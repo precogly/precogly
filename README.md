@@ -5,9 +5,7 @@
   <h3>Open-source, enterprise-grade threat modeling.</h3>
   <p>Making threat modeling a core engineering practice, not an isolated compliance step.</p>
 
-  <br />
 
-  <a href="https://precogly.org"><strong>Explore the Website »</strong></a>
   <br />
   <br />
 
@@ -31,7 +29,7 @@ We are building a tool that supports:
 
 ## 📅 The Roadmap
 
-* **Jan 15, 2026:** Project Announcement & Partner Program ([precogly.org](https://precogly.org))
+* **Jan 15, 2026:** Project Announcement & Partner Program
 * **Feb 12, 2026:** **Public Alpha Release (v0.1)** - The code in this repository will be unlocked.
 
 ## 🤝 Join the Launch
@@ -39,7 +37,7 @@ We are building a tool that supports:
 We are building a network of **Enterprise Success Partners** and open-source contributors.
 
 * **Practitioners:** Star this repo to watch the release.
-* **Partners:** [Contact us](https://precogly.org) to discuss the founding partner program.
+* **Partners:** [email us](vikramsnarayan@gmail.com) or [schedule a meeting](https://calendly.com/vikramsnarayan/30min) to discuss the founding partner program.
 
 ---
 
