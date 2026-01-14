@@ -3,7 +3,7 @@
 <div align="center">
 
   <h3>Open-source, enterprise-grade threat modeling.</h3>
-  <p>Making threat modeling a core engineering practice, not an isolated compliance step.</p>
+  <p>Making threat modeling available to every AppSec team on the planet.</p>
 
 
   <br />
