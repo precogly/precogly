@@ -23,7 +23,7 @@
 Precogly is an open platform designed to fill the gap between manual diagramming tools and closed-source commercial platforms.
 
 We are building a tool that supports:
-* **Threat Modeling as Code:** Version controlled, diff-able, and integrated into CI/CD.
+* **DFD Editing:** Threat modeling via an interactive UI, using reusable libraries and workflows.
 * **Enterprise Scale:** Collaboration features, SSO readiness, and compliance mapping.
 * **Open Standards:** No vendor lock-in. Your models belong to you.
 
