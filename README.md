@@ -64,7 +64,7 @@ The central hub for each system's threat model. Track completion status, map thr
 | Date | Milestone |
 |------|-----------|
 | ✅ Jan 15, 2026 | Project announcement |
-| 🚀 Feb 12, 2026 | **Public Alpha (v0.1)** — Code drops in this repository |
+| 🚀 Mid-Feb, 2026 | **Public Alpha (v0.1)** — Code drops in this repository |
 
 ---
 
