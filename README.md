@@ -88,6 +88,9 @@ Built by [Vikramaditya Narayan](https://www.linkedin.com/in/vikramadityanarayan/
 
 📬 Questions? [Email me](mailto:vikramsnarayan@gmail.com) or [book a call](https://calendly.com/vikramsnarayan/30min).
 
+## Special Thanks
+A special thanks to [Jeroen Verwoest] (https://www.linkedin.com/in/jeroen-verwoest-0a76097/) for generously sharing his knowledge about threat modeling at an enterprise-scale in a compliance-heavy environment. 
+
 ---
 
 ## License
