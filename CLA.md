@@ -3,7 +3,7 @@
 Thank you for your interest in contributing to Precogly. This Contributor License Agreement ("Agreement") documents the rights granted by contributors to Precogly.
 
 By signing this Agreement, you accept and agree to the following terms and conditions for your present and future Contributions submitted to Precogly. Except for the license granted herein to Precogly and recipients of software distributed by Precogly, you reserve all right, title, and interest in and to your Contributions.
-test
+
 ## 1. Definitions
 
 **"You" (or "Your")** shall mean the copyright owner or legal entity authorized by the copyright owner that is making this Agreement with Precogly. For legal entities, the entity making a Contribution and all other entities that control, are controlled by, or are under common control with that entity are considered to be a single Contributor.
