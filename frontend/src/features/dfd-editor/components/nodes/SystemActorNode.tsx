@@ -3,16 +3,17 @@ import { Handle, Position, type Node, type NodeProps } from '@xyflow/react'
 import { Server } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { SystemActorNodeData } from '../../types'
+import { NodeThreatBadge } from './NodeThreatBadge'
 
 type SystemActorNodeType = Node<SystemActorNodeData, 'systemActor'>
 
 export const SystemActorNode = memo(function SystemActorNode({
+  id,
   data,
   selected,
 }: NodeProps<SystemActorNodeType>) {
   const isNewlyInserted = data.isNewlyInserted
   const [showLockAnimation, setShowLockAnimation] = useState(false)
-
   // Trigger lock animation when lockAnimationKey changes (new timestamp = new animation)
   useEffect(() => {
     if (data.lockAnimationKey) {
@@ -54,6 +55,7 @@ export const SystemActorNode = memo(function SystemActorNode({
         <span className="font-medium text-sm text-slate-900 text-center">
           {data.label}
         </span>
+        <NodeThreatBadge nodeId={id} className="mt-1 text-center" />
       </div>
     </>
   )

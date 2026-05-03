@@ -5,17 +5,18 @@ import { cn } from '@/lib/utils'
 import type { DataStoreNodeData } from '../../types'
 import { DATA_SENSITIVITY_CONFIG } from '../../types'
 import { useTechnologyDisplayName } from '../../api/component-library'
+import { NodeThreatBadge } from './NodeThreatBadge'
 
 type DataStoreNodeType = Node<DataStoreNodeData, 'datastore'>
 
 export const DataStoreNode = memo(function DataStoreNode({
+  id,
   data,
   selected,
 }: NodeProps<DataStoreNodeType>) {
   const isNewlyInserted = data.isNewlyInserted
   const technologyDisplayName = useTechnologyDisplayName(data.technology)
   const [showLockAnimation, setShowLockAnimation] = useState(false)
-
   // Trigger lock animation when lockAnimationKey changes (new timestamp = new animation)
   useEffect(() => {
     if (data.lockAnimationKey) {
@@ -93,6 +94,7 @@ export const DataStoreNode = memo(function DataStoreNode({
                 {DATA_SENSITIVITY_CONFIG[data.dataSensitivity].label}
               </div>
             )}
+            <NodeThreatBadge nodeId={id} className="mt-1.5 text-center" />
           </div>
 
           {/* Bottom ellipse */}

@@ -156,6 +156,7 @@ export interface ComponentThreat {
   taxonomyEntries?: TaxonomyEntry[]
   // Severity scoring metadata
   inherentSeverity?: string
+  residualSeverity?: string
   severityScoringMetadata?: Record<string, unknown>
   // Display order for drag-and-drop reordering
   displayOrder?: number
@@ -204,6 +205,24 @@ export function deriveThreatStatus(countermeasures: ComponentThreatCountermeasur
 
   // All are 'platform' or 'verified' (no gaps, no planned, no waived)
   return 'mitigated'
+}
+
+const SEVERITY_RANK: Record<string, number> = {
+  low: 1,
+  medium: 2,
+  high: 3,
+  critical: 4,
+}
+
+/** Return the higher (worse) of two severity labels for rollup on the canvas. */
+export function worseSeverity(a: string | undefined, b: string | undefined): string | undefined {
+  const ra = SEVERITY_RANK[String(a ?? '').toLowerCase()] ?? 0
+  const rb = SEVERITY_RANK[String(b ?? '').toLowerCase()] ?? 0
+  const ta = String(a ?? '').trim()
+  const tb = String(b ?? '').trim()
+  if (!ta) return tb || undefined
+  if (!tb) return ta
+  return rb >= ra ? tb : ta
 }
 
 /**

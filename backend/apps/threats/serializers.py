@@ -175,6 +175,7 @@ class ComponentInstanceThreatSerializer(serializers.ModelSerializer):
     threat_name_display = serializers.SerializerMethodField()
     taxonomy_entries = serializers.SerializerMethodField()
     component_name = serializers.CharField(source="component.name", read_only=True)
+    countermeasures = serializers.SerializerMethodField()
 
     # Write fields - accept threat_name for custom threats
     threat_name = serializers.CharField(required=False, allow_blank=True, write_only=True)
@@ -197,6 +198,7 @@ class ComponentInstanceThreatSerializer(serializers.ModelSerializer):
             "dismissal_reason",
             "format_metadata",
             "display_order",
+            "countermeasures",
             "created_at",
             "updated_at",
         ]
@@ -207,6 +209,7 @@ class ComponentInstanceThreatSerializer(serializers.ModelSerializer):
             "threat_name_display",
             "taxonomy_entries",
             "component_name",
+            "countermeasures",
         ]
 
     def get_threat_name_display(self, obj):
@@ -227,6 +230,11 @@ class ComponentInstanceThreatSerializer(serializers.ModelSerializer):
                 [j.taxonomy_entry for j in joins], many=True
             ).data
         return obj.taxonomy_snapshot
+
+    def get_countermeasures(self, obj):
+        """Nested countermeasures (resolved at request time; serializer class is defined below)."""
+        qs = obj.countermeasures.all().order_by("display_order", "created_at")
+        return ComponentInstanceCountermeasureSerializer(qs, many=True).data
 
     def create(self, validated_data):
         threat_library = validated_data.get("threat_library")

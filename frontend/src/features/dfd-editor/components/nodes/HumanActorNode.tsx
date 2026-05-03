@@ -2,16 +2,17 @@ import { memo, useEffect, useState } from 'react'
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react'
 import { cn } from '@/lib/utils'
 import type { HumanActorNodeData } from '../../types'
+import { NodeThreatBadge } from './NodeThreatBadge'
 
 type HumanActorNodeType = Node<HumanActorNodeData, 'humanActor'>
 
 export const HumanActorNode = memo(function HumanActorNode({
+  id,
   data,
   selected,
 }: NodeProps<HumanActorNodeType>) {
   const isNewlyInserted = data.isNewlyInserted
   const [showLockAnimation, setShowLockAnimation] = useState(false)
-
   // Trigger lock animation when lockAnimationKey changes (new timestamp = new animation)
   useEffect(() => {
     if (data.lockAnimationKey) {
@@ -66,6 +67,7 @@ export const HumanActorNode = memo(function HumanActorNode({
         <span className="font-medium text-sm text-green-900 text-center">
           {data.label}
         </span>
+        <NodeThreatBadge nodeId={id} className="mt-1 text-center" />
       </div>
     </>
   )

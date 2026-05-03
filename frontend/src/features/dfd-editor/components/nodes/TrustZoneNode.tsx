@@ -4,16 +4,17 @@ import { Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { TrustZoneNodeData } from '../../types'
 import { getZoneColorConfig } from '../../types'
+import { NodeThreatBadge } from './NodeThreatBadge'
 
 type TrustZoneNodeType = Node<TrustZoneNodeData, 'trustZone'>
 
 export const TrustZoneNode = memo(function TrustZoneNode({
+  id,
   data,
   selected,
 }: NodeProps<TrustZoneNodeType>) {
   const isNewlyInserted = data.isNewlyInserted
   const [showLockAnimation, setShowLockAnimation] = useState(false)
-
   const trustLevel = data.trustLevel ?? 75
   const { color: displayColor, borderColor: displayBorderColor } = getZoneColorConfig(data.zoneColor)
 
@@ -80,6 +81,8 @@ export const TrustZoneNode = memo(function TrustZoneNode({
         >
           TL: {trustLevel}
         </div>
+
+        <NodeThreatBadge nodeId={id} className="absolute bottom-1 right-3" />
       </div>
     </>
   )

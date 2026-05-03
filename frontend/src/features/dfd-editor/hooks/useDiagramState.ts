@@ -29,7 +29,7 @@ interface UseDiagramStateReturn {
   setEdges: React.Dispatch<React.SetStateAction<DiagramEdge[]>>
   onNodesChange: (changes: NodeChange<DiagramNode>[]) => void
   onEdgesChange: (changes: EdgeChange<DiagramEdge>[]) => void
-  saveNow: () => Promise<void>
+  saveNow: () => Promise<Diagram>
   updateTitle: (title: string) => Promise<void>
   // Undo feature - remove this line to disable undo functionality
   undo: () => void
@@ -261,7 +261,8 @@ export function useDiagramState({
 
   // Save now function
   const saveNow = useCallback(async () => {
-    await saveMutation.mutateAsync({ nodes, edges })
+    const result = await saveMutation.mutateAsync({ nodes, edges })
+    return result
   }, [nodes, edges, saveMutation])
 
   // Update title function

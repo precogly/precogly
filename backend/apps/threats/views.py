@@ -2,7 +2,7 @@
 Views for threats app.
 """
 
-from django.db.models import Q
+from django.db.models import Prefetch, Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
@@ -134,11 +134,18 @@ class ComponentInstanceThreatViewSet(viewsets.ModelViewSet):
         org_ids = self.request.user.organization_memberships.values_list(
             "organization_id", flat=True
         )
+        cm_qs = ComponentInstanceCountermeasure.objects.select_related(
+            "countermeasure_library",
+            "assigned_owner",
+            "verified_by",
+        ).order_by("display_order", "created_at")
         return ComponentInstanceThreat.objects.filter(
             Q(component__orgsystem__organization_id__in=org_ids)
             | Q(component__orgsystem__isnull=True,
                 component__threat_model__organization_id__in=org_ids)
-        ).select_related("component", "threat_library")
+        ).select_related("component", "threat_library").prefetch_related(
+            Prefetch("countermeasures", queryset=cm_qs),
+        )
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = ["component", "threat_library", "status", "inherent_severity"]
     ordering_fields = ["inherent_severity", "status", "created_at"]
@@ -426,6 +433,7 @@ class ComponentInstanceCountermeasureViewSet(viewsets.ModelViewSet):
             current_status = serializer.instance.status
             _check_platform_status_permission(self.request.user, current_status, new_status)
         instance = serializer.save()
+        recalculate_threat_status(instance.instance_threat)
         recalculate_risks_for_threat(instance.instance_threat, threat_type="component")
 
     @action(detail=False, methods=["post"])

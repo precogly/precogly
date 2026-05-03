@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import type { ProcessNodeData } from '../../types'
 import { DATA_SENSITIVITY_CONFIG } from '../../types'
 import { useTechnologyDisplayName } from '../../api/component-library'
+import { NodeThreatBadge } from './NodeThreatBadge'
 
 type ProcessNodeType = Node<ProcessNodeData, 'process'>
 
@@ -42,7 +43,6 @@ export const ProcessNode = memo(function ProcessNode({
   const technologyDisplayName = useTechnologyDisplayName(data.technology)
   const [showLockAnimation, setShowLockAnimation] = useState(false)
   const [showReceiveAnimation, setShowReceiveAnimation] = useState(false)
-
   // Check if this process has children (makes it a container)
   const isContainer = useStore(
     useCallback(
@@ -128,6 +128,7 @@ export const ProcessNode = memo(function ProcessNode({
                 {DATA_SENSITIVITY_CONFIG[data.dataSensitivity].label}
               </div>
             )}
+            <NodeThreatBadge nodeId={id} className="absolute bottom-1 right-3" />
           </>
         ) : (
           <>
@@ -155,6 +156,7 @@ export const ProcessNode = memo(function ProcessNode({
                 {DATA_SENSITIVITY_CONFIG[data.dataSensitivity].label}
               </div>
             )}
+            <NodeThreatBadge nodeId={id} className="mt-1.5 text-center" />
           </>
         )}
       </div>

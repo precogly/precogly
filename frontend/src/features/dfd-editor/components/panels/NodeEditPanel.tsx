@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { TechnologyCombobox } from '../technology-combobox'
 import { SuggestionCombobox } from '../suggestion-combobox'
+import { NodeThreatSection } from './NodeThreatSection'
 import { useThreatModelSystems, useUpdateComponentSystem } from '@/features/threat-models/api/threat-models'
 import { useDataAssets } from '@/features/threat-models/api/data-assets'
 import {
@@ -804,6 +805,24 @@ export const NodeEditPanel = memo(function NodeEditPanel({
               </div>
             </div>
           </>
+        )}
+
+        {/* Threats & Countermeasures — all analyzable node types */}
+        {['process', 'datastore', 'humanActor', 'systemActor'].includes(node.type as string) && (
+          (node.data as { componentId?: number }).componentId ? (
+            <NodeThreatSection
+              componentId={(node.data as { componentId?: number }).componentId!}
+              componentName={String(node.data.label || '')}
+            />
+          ) : (
+            <>
+              <Separator />
+              <div className="flex items-center gap-2 p-2 rounded-md bg-muted/50 text-xs text-muted-foreground">
+                <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
+                Save the diagram to enable threat analysis for this component.
+              </div>
+            </>
+          )
         )}
 
         {/* Node info */}

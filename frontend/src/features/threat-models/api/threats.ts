@@ -15,8 +15,9 @@ export interface ComponentInstanceThreat {
   id: number
   component: number
   componentName: string
-  threatLibrary: number
+  threatLibrary: number | null
   threatName: string
+  threatNameDisplay?: string  // read field from serializer (threat_name_display)
   taxonomyEntries?: TaxonomyEntry[]
   inherentSeverity: string
   residualSeverity: string
@@ -27,6 +28,8 @@ export interface ComponentInstanceThreat {
   formatMetadata: Record<string, unknown>
   createdAt: string
   updatedAt: string
+  /** Populated on list/detail when nested serialization is enabled */
+  countermeasures?: ComponentInstanceCountermeasure[]
 }
 
 export interface CountermeasureLibraryItem {
@@ -54,6 +57,11 @@ export interface ComponentInstanceCountermeasure {
   instanceThreat: number
   countermeasureLibrary: number
   countermeasureName: string
+  countermeasureNameDisplay?: string | null
+  countermeasureDescription?: string
+  controlType?: string
+  controlTypeDisplay?: string
+  effectiveness?: number | null
   status: BackendCountermeasureStatus
   priority: string
   verifiedBy: number | null
@@ -63,6 +71,7 @@ export interface ComponentInstanceCountermeasure {
   assignedOwner: number | null
   assignedOwnerEmail: string | null
   formatMetadata: Record<string, unknown>
+  displayOrder?: number
   isInherited?: boolean
   inheritedFromComponentName?: string
   inheritedFromZoneName?: string
@@ -703,6 +712,7 @@ export function transformBackendThreatsToComponentThreats(
       taxonomyEntries: bt.taxonomyEntries,
       // Severity scoring metadata
       inherentSeverity: bt.inherentSeverity,
+      residualSeverity: bt.residualSeverity,
       severityScoringMetadata: bt.severityScoringMetadata,
       // Display order for drag-and-drop reordering
       displayOrder: bt.displayOrder ?? 0,

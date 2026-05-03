@@ -1,4 +1,4 @@
-import { useCallback, useState, useRef, useEffect } from 'react'
+import { useCallback, useState, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ReactFlow,
@@ -35,6 +35,7 @@ import { useParentRelationships } from './hooks/useParentRelationships'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useConnectionMode } from './hooks/useConnectionMode'
 import { useBoundaryMode } from './hooks/useBoundaryMode'
+import { ThreatSummaryProvider } from './contexts/ThreatSummaryContext'
 import type { DiagramNode, DiagramEdge, DataFlowEdge, TrustBoundaryEdge } from './types'
 
 function DFDEditorContent() {
@@ -270,9 +271,13 @@ function DFDEditorContent() {
     }
   }, [boundaryMode, cancelBoundaryMode])
 
+  const handleSave = useCallback(async () => {
+    await saveNow()
+  }, [saveNow])
+
   // Keyboard shortcuts
   useKeyboardShortcuts({
-    onSave: saveNow,
+    onSave: handleSave,
     onUndo: undo,
     onDeselect: handleDeselect,
     enabled: true,
@@ -354,6 +359,7 @@ function DFDEditorContent() {
   }
 
   return (
+    <ThreatSummaryProvider threatModelId={threatModelId}>
     <div className="flex flex-col h-[calc(100vh-44px)]">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2 border-b bg-background">
@@ -424,7 +430,7 @@ function DFDEditorContent() {
 
           <Button
             size="sm"
-            onClick={saveNow}
+            onClick={handleSave}
             disabled={isSaving || !hasUnsavedChanges}
           >
             <Save className="h-4 w-4 mr-2" />
@@ -452,7 +458,7 @@ function DFDEditorContent() {
         onOpenTemplates={() => setShowTemplates(true)}
         onOpenThreatAnalysis={async () => {
           if (hasUnsavedChanges) {
-            await saveNow()
+            await handleSave()
           }
           navigate(`/threat-models/${threatModelId}`)
         }}
@@ -544,6 +550,7 @@ function DFDEditorContent() {
         isDeleting={deleteDFDMutation.isPending}
       />
     </div>
+    </ThreatSummaryProvider>
   )
 }
 
