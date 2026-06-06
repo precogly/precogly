@@ -501,6 +501,11 @@ class DataFlow(TimestampedModel):
     encrypted = models.BooleanField(default=False)
     authenticated = models.BooleanField(default=False)
     crosses_trust_zone = models.BooleanField(default=False)
+    trust_boundary_ids = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of trust boundary IDs this data flow crosses",
+    )
     has_sensitive_data = models.BooleanField(default=False)
     data_classification = models.JSONField(default=list, blank=True)
     format_metadata = models.JSONField(default=dict, blank=True)
@@ -523,6 +528,19 @@ class DataFlow(TimestampedModel):
                     seen.add(t)
                     normalized.append(t)
             self.data_classification = normalized
+        if self.trust_boundary_ids:
+            # Normalize to list of integers, deduplicated
+            seen = set()
+            normalized = []
+            for bid in self.trust_boundary_ids:
+                try:
+                    b = int(bid)
+                    if b not in seen:
+                        seen.add(b)
+                        normalized.append(b)
+                except (ValueError, TypeError):
+                    pass
+            self.trust_boundary_ids = normalized
         super().save(*args, **kwargs)
 
 

@@ -105,6 +105,8 @@ export interface DataFlowEdgeData {
   crossesZoneTrustLevel?: number   // Trust level of the zone
   crossesZoneColor?: string        // Color of the zone (borderColor hex)
   crossesZoneIds?: string[]        // For flows crossing multiple zones
+  // Trust boundary crossings (auto-detected and stored by backend sync)
+  crossesBoundaryIds?: number[]    // IDs of trust boundaries this flow crosses
   [key: string]: unknown  // Required for React Flow's Edge<T> constraint
 }
 
@@ -147,6 +149,8 @@ export interface TrustBoundaryEdgeData {
   canSystemLogout?: boolean
   // Written back by backend sync (trust_boundary_id → trustBoundaryId)
   trustBoundaryId?: number
+  // Display index (1-based) shown in UI for "Boundary N" labels
+  boundaryDisplayId?: number
   [key: string]: unknown
 }
 

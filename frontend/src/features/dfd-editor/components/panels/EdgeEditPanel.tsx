@@ -28,6 +28,7 @@ import type {
   Protocol,
   DiagramNode,
   TrustZoneNodeData,
+  TrustBoundaryEdgeData,
 } from '../../types'
 import { PROTOCOLS, getZoneColorConfig } from '../../types'
 import { DATA_SENSITIVITY_TAG_CONFIG } from '@/types/domain'
@@ -219,9 +220,10 @@ export const EdgeEditPanel = memo(function EdgeEditPanel({
   onClose,
   threatModelId,
 }: EdgeEditPanelProps) {
-  const { setEdges, getNodes } = useReactFlow()
+  const { setEdges, getNodes, getEdges } = useReactFlow()
 
   const nodes = getNodes()
+  const edges = getEdges()
   const sourceNode = nodes.find((n) => n.id === edge.source)
   const targetNode = nodes.find((n) => n.id === edge.target)
 
@@ -487,6 +489,86 @@ export const EdgeEditPanel = memo(function EdgeEditPanel({
             </div>
           )
         })()}
+
+        {/* Boundary Crossings (auto-detected, read-only display) */}
+        {edge.data?.crossesBoundaryIds && edge.data.crossesBoundaryIds.length > 0 && (
+          <>
+            <Separator />
+            <div className="space-y-2">
+              <Label>Crosses Boundaries</Label>
+              <div className="flex flex-col gap-2">
+                {edge.data.crossesBoundaryIds.map((boundaryId) => {
+                  // Find boundary edge - try trustBoundaryId (camelCase from backend sync) first
+                  let boundaryEdge = edges.find(
+                    (e) =>
+                      e.type === 'trustBoundary' &&
+                      e.data?.trustBoundaryId === boundaryId
+                  )
+
+                  // Fallback: try snake_case trust_boundary_id
+                  if (!boundaryEdge) {
+                    boundaryEdge = edges.find(
+                      (e) =>
+                        e.type === 'trustBoundary' &&
+                        e.data?.trust_boundary_id === boundaryId
+                    )
+                  }
+
+                  // Fallback: try exact edge ID match (boundary-{id})
+                  if (!boundaryEdge) {
+                    boundaryEdge = edges.find(
+                      (e) =>
+                        e.type === 'trustBoundary' &&
+                        e.id === `boundary-${boundaryId}`
+                    )
+                  }
+
+                  const boundaryData = boundaryEdge?.data as TrustBoundaryEdgeData | undefined
+
+                  // Compute display ID from boundary's position in edges list (1-based)
+                  // This ensures correct numbering even after reload when boundaryDisplayId is not persisted
+                  const allBoundaryEdges = edges.filter((e) => e.type === 'trustBoundary')
+                  const boundaryIndexInList = allBoundaryEdges.findIndex((e) => e.id === boundaryEdge?.id)
+                  const displayId = boundaryIndexInList >= 0 ? boundaryIndexInList + 1 : boundaryId
+
+                  return (
+                    <div
+                      key={boundaryId}
+                      className="p-2 rounded-md bg-amber-50 border border-amber-200 space-y-1"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-amber-700">⚠️</span>
+                        <span className="font-medium text-amber-800">
+                          {boundaryData?.label || `Boundary ${displayId}`}
+                        </span>
+                      </div>
+                      {boundaryData?.accessControlMethods && boundaryData.accessControlMethods.length > 0 && (
+                        <div className="text-xs text-amber-700">
+                          <span className="font-medium">Access Control:</span>{' '}
+                          {boundaryData.accessControlMethods.join(', ')}
+                        </div>
+                      )}
+                      {boundaryData?.authenticationMethods && boundaryData.authenticationMethods.length > 0 && (
+                        <div className="text-xs text-amber-700">
+                          <span className="font-medium">Auth:</span>{' '}
+                          {boundaryData.authenticationMethods.join(', ')}
+                        </div>
+                      )}
+                      {!boundaryData?.accessControlMethods?.length && !boundaryData?.authenticationMethods?.length && (
+                        <div className="text-xs text-amber-600">
+                          No security controls configured
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Boundary crossings are auto-detected based on source and target component zones.
+              </p>
+            </div>
+          </>
+        )}
 
         {/* Edge info */}
         <Separator />

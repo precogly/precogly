@@ -172,7 +172,11 @@ export function useDiagramState({
         currentEdges.map((edge) => {
           const savedData = savedEdgeMap.get(edge.id)
           if (!savedData) return edge
-          const edgeBackendKeys = ['dataflowId', 'trustBoundaryId'] as const
+          const edgeBackendKeys = [
+            'dataflowId', 'trustBoundaryId', 'crossesBoundaryIds',
+            // Snake_case variants from backend
+            'trust_boundary_id',
+          ] as const
           let updated = false
           const mergedData = { ...edge.data }
           for (const key of edgeBackendKeys) {

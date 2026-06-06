@@ -19,13 +19,18 @@ export function useBoundaryMode({
 }) {
   const [boundaryMode, setBoundaryMode] = useState(false)
   const [boundarySourceId, setBoundarySourceId] = useState<string | null>(null)
+  // Track next available boundary display index for THIS diagram
+  // Computed from current edges so it resets when diagram changes
+  const [nextBoundaryIndex, setNextBoundaryIndex] = useState(1)
 
   // Refs for boundary mode — avoids stale closure issues in handleNodeClick
   // when React Flow fires onPaneClick alongside onNodeClick for container nodes
   const boundaryModeRef = useRef(false)
   const boundarySourceIdRef = useRef<string | null>(null)
+  const nextBoundaryIndexRef = useRef(nextBoundaryIndex)
   useEffect(() => { boundaryModeRef.current = boundaryMode }, [boundaryMode])
   useEffect(() => { boundarySourceIdRef.current = boundarySourceId }, [boundarySourceId])
+  useEffect(() => { nextBoundaryIndexRef.current = nextBoundaryIndex }, [nextBoundaryIndex])
 
   // Clear boundary source when boundary mode is turned off
   useEffect(() => {
@@ -33,6 +38,16 @@ export function useBoundaryMode({
       setBoundarySourceId(null)
     }
   }, [boundaryMode])
+
+  // Sync boundary index when diagram loads (nodes.length changes)
+  useEffect(() => {
+    const currentBoundaries = getEdges().filter((e) => e.type === 'trustBoundary')
+    if (currentBoundaries.length === 0) {
+      setNextBoundaryIndex(1)
+      return
+    }
+    setNextBoundaryIndex(currentBoundaries.length + 1)
+  }, [nodes.length])
 
   // Enable boundary mode only when there are at least 2 trust zones
   const enableBoundaryMode = useCallback(
@@ -102,6 +117,10 @@ export function useBoundaryMode({
       }
 
       // Second click: create trust boundary edge
+      // Compute display ID from current boundary count to avoid stale state issues
+      const currentBoundaryCount = getEdges().filter((e) => e.type === 'trustBoundary').length
+      const newBoundaryDisplayId = currentBoundaryCount + 1
+
       const newBoundaryEdge: TrustBoundaryEdge = {
         id: `boundary-${Date.now()}`,
         source: currentBoundarySourceId,
@@ -109,11 +128,14 @@ export function useBoundaryMode({
         type: 'trustBoundary',
         data: {
           label: '',
+          boundaryDisplayId: newBoundaryDisplayId,
         },
       }
 
       setEdges((eds) => [...eds, newBoundaryEdge])
       setBoundaryMode(false)
+      // Pre-increment for next boundary to avoid async state lag
+      setNextBoundaryIndex(currentBoundaryCount + 2)
 
       return { consumed: true, selectedEdge: newBoundaryEdge }
     },

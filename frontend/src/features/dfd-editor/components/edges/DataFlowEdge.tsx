@@ -145,6 +145,19 @@ export const DataFlowEdge = memo(function DataFlowEdge({
               <span className="font-medium">{data.crossesZoneLabel || 'Zone'}</span>
             </div>
           )}
+
+          {/* Boundary crossing indicator */}
+          {data?.crossesBoundaryIds && data.crossesBoundaryIds.length > 0 && (
+            <div
+              className="px-2 py-0.5 rounded text-xs flex items-center gap-1 whitespace-nowrap border border-amber-400 bg-amber-50 text-amber-700"
+              title={`Crosses ${data.crossesBoundaryIds.length} trust boundary(ies)`}
+            >
+              <span>⚠️</span>
+              <span className="font-medium">
+                {data.crossesBoundaryIds.length} boundary(ies)
+              </span>
+            </div>
+          )}
         </div>
       </EdgeLabelRenderer>
     </>

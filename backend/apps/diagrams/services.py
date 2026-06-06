@@ -470,17 +470,25 @@ def sync_dfd_nodes_to_components(dfd, threat_model, old_canvas_data=None):
                 generated = _generate_threats_for_component(component)
                 threats_generated += generated
 
-        # Sync edges to DataFlow records and generate flow threats
-        flow_result = _sync_edges_to_dataflows(dfd, edges, node_component_map)
-
-        # Sync trust boundary edges to TrustBoundary DB records
+        # Sync trust boundary edges to TrustBoundary DB records (must sync before flows to enable detection)
         boundary_result = _sync_edges_to_trust_boundaries(
             dfd, edges, node_zone_map
         )
 
-        # Clean up orphaned records (nodes/edges removed since last save)
+        # Sync edges to DataFlow records and generate flow threats
+        # Pass node_zone_map and boundary edge map for automatic boundary crossing detection
+        boundary_edge_map = {
+            edge.get("id"): (node_zone_map.get(edge.get("source")), node_zone_map.get(edge.get("target")))
+            for edge in edges
+            if edge.get("type") == "trustBoundary"
+        }
+
+        # Clean up orphaned records BEFORE syncing flows, so boundary deletions
+        # are visible when _update_canvas_with_boundary_crossings runs
         if old_canvas_data:
             _cleanup_orphaned_records(old_canvas_data, dfd.canvas_data or {}, threat_model)
+
+        flow_result = _sync_edges_to_dataflows(dfd, edges, node_component_map, node_zone_map, boundary_edge_map)
 
     return {
         "synced_count": synced_count,
@@ -692,7 +700,201 @@ def _generate_threats_for_component(component):
     return created_count
 
 
-def _sync_edges_to_dataflows(dfd, edges, node_component_map):
+def _get_zone_ancestor_ids(zone_id):
+    """
+    Get all ancestor zone IDs for a given zone, including itself.
+    Walks up the parent chain to find all ancestors.
+
+    Args:
+        zone_id: ID of the starting zone
+
+    Returns:
+        Set of zone IDs (including the input zone)
+    """
+    from apps.systems.models import TrustZone
+
+    if not zone_id:
+        return set()
+
+    ancestor_ids = {zone_id}
+    current_zone_id = zone_id
+
+    # Walk up the parent chain
+    while True:
+        try:
+            zone = TrustZone.objects.get(id=current_zone_id)
+            if zone.parent_id:
+                ancestor_ids.add(zone.parent_id)
+                current_zone_id = zone.parent_id
+            else:
+                break
+        except TrustZone.DoesNotExist:
+            break
+
+    return ancestor_ids
+
+
+def _detect_boundary_crossings(source_component_id, target_component_id):
+    """
+    Detect which trust boundaries a data flow crosses based on its source and target components.
+
+    A data flow crosses a trust boundary when:
+    1. Source component is in zone A (or any ancestor of A)
+    2. Target component is in zone B (or any ancestor of B)
+    3. There's a TrustBoundary connecting any ancestor of A to any ancestor of B
+
+    Handles nested zones by walking up the zone hierarchy.
+
+    Args:
+        source_component_id: ID of the source OrgsystemComponent
+        target_component_id: ID of the target OrgsystemComponent
+
+    Returns:
+        List of trust boundary IDs that this data flow crosses
+    """
+    from apps.systems.models import OrgsystemComponent, TrustBoundary
+
+    try:
+        source_component = OrgsystemComponent.objects.select_related('trust_zone').get(id=source_component_id)
+        target_component = OrgsystemComponent.objects.select_related('trust_zone').get(id=target_component_id)
+    except OrgsystemComponent.DoesNotExist:
+        return []
+
+    source_zone_id = source_component.trust_zone_id
+    target_zone_id = target_component.trust_zone_id
+
+    if not source_zone_id or not target_zone_id:
+        return []
+
+    # Get all ancestor zones for both source and target
+    source_ancestors = _get_zone_ancestor_ids(source_zone_id)
+    target_ancestors = _get_zone_ancestor_ids(target_zone_id)
+
+    # Same zone family - no boundary crossing (they share a common ancestor)
+    if source_ancestors & target_ancestors:
+        return []
+
+    # Find trust boundaries between any ancestor of source and any ancestor of target
+    boundary_ids = list(
+        TrustBoundary.objects.filter(
+            zone_a_id__in=source_ancestors,
+            zone_b_id__in=target_ancestors
+        ).union(
+            TrustBoundary.objects.filter(
+                zone_a_id__in=target_ancestors,
+                zone_b_id__in=source_ancestors
+            )
+        ).values_list('id', flat=True).distinct()
+    )
+
+    return boundary_ids
+
+
+def _build_zone_ancestor_map(zone_ids):
+    """
+    Build a map of zone_id -> set of ancestor zone IDs (including itself).
+    Pre-fetches all ancestor relationships in one query.
+
+    Args:
+        zone_ids: Set of zone IDs to get ancestors for
+
+    Returns:
+        Dict mapping zone_id -> set of ancestor zone IDs
+    """
+    from apps.systems.models import TrustZone
+
+    if not zone_ids:
+        return {}
+
+    # Get all zones in one query
+    zones = TrustZone.objects.filter(id__in=zone_ids).select_related('parent')
+    zone_map = {z.id: z for z in zones}
+
+    result = {}
+    for zone_id in zone_ids:
+        ancestors = set()
+        current_id = zone_id
+        while current_id:
+            ancestors.add(current_id)
+            zone = zone_map.get(current_id)
+            if zone and zone.parent_id:
+                current_id = zone.parent_id
+            else:
+                current_id = None
+        result[zone_id] = ancestors
+
+    return result
+
+
+def _detect_boundary_crossings_batch(source_component_id, target_component_id, component_zone_map, zone_ancestor_map, boundary_zone_pairs, all_boundaries):
+    """
+    Batch version of boundary detection using pre-fetched data.
+
+    Args:
+        source_component_id: ID of source component
+        target_component_id: ID of target component
+        component_zone_map: Dict mapping component_id -> zone_id
+        zone_ancestor_map: Dict mapping zone_id -> set of ancestor zone IDs
+        boundary_zone_pairs: Set of (zone_a_id, zone_b_id) tuples for all boundaries
+        all_boundaries: QuerySet of TrustBoundary objects
+
+    Returns:
+        List of boundary IDs crossed
+    """
+    src_zone = component_zone_map.get(source_component_id)
+    tgt_zone = component_zone_map.get(target_component_id)
+
+    if not src_zone or not tgt_zone:
+        return []
+
+    src_ancestors = zone_ancestor_map.get(src_zone, {src_zone})
+    tgt_ancestors = zone_ancestor_map.get(tgt_zone, {tgt_zone})
+
+    # Same zone family - no boundary crossing
+    if src_ancestors & tgt_ancestors:
+        return []
+
+    # Find boundaries where one endpoint is in source ancestors and other in target ancestors
+    boundary_ids = []
+    for boundary in all_boundaries:
+        zone_a_in_src = boundary.zone_a_id in src_ancestors
+        zone_b_in_src = boundary.zone_b_id in src_ancestors
+        zone_a_in_tgt = boundary.zone_a_id in tgt_ancestors
+        zone_b_in_tgt = boundary.zone_b_id in tgt_ancestors
+
+        # Boundary crosses if one endpoint is in source family and other in target family
+        if (zone_a_in_src and zone_b_in_tgt) or (zone_b_in_src and zone_a_in_tgt):
+            boundary_ids.append(boundary.id)
+
+    return boundary_ids
+
+
+def _get_all_boundaries_for_zones(source_ancestors, target_ancestors):
+    """
+    Find all trust boundaries between any ancestor of source zone and any ancestor of target zone.
+
+    Args:
+        source_ancestors: Set of ancestor zone IDs for source
+        target_ancestors: Set of ancestor zone IDs for target
+
+    Returns:
+        List of boundary IDs
+    """
+    from apps.systems.models import TrustBoundary
+
+    if not source_ancestors or not target_ancestors:
+        return []
+
+    # Single query to find all boundaries between the two zone families
+    return list(
+        TrustBoundary.objects.filter(
+            Q(zone_a_id__in=source_ancestors, zone_b_id__in=target_ancestors) |
+            Q(zone_a_id__in=target_ancestors, zone_b_id__in=source_ancestors)
+        ).values_list('id', flat=True).distinct()
+    )
+
+
+def _sync_edges_to_dataflows(dfd, edges, node_component_map, node_zone_map=None, boundary_edge_map=None):
     """
     Sync DFD edges to DataFlow records and generate threats.
 
@@ -703,10 +905,68 @@ def _sync_edges_to_dataflows(dfd, edges, node_component_map):
         dfd: The DFD instance
         edges: List of edges from canvas_data
         node_component_map: Mapping of node_id -> component_id
+        node_zone_map: Mapping of node_id -> zone_id (for boundary detection)
+        boundary_edge_map: Mapping of edge_id -> (zone_a_id, zone_b_id) for trust boundaries
 
     Returns:
         dict with synced_count, created_count, threats_generated
     """
+    from apps.systems.models import OrgsystemComponent, TrustBoundary
+
+    # Collect all component IDs that appear in data flows
+    dataflow_edges = [
+        edge for edge in edges
+        if edge.get("type") == "dataFlow" and node_component_map.get(edge.get("source")) and node_component_map.get(edge.get("target"))
+    ]
+
+    if not dataflow_edges:
+        return {"synced_count": 0, "created_count": 0, "threats_generated": 0}
+
+    # Batch fetch all components with their zones
+    all_component_ids = set()
+    for edge in dataflow_edges:
+        src_id = node_component_map.get(edge.get("source"))
+        tgt_id = node_component_map.get(edge.get("target"))
+        if src_id:
+            all_component_ids.add(src_id)
+        if tgt_id:
+            all_component_ids.add(tgt_id)
+
+    components = OrgsystemComponent.objects.filter(id__in=all_component_ids).select_related('trust_zone')
+    component_zone_map = {c.id: c.trust_zone_id for c in components}
+
+    # Build zone ancestor map for all relevant zones
+    all_zone_ids = {z for z in component_zone_map.values() if z}
+    zone_ancestor_map = _build_zone_ancestor_map(all_zone_ids)
+
+    # Batch fetch all relevant boundaries at once
+    # Get all unique zone sets to check for boundaries
+    all_boundary_ids = set()
+    for edge in dataflow_edges:
+        src_zone = component_zone_map.get(node_component_map.get(edge.get("source")))
+        tgt_zone = component_zone_map.get(node_component_map.get(edge.get("target")))
+        if src_zone and tgt_zone:
+            src_ancestors = zone_ancestor_map.get(src_zone, {src_zone})
+            tgt_ancestors = zone_ancestor_map.get(tgt_zone, {tgt_zone})
+            # Skip if same zone family
+            if src_ancestors & tgt_ancestors:
+                continue
+            boundaries = _get_all_boundaries_for_zones(src_ancestors, tgt_ancestors)
+            all_boundary_ids.update(boundaries)
+
+    # Build boundary map for quick lookup
+    # Fetch ALL existing boundaries in DB (not just those crossed by flows)
+    all_existing_boundaries = list(TrustBoundary.objects.all().only('id'))
+    all_boundary_ids = {b.id for b in all_existing_boundaries}
+
+    all_boundaries = list(TrustBoundary.objects.filter(id__in=all_boundary_ids))
+    boundary_zone_pairs = set()
+    boundary_ids_set = set()
+    for b in all_boundaries:
+        boundary_zone_pairs.add((b.zone_a_id, b.zone_b_id))
+        boundary_zone_pairs.add((b.zone_b_id, b.zone_a_id))
+        boundary_ids_set.add(b.id)
+
     from apps.threats.models import CountermeasureLibrary
 
     synced_count = 0
@@ -714,18 +974,14 @@ def _sync_edges_to_dataflows(dfd, edges, node_component_map):
     threats_generated = 0
     all_synced_flows = []
     edge_dataflow_map = {}
+    edge_boundary_crossings = {}
 
-    for edge in edges:
-        # Only sync dataFlow edges — skip trust boundaries and other edge types
-        if edge.get("type") != "dataFlow":
-            continue
-
+    for edge in dataflow_edges:
         edge_id = edge.get("id")
         source_node_id = edge.get("source")
         target_node_id = edge.get("target")
         edge_data = edge.get("data", {})
 
-        # Skip edges where either endpoint doesn't have a component
         source_component_id = node_component_map.get(source_node_id)
         target_component_id = node_component_map.get(target_node_id)
 
@@ -741,8 +997,13 @@ def _sync_edges_to_dataflows(dfd, edges, node_component_map):
         has_sensitive_data = edge_data.get("has_sensitive_data", False)
         data_classification = edge_data.get("data_classification", [])
 
-        # Check if this edge already has a dataflow_id stored
         existing_dataflow_id = edge_data.get("dataflow_id")
+
+        # Compute boundary crossings from pre-fetched data
+        trust_boundary_ids = _detect_boundary_crossings_batch(
+            source_component_id, target_component_id,
+            component_zone_map, zone_ancestor_map, boundary_zone_pairs, all_boundaries
+        )
 
         if existing_dataflow_id:
             # Update existing DataFlow
@@ -757,6 +1018,7 @@ def _sync_edges_to_dataflows(dfd, edges, node_component_map):
                 dataflow.data_classification = data_classification
                 dataflow.source_component_id = source_component_id
                 dataflow.dest_component_id = target_component_id
+                dataflow.trust_boundary_ids = trust_boundary_ids
                 dataflow.save()
                 synced_count += 1
                 all_synced_flows.append(dataflow)
@@ -773,6 +1035,7 @@ def _sync_edges_to_dataflows(dfd, edges, node_component_map):
                     description=description,
                     has_sensitive_data=has_sensitive_data,
                     data_classification=data_classification,
+                    trust_boundary_ids=trust_boundary_ids,
                 )
                 created_count += 1
                 synced_count += 1
@@ -790,6 +1053,7 @@ def _sync_edges_to_dataflows(dfd, edges, node_component_map):
                 description=description,
                 has_sensitive_data=has_sensitive_data,
                 data_classification=data_classification,
+                trust_boundary_ids=trust_boundary_ids,
             )
             created_count += 1
             all_synced_flows.append(dataflow)
@@ -797,8 +1061,15 @@ def _sync_edges_to_dataflows(dfd, edges, node_component_map):
 
         edge_dataflow_map[edge_id] = dataflow.id
 
+        # Track boundary crossings for canvas update
+        if trust_boundary_ids:
+            edge_boundary_crossings[edge_id] = trust_boundary_ids
+
     # Update canvas_data with dataflow_ids
     _update_canvas_with_dataflow_ids(dfd, edge_dataflow_map)
+
+    # Update canvas_data with boundary crossings
+    _update_canvas_with_boundary_crossings(dfd, edge_boundary_crossings, boundary_ids_set)
 
     # Generate threats for all synced data flows (idempotent via get_or_create)
     for dataflow in all_synced_flows:
@@ -828,6 +1099,49 @@ def _update_canvas_with_dataflow_ids(dfd, edge_dataflow_map):
                 edge["data"] = {}
             if edge["data"].get("dataflow_id") != edge_dataflow_map[edge_id]:
                 edge["data"]["dataflow_id"] = edge_dataflow_map[edge_id]
+                updated = True
+
+    if updated:
+        dfd.canvas_data = canvas_data
+        dfd.save(update_fields=["canvas_data"])
+
+
+def _update_canvas_with_boundary_crossings(dfd, edge_boundary_crossings, all_current_boundary_ids=None):
+    """
+    Update DFD canvas_data with trust boundary IDs for data flow edges.
+
+    Args:
+        dfd: The DFD instance
+        edge_boundary_crossings: Dict mapping edge_id -> list of boundary IDs crossed
+        all_current_boundary_ids: Set of boundary IDs that still exist (to clear stale refs)
+    """
+    if not edge_boundary_crossings and not all_current_boundary_ids:
+        return
+
+    canvas_data = dfd.canvas_data or {}
+    edges = canvas_data.get("edges", [])
+    current_boundary_ids_set = set(all_current_boundary_ids) if all_current_boundary_ids else None
+
+    updated = False
+    for edge in edges:
+        edge_id = edge.get("id")
+        edge_data = edge.get("data", {})
+
+        if edge.get("type") == "dataFlow":
+            current_ids = edge_data.get("crossesBoundaryIds", [])
+            new_ids = edge_boundary_crossings.get(edge_id, [])
+
+            if current_boundary_ids_set is not None:
+                # Filter detected IDs to only include boundaries that still exist
+                new_ids_filtered = [bid for bid in new_ids if bid in current_boundary_ids_set]
+                # If no boundaries detected this save, clear the field entirely
+                # (don't preserve stale IDs from a prior save)
+                filtered_ids = new_ids_filtered
+            else:
+                filtered_ids = new_ids if new_ids else current_ids
+
+            if edge_data.get("crossesBoundaryIds") != filtered_ids:
+                edge_data["crossesBoundaryIds"] = filtered_ids
                 updated = True
 
     if updated:
@@ -1210,6 +1524,7 @@ def _sync_edges_to_trust_boundaries(dfd, edges, node_zone_map):
         }
 
         existing_boundary_id = edge_data.get("trust_boundary_id")
+        boundary = None
 
         if existing_boundary_id:
             try:
@@ -1222,6 +1537,39 @@ def _sync_edges_to_trust_boundaries(dfd, edges, node_zone_map):
                 boundary.save()
                 synced_count += 1
             except TrustBoundary.DoesNotExist:
+                # Check if boundary with these zones already exists (different edge_id)
+                existing = TrustBoundary.objects.filter(zone_a_id=zone_a_id, zone_b_id=zone_b_id).first()
+                if existing:
+                    boundary = existing
+                    boundary.label = label
+                    boundary.edge_id = edge_id
+                    boundary.format_metadata = format_metadata
+                    boundary.save()
+                    synced_count += 1
+                else:
+                    boundary = TrustBoundary.objects.create(
+                        zone_a_id=zone_a_id,
+                        zone_b_id=zone_b_id,
+                        label=label,
+                        edge_id=edge_id,
+                        format_metadata=format_metadata,
+                    )
+                    created_count += 1
+                    synced_count += 1
+        else:
+            # Check if boundary with these zones already exists
+            existing = TrustBoundary.objects.filter(
+                Q(zone_a_id=zone_a_id, zone_b_id=zone_b_id) |
+                Q(zone_a_id=zone_b_id, zone_b_id=zone_a_id)
+            ).first()
+            if existing:
+                boundary = existing
+                boundary.label = label
+                boundary.edge_id = edge_id
+                boundary.format_metadata = format_metadata
+                boundary.save()
+                synced_count += 1
+            else:
                 boundary = TrustBoundary.objects.create(
                     zone_a_id=zone_a_id,
                     zone_b_id=zone_b_id,
@@ -1230,17 +1578,10 @@ def _sync_edges_to_trust_boundaries(dfd, edges, node_zone_map):
                     format_metadata=format_metadata,
                 )
                 created_count += 1
-        else:
-            boundary = TrustBoundary.objects.create(
-                zone_a_id=zone_a_id,
-                zone_b_id=zone_b_id,
-                label=label,
-                edge_id=edge_id,
-                format_metadata=format_metadata,
-            )
-            created_count += 1
-            synced_count += 1
+                synced_count += 1
 
+        # Always write back trust_boundary_id so frontend has it for subsequent saves
+        edge_data["trust_boundary_id"] = boundary.id
         edge_boundary_map[edge_id] = boundary.id
 
     _update_canvas_with_trust_boundary_ids(dfd, edge_boundary_map)

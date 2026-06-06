@@ -238,6 +238,7 @@ class DataFlowSerializer(serializers.ModelSerializer):
             "encrypted",
             "authenticated",
             "crosses_trust_zone",
+            "trust_boundary_ids",
             "has_sensitive_data",
             "data_classification",
             "format_metadata",
