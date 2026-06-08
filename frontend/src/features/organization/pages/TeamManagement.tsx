@@ -14,6 +14,7 @@ import {
   useRemoveTeamMember,
   useChangeTeamMemberRole,
   useBusinessUnits,
+  useOrganizationMembers,
 } from '@/features/organization/api/organizations'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -313,11 +314,25 @@ interface TeamMembersDialogProps {
 
 function TeamMembersDialog({ team, open, onOpenChange }: TeamMembersDialogProps) {
   const { data: members = [], isLoading } = useTeamMembers(team.id)
+  const { currentOrganization } = useWorkspace()
+
+  const { data: orgMembers = [] } =
+    useOrganizationMembers(currentOrganization?.id ?? 0)
+  
+  const availableOrgMembers = orgMembers.filter(
+  (orgMember) =>
+    !members.some(
+      (teamMember) => teamMember.user === orgMember.user
+    )
+)
+
   const { mutate: inviteMember, isPending: isInviting } = useInviteTeamMember()
   const { mutate: removeMember, isPending: isRemoving } = useRemoveTeamMember()
   const { mutate: changeRole, isPending: isChangingRole } = useChangeTeamMemberRole()
 
   const [inviteEmail, setInviteEmail] = useState('')
+  const [selectedOrgMember, setSelectedOrgMember] = useState('')
+  const [addRole, setAddRole] = useState<TeamRole>('member')
   const [inviteRole, setInviteRole] = useState<TeamRole>('member')
   const [inviteResult, setInviteResult] = useState<InviteMemberResponse | null>(null)
   const [copiedLink, setCopiedLink] = useState(false)
@@ -329,19 +344,51 @@ function TeamMembersDialog({ team, open, onOpenChange }: TeamMembersDialogProps)
   }
 
   const handleInvite = () => {
+    console.log("handleAddExisting called")
     if (!inviteEmail) return
     setInviteResult(null)
     inviteMember(
-      { teamId: team.id, email: inviteEmail, role: inviteRole },
+      { teamId: team.id, email: inviteEmail, role: addRole, },
       {
         onSuccess: (data) => {
           setInviteEmail('')
-          setInviteRole('member')
+          setAddRole('member')
           setInviteResult(data)
         },
       }
     )
   }
+
+  const handleAddExisting = () => {
+
+  if (!selectedOrgMember) return
+
+  const member = orgMembers.find(
+    (m) => m.user === parseInt(selectedOrgMember, 10)
+  )
+
+  console.log(member)
+
+  if (!member) return
+
+  setInviteResult(null)
+
+  inviteMember(
+    {
+      teamId: team.id,
+      email: member.userEmail,
+      role: inviteRole,
+    },
+    {
+      onSuccess: (data) => {
+        console.log("SUCCESS")
+        setSelectedOrgMember('')
+        setInviteRole('member')
+        setInviteResult(data)
+      },
+    }
+  )
+}
 
   const handleCopyInviteLink = () => {
     if (!inviteResult?.invitation?.inviteUrl) return
@@ -374,7 +421,49 @@ function TeamMembersDialog({ team, open, onOpenChange }: TeamMembersDialogProps)
         <div className="space-y-4 min-w-0">
           {/* Invite form */}
           <div className="space-y-2 min-w-0">
-            <Label>Invite Member</Label>
+          {availableOrgMembers.length > 0 && (
+            <div className="space-y-2">
+              <Label>Add Existing Member</Label>
+              <div className="flex gap-2">
+                <Select
+                  value={selectedOrgMember}
+                  onValueChange={setSelectedOrgMember}
+                >
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select a member..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableOrgMembers.map((member) => (
+                      <SelectItem
+                        key={member.user}
+                        value={member.user.toString()}
+                      >
+                        {member.userEmail}
+                      </SelectItem>
+                  ))}
+                  </SelectContent>
+                </Select>
+                <Select value={addRole} onValueChange={(value) => setAddRole(value as TeamRole)}>
+                  <SelectTrigger className="w-28">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lead">Lead</SelectItem>
+                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="viewer">Viewer</SelectItem>
+                  </SelectContent>
+                </Select>
+
+    <Button
+  onClick={handleAddExisting}
+  disabled={isInviting || !selectedOrgMember}
+>
+  <UserPlus className="h-4 w-4" />
+</Button>
+  </div>
+</div>
+            )}
+            <Label>Or Invite by Email</Label>
             <div className="flex gap-2">
               <Input
                 type="email"
