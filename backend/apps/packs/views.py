@@ -247,6 +247,11 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
         """
         pack = self.get_object()
         preview_data = get_pack_preview_from_database(pack)
+        if preview_data is None:
+            return Response(
+                {"detail": "Pack source files not found on disk."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
         return Response(preview_data)
 
     @action(detail=False, methods=["get"])
