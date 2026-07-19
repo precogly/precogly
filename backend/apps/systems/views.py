@@ -81,9 +81,9 @@ class TrustZoneViewSet(viewsets.ModelViewSet):
         )
         threat_model_id = self.request.query_params.get("threat_model")
         if threat_model_id:
-            # Scoped: zones that have components belonging to this threat model
             return TrustZone.objects.filter(
-                components__threat_model_id=threat_model_id
+                components__threat_model_id=threat_model_id,
+                components__threat_model__organization_id__in=org_ids,
             ).distinct()
         # Default: zones reachable through any component in user's org
         return TrustZone.objects.filter(
@@ -175,7 +175,8 @@ class OrgsystemComponentViewSet(viewsets.ModelViewSet):
         user = self.request.user
         org_ids = user.organization_memberships.values_list("organization_id", flat=True)
         return OrgsystemComponent.objects.filter(
-            Q(orgsystem__organization_id__in=org_ids) | Q(orgsystem__isnull=True)
+            Q(orgsystem__organization_id__in=org_ids)
+            | Q(orgsystem__isnull=True, threat_model__organization_id__in=org_ids)
         ).select_related("component_library", "trust_zone")
 
     @action(detail=True, methods=["patch"])
@@ -310,7 +311,10 @@ class ComponentDataAssetViewSet(viewsets.ModelViewSet):
         org_ids = user.organization_memberships.values_list("organization_id", flat=True)
         return ComponentDataAsset.objects.filter(
             Q(component__orgsystem__organization_id__in=org_ids)
-            | Q(component__orgsystem__isnull=True)
+            | Q(
+                component__orgsystem__isnull=True,
+                component__threat_model__organization_id__in=org_ids,
+            )
         ).select_related("component", "data_asset")
 
 
