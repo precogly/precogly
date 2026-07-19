@@ -11,6 +11,7 @@ from django.core.mail import send_mail
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
+from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -452,8 +453,24 @@ class MagicLinkViewSet(viewsets.ModelViewSet):
             threat_model__organization__members__user=user
         ).select_related("threat_model")
 
+    def get_permissions(self):
+        """Require IsSecurityTeam for create and revoke."""
+        if self.action in ["create", "revoke"]:
+            return [IsAuthenticated(), IsSecurityTeam()]
+        return [IsAuthenticated()]
+
     def perform_create(self, serializer):
         """Create magic link with token and expiration."""
+        threat_model = serializer.validated_data.get("threat_model")
+        user_org_ids = set(
+            self.request.user.organization_memberships.values_list(
+                "organization_id", flat=True
+            )
+        )
+        if threat_model.organization_id not in user_org_ids:
+            raise ValidationError(
+                {"threat_model": "You do not have access to this threat model."}
+            )
         serializer.save(
             token=secrets.token_urlsafe(32),
             created_by=self.request.user,

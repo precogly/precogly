@@ -62,8 +62,13 @@ class DFDViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        user_org_ids = request.user.organization_memberships.values_list(
+            "organization_id", flat=True
+        )
         try:
-            threat_model = ThreatModel.objects.get(id=threat_model_id)
+            threat_model = ThreatModel.objects.get(
+                id=threat_model_id, organization_id__in=user_org_ids
+            )
         except ThreatModel.DoesNotExist:
             return Response(
                 {"error": "Threat model not found"},
