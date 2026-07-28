@@ -192,6 +192,11 @@ REST_FRAMEWORK = {
         "djangorestframework_camel_case.parser.CamelCaseFormParser",
         "djangorestframework_camel_case.parser.CamelCaseMultiPartParser",
     ),
+    "DEFAULT_THROTTLE_RATES": {
+        "login": "5/min",
+        "registration": "3/min",
+        "password_reset": "3/min",
+    },
 }
 
 # CamelCase parser settings - ignore auth fields used by dj-rest-auth

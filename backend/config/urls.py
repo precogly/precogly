@@ -12,12 +12,29 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
+from apps.core.auth_views import (
+    ThrottledLoginView,
+    ThrottledPasswordResetView,
+    ThrottledRegisterView,
+)
+
 urlpatterns = [
     # Admin
     path("admin/", admin.site.urls),
     # Core API (health check, dashboard stats)
     path("api/", include("apps.core.urls")),
-    # Authentication
+    # Authentication — throttled overrides before the dj-rest-auth includes
+    path("api/auth/login/", ThrottledLoginView.as_view(), name="rest_login"),
+    path(
+        "api/auth/password/reset/",
+        ThrottledPasswordResetView.as_view(),
+        name="rest_password_reset",
+    ),
+    path(
+        "api/auth/registration/",
+        ThrottledRegisterView.as_view(),
+        name="rest_register",
+    ),
     path("api/auth/", include("dj_rest_auth.urls")),
     path("api/auth/registration/", include("dj_rest_auth.registration.urls")),
     # App APIs
