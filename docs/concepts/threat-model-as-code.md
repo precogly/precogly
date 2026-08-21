@@ -2,9 +2,16 @@
 
 Precogly lets you export any threat model as a structured JSON file so you can store it in version control, diff changes over time, and integrate threat modeling into your development workflow. The same format can be imported back — making Precogly a two-way bridge between your codebase and your threat models.
 
+Precogly supports two interchange formats:
+
+- **TM-Library (JSON)** — Precogly's native format based on the [OWASP Threat Model Library](https://github.com/OWASP/www-project-threat-model-library) schema, with full round-trip fidelity including extensions for STRIDE tags, compliance mappings, and pack lineage.
+- **CycloneDX 2.0 TM-BOM (JSON)** — industry-standard [CycloneDX](https://cyclonedx.org/) BOM format for threat model interchange with the broader CycloneDX ecosystem.
+
+For detailed import/export workflows, format comparisons, and guidance on when to use each format, see [Importing & Exporting](../guides/importing-exporting.md).
+
 ## Exporting
 
-From any threat model workspace, click **Export** and select **TM-Library (JSON)**. The browser downloads a JSON file named after your threat model (e.g., `my-api-threat-model.json`).
+From any threat model workspace, click **Export** and select **TM-Library (JSON)** or **CycloneDX (JSON)**. The browser downloads a JSON file named after your threat model.
 
 ![Export dropdown showing the TM-Library JSON option](../assets/images/tm-as-code-export.png)
 
@@ -25,15 +32,15 @@ The export includes everything in your threat model:
 
 ## Importing
 
-On the Threat Models list page, click **Import** and drag in a JSON file (or use the file picker). Precogly creates a new threat model with all entities from the file — components, threats, controls, risks, and their relationships.
+On the Threat Models list page, click **Import** and drag in a JSON file (or use the file picker). Precogly accepts both TM-Library (`.json`) and CycloneDX (`.cdx.json`) files. Precogly creates a new threat model with all entities from the file — components, threats, controls, risks, and their relationships.
 
 ![Import dialog with drag-and-drop dropzone and file picker](../assets/images/tm-as-code-import.png)
 
 After import you'll see a summary of what was created (trust zones, components, threats, controls, etc.) along with any warnings for references that couldn't be resolved.
 
-## The JSON format
+## TM-Library format
 
-Precogly currently uses the [OWASP TM-Library format](https://github.com/OWASP/www-project-threat-model-library) — a structured JSON schema designed for threat model interchange which is expected to evolve into the TM-BOM. Here's the top-level structure:
+The [OWASP TM-Library format](https://github.com/OWASP/www-project-threat-model-library) is Precogly's native interchange format — a structured JSON schema designed for threat model interchange. Here's the top-level structure:
 
 ```json
 {
@@ -76,9 +83,15 @@ Because the export is a single, human-readable JSON file, it fits naturally into
 - **Audit trail** — tag releases with a snapshot of the threat model for compliance evidence
 - **Templates** — export a well-structured threat model and import it as a starting point for similar projects
 
+## CycloneDX 2.0 TM-BOM
+
+Precogly also supports the [CycloneDX 2.0 Threat Modeling BOM](https://cyclonedx.org/) format. CycloneDX is an industry-standard BOM specification — use it when sharing threat models with tools in the CycloneDX ecosystem or when your organisation standardises on CycloneDX for software supply chain data.
+
+The CycloneDX adapter maps Precogly entities (components, threats, controls, risks, compliance mappings) to CycloneDX 2.0 structures (blueprints, assets, data flows, threats, controls, risks, requirements). See [Importing & Exporting — CycloneDX 2.0 TM-BOM](../guides/importing-exporting.md#cyclonedx-20-tm-bom) for details.
+
 ## Interoperability
 
-The adapter architecture is pluggable — TM-Library is the first format, and additional adapters can be added for other standards.
+The adapter architecture is pluggable. Both TM-Library and CycloneDX 2.0 are supported, and additional adapters can be added for other standards.
 
 ## Sample files
 
