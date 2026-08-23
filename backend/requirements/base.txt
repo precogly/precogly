@@ -11,7 +11,7 @@ psycopg[binary]>=3.2,<4.0
 # Authentication
 djangorestframework-simplejwt>=5.3,<6.0
 dj-rest-auth>=7.0,<8.0
-django-allauth>=65.0,<66.0
+django-allauth>=65.19.1,<66.0
 requests>=2.32,<3.0
 
 # CORS
