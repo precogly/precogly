@@ -13,7 +13,7 @@ jobs:
           # --from-ref resolves against the base branch, which a shallow clone
           # does not fetch.
           fetch-depth: 0
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - run: pip install pre-commit
