@@ -3,7 +3,7 @@ Django>=5.1,<5.2
 
 # Django REST Framework
 djangorestframework>=3.15,<4.0
-django-filter>=24.0,<25.0
+django-filter>=26.1,<27.0
 
 # Database
 psycopg[binary]>=3.2,<4.0
