@@ -4,7 +4,7 @@
 gunicorn>=23.0,<24.0
 
 # Redis/Celery (for background tasks)
-redis>=5.0,<6.0
+redis>=8.1.0,<9.0
 celery>=5.4,<6.0
 django-celery-beat>=2.6,<3.0
 
