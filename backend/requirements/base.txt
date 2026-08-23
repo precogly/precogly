@@ -6,7 +6,7 @@ djangorestframework>=3.15,<4.0
 django-filter>=24.0,<25.0
 
 # Database
-psycopg[binary]>=3.2,<4.0
+psycopg[binary]>=3.3.4,<4.0
 
 # Authentication
 djangorestframework-simplejwt>=5.3,<6.0
