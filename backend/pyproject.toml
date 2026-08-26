@@ -33,7 +33,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "django-debug-toolbar>=4.4,<5.0",
-    "django-extensions>=3.2,<4.0",
+    "django-extensions>=3.2,<5.0",
     # Testing
     "pytest>=8.0,<9.0",
     "pytest-django>=4.8,<5.0",
