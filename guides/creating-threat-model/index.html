@@ -1,0 +1,3102 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for Precogly — the open-source threat modeling platform">
+      
+      
+      
+        <link rel="canonical" href="https://precogly.github.io/precogly/guides/creating-threat-model/">
+      
+      
+        <link rel="prev" href="../../concepts/magic-links/">
+      
+      
+        <link rel="next" href="../guest-editor/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Creating a Threat Model - Precogly Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#creating-a-threat-model" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Precogly Documentation" class="md-header__button md-logo" aria-label="Precogly Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Precogly Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Creating a Threat Model
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/precogly/precogly" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    precogly/precogly
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Precogly Documentation" class="md-nav__button md-logo" aria-label="Precogly Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Precogly Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/precogly/precogly" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    precogly/precogly
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/library-packs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Library Packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/dfd-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DFD Editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/threat-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/threat-model-as-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat Model as Code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/zone-protections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zone Protections
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/platform-controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/completion-status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Completion Status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/reference-images/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference Images
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/org-hierarchy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Org Hierarchy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/roles-and-permissions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roles and Permissions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/connected-systems-tm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connected Systems & TMs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/magic-links/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Magic Links
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Threat Model
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Threat Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#who-can-create-and-edit-threat-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who can create and edit threat models?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-the-pieces-connect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the pieces connect
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#two-approaches-to-threat-modeling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two approaches to threat modeling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Two approaches to threat modeling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#approach-1-library-driven" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Approach 1: Library-driven
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#approach-2-from-scratch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Approach 2: From scratch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-1-create-the-threat-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1. Create the threat model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-2-define-the-system-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2. Define the system context
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 2. Define the system context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Description
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-assets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data assets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#out-of-scope-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Out-of-scope items
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assumptions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-link-systems-and-frameworks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3. Link systems and frameworks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 3. Link systems and frameworks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#link-systems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Link systems
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#link-compliance-frameworks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Link compliance frameworks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference-other-threat-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference other threat models
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4-invite-collaborators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4. Invite collaborators
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-5-model-the-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5. Model the architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 5. Model the architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-draw-a-data-flow-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A: Draw a Data Flow Diagram
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Option A: Draw a Data Flow Diagram">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-dfd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create a DFD
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#draw-the-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Draw the architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-a-dfd-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use a DFD template
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-trust-zones-and-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Add trust zones and boundaries
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-add-components-directly-approach-2-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B: Add components directly (Approach 2 only)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-6-analyze-threats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 6. Analyze threats
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 6. Analyze threats">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#view-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        View modes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-threats-library-vs-custom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding threats: library vs. custom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set-threat-severity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Set threat severity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-7-apply-countermeasures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 7. Apply countermeasures
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 7. Apply countermeasures">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-library-packs-approach-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using library packs (Approach 1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-scratch-approach-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From scratch (Approach 2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#countermeasure-statuses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Countermeasure statuses
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assign-owners" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assign owners
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#track-compliance-mappings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Track compliance mappings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-8-review-zone-protections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 8. Review zone protections
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-9-score-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 9. Score risks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 9. Score risks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#select-a-scoring-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Select a scoring method
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-and-score-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create and score risks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-10-track-progress-and-finalize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 10. Track progress and finalize
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 10. Track progress and finalize">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#upload-reference-images" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Upload reference images
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#share-for-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Share for review
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#end-to-end-workflow-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-end workflow summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's next?
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guest-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guest Editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pentests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pentest Scope
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../importing-exporting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Importing & Exporting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compliance-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../report-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recipes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recipes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recipes/iec-62443/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IEC 62443
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recipes/eu-banking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EU Banking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/development-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/creating-library-packs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating Library Packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#who-can-create-and-edit-threat-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who can create and edit threat models?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-the-pieces-connect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the pieces connect
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#two-approaches-to-threat-modeling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two approaches to threat modeling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Two approaches to threat modeling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#approach-1-library-driven" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Approach 1: Library-driven
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#approach-2-from-scratch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Approach 2: From scratch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-1-create-the-threat-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 1. Create the threat model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-2-define-the-system-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 2. Define the system context
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 2. Define the system context">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#description" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Description
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-assets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data assets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#out-of-scope-items" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Out-of-scope items
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assumptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assumptions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-3-link-systems-and-frameworks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 3. Link systems and frameworks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 3. Link systems and frameworks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#link-systems" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Link systems
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#link-compliance-frameworks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Link compliance frameworks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reference-other-threat-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference other threat models
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-4-invite-collaborators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 4. Invite collaborators
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-5-model-the-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 5. Model the architecture
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 5. Model the architecture">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#option-a-draw-a-data-flow-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option A: Draw a Data Flow Diagram
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Option A: Draw a Data Flow Diagram">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#create-a-dfd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create a DFD
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#draw-the-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Draw the architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-a-dfd-template" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use a DFD template
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#add-trust-zones-and-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Add trust zones and boundaries
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#option-b-add-components-directly-approach-2-only" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Option B: Add components directly (Approach 2 only)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-6-analyze-threats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 6. Analyze threats
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 6. Analyze threats">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#view-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        View modes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-threats-library-vs-custom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Adding threats: library vs. custom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set-threat-severity" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Set threat severity
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-7-apply-countermeasures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 7. Apply countermeasures
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 7. Apply countermeasures">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-library-packs-approach-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using library packs (Approach 1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#from-scratch-approach-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        From scratch (Approach 2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#countermeasure-statuses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Countermeasure statuses
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assign-owners" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assign owners
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#track-compliance-mappings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Track compliance mappings
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-8-review-zone-protections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 8. Review zone protections
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-9-score-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 9. Score risks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 9. Score risks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#select-a-scoring-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Select a scoring method
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#create-and-score-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Create and score risks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#step-10-track-progress-and-finalize" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step 10. Track progress and finalize
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Step 10. Track progress and finalize">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#upload-reference-images" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Upload reference images
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#share-for-review" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Share for review
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#end-to-end-workflow-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-end workflow summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's next?
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="creating-a-threat-model">Creating a Threat Model<a class="headerlink" href="#creating-a-threat-model" title="Permanent link">&para;</a></h1>
+<p>A step-by-step guide to building a threat model in Precogly, from defining scope to tracking countermeasure status. This guide covers both library-driven and from-scratch approaches, along with the access controls that govern who can do what.</p>
+<div class="admonition info">
+<p class="admonition-title">Prerequisites</p>
+<ul>
+<li>Precogly is running and you can log in. See <a href="../../getting-started/installation/">Installation</a> if needed.</li>
+<li>You have <strong>Lead</strong> or <strong>Member</strong> role on the team that will own the threat model, or you have the <strong>Security Team</strong> org-level role.</li>
+<li>For Approach 1, at least one library pack has been imported. See <a href="../../concepts/library-packs/">Library Packs</a>.</li>
+</ul>
+</div>
+<hr />
+<h2 id="who-can-create-and-edit-threat-models">Who can create and edit threat models?<a class="headerlink" href="#who-can-create-and-edit-threat-models" title="Permanent link">&para;</a></h2>
+<p>Precogly enforces access control at two levels. Understanding these upfront prevents confusion later.</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Role</th>
+<th>Can create?</th>
+<th>Can edit?</th>
+<th>Can view?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Organization</td>
+<td>Security Team</td>
+<td>Yes (all teams)</td>
+<td>Yes (all teams)</td>
+<td>Yes (all)</td>
+</tr>
+<tr>
+<td>Organization</td>
+<td>Member</td>
+<td>Yes (own teams)</td>
+<td>Yes (own teams)</td>
+<td>Own teams only</td>
+</tr>
+<tr>
+<td>Team</td>
+<td>Lead</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Team</td>
+<td>Member</td>
+<td>Yes</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Team</td>
+<td>Viewer</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table>
+<p>For full details, see <a href="../../concepts/roles-and-permissions/">Roles and Permissions</a>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If your organization has multiple teams, assign the threat model to the correct owning team during creation. This determines who can view and edit it.</p>
+</div>
+<hr />
+<h2 id="how-the-pieces-connect">How the pieces connect<a class="headerlink" href="#how-the-pieces-connect" title="Permanent link">&para;</a></h2>
+<p>Before diving into the workflow, it helps to understand how Precogly's core elements relate to each other.</p>
+<p><img alt="How the pieces connect" src="../../assets/images/creating-tm-relationship-chain.png" /></p>
+<ul>
+<li><strong>Components</strong> represent the parts of your system: processes, data stores, actors, and data flows.</li>
+<li><strong>Threats</strong> describe what can go wrong with each component. Each threat can be linked to external <strong>taxonomies</strong> (STRIDE, CAPEC, CWE, MITRE ATT&amp;CK) for classification and traceability.</li>
+<li><strong>Countermeasures</strong> describe what you can do about each threat. Each countermeasure can be mapped to <strong>compliance requirements</strong> (PCI-DSS, ASVS, SOC 2, NIST 800-53, etc.) to demonstrate regulatory coverage.</li>
+</ul>
+<p>This chain, from component to threat to countermeasure to compliance requirement, is the backbone of every threat model in Precogly. Whether you use library packs or build from scratch, you are constructing this chain.</p>
+<hr />
+<h2 id="two-approaches-to-threat-modeling">Two approaches to threat modeling<a class="headerlink" href="#two-approaches-to-threat-modeling" title="Permanent link">&para;</a></h2>
+<p>Precogly supports two complementary approaches. You can use either one, or combine them.</p>
+<h3 id="approach-1-library-driven">Approach 1: Library-driven<a class="headerlink" href="#approach-1-library-driven" title="Permanent link">&para;</a></h3>
+<p>You use components, threats, and countermeasures from imported library packs. The library provides:</p>
+<ul>
+<li>Components with pre-mapped threats for each component type</li>
+<li>Threats with taxonomy links (STRIDE, CAPEC, CWE, MITRE ATT&amp;CK) already wired up</li>
+<li>Countermeasures with compliance mappings (PCI-DSS, ASVS, etc.) already attached</li>
+<li>Suggested countermeasures for each threat, based on library relationships</li>
+</ul>
+<p>Best suited for:</p>
+<ul>
+<li>Teams adopting threat modeling for the first time</li>
+<li>Standard technology stacks covered by community or official packs</li>
+<li>Organizations that want consistent, repeatable threat analysis across teams</li>
+</ul>
+<h3 id="approach-2-from-scratch">Approach 2: From scratch<a class="headerlink" href="#approach-2-from-scratch" title="Permanent link">&para;</a></h3>
+<p>You create your own components, threats, and countermeasures without relying on library packs. This means:</p>
+<ul>
+<li>Defining custom component types and names</li>
+<li>Writing threat descriptions and manually linking taxonomies</li>
+<li>Writing countermeasure descriptions and manually adding compliance mappings</li>
+</ul>
+<p>Best suited for:</p>
+<ul>
+<li>Proprietary or novel systems not covered by existing library packs</li>
+<li>Organizations with their own internal threat catalogs or security standards</li>
+<li>Highly specialized domains (e.g., embedded systems, industrial control systems)</li>
+</ul>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>In practice, most teams use a <strong>hybrid approach</strong>: start with library packs for common components and threats, then add custom entries for anything the library doesn't cover.</p>
+</div>
+<hr />
+<h2 id="step-1-create-the-threat-model">Step 1. Create the threat model<a class="headerlink" href="#step-1-create-the-threat-model" title="Permanent link">&para;</a></h2>
+<p>From the <strong>Threat Models</strong> page, click <strong>Create Threat Model</strong>.</p>
+<p><img alt="Create threat model dialog" src="../../assets/images/creating-tm-create-dialog.png" /></p>
+<p>Enter a descriptive name (e.g., "Payment Processing Service" or "Customer Data Pipeline"). If you belong to multiple teams, select the owning team.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you belong to exactly one team, the threat model is automatically assigned to that team.</p>
+</div>
+<p>After creation, you land on the <strong>Overview</strong> tab, which shows the progress checklist and summary cards.</p>
+<p><img alt="Overview tab after creation" src="../../assets/images/creating-tm-overview-empty.png" /></p>
+<hr />
+<h2 id="step-2-define-the-system-context">Step 2. Define the system context<a class="headerlink" href="#step-2-define-the-system-context" title="Permanent link">&para;</a></h2>
+<p>Click the <strong>pencil icon</strong> on the System Context card to open the System Context dialog. This is where you establish what is (and isn't) in scope.</p>
+<p><img alt="System context dialog" src="../../assets/images/creating-tm-system-context-dialog.png" /></p>
+<h3 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h3>
+<p>Write a description of the system being modeled: its purpose, key users, and high-level architecture.</p>
+<h3 id="data-assets">Data assets<a class="headerlink" href="#data-assets" title="Permanent link">&para;</a></h3>
+<p>Define the sensitive data the system processes. For each asset, specify:</p>
+<ul>
+<li><strong>Name</strong> (e.g., "Customer PII", "Payment card data")</li>
+<li><strong>Classification</strong> (e.g., PII, PHI, financial, credentials)</li>
+<li><strong>CIA ratings</strong> (confidentiality, integrity, availability)</li>
+</ul>
+<h3 id="out-of-scope-items">Out-of-scope items<a class="headerlink" href="#out-of-scope-items" title="Permanent link">&para;</a></h3>
+<p>Document what is explicitly excluded, with justification. This prevents scope creep and sets expectations for reviewers.</p>
+<h3 id="assumptions">Assumptions<a class="headerlink" href="#assumptions" title="Permanent link">&para;</a></h3>
+<p>Record architectural or operational assumptions (e.g., "TLS 1.3 is enforced at the load balancer"). Each assumption can be marked as <strong>unconfirmed</strong>, <strong>confirmed</strong>, or <strong>rejected</strong> as the model matures.</p>
+<hr />
+<h2 id="step-3-link-systems-and-frameworks">Step 3. Link systems and frameworks<a class="headerlink" href="#step-3-link-systems-and-frameworks" title="Permanent link">&para;</a></h2>
+<p>Before diving into analysis, associate the threat model with the relevant context.</p>
+<h3 id="link-systems">Link systems<a class="headerlink" href="#link-systems" title="Permanent link">&para;</a></h3>
+<p>Click <strong>Manage Systems</strong> to associate existing organizational systems with the threat model. This provides traceability between business systems and their threat analysis.</p>
+<h3 id="link-compliance-frameworks">Link compliance frameworks<a class="headerlink" href="#link-compliance-frameworks" title="Permanent link">&para;</a></h3>
+<p>Click <strong>Manage Frameworks</strong> to associate compliance frameworks (e.g., PCI-DSS, SOC 2, NIST 800-53). Countermeasures added later will show their mappings to these frameworks automatically.</p>
+<h3 id="reference-other-threat-models">Reference other threat models<a class="headerlink" href="#reference-other-threat-models" title="Permanent link">&para;</a></h3>
+<p>If this system depends on or relates to other threat models, link them via <strong>Manage Threat Models</strong>. Relationship types include: depends on, subsystem of, related to, and superseded by.</p>
+<hr />
+<h2 id="step-4-invite-collaborators">Step 4. Invite collaborators<a class="headerlink" href="#step-4-invite-collaborators" title="Permanent link">&para;</a></h2>
+<p>Click the <strong>people icon</strong> to open the team management dialog.</p>
+<p><img alt="Invite collaborators dialog" src="../../assets/images/creating-tm-invite-collaborators.png" /></p>
+<p>Invite team members by email and assign roles:</p>
+<ul>
+<li><strong>Lead</strong>: full access, can manage team membership</li>
+<li><strong>Member</strong>: can edit components, threats, and countermeasures</li>
+<li><strong>Viewer</strong>: read-only access for stakeholders and auditors</li>
+</ul>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p><strong>Security Team</strong> members (org-level role) have unconditional write access to all threat models across the organization, regardless of team membership. They do not need to be explicitly invited.</p>
+</div>
+<hr />
+<h2 id="step-5-model-the-architecture">Step 5. Model the architecture<a class="headerlink" href="#step-5-model-the-architecture" title="Permanent link">&para;</a></h2>
+<p>How you model the architecture depends on your approach:</p>
+<ul>
+<li><strong>Approach 1 (Library-driven):</strong> You need to start with the DFD editor. When you place library components on the canvas and connect them with data flows, Precogly registers the library pack mappings and populates the threat analysis workspace with pre-mapped threats and countermeasures.</li>
+<li><strong>Approach 2 (From scratch):</strong> The DFD is optional. You can skip the diagram entirely and add components directly in the threat analysis workspace.</li>
+</ul>
+<h3 id="option-a-draw-a-data-flow-diagram">Option A: Draw a Data Flow Diagram<a class="headerlink" href="#option-a-draw-a-data-flow-diagram" title="Permanent link">&para;</a></h3>
+<h4 id="create-a-dfd">Create a DFD<a class="headerlink" href="#create-a-dfd" title="Permanent link">&para;</a></h4>
+<p>From the Overview tab, click <strong>Manage DFDs</strong> and create a new diagram. The first diagram becomes the <strong>primary DFD</strong>, which syncs components and data flows to the threat analysis workspace.</p>
+<h4 id="draw-the-architecture">Draw the architecture<a class="headerlink" href="#draw-the-architecture" title="Permanent link">&para;</a></h4>
+<p>The DFD editor provides a visual canvas. Use the toolbar to add:</p>
+<table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Description</th>
+<th>Icon</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Process</td>
+<td>Application logic, services, APIs</td>
+<td>Cog</td>
+</tr>
+<tr>
+<td>Data Store</td>
+<td>Databases, file systems, caches</td>
+<td>Database</td>
+</tr>
+<tr>
+<td>Human Actor</td>
+<td>End users, administrators</td>
+<td>User</td>
+</tr>
+<tr>
+<td>System Actor</td>
+<td>External services, third-party APIs</td>
+<td>Building</td>
+</tr>
+<tr>
+<td>Trust Zone</td>
+<td>Security boundary (e.g., DMZ, internal network)</td>
+<td>Colored region</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="DFD editor with sample architecture" src="../../assets/images/creating-tm-dfd-editor-architecture.png" /></p>
+<p>Connect components with <strong>data flows</strong> by clicking a component's connection handle and dragging to another component. For each data flow, specify:</p>
+<ul>
+<li>Label and description</li>
+<li>Protocol and port</li>
+<li>Whether it is encrypted and authenticated</li>
+<li>Whether it carries sensitive data</li>
+<li>Data classification</li>
+</ul>
+<h4 id="use-a-dfd-template">Use a DFD template<a class="headerlink" href="#use-a-dfd-template" title="Permanent link">&para;</a></h4>
+<p>Instead of starting from a blank canvas, you can select a pre-built template from the library. Templates provide a starting architecture for common patterns (web applications, microservices, serverless, etc.) that you can customize.</p>
+<p><img alt="Select DFD template" src="../../assets/images/creating-tm-select-template.png" /></p>
+<h4 id="add-trust-zones-and-boundaries">Add trust zones and boundaries<a class="headerlink" href="#add-trust-zones-and-boundaries" title="Permanent link">&para;</a></h4>
+<p>Trust zones represent security regions with different trust levels (0-100 scale). Place components inside zones, and Precogly will automatically detect when data flows cross trust boundaries.</p>
+<p>For more on trust zones, see <a href="../../concepts/zone-protections/">Zone Protections</a>.</p>
+<h3 id="option-b-add-components-directly-approach-2-only">Option B: Add components directly (Approach 2 only)<a class="headerlink" href="#option-b-add-components-directly-approach-2-only" title="Permanent link">&para;</a></h3>
+<p>If you are building from scratch, you can skip the DFD editor and go straight to the <strong>Threat Analysis</strong> tab. Click <strong>Add Component</strong> to create analysis-only components. These components exist purely for threat analysis and do not appear on any diagram.</p>
+<p><img alt="Add analysis-only component" src="../../assets/images/creating-tm-add-analysis-component.png" /></p>
+<p>For each component, specify:</p>
+<ul>
+<li>Name and type (process, data store, external entity, etc.)</li>
+<li>Trust zone assignment</li>
+</ul>
+<p>This is faster when you already know the system architecture and want to focus on threat enumeration.</p>
+<hr />
+<h2 id="step-6-analyze-threats">Step 6. Analyze threats<a class="headerlink" href="#step-6-analyze-threats" title="Permanent link">&para;</a></h2>
+<p>Navigate to the <strong>Threat Analysis</strong> tab. This workspace has three columns that map to the core threat modeling questions:</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Question</th>
+<th>Contains</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 - Components</td>
+<td>"What are we working on?"</td>
+<td>Components and data flows</td>
+</tr>
+<tr>
+<td>2 - Threats</td>
+<td>"What can go wrong?"</td>
+<td>Threats with taxonomy links (STRIDE, CAPEC, CWE, MITRE ATT&amp;CK)</td>
+</tr>
+<tr>
+<td>3 - Countermeasures</td>
+<td>"What can we do about it?"</td>
+<td>Countermeasures with compliance mappings</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Threat analysis workspace" src="../../assets/images/creating-tm-threat-analysis-workspace.png" /></p>
+<h3 id="view-modes">View modes<a class="headerlink" href="#view-modes" title="Permanent link">&para;</a></h3>
+<p>The workspace offers two views:</p>
+<ul>
+<li><strong>Component View</strong>: hierarchical tree showing threats nested under each component</li>
+<li><strong>Table View</strong>: flat table of all threats across all components, sortable and filterable</li>
+</ul>
+<h3 id="adding-threats-library-vs-custom">Adding threats: library vs. custom<a class="headerlink" href="#adding-threats-library-vs-custom" title="Permanent link">&para;</a></h3>
+<p><strong>Using library packs (Approach 1):</strong> Select a component to see threats pre-mapped from the library. Threats arrive with taxonomy links already attached. You can accept, dismiss, or reorder them.</p>
+<p><strong>From scratch (Approach 2):</strong> Click <strong>Add Custom Threat</strong> to create a threat manually. You write the name and description, then optionally link it to taxonomy entries (STRIDE categories, CAPEC IDs, CWE IDs, etc.).</p>
+<p>In both cases, you can:</p>
+<ul>
+<li><strong>Dismiss threats</strong> that don't apply, with a documented reason (preserved for audit)</li>
+<li><strong>Reorder threats</strong> by dragging to set priority</li>
+</ul>
+<h3 id="set-threat-severity">Set threat severity<a class="headerlink" href="#set-threat-severity" title="Permanent link">&para;</a></h3>
+<p>For each threat, set the <strong>inherent severity</strong> (before countermeasures): low, medium, high, or critical. The scoring method configured on the threat model determines how severity is calculated.</p>
+<hr />
+<h2 id="step-7-apply-countermeasures">Step 7. Apply countermeasures<a class="headerlink" href="#step-7-apply-countermeasures" title="Permanent link">&para;</a></h2>
+<h3 id="using-library-packs-approach-1">Using library packs (Approach 1)<a class="headerlink" href="#using-library-packs-approach-1" title="Permanent link">&para;</a></h3>
+<p>Select a threat to see <strong>suggested countermeasures</strong> from the library. These are countermeasures that the library pack has pre-mapped to this threat type. Click <strong>Apply</strong> to add one. Each arrives with compliance mappings already attached.</p>
+<h3 id="from-scratch-approach-2">From scratch (Approach 2)<a class="headerlink" href="#from-scratch-approach-2" title="Permanent link">&para;</a></h3>
+<p>Click <strong>Add Custom Countermeasure</strong> to create one manually. You write the name and description, then optionally add compliance mappings to framework requirements.</p>
+<h3 id="countermeasure-statuses">Countermeasure statuses<a class="headerlink" href="#countermeasure-statuses" title="Permanent link">&para;</a></h3>
+<p>Each countermeasure has a status that drives the overall threat status:</p>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+<th>Color</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gap</td>
+<td>Not implemented</td>
+<td>Red</td>
+</tr>
+<tr>
+<td>Planned</td>
+<td>Implementation scheduled</td>
+<td>Yellow</td>
+</tr>
+<tr>
+<td>In Progress</td>
+<td>Implementation underway</td>
+<td>Yellow</td>
+</tr>
+<tr>
+<td>Implemented</td>
+<td>Deployed, not yet verified</td>
+<td>Yellow</td>
+</tr>
+<tr>
+<td>Verified</td>
+<td>Confirmed by security team</td>
+<td>Green</td>
+</tr>
+<tr>
+<td>Platform</td>
+<td>Handled at platform/infrastructure level</td>
+<td>Green</td>
+</tr>
+<tr>
+<td>Waived</td>
+<td>Risk accepted with documented justification</td>
+<td>Blue</td>
+</tr>
+<tr>
+<td>Decommissioned</td>
+<td>No longer active</td>
+<td>Gray</td>
+</tr>
+</tbody>
+</table>
+<p>The threat's overall status is derived from its countermeasures:</p>
+<table>
+<thead>
+<tr>
+<th>Threat status</th>
+<th>Condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Exposed</td>
+<td>No countermeasures applied, or at least one countermeasure is a gap</td>
+</tr>
+<tr>
+<td>Addressable</td>
+<td>All countermeasures are planned, in progress, waived, or decommissioned</td>
+</tr>
+<tr>
+<td>Mitigated</td>
+<td>All countermeasures are implemented, verified, or platform</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Platform</strong> status can only be set by <strong>Security Team</strong> members. This is used for controls managed centrally (e.g., WAF, DDoS protection, SSO). See <a href="../../concepts/platform-controls/">Platform Controls</a>.</p>
+</div>
+<h3 id="assign-owners">Assign owners<a class="headerlink" href="#assign-owners" title="Permanent link">&para;</a></h3>
+<p>Assign each countermeasure to a responsible owner. This drives the progress checklist and provides accountability.</p>
+<h3 id="track-compliance-mappings">Track compliance mappings<a class="headerlink" href="#track-compliance-mappings" title="Permanent link">&para;</a></h3>
+<p>Countermeasures show their mappings to compliance framework requirements (e.g., PCI-DSS 6.5.1, ASVS 5.3.4). For library-driven countermeasures, these mappings come pre-attached. For custom countermeasures, add them manually.</p>
+<hr />
+<h2 id="step-8-review-zone-protections">Step 8. Review zone protections<a class="headerlink" href="#step-8-review-zone-protections" title="Permanent link">&para;</a></h2>
+<p>If you used trust zones in your DFD, review the zone-level protections.</p>
+<p>Click <strong>Zone Protections</strong> in the threat analysis toolbar to open the review dialog. This shows which countermeasures are inherited from zone-level security controls (e.g., network segmentation, firewall rules).</p>
+<p>For full details, see <a href="../../concepts/zone-protections/">Zone Protections</a>.</p>
+<hr />
+<h2 id="step-9-score-risks">Step 9. Score risks<a class="headerlink" href="#step-9-score-risks" title="Permanent link">&para;</a></h2>
+<p>Navigate to the <strong>Risk Analysis</strong> tab to aggregate threats into business-level risks.</p>
+<h3 id="select-a-scoring-method">Select a scoring method<a class="headerlink" href="#select-a-scoring-method" title="Permanent link">&para;</a></h3>
+<p>Choose the risk scoring methodology for this threat model. The selector shows planned methods as disabled until their scoring engines are available:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Availability</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TM Library (5x5 Matrix)</td>
+<td>Available</td>
+<td>Likelihood x Impact grid</td>
+</tr>
+<tr>
+<td>FAIR</td>
+<td>Coming soon</td>
+<td>Factor Analysis of Information Risk</td>
+</tr>
+<tr>
+<td>OWASP Risk Rating</td>
+<td>Coming soon</td>
+<td>OWASP methodology with multiple factors</td>
+</tr>
+<tr>
+<td>Mozilla RRA</td>
+<td>Coming soon</td>
+<td>Mozilla Rapid Risk Assessment</td>
+</tr>
+<tr>
+<td>Custom</td>
+<td>Coming soon</td>
+<td>Manual score assignment</td>
+</tr>
+</tbody>
+</table>
+<h3 id="create-and-score-risks">Create and score risks<a class="headerlink" href="#create-and-score-risks" title="Permanent link">&para;</a></h3>
+<p>Create named risks (e.g., "Customer data breach", "Service availability loss") and link them to specific threats. Precogly computes both inherent and residual risk scores based on threat severity and countermeasure effectiveness.</p>
+<p>Use <strong>Table View</strong> to compare scores, owners, responses, and linked-threat counts. Select multiple rows to update their owner or response together. Use <strong>Kanban View</strong> to organize risks by response: Unresponded, Mitigate, Transfer, Accept, or Avoid. Drag a risk between columns to change its response.</p>
+<p><img alt="Risk Analysis" src="../../assets/images/creating-tm-risk-analysis.png" /></p>
+<hr />
+<h2 id="step-10-track-progress-and-finalize">Step 10. Track progress and finalize<a class="headerlink" href="#step-10-track-progress-and-finalize" title="Permanent link">&para;</a></h2>
+<p>Return to the <strong>Overview</strong> tab to check the progress checklist. Precogly automatically tracks:</p>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Data assets defined</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Components identified</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Trust boundaries identified</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Data flows defined</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Threats linked to components</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Threats linked to data flows</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Countermeasure owners assigned</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Countermeasures assigned</li>
+</ul>
+<p><img alt="Completed progress checklist" src="../../assets/images/creating-tm-progress-complete.png" /></p>
+<h3 id="upload-reference-images">Upload reference images<a class="headerlink" href="#upload-reference-images" title="Permanent link">&para;</a></h3>
+<p>Add architecture diagrams, whiteboard photos, or other reference materials via the <strong>Reference Images</strong> section on the Overview tab.</p>
+<h3 id="share-for-review">Share for review<a class="headerlink" href="#share-for-review" title="Permanent link">&para;</a></h3>
+<p>Use <strong>magic links</strong> to share a read-only view of the threat model with external stakeholders who don't have Precogly accounts. Links expire after 30 days and can be revoked at any time. See <a href="../../concepts/magic-links/">Magic Links</a>.</p>
+<hr />
+<h2 id="end-to-end-workflow-summary">End-to-end workflow summary<a class="headerlink" href="#end-to-end-workflow-summary" title="Permanent link">&para;</a></h2>
+<p><img alt="End to End Workflow" src="../../assets/images/creating-tm-workflow.png" /></p>
+<hr />
+<h2 id="whats-next">What's next?<a class="headerlink" href="#whats-next" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../concepts/dfd-editor/">DFD Editor</a>: toolbar, keyboard shortcuts, and canvas features</li>
+<li><a href="../../concepts/threat-analysis/">Threat Analysis</a>: deep dive into the three-column workspace</li>
+<li><a href="../../concepts/library-packs/">Library Packs</a>: browsing, importing, and customizing packs</li>
+<li><a href="../../concepts/zone-protections/">Zone Protections</a>: trust zones and inherited countermeasures</li>
+<li><a href="../../concepts/platform-controls/">Platform Controls</a>: managing org-wide security controls</li>
+<li><a href="../importing-exporting/">Importing &amp; Exporting</a>: threat model as code (JSON format)</li>
+<li><a href="../compliance-mapping/">Compliance Mapping</a>: mapping countermeasures to framework requirements</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

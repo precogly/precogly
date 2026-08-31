@@ -1,0 +1,2618 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for Precogly — the open-source threat modeling platform">
+      
+      
+      
+        <link rel="canonical" href="https://precogly.github.io/precogly/recipes/iec-62443/">
+      
+      
+        <link rel="prev" href="../../guides/ai-features/">
+      
+      
+        <link rel="next" href="../eu-banking/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>IEC 62443 - Precogly Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#iec-62443-industrial-automation-and-control-systems-security" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Precogly Documentation" class="md-header__button md-logo" aria-label="Precogly Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Precogly Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              IEC 62443
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/precogly/precogly" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    precogly/precogly
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Precogly Documentation" class="md-nav__button md-logo" aria-label="Precogly Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Precogly Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/precogly/precogly" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    precogly/precogly
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/library-packs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Library Packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/dfd-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DFD Editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/threat-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/threat-model-as-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat Model as Code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/zone-protections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zone Protections
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/platform-controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/completion-status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Completion Status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/reference-images/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference Images
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/org-hierarchy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Org Hierarchy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/roles-and-permissions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roles and Permissions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/connected-systems-tm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connected Systems & TMs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/magic-links/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Magic Links
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/creating-threat-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Threat Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/guest-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guest Editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/pentests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pentest Scope
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/importing-exporting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Importing & Exporting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/compliance-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/report-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/ai-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recipes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recipes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IEC 62443
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IEC 62443
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-iec-62443-requires" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What IEC 62443 requires
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-maps-to-precogly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it maps to Precogly
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#which-packs-to-import" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which packs to import
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#structuring-the-iec-62443-compliance-pack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structuring the IEC 62443 compliance pack
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worked-example-remote-operations-center" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Worked example: Remote Operations Center
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Worked example: Remote Operations Center">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-create-the-threat-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Create the threat model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-define-the-system-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Define the system context
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-compliance-frameworks-setting-sl-t" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Compliance frameworks (setting SL-T)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-model-the-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Model the architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-analyze-threats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Analyze threats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-apply-countermeasures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Apply countermeasures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-read-the-compliance-report-coverage-vs-satisfaction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Read the compliance report (Coverage vs Satisfaction)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-score-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Score risks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sl-t-vs-sl-a-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SL-T vs. SL-A summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#single-model-vs-duplicate-modeling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single model vs duplicate modeling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-this-approach-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this approach works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's next
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../eu-banking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EU Banking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/development-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/creating-library-packs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating Library Packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-iec-62443-requires" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What IEC 62443 requires
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-it-maps-to-precogly" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How it maps to Precogly
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#which-packs-to-import" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which packs to import
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#structuring-the-iec-62443-compliance-pack" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Structuring the IEC 62443 compliance pack
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#worked-example-remote-operations-center" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Worked example: Remote Operations Center
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Worked example: Remote Operations Center">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-create-the-threat-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Create the threat model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-define-the-system-context" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Define the system context
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-compliance-frameworks-setting-sl-t" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Compliance frameworks (setting SL-T)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-model-the-architecture" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Model the architecture
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-analyze-threats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Analyze threats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#6-apply-countermeasures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Apply countermeasures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#7-read-the-compliance-report-coverage-vs-satisfaction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Read the compliance report (Coverage vs Satisfaction)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#8-score-risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        8. Score risks
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sl-t-vs-sl-a-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        SL-T vs. SL-A summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#single-model-vs-duplicate-modeling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Single model vs duplicate modeling
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-this-approach-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why this approach works
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's next
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="iec-62443-industrial-automation-and-control-systems-security">IEC 62443: Industrial Automation and Control Systems Security<a class="headerlink" href="#iec-62443-industrial-automation-and-control-systems-security" title="Permanent link">&para;</a></h1>
+<p>Commonly used in: Energy, Manufacturing, Utilities, Oil &amp; Gas, Chemicals, Building Automation, Water/Wastewater</p>
+<p>This recipe shows how to implement IEC 62443 threat modeling in Precogly, including the SL-T (Target Security Level) vs SL-A (Achieved Security Level) gap analysis. It uses a simplified Remote Operations Center as a worked example.</p>
+<hr />
+<h2 id="what-iec-62443-requires">What IEC 62443 requires<a class="headerlink" href="#what-iec-62443-requires" title="Permanent link">&para;</a></h2>
+<p>IEC 62443 is a series of standards for securing Industrial Automation and Control Systems (IACS). The parts most relevant to threat modeling are:</p>
+<ul>
+<li><strong>Part 3-2</strong>: Security risk assessment and system design. Defines zones, conduits, and the process for assigning target security levels.</li>
+<li><strong>Part 3-3</strong>: System security requirements and security levels. Defines the Foundational Requirements (FRs), System Requirements (SRs), and Requirement Enhancements (REs).</li>
+<li><strong>Part 4-2</strong>: Technical security requirements for IACS components.</li>
+</ul>
+<p>The standard defines four Security Levels:</p>
+<table>
+<thead>
+<tr>
+<th>Level</th>
+<th>Intent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SL-1</td>
+<td>Protection against casual or coincidental violation</td>
+</tr>
+<tr>
+<td>SL-2</td>
+<td>Protection against intentional violation using simple means</td>
+</tr>
+<tr>
+<td>SL-3</td>
+<td>Protection against intentional violation using sophisticated means</td>
+</tr>
+<tr>
+<td>SL-4</td>
+<td>Protection against intentional violation using sophisticated means with extended resources</td>
+</tr>
+</tbody>
+</table>
+<p>Each level requires progressively more System Requirements (SRs) and Requirement Enhancements (REs) across seven Foundational Requirements:</p>
+<table>
+<thead>
+<tr>
+<th>FR</th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FR 1</td>
+<td>Identification and Authentication Control</td>
+</tr>
+<tr>
+<td>FR 2</td>
+<td>Use Control</td>
+</tr>
+<tr>
+<td>FR 3</td>
+<td>System Integrity</td>
+</tr>
+<tr>
+<td>FR 4</td>
+<td>Data Confidentiality</td>
+</tr>
+<tr>
+<td>FR 5</td>
+<td>Restricted Data Flow</td>
+</tr>
+<tr>
+<td>FR 6</td>
+<td>Timely Response to Events</td>
+</tr>
+<tr>
+<td>FR 7</td>
+<td>Resource Availability</td>
+</tr>
+</tbody>
+</table>
+<p>The requirements are <strong>additive</strong>: SL-2 includes everything in SL-1 plus additional SRs and REs. For example, SL-1 may require basic identification and authentication (SR 1.1), while SL-2 adds unique identification (SR 1.1 RE 1) and authenticator management (SR 1.5). SL-2 also introduces entirely new requirement areas such as continuous monitoring (SR 6.2) and control system component inventory for rogue asset detection (SR 7.8).</p>
+<hr />
+<h2 id="how-it-maps-to-precogly">How it maps to Precogly<a class="headerlink" href="#how-it-maps-to-precogly" title="Permanent link">&para;</a></h2>
+<p>IEC 62443 concepts map to Precogly features without any platform customization:</p>
+<table>
+<thead>
+<tr>
+<th>IEC 62443 Concept</th>
+<th>Precogly Feature</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zones and conduits</td>
+<td>Trust zones in the DFD editor</td>
+</tr>
+<tr>
+<td>Components (PLCs, RTUs, HMIs)</td>
+<td>Component library entries</td>
+</tr>
+<tr>
+<td>Threats to control systems</td>
+<td>Threat library with MITRE ATT&amp;CK for ICS mappings</td>
+</tr>
+<tr>
+<td>Security countermeasures</td>
+<td>Countermeasure library with status tracking</td>
+</tr>
+<tr>
+<td>Security Levels (SL-1 through SL-4)</td>
+<td>Separate compliance frameworks per level</td>
+</tr>
+<tr>
+<td>SL-T (Target)</td>
+<td>Which level frameworks appear from countermeasure mappings</td>
+</tr>
+<tr>
+<td>SL-A (Achieved)</td>
+<td>Which level's requirements are fully satisfied</td>
+</tr>
+<tr>
+<td>Gap (SL-T vs. SL-A)</td>
+<td>Compliance report showing unsatisfied requirements</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="which-packs-to-import">Which packs to import<a class="headerlink" href="#which-packs-to-import" title="Permanent link">&para;</a></h2>
+<p>Import these packs in order (dependencies first):</p>
+<table>
+<thead>
+<tr>
+<th>Pack</th>
+<th>Type</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>stride-taxonomy</code></td>
+<td>taxonomy</td>
+<td>STRIDE threat classification</td>
+</tr>
+<tr>
+<td><code>cwe</code></td>
+<td>taxonomy</td>
+<td>CWE weakness enumeration</td>
+</tr>
+<tr>
+<td><code>mitre-attack-ics</code></td>
+<td>taxonomy</td>
+<td>MITRE ATT&amp;CK for ICS techniques</td>
+</tr>
+<tr>
+<td><code>iec-62443</code></td>
+<td>compliance</td>
+<td>IEC 62443 framework requirements, split by security level</td>
+</tr>
+<tr>
+<td><code>ot-ics</code></td>
+<td>full</td>
+<td>OT/ICS components, threats, countermeasures, and DFD templates</td>
+</tr>
+</tbody>
+</table>
+<p><img alt="Library packs imported for IEC 62443" src="../../assets/images/iec-62443-library-packs.png" /></p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>If your environment also includes cloud or IT infrastructure, import additional packs (e.g., <code>aws</code>, <code>azure</code>) alongside the OT/ICS pack. Precogly supports mixing packs within a single threat model.</p>
+</div>
+<hr />
+<h2 id="structuring-the-iec-62443-compliance-pack">Structuring the IEC 62443 compliance pack<a class="headerlink" href="#structuring-the-iec-62443-compliance-pack" title="Permanent link">&para;</a></h2>
+<p>The key to handling SL-T vs. SL-A in Precogly is structuring the IEC 62443 compliance pack with <strong>one framework per security level</strong>. Each framework contains only the additional SRs and REs required at that level.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># iec-62443/pack.yaml</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nt">pack</span><span class="p">:</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">slug</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">iec-62443</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"IEC</span><span class="nv"> </span><span class="s">62443"</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">"1.0.0"</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">pack_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">compliance</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"IEC</span><span class="nv"> </span><span class="s">62443</span><span class="nv"> </span><span class="s">IACS</span><span class="nv"> </span><span class="s">Security,</span><span class="nv"> </span><span class="s">split</span><span class="nv"> </span><span class="s">by</span><span class="nv"> </span><span class="s">Security</span><span class="nv"> </span><span class="s">Level"</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="nt">frameworks</span><span class="p">:</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">slug</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">iec-62443-sl1</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"IEC</span><span class="nv"> </span><span class="s">62443</span><span class="nv"> </span><span class="s">SL-1"</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">"4.2"</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">    </span><span class="nt">issuer</span><span class="p">:</span><span class="w"> </span><span class="s">"IEC"</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"Base</span><span class="nv"> </span><span class="s">security</span><span class="nv"> </span><span class="s">requirements</span><span class="nv"> </span><span class="s">(SL-1)"</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="nt">requirements</span><span class="p">:</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">section_code</span><span class="p">:</span><span class="w"> </span><span class="s">"SR</span><span class="nv"> </span><span class="s">1.1"</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">        </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"Human</span><span class="nv"> </span><span class="s">user</span><span class="nv"> </span><span class="s">identification</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">authentication"</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">section_code</span><span class="p">:</span><span class="w"> </span><span class="s">"SR</span><span class="nv"> </span><span class="s">2.1"</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">        </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"Authorization</span><span class="nv"> </span><span class="s">enforcement"</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">      </span><span class="c1"># ... all base SRs required at SL-1</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">slug</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">iec-62443-sl2</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"IEC</span><span class="nv"> </span><span class="s">62443</span><span class="nv"> </span><span class="s">SL-2"</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">"4.2"</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">    </span><span class="nt">issuer</span><span class="p">:</span><span class="w"> </span><span class="s">"IEC"</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"Additional</span><span class="nv"> </span><span class="s">requirements</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">Security</span><span class="nv"> </span><span class="s">Level</span><span class="nv"> </span><span class="s">2"</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="w">    </span><span class="nt">requirements</span><span class="p">:</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">section_code</span><span class="p">:</span><span class="w"> </span><span class="s">"SR</span><span class="nv"> </span><span class="s">1.1</span><span class="nv"> </span><span class="s">RE</span><span class="nv"> </span><span class="s">1"</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="w">        </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"Unique</span><span class="nv"> </span><span class="s">identification</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">authentication"</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">section_code</span><span class="p">:</span><span class="w"> </span><span class="s">"SR</span><span class="nv"> </span><span class="s">1.5"</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="w">        </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"Authenticator</span><span class="nv"> </span><span class="s">management"</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="w">      </span><span class="c1"># ... only the ADDITIONAL SRs/REs for SL-2</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">slug</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">iec-62443-sl3</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"IEC</span><span class="nv"> </span><span class="s">62443</span><span class="nv"> </span><span class="s">SL-3"</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">"4.2"</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="w">    </span><span class="nt">issuer</span><span class="p">:</span><span class="w"> </span><span class="s">"IEC"</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"Additional</span><span class="nv"> </span><span class="s">requirements</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">Security</span><span class="nv"> </span><span class="s">Level</span><span class="nv"> </span><span class="s">3"</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="w">    </span><span class="nt">requirements</span><span class="p">:</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">section_code</span><span class="p">:</span><span class="w"> </span><span class="s">"SR</span><span class="nv"> </span><span class="s">1.1</span><span class="nv"> </span><span class="s">RE</span><span class="nv"> </span><span class="s">2"</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="w">        </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"Multifactor</span><span class="nv"> </span><span class="s">authentication</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">untrusted</span><span class="nv"> </span><span class="s">networks"</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">section_code</span><span class="p">:</span><span class="w"> </span><span class="s">"SR</span><span class="nv"> </span><span class="s">1.9"</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="w">        </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"Strength</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">public</span><span class="nv"> </span><span class="s">key</span><span class="nv"> </span><span class="s">authentication"</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="w">      </span><span class="c1"># ... only the ADDITIONAL SRs/REs for SL-3</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">slug</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">iec-62443-sl4</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">"IEC</span><span class="nv"> </span><span class="s">62443</span><span class="nv"> </span><span class="s">SL-4"</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="w">    </span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="s">"4.2"</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="w">    </span><span class="nt">issuer</span><span class="p">:</span><span class="w"> </span><span class="s">"IEC"</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">"Additional</span><span class="nv"> </span><span class="s">requirements</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">Security</span><span class="nv"> </span><span class="s">Level</span><span class="nv"> </span><span class="s">4"</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="w">    </span><span class="nt">requirements</span><span class="p">:</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="w">      </span><span class="c1"># ... only the ADDITIONAL SRs/REs for SL-4</span>
+</code></pre></div>
+<p>The OT/ICS pack then provides separate compliance overlay files per level:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>ot-ics/
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>└── joins/
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    ├── countermeasures-iec-62443-sl1.yaml
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    ├── countermeasures-iec-62443-sl2.yaml
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    └── countermeasures-iec-62443-sl3.yaml
+</code></pre></div>
+<p>Each overlay maps countermeasures to the requirements at that specific level.</p>
+<p>This additive overlay structure mirrors how IEC 62443 itself works. A countermeasure like "role-based access control" satisfies SR 2.1 (Authorization enforcement) at SL-1. At SL-2, the same countermeasure may also need to satisfy SR 2.1 RE 1 (Authorization enforcement for all users), mapped in a separate overlay file. The countermeasure exists once in the model. The overlays determine which level's requirements it covers.</p>
+<hr />
+<h2 id="worked-example-remote-operations-center">Worked example: Remote Operations Center<a class="headerlink" href="#worked-example-remote-operations-center" title="Permanent link">&para;</a></h2>
+<p>The following walkthrough uses a simplified Remote Operations Center (ROC) that monitors two distributed energy sites. This is one of the pre-built DFD templates in the OT/ICS pack. The goal is to achieve SL-2 compliance (protection against intentional violation using simple means).</p>
+<h3 id="1-create-the-threat-model">1. Create the threat model<a class="headerlink" href="#1-create-the-threat-model" title="Permanent link">&para;</a></h3>
+<p>Create a new threat model called "Remote Operations Center". Set criticality to <strong>Critical</strong> (compromising remote pipeline and compressor controls has direct safety consequences).</p>
+<h3 id="2-define-the-system-context">2. Define the system context<a class="headerlink" href="#2-define-the-system-context" title="Permanent link">&para;</a></h3>
+<p><strong>System description:</strong></p>
+<blockquote>
+<p>Centralized remote operations center providing SCADA-based supervisory control over two distributed energy sites: a pipeline station (Site A) and a compressor station (Site B). The ROC connects to remote sites via encrypted WAN/satellite links through an OPC UA broker. A secure remote access zone provides jump server access for field engineers. The system handles pipeline flow control, compressor management, and safety instrumented system (SIS) monitoring across both sites.</p>
+</blockquote>
+<p><strong>Data assets:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Asset</th>
+<th>Category</th>
+<th>C</th>
+<th>I</th>
+<th>A</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Control Commands &amp; Setpoints</td>
+<td>Business Critical</td>
+<td>High</td>
+<td>High</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Safety System Parameters</td>
+<td>Business Critical</td>
+<td>High</td>
+<td>High</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Pipeline Telemetry (pressure, flow, leak detection)</td>
+<td>Business Critical</td>
+<td>Medium</td>
+<td>High</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Compressor Telemetry (vibration, temperature, surge)</td>
+<td>Business Critical</td>
+<td>Medium</td>
+<td>High</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Central Historian Archives</td>
+<td>Intellectual Property</td>
+<td>High</td>
+<td>High</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>Operator and Engineer Credentials</td>
+<td>Credentials / Secrets</td>
+<td>High</td>
+<td>High</td>
+<td>High</td>
+</tr>
+</tbody>
+</table>
+<h3 id="3-compliance-frameworks-setting-sl-t">3. Compliance frameworks (setting SL-T)<a class="headerlink" href="#3-compliance-frameworks-setting-sl-t" title="Permanent link">&para;</a></h3>
+<p>Compliance frameworks are not manually linked. They appear automatically once the threat model contains countermeasures that have compliance mappings. After you load the DFD template (next step) and save it, the OT/ICS pack's countermeasures bring their IEC 62443 mappings with them. The frameworks that appear depend on which countermeasure-to-requirement mappings exist in the imported packs.</p>
+<p>For this example, the OT/ICS pack includes mappings to both:</p>
+<ul>
+<li><strong>IEC 62443 SL-1</strong> (base requirements: SR 1.1, SR 2.1, SR 3.1, SR 5.1, SR 7.1, etc.)</li>
+<li><strong>IEC 62443 SL-2</strong> (additional requirements: SR 1.1 RE 1, SR 1.5, SR 6.2, SR 7.8, etc.)</li>
+</ul>
+<p>The set of frameworks that appear IS your SL-T. There is no separate "target level" field because the frameworks define exactly which requirements must be satisfied.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>To expand your SL-T to SL-3, import a pack that includes countermeasure mappings to SL-3 requirements. The IEC 62443 SL-3 framework will then appear automatically in your compliance report.</p>
+</div>
+<h3 id="4-model-the-architecture">4. Model the architecture<a class="headerlink" href="#4-model-the-architecture" title="Permanent link">&para;</a></h3>
+<p>Open the DFD editor and load the <strong>Remote Operations Center</strong> template from the OT/ICS pack. The template creates:</p>
+<ul>
+<li><strong>Central Operations (Level 2-3)</strong>: Central SCADA, Operations HMI, Central Historian</li>
+<li><strong>WAN / Satellite Link</strong>: WAN Firewall, OPC UA Broker</li>
+<li><strong>Remote Site A (Pipeline Station)</strong>: Pipeline RTU, Pipeline Sensors, Isolation Valves</li>
+<li><strong>Remote Site B (Compressor Station)</strong>: Compressor PLC, Compressor SIS, Compressor Sensors</li>
+<li><strong>Secure Remote Access Zone</strong>: Jump Server for field engineer access</li>
+</ul>
+<p>Each component is placed in a trust zone matching the Purdue Model segmentation. Data flows show the communication paths, protocols (DNP3, EtherNet/IP, OPC UA, VPN+MFA), and encryption status.</p>
+<p><img alt="DFD Editor showing the Remote Operations Center diagram" src="../../assets/images/iec-62443-dfd-editor.png" /></p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>The trust zone names in the template correspond to IEC 62443 zones and conduits. Rename them to match your organization's zone and conduit diagram if needed (e.g., "Control Network (Level 0-1)", "Industrial DMZ (Level 3.5)").</p>
+</div>
+<h3 id="5-analyze-threats">5. Analyze threats<a class="headerlink" href="#5-analyze-threats" title="Permanent link">&para;</a></h3>
+<p>Navigate to the Threat Analysis tab. Because the template uses library components from the OT/ICS pack, threats are pre-populated with mappings to:</p>
+<ul>
+<li><strong>STRIDE</strong> categories</li>
+<li><strong>MITRE ATT&amp;CK for ICS</strong> techniques (e.g., T1692.001 Unauthorized Command Message, T0831 Manipulation of Control)</li>
+<li><strong>CWE</strong> weakness enumerations</li>
+</ul>
+<p>For the Remote Operations Center, key threats include:</p>
+<ul>
+<li><strong>Unauthorized SCADA command injection</strong> targeting the Central SCADA and OPC UA Broker</li>
+<li><strong>DNP3 protocol manipulation</strong> on the unencrypted RTU links to Site A</li>
+<li><strong>Rogue device on field network</strong> at compressor or pipeline sites</li>
+<li><strong>Compromised jump server</strong> providing lateral movement from the remote access zone</li>
+</ul>
+<p>Review each threat, set severity, and dismiss any that don't apply (with documented rationale).</p>
+<!-- SCREENSHOT 2: Threat Analysis tab showing threats for the Remote Operations Center
+     Capture the Threat Analysis view with several threats visible, showing their
+     STRIDE category tags, severity ratings, and countermeasure status. Ideally
+     show a mix of threats across different components (e.g., SCADA, RTU, PLC).
+     Suggested filename: iec-62443-threat-analysis.png -->
+
+<h3 id="6-apply-countermeasures">6. Apply countermeasures<a class="headerlink" href="#6-apply-countermeasures" title="Permanent link">&para;</a></h3>
+<p>For each threat, review suggested countermeasures from the library. Each countermeasure arrives with IEC 62443 compliance mappings already attached across the relevant security levels.</p>
+<p><strong>How countermeasures map across levels:</strong></p>
+<p>A single countermeasure can satisfy requirements at multiple security levels. For example:</p>
+<table>
+<thead>
+<tr>
+<th>Countermeasure</th>
+<th>SL-1 Requirement</th>
+<th>SL-2 Additional Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Role-based access control</td>
+<td>SR 2.1 (Authorization enforcement)</td>
+<td>SR 2.1 RE 1 (All users, including automated)</td>
+</tr>
+<tr>
+<td>Communication integrity checks</td>
+<td>SR 3.1 (Communication integrity)</td>
+<td>SR 3.1 RE 1 (Cryptographic integrity protection)</td>
+</tr>
+<tr>
+<td>System component inventory</td>
+<td>-</td>
+<td>SR 7.8 (Control system component inventory)</td>
+</tr>
+<tr>
+<td>Continuous monitoring</td>
+<td>-</td>
+<td>SR 6.2 (Continuous monitoring)</td>
+</tr>
+</tbody>
+</table>
+<p>Notice that some countermeasures (like system component inventory) only appear at SL-2 and above. Others (like role-based access control) satisfy base requirements at SL-1 and additional requirement enhancements at SL-2.</p>
+<p>Track countermeasure status:</p>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gap</td>
+<td>Not implemented. Contributes to the SL-T/SL-A gap.</td>
+</tr>
+<tr>
+<td>Planned</td>
+<td>Implementation scheduled. Still a gap for SL-A purposes.</td>
+</tr>
+<tr>
+<td>Verified</td>
+<td>Confirmed implemented. Counts toward SL-A.</td>
+</tr>
+<tr>
+<td>Platform</td>
+<td>Infrastructure-level control. Counts toward SL-A.</td>
+</tr>
+<tr>
+<td>Waived</td>
+<td>Risk accepted with justification.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="7-read-the-compliance-report-coverage-vs-satisfaction">7. Read the compliance report (Coverage vs Satisfaction)<a class="headerlink" href="#7-read-the-compliance-report-coverage-vs-satisfaction" title="Permanent link">&para;</a></h3>
+<p>Generate the report to see two compliance metrics for each linked framework:</p>
+<ul>
+<li><strong>Coverage</strong>: the percentage of requirements that have at least one countermeasure mapped to them. This answers "do we have a plan?"</li>
+<li><strong>Satisfaction</strong>: the percentage of requirements where at least one mapped countermeasure has status <strong>Verified</strong> or <strong>Platform</strong>. This answers "have we actually done it?"</li>
+</ul>
+<p>After loading the template and saving the DFD, coverage should be high (the library provides countermeasure mappings), but satisfaction starts at <strong>0%</strong> because all countermeasures default to "Gap" status.</p>
+<p><img alt="Compliance report showing IEC 62443 SL-1 and SL-2 coverage vs satisfaction" src="../../assets/images/iec-62443-compliance-tab.png" /></p>
+<p><strong>Increasing satisfaction: a step-by-step example</strong></p>
+<p>To see the satisfaction metric move, change a few countermeasure statuses to "Verified". Here are three high-impact countermeasures to start with:</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Component</th>
+<th>Threat</th>
+<th>Countermeasure</th>
+<th>Set status to</th>
+<th>Requirements satisfied</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>SCADA Server</strong></td>
+<td>SCADA Unauthorized Access</td>
+<td>Multi-Factor Authentication for Remote OT Access</td>
+<td>Verified</td>
+<td>SR 1.1 (SL-1), SR 1.1 RE 1, SR 1.9, SR 1.13 (SL-2)</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Central Historian</strong></td>
+<td>Historian Data Exfiltration</td>
+<td>Industrial DMZ</td>
+<td>Verified</td>
+<td>SR 4.1, SR 5.1, SR 5.2 (SL-1), SR 4.2, SR 5.3 (SL-2)</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>SCADA Server</strong></td>
+<td>SCADA Command Injection</td>
+<td>OT Role-Based Access Control</td>
+<td>Verified</td>
+<td>SR 1.1, SR 1.3 (SL-1), SR 2.1 RE 1 (SL-2)</td>
+</tr>
+</tbody>
+</table>
+<p>After each change, regenerate the report. You should see the satisfaction percentage climb while coverage stays the same.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>For a quick demonstration, set just the first two countermeasures above to "Verified". This satisfies requirements across both SL-1 and SL-2, producing a visible contrast between the green coverage bars and the red/yellow satisfaction bars.</p>
+</div>
+<p><strong>How to determine your achieved security level:</strong></p>
+<ul>
+<li>If all <strong>SL-1</strong> requirements have verified or platform countermeasures: you have achieved <strong>SL-1</strong></li>
+<li>If all <strong>SL-1 and SL-2</strong> requirements are satisfied: you have achieved <strong>SL-2</strong></li>
+<li>Any SL-2 requirement still showing gaps means SL-2 is not yet achieved, even if some SL-3 requirements happen to be satisfied</li>
+</ul>
+<p><strong>Example gap reading for the ROC:</strong></p>
+<p>Suppose after implementing countermeasures:</p>
+<ul>
+<li>All SL-1 requirements are satisfied (SL-A = SL-1)</li>
+<li>SL-2 has 3 gaps remaining: SR 6.2 (continuous monitoring not yet deployed), SR 7.8 (no component inventory system), and SR 1.1 RE 1 (unique identification not enforced on RTU links)</li>
+</ul>
+<p>Your SL-T is SL-2. Your SL-A is SL-1. The remediation roadmap is those 3 specific countermeasures.</p>
+<h3 id="8-score-risks">8. Score risks<a class="headerlink" href="#8-score-risks" title="Permanent link">&para;</a></h3>
+<p>Navigate to the Risk Analysis tab to aggregate threats into business-level risks. For the ROC, natural risk groupings include:</p>
+<ul>
+<li><strong>Unauthorized remote control</strong>: Threats to SCADA command integrity, OPC UA broker compromise, unauthorized valve/compressor commands</li>
+<li><strong>Loss of visibility</strong>: Threats to historian data integrity, telemetry manipulation, sensor spoofing</li>
+<li><strong>Safety system bypass</strong>: Threats to SIS independence, safety parameter manipulation</li>
+<li><strong>Lateral movement via remote access</strong>: Jump server compromise, field engineer credential theft</li>
+</ul>
+<details class="example">
+<summary>Step-by-step: creating these risks</summary>
+<p><strong>Risk 1: Unauthorized Remote Control</strong></p>
+<ol>
+<li>In the Risk Analysis tab, click <strong>Add Risk</strong></li>
+<li>Name: <code>Unauthorized Remote Control</code></li>
+<li>Description: <code>Unauthorized manipulation of SCADA commands, valve setpoints, or compressor controls via compromised remote access or protocol exploitation.</code></li>
+<li>In the <strong>Link Threats</strong> section, check:<ul>
+<li>SCADA Unauthorized Access (SCADA Server)</li>
+<li>SCADA Command Injection (SCADA Server)</li>
+<li>RTU Protocol Exploitation (Pipeline RTU)</li>
+</ul>
+</li>
+<li>Click <strong>Create Risk</strong></li>
+</ol>
+<p><strong>Risk 2: Loss of Operational Visibility</strong></p>
+<ol>
+<li>Click <strong>Add Risk</strong></li>
+<li>Name: <code>Loss of Operational Visibility</code></li>
+<li>Description: <code>Compromise of historian data integrity or telemetry feeds, leading to operators making decisions on manipulated or missing data.</code></li>
+<li>In the <strong>Link Threats</strong> section, check:<ul>
+<li>Historian Data Exfiltration (Central Historian)</li>
+<li>Any sensor spoofing or telemetry-related threats for Pipeline Sensors or Compressor Sensors</li>
+</ul>
+</li>
+<li>Click <strong>Create Risk</strong></li>
+</ol>
+<p><strong>Risk 3: Lateral Movement via Remote Access</strong></p>
+<ol>
+<li>Click <strong>Add Risk</strong></li>
+<li>Name: <code>Lateral Movement via Remote Access</code></li>
+<li>Description: <code>Compromise of the jump server or field engineer credentials to pivot from the remote access zone into the control network.</code></li>
+<li>In the <strong>Link Threats</strong> section, check threats related to the Jump Server component</li>
+<li>Click <strong>Create Risk</strong></li>
+</ol>
+<p>After creating all three, click one of the risk rows to expand its detail panel showing the linked threats.</p>
+</details>
+<p><img alt="Risk Analysis tab showing aggregated risks" src="../../assets/images/iec-62443-risk-analysis.png" /></p>
+<p>The target security level provides context for inherent risk scoring: threats against zones with higher SL-T targets should be scored with greater severity, reflecting the higher consequences of compromise.</p>
+<hr />
+<h2 id="sl-t-vs-sl-a-summary">SL-T vs. SL-A summary<a class="headerlink" href="#sl-t-vs-sl-a-summary" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Concept</th>
+<th>How it works in Precogly</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>SL-T</strong> (Target)</td>
+<td>The set of IEC 62443 level frameworks derived from countermeasure mappings</td>
+</tr>
+<tr>
+<td><strong>SL-A</strong> (Achieved)</td>
+<td>The highest level whose requirements are all satisfied (countermeasure status = Verified or Platform)</td>
+</tr>
+<tr>
+<td><strong>Gap</strong></td>
+<td>Requirements in linked frameworks without verified countermeasures</td>
+</tr>
+<tr>
+<td><strong>Remediation plan</strong></td>
+<td>Countermeasures in Gap or Planned status for the target level's requirements</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="single-model-vs-duplicate-modeling">Single model vs duplicate modeling<a class="headerlink" href="#single-model-vs-duplicate-modeling" title="Permanent link">&para;</a></h2>
+<p>Tools like <a href="https://github.com/iriusrisk/Community/blob/master/Examples/62443%20Example%201%20-%20SL-A%20to%20SL-T%20Basic%20Component">IriusRisk</a> implement SL-T/SL-A by duplicating the entire system model: the same component (e.g., an RS-485 serial interface) is placed in separate trust zones for each security level. SL-1 gets one instance with its countermeasures marked "Implemented". SL-2 gets a second instance where some countermeasures are "Implemented" and others are "Required". The gap is determined by diffing the two instances.</p>
+<p>This works, but it creates problems at scale:</p>
+<table>
+<thead>
+<tr>
+<th>Factor</th>
+<th>Duplicate modeling</th>
+<th>Single model (Precogly)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A system with 20 components targeting SL-3</td>
+<td>60 component instances (20 x 3 zones)</td>
+<td>20 components, 3 linked frameworks</td>
+</tr>
+<tr>
+<td>Adding a new component</td>
+<td>Must be added to every level zone</td>
+<td>Add once, compliance mappings follow from library</td>
+</tr>
+<tr>
+<td>Changing a countermeasure status</td>
+<td>Must be updated in each zone's instance</td>
+<td>Update once, reflected across all levels</td>
+</tr>
+<tr>
+<td>Reading the gap</td>
+<td>Compare countermeasure states across zone pairs</td>
+<td>Compliance report shows unsatisfied requirements directly</td>
+</tr>
+<tr>
+<td>Architecture accuracy</td>
+<td>DFD does not reflect the real network topology (zones represent security levels, not physical/logical zones)</td>
+<td>Trust zones represent actual network segmentation (Purdue Model levels, DMZs)</td>
+</tr>
+</tbody>
+</table>
+<p>The last point is subtle but important. In a duplicate-modeling approach, trust zones represent security level tiers, not the actual network architecture. A "SL-2 Zone" containing a copy of every component at security level 2 does not correspond to any real zone in the facility's network diagram. In Precogly, trust zones represent the actual zones and conduits from IEC 62443-3-2, and the security level analysis happens through the compliance framework layer.</p>
+<hr />
+<h2 id="why-this-approach-works">Why this approach works<a class="headerlink" href="#why-this-approach-works" title="Permanent link">&para;</a></h2>
+<p>The platform remains standards-agnostic. The SL-T/SL-A workflow is achieved entirely through:</p>
+<ol>
+<li><strong>Pack structure</strong>: one compliance framework per security level</li>
+<li><strong>Existing feature</strong>: frameworks derived automatically from countermeasure mappings</li>
+<li><strong>Existing feature</strong>: compliance report showing requirement satisfaction status</li>
+<li><strong>Existing feature</strong>: countermeasure status tracking (Gap/Planned/Verified/Platform/Waived)</li>
+</ol>
+<p>No custom fields, no IEC 62443-specific code, no platform modifications. The same pattern works for any standard with tiered maturity or capability levels (NIST CSF Tiers, CMMC Levels, ASVS Levels).</p>
+<hr />
+<h2 id="whats-next">What's next<a class="headerlink" href="#whats-next" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../concepts/library-packs/">Library Packs</a>: how packs, overlays, and dependencies work</li>
+<li><a href="../../contributing/creating-library-packs/">Creating Library Packs</a>: author guide for pack YAML schema</li>
+<li><a href="../../guides/compliance-mapping/">Compliance Mapping</a>: mapping countermeasures to framework requirements</li>
+<li><a href="../../guides/creating-threat-model/">Creating a Threat Model</a>: end-to-end threat modeling workflow</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

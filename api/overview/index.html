@@ -1,0 +1,3530 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for Precogly — the open-source threat modeling platform">
+      
+      
+      
+        <link rel="canonical" href="https://precogly.github.io/precogly/api/overview/">
+      
+      
+        <link rel="prev" href="../../recipes/eu-banking/">
+      
+      
+        <link rel="next" href="../../contributing/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Overview - Precogly Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#api-overview" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Precogly Documentation" class="md-header__button md-logo" aria-label="Precogly Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Precogly Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Overview
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/precogly/precogly" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    precogly/precogly
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Precogly Documentation" class="md-nav__button md-logo" aria-label="Precogly Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Precogly Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/precogly/precogly" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    precogly/precogly
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/library-packs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Library Packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/dfd-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DFD Editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/threat-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/threat-model-as-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat Model as Code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/zone-protections/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zone Protections
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/platform-controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/completion-status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Completion Status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/reference-images/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference Images
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/org-hierarchy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Org Hierarchy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/roles-and-permissions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roles and Permissions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/connected-systems-tm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connected Systems & TMs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/magic-links/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Magic Links
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/creating-threat-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Threat Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/guest-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guest Editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/pentests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pentest Scope
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/importing-exporting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Importing & Exporting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/compliance-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/report-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../guides/ai-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recipes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recipes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recipes/iec-62443/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IEC 62443
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recipes/eu-banking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EU Banking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#base-url" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Base URL
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#content-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Content format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authentication
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Authentication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#obtaining-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Obtaining tokens
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using tokens
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#token-lifetimes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Token lifetimes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refreshing-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refreshing tokens
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#auth-endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auth endpoints
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pagination" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pagination
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filtering-search-and-ordering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filtering, search, and ordering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Permissions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interactive-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interactive documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#endpoint-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Endpoint reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Endpoint reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#threat-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threat models
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#diagrams" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagrams
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#systems-and-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Systems and components
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trust-zones-and-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trust zones and boundaries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-assets-and-flows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data assets and flows
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#threats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#countermeasures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Countermeasures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compliance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compliance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#taxonomies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Taxonomies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risk-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#threat-personas-and-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threat personas and sources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#organizations-and-teams" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Organizations and teams
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invitations-and-sharing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invitations and sharing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#library-packs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library packs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dashboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dashboard
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ai-providers-and-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI providers and usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-responses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error responses
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-tenancy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-tenancy
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/development-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/creating-library-packs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating Library Packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#base-url" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Base URL
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#content-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Content format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authentication" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Authentication
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Authentication">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#obtaining-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Obtaining tokens
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Using tokens
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#token-lifetimes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Token lifetimes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refreshing-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refreshing tokens
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#auth-endpoints" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Auth endpoints
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pagination" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pagination
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#filtering-search-and-ordering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filtering, search, and ordering
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#permissions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Permissions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interactive-documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interactive documentation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#endpoint-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Endpoint reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Endpoint reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#threat-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threat models
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#diagrams" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagrams
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#systems-and-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Systems and components
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#trust-zones-and-boundaries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trust zones and boundaries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-assets-and-flows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data assets and flows
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#threats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threats
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#countermeasures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Countermeasures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#compliance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compliance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#taxonomies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Taxonomies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risk-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risk management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#threat-personas-and-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threat personas and sources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#organizations-and-teams" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Organizations and teams
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invitations-and-sharing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Invitations and sharing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#library-packs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library packs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dashboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dashboard
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ai-providers-and-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI providers and usage
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-responses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error responses
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-tenancy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-tenancy
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="api-overview">API Overview<a class="headerlink" href="#api-overview" title="Permanent link">&para;</a></h1>
+<p>Precogly exposes a REST API built with Django REST Framework. All endpoints are documented with an OpenAPI schema and can be explored interactively via Swagger UI.</p>
+<h2 id="base-url">Base URL<a class="headerlink" href="#base-url" title="Permanent link">&para;</a></h2>
+<p>All endpoints are prefixed with <code>/api/</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>http://localhost:8000/api/
+</code></pre></div>
+<h2 id="content-format">Content format<a class="headerlink" href="#content-format" title="Permanent link">&para;</a></h2>
+<p><strong>Request and response bodies use JSON with camelCase keys.</strong> The backend uses snake_case internally, but <code>djangorestframework-camel-case</code> converts keys automatically at the API boundary.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">"threatModel"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Payment Gateway"</span><span class="p">,</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nt">"riskScoringMethod"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tm_library"</span><span class="p">,</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="nt">"createdAt"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-01-15T10:30:00Z"</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">}</span>
+</code></pre></div>
+<p>A small set of keys are passed through without conversion for <code>dj-rest-auth</code> compatibility: <code>password1</code>, <code>password2</code>, <code>new_password1</code>, <code>new_password2</code>, <code>email</code>.</p>
+<h2 id="authentication">Authentication<a class="headerlink" href="#authentication" title="Permanent link">&para;</a></h2>
+<p>The API uses JWT bearer tokens via <code>djangorestframework-simplejwt</code>.</p>
+<h3 id="obtaining-tokens">Obtaining tokens<a class="headerlink" href="#obtaining-tokens" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>POST /api/auth/login/
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>Content-Type: application/json
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>{
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>  "email": "user@example.com",
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>  "password": "yourpassword"
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>}
+</code></pre></div>
+<p>Response:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">"accessToken"</span><span class="p">:</span><span class="w"> </span><span class="s2">"eyJ..."</span><span class="p">,</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">"refreshToken"</span><span class="p">:</span><span class="w"> </span><span class="s2">"eyJ..."</span><span class="p">,</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">"user"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">    </span><span class="nt">"pk"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">    </span><span class="nt">"email"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user@example.com"</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="using-tokens">Using tokens<a class="headerlink" href="#using-tokens" title="Permanent link">&para;</a></h3>
+<p>Include the access token in the <code>Authorization</code> header:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Authorization: Bearer eyJ...
+</code></pre></div>
+<h3 id="token-lifetimes">Token lifetimes<a class="headerlink" href="#token-lifetimes" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th>Lifetime</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Access token</td>
+<td>60 minutes</td>
+</tr>
+<tr>
+<td>Refresh token</td>
+<td>7 days</td>
+</tr>
+</tbody>
+</table>
+<p>Refresh tokens rotate on each use. The previous refresh token is blacklisted after rotation.</p>
+<h3 id="refreshing-tokens">Refreshing tokens<a class="headerlink" href="#refreshing-tokens" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>POST /api/auth/token/refresh/
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>{
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>  "refresh": "eyJ..."
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>}
+</code></pre></div>
+<h3 id="auth-endpoints">Auth endpoints<a class="headerlink" href="#auth-endpoints" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/auth/login/</code></td>
+<td>Obtain access and refresh tokens</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/auth/logout/</code></td>
+<td>Blacklist refresh token</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/auth/registration/</code></td>
+<td>Register a new account</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/auth/user/</code></td>
+<td>Current user profile</td>
+</tr>
+<tr>
+<td><code>PUT/PATCH</code></td>
+<td><code>/api/auth/user/</code></td>
+<td>Update profile</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/auth/password/change/</code></td>
+<td>Change password</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/auth/password/reset/</code></td>
+<td>Request password reset email</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/auth/password/reset/confirm/</code></td>
+<td>Confirm password reset</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/auth/token/refresh/</code></td>
+<td>Refresh access token</td>
+</tr>
+</tbody>
+</table>
+<h2 id="pagination">Pagination<a class="headerlink" href="#pagination" title="Permanent link">&para;</a></h2>
+<p>Responses that return lists use page-based pagination with a default page size of <strong>20</strong>.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="nt">"count"</span><span class="p">:</span><span class="w"> </span><span class="mi">58</span><span class="p">,</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nt">"next"</span><span class="p">:</span><span class="w"> </span><span class="s2">"http://localhost:8000/api/threat-models/?page=2"</span><span class="p">,</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nt">"previous"</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="nt">"results"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">]</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">}</span>
+</code></pre></div>
+<p>Use the <code>page</code> query parameter to navigate: <code>?page=2</code>, <code>?page=3</code>, etc.</p>
+<p>Some endpoints (library browsing, scoring methods) disable pagination and return all results directly.</p>
+<h2 id="filtering-search-and-ordering">Filtering, search, and ordering<a class="headerlink" href="#filtering-search-and-ordering" title="Permanent link">&para;</a></h2>
+<p>Three filter backends are enabled globally:</p>
+<ul>
+<li><strong>DjangoFilterBackend</strong> for field-level filtering: <code>?criticality=high&amp;status=exposed</code></li>
+<li><strong>SearchFilter</strong> for text search: <code>?search=payment</code></li>
+<li><strong>OrderingFilter</strong> for sorting: <code>?ordering=-created_at</code></li>
+</ul>
+<p>Available filter fields vary by endpoint. Refer to the OpenAPI schema for each endpoint's supported parameters.</p>
+<h2 id="permissions">Permissions<a class="headerlink" href="#permissions" title="Permanent link">&para;</a></h2>
+<p>The API uses two levels of role-based access control. See <a href="../../concepts/roles-and-permissions/">Roles and Permissions</a> for full details.</p>
+<p><strong>Organization roles</strong> determine broad access:</p>
+<ul>
+<li><strong>Security Team</strong> has full read/write access across the organization, including library pack management and platform control assignments.</li>
+<li><strong>Member</strong> has read access across accessible teams, write access only within teams they belong to (with a non-viewer team role).</li>
+</ul>
+<p><strong>Team roles</strong> (Lead, Member, Viewer) control write access to a team's threat models and related data. Viewers are read-only.</p>
+<p>All endpoints require authentication by default. The only exceptions are magic link access (<code>/api/share/{token}/</code>) and invitation preview (<code>GET /api/invite/{token}/</code>).</p>
+<h2 id="interactive-documentation">Interactive documentation<a class="headerlink" href="#interactive-documentation" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>URL</th>
+<th>Format</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/api/docs/</code></td>
+<td>Swagger UI</td>
+</tr>
+<tr>
+<td><code>/api/redoc/</code></td>
+<td>ReDoc</td>
+</tr>
+<tr>
+<td><code>/api/schema/</code></td>
+<td>Raw OpenAPI 3.0 schema (YAML)</td>
+</tr>
+</tbody>
+</table>
+<p>The generated OpenAPI documentation is the canonical, exhaustive reference for request
+fields, response schemas, filters, and status codes. The tables below provide a practical
+map of the public resources and custom actions.</p>
+<h2 id="endpoint-reference">Endpoint reference<a class="headerlink" href="#endpoint-reference" title="Permanent link">&para;</a></h2>
+<h3 id="threat-models">Threat models<a class="headerlink" href="#threat-models" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/threat-models/</code></td>
+<td>List threat models</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/threat-models/</code></td>
+<td>Create threat model</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/threat-models/{id}/</code></td>
+<td>Retrieve threat model</td>
+</tr>
+<tr>
+<td><code>PUT/PATCH</code></td>
+<td><code>/api/threat-models/{id}/</code></td>
+<td>Update threat model</td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td><code>/api/threat-models/{id}/</code></td>
+<td>Delete threat model</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/threat-models/{id}/threats/</code></td>
+<td>Aggregated threat analysis</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/threat-models/{id}/report/</code></td>
+<td>Full report data</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/threat-models/{id}/delete_preview/</code></td>
+<td>Preview cascade before deletion</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/threat-models/{id}/zone_protections/</code></td>
+<td>Analyze zone protection suggestions</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/threat-models/{id}/apply_zone_protections/</code></td>
+<td>Apply zone protection inheritance</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/threat-models/{id}/add_system/</code></td>
+<td>Link an existing system</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/threat-models/{id}/remove_system/</code></td>
+<td>Unlink a system</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/threat-models/{id}/add_referenced_model/</code></td>
+<td>Add model relationship</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/threat-models/{id}/remove_referenced_model/</code></td>
+<td>Remove model relationship</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/threat-models/{id}/add_pack/</code></td>
+<td>Attach a library pack</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/threat-models/{id}/remove_pack/</code></td>
+<td>Detach a library pack</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/threat-models/{id}/countermeasures-in-use/</code></td>
+<td>List countermeasures active in the model</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/threat-models/{id}/compliance_drift/</code></td>
+<td>Compare instance mappings with their library sources</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/threat-models/{id}/refresh_compliance/</code></td>
+<td>Refresh instance compliance mappings from libraries</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/threat-models/import/tm-library/</code></td>
+<td>Import from TM-Library JSON</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/threat-models/{id}/export/tm-library/</code></td>
+<td>Export as TM-Library JSON</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/threat-models/import/cyclonedx/</code></td>
+<td>Import from CycloneDX 2.0 TM-BOM JSON</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/threat-models/{id}/export/cyclonedx/</code></td>
+<td>Export as CycloneDX 2.0 TM-BOM JSON</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Reference images</strong> (nested under threat model):</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/threat-models/{id}/reference-images/</code></td>
+<td>List images</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/threat-models/{id}/reference-images/upload/</code></td>
+<td>Upload image (multipart)</td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td><code>/api/reference-images/{id}/</code></td>
+<td>Delete image</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Out-of-scope items</strong> (nested under threat model):</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/threat-models/{id}/out-of-scope-items/</code></td>
+<td>List or create</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/threat-models/{id}/out-of-scope-items/{id}/</code></td>
+<td>Retrieve, update, or delete</td>
+</tr>
+</tbody>
+</table>
+<h3 id="diagrams">Diagrams<a class="headerlink" href="#diagrams" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/diagrams/</code></td>
+<td>List DFDs</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/diagrams/</code></td>
+<td>Create DFD</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/diagrams/{id}/</code></td>
+<td>Retrieve DFD with canvas data</td>
+</tr>
+<tr>
+<td><code>PUT/PATCH</code></td>
+<td><code>/api/diagrams/{id}/</code></td>
+<td>Update DFD (triggers component sync for primary DFDs)</td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td><code>/api/diagrams/{id}/</code></td>
+<td>Delete DFD</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/diagrams/create_for_threat_model/</code></td>
+<td>Create DFD from template for a threat model</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/diagrams/ai-availability/</code></td>
+<td>Check whether AI diagram generation is configured</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/diagrams/analyze-image/</code></td>
+<td>Analyze an uploaded architecture image</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/diagrams/generate-dfd/</code></td>
+<td>Generate DFD canvas data from an analyzed image</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/diagrams/{id}/delete_preview/</code></td>
+<td>Preview cascade before deletion</td>
+</tr>
+</tbody>
+</table>
+<p><strong>DFD templates</strong> (read-only):</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/dfd-templates/</code></td>
+<td>List templates</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/dfd-templates/{id}/</code></td>
+<td>Template detail</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/dfd-templates/{id}/resolved/</code></td>
+<td>Template with component library references resolved</td>
+</tr>
+</tbody>
+</table>
+<h3 id="systems-and-components">Systems and components<a class="headerlink" href="#systems-and-components" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/systems/</code></td>
+<td>List or create systems</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/systems/{id}/</code></td>
+<td>System CRUD</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/components/</code></td>
+<td>List or create components</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/components/{id}/</code></td>
+<td>Component CRUD</td>
+</tr>
+<tr>
+<td><code>PATCH</code></td>
+<td><code>/api/components/{id}/assign_system/</code></td>
+<td>Assign component to a system</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/components/{id}/generate_threats/</code></td>
+<td>Generate threats from component library</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/component-library/</code></td>
+<td>Browse or create library components</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/component-library/{id}/</code></td>
+<td>Library component CRUD</td>
+</tr>
+</tbody>
+</table>
+<h3 id="trust-zones-and-boundaries">Trust zones and boundaries<a class="headerlink" href="#trust-zones-and-boundaries" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/trust-zones/</code></td>
+<td>List or create trust zones</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/trust-zones/{id}/</code></td>
+<td>Trust zone CRUD</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/trust-boundaries/</code></td>
+<td>List or create trust boundaries</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/trust-boundaries/{id}/</code></td>
+<td>Trust boundary CRUD</td>
+</tr>
+</tbody>
+</table>
+<h3 id="data-assets-and-flows">Data assets and flows<a class="headerlink" href="#data-assets-and-flows" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/data-assets/</code></td>
+<td>List or create data assets</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/data-assets/{id}/</code></td>
+<td>Data asset CRUD</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/data-flows/</code></td>
+<td>List or create data flows</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/data-flows/{id}/</code></td>
+<td>Data flow CRUD</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/component-data-assets/</code></td>
+<td>Link data assets to components</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/data-flow-assets/</code></td>
+<td>Link data assets to data flows</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/integrations/</code></td>
+<td>List or create integration sources</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/integrations/{id}/</code></td>
+<td>Integration source CRUD</td>
+</tr>
+</tbody>
+</table>
+<h3 id="threats">Threats<a class="headerlink" href="#threats" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/threat-library/</code></td>
+<td>Browse or create library threats</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/threat-library/{id}/</code></td>
+<td>Library threat CRUD</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/component-library-threats/</code></td>
+<td>Map library threats to library components</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/component-threats/</code></td>
+<td>List or create component instance threats</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/component-threats/{id}/</code></td>
+<td>Instance threat CRUD</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/component-threats/{id}/suggested_countermeasures/</code></td>
+<td>Countermeasure suggestions from library</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/component-threats/{id}/apply_countermeasure/</code></td>
+<td>Apply a library countermeasure</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/component-threats/{id}/recalculate_status/</code></td>
+<td>Recalculate threat status</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/component-threats/reorder/</code></td>
+<td>Reorder component threats</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/component-threats/ai_availability/</code></td>
+<td>Check AI suggestion availability</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/component-threats/suggest/</code></td>
+<td>Get AI-ranked threat suggestions</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/flow-threats/</code></td>
+<td>List or create data flow instance threats</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/flow-threats/{id}/</code></td>
+<td>Flow threat CRUD</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/flow-threats/{id}/apply_countermeasure/</code></td>
+<td>Apply countermeasure to flow threat</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/flow-threats/{id}/recalculate_status/</code></td>
+<td>Recalculate flow threat status</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/flow-threats/reorder/</code></td>
+<td>Reorder data flow threats</td>
+</tr>
+</tbody>
+</table>
+<h3 id="countermeasures">Countermeasures<a class="headerlink" href="#countermeasures" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/countermeasure-library/</code></td>
+<td>Browse or create library countermeasures</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/countermeasure-library/{id}/</code></td>
+<td>Library countermeasure CRUD</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/countermeasures/</code></td>
+<td>List or create unified countermeasure instances</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/countermeasures/{id}/</code></td>
+<td>Countermeasure instance CRUD</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/countermeasures/{id}/link/</code></td>
+<td>Link a countermeasure to another component or flow threat</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/countermeasures/{id}/unlink/</code></td>
+<td>Unlink a countermeasure from a threat</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/countermeasures/reorder/</code></td>
+<td>Reorder countermeasures within a threat</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/countermeasure-comments/</code></td>
+<td>List or create countermeasure history entries</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/countermeasure-comments/{id}/</code></td>
+<td>Countermeasure comment CRUD</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/verification-tests/</code></td>
+<td>List or create verification tests</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/verification-tests/{id}/</code></td>
+<td>Verification test CRUD</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/pentest-findings/</code></td>
+<td>List or create pentest findings</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/pentest-findings/{id}/</code></td>
+<td>Pentest finding CRUD</td>
+</tr>
+</tbody>
+</table>
+<h3 id="compliance">Compliance<a class="headerlink" href="#compliance" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/frameworks/</code></td>
+<td>List or create compliance frameworks</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/frameworks/{id}/</code></td>
+<td>Framework CRUD</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/requirements/</code></td>
+<td>List or create standard requirements</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/requirements/{id}/</code></td>
+<td>Requirement CRUD</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/countermeasure-standards/</code></td>
+<td>Library-level compliance mappings</td>
+</tr>
+</tbody>
+</table>
+<h3 id="taxonomies">Taxonomies<a class="headerlink" href="#taxonomies" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/taxonomies/</code></td>
+<td>List taxonomies (STRIDE, CAPEC, CWE, etc.)</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/taxonomies/{id}/</code></td>
+<td>Taxonomy detail</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/taxonomy-entries/</code></td>
+<td>List taxonomy entries</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/taxonomy-entries/{id}/</code></td>
+<td>Entry detail</td>
+</tr>
+</tbody>
+</table>
+<h3 id="risk-management">Risk management<a class="headerlink" href="#risk-management" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/threat-models/{id}/risks/</code></td>
+<td>List or create risks for a threat model</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/threat-models/{id}/risks/{id}/</code></td>
+<td>Risk CRUD</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/threat-models/{id}/risks/{id}/recalculate/</code></td>
+<td>Recalculate risk scores</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/threat-models/{id}/risks/{id}/add-threats/</code></td>
+<td>Link threats to a risk</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/threat-models/{id}/risks/{id}/remove-threats/</code></td>
+<td>Unlink threats from a risk</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/threat-models/{id}/risks/bulk-update/</code></td>
+<td>Bulk update risk response or owner</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/scoring-methods/</code></td>
+<td>List available risk scoring methods</td>
+</tr>
+</tbody>
+</table>
+<h3 id="threat-personas-and-sources">Threat personas and sources<a class="headerlink" href="#threat-personas-and-sources" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/threat-models/{id}/threat-personas/</code></td>
+<td>List or create threat personas for a model</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/threat-models/{id}/threat-personas/{id}/</code></td>
+<td>Threat persona CRUD</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/threat-sources/</code></td>
+<td>List global threat source reference data</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/threat-sources/{id}/</code></td>
+<td>Threat source detail</td>
+</tr>
+</tbody>
+</table>
+<h3 id="organizations-and-teams">Organizations and teams<a class="headerlink" href="#organizations-and-teams" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/organizations/</code></td>
+<td>List or create organizations</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/organizations/{id}/</code></td>
+<td>Organization CRUD</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/organizations/{id}/members/</code></td>
+<td>List organization members</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/organizations/{id}/add-member/</code></td>
+<td>Add member to organization</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/organizations/{id}/remove-member/</code></td>
+<td>Remove member from organization</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/teams/</code></td>
+<td>List or create teams</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/teams/{id}/</code></td>
+<td>Team CRUD</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/teams/{id}/members/</code></td>
+<td>List team members</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/teams/{id}/add-member/</code></td>
+<td>Add member to team</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/teams/{id}/invite-member/</code></td>
+<td>Send team invitation</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/teams/{id}/remove-member/</code></td>
+<td>Remove member from team</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/teams/{id}/change-member-role/</code></td>
+<td>Change a member's team role</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/teams/{id}/join/</code></td>
+<td>Join a team (via invitation)</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/business-units/</code></td>
+<td>Business unit CRUD</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/memberships/</code></td>
+<td>Organization membership CRUD</td>
+</tr>
+</tbody>
+</table>
+<h3 id="invitations-and-sharing">Invitations and sharing<a class="headerlink" href="#invitations-and-sharing" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/team-invitations/</code></td>
+<td>List or create invitations</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/team-invitations/{id}/revoke/</code></td>
+<td>Revoke a pending invitation</td>
+</tr>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/magic-links/</code></td>
+<td>List or create magic links</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/magic-links/{id}/revoke/</code></td>
+<td>Revoke a magic link</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/shared-with-me/</code></td>
+<td>List threat models shared with current user</td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td><code>/api/shared-with-me/{id}/remove/</code></td>
+<td>Remove from shared list</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/share/{token}/</code></td>
+<td>Access a shared threat model (no auth required)</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/invite/{token}/</code></td>
+<td>Preview invitation details (no auth required)</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/invite/{token}/</code></td>
+<td>Accept invitation (auth required)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="library-packs">Library packs<a class="headerlink" href="#library-packs" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/packs/</code></td>
+<td>List imported packs</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/packs/{id}/</code></td>
+<td>Pack detail</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/packs/{id}/preview/</code></td>
+<td>Preview pack contents</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/packs/{id}/check_dependencies/</code></td>
+<td>Check dependency status</td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td><code>/api/packs/{id}/unimport/</code></td>
+<td>Unimport a pack (Security Team only)</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/packs/available_from_source/</code></td>
+<td>Browse packs available for import</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/packs/preview_from_source/</code></td>
+<td>Preview a pack before importing</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/packs/import_single/</code></td>
+<td>Import a pack (Security Team only)</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/packs/sync_from_source/</code></td>
+<td>Sync pack catalog (Security Team only)</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/packs/validate/</code></td>
+<td>Validate pack YAML (Security Team only)</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/packs/available_overlays/</code></td>
+<td>List compliance overlays available for a pack</td>
+</tr>
+</tbody>
+</table>
+<h3 id="dashboard">Dashboard<a class="headerlink" href="#dashboard" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/health/</code></td>
+<td>Health check</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/dashboard/stats/</code></td>
+<td>Dashboard statistics</td>
+</tr>
+</tbody>
+</table>
+<h3 id="ai-providers-and-usage">AI providers and usage<a class="headerlink" href="#ai-providers-and-usage" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET/POST</code></td>
+<td><code>/api/ai-providers/</code></td>
+<td>List or create organization AI provider configurations</td>
+</tr>
+<tr>
+<td><code>GET/PUT/PATCH/DELETE</code></td>
+<td><code>/api/ai-providers/{id}/</code></td>
+<td>AI provider configuration CRUD</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/api/ai-providers/{id}/test-connection/</code></td>
+<td>Test an AI provider connection</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/api/ai-usage/summary/</code></td>
+<td>Organization AI usage summary</td>
+</tr>
+</tbody>
+</table>
+<h2 id="error-responses">Error responses<a class="headerlink" href="#error-responses" title="Permanent link">&para;</a></h2>
+<p>The API returns standard HTTP status codes:</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>400</code></td>
+<td>Bad request. Validation errors are returned as a JSON object with field names as keys.</td>
+</tr>
+<tr>
+<td><code>401</code></td>
+<td>Authentication required or token expired.</td>
+</tr>
+<tr>
+<td><code>403</code></td>
+<td>Insufficient permissions for this action.</td>
+</tr>
+<tr>
+<td><code>404</code></td>
+<td>Resource not found.</td>
+</tr>
+<tr>
+<td><code>405</code></td>
+<td>Method not allowed.</td>
+</tr>
+</tbody>
+</table>
+<p>Validation error example:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="p">{</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"This field is required."</span><span class="p">],</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nt">"criticality"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"\"invalid\" is not a valid choice."</span><span class="p">]</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="multi-tenancy">Multi-tenancy<a class="headerlink" href="#multi-tenancy" title="Permanent link">&para;</a></h2>
+<p>All data is scoped to the authenticated user's organization memberships. Queries automatically filter to organizations the user belongs to. There is no way to access data from organizations you are not a member of.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
