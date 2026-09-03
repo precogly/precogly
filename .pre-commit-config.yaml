@@ -8,7 +8,7 @@
 # means one resolved ruff, so both members move together.
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.4
+    rev: v0.16.5
     hooks:
       # Lint first so the formatter's output is what actually lands in the commit.
       - id: ruff-check
