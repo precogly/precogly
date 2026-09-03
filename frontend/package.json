@@ -36,7 +36,7 @@
     "date-fns": "^4.1.0",
     "docx": "^9.0.3",
     "html-to-image": "^1.11.11",
-    "lucide-react": "^0.561.0",
+    "lucide-react": "^1.38.0",
     "next-themes": "^0.4.6",
     "radix-ui": "^1.6.7",
     "react": "^19.2.0",
