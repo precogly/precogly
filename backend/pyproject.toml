@@ -60,7 +60,7 @@ dev = [
 ]
 
 prod = [
-    "gunicorn>=23.0,<24.0",
+    "gunicorn>=26.2.0,<27.0",
     # Redis/Celery (for background tasks)
     "celery>=5.4,<6.0",
     "django-celery-beat>=2.6,<3.0",
