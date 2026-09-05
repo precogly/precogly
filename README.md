@@ -5,6 +5,7 @@
 [![Stars](https://img.shields.io/github/stars/precogly/precogly)](https://github.com/precogly/precogly/stargazers)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-5865F2?logo=discord&logoColor=white)](https://discord.gg/uBFZGJzpYa)
 ![OWASP Project](https://img.shields.io/badge/OWASP-Project-blue?logo=owasp)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/precogly/precogly/badge)](https://securityscorecards.dev/viewer/?uri=github.com/precogly/precogly)
 
 > [!IMPORTANT]
 > **Precogly is now an OWASP project!** OWASP is the world's largest open-source application security community, and Precogly is proud to be part of it.
