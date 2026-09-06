@@ -126,7 +126,12 @@ export const ProcessNode = memo(function ProcessNode({
           <>
             {/* Label badge at top-left */}
             <div className="absolute -top-3 left-3 px-2 py-0.5 rounded text-xs font-medium bg-blue-500 text-white flex items-center gap-1">
-              <TechIcon iconSvg={technologyIcon} className="h-3 w-3" />
+              {technologyIcon && (
+                <span
+                  className="h-3 w-3 [&>svg]:h-full [&>svg]:w-full"
+                  dangerouslySetInnerHTML={{ __html: technologyIcon }}
+                />
+              )}
               <InlineEditableLabel
                 nodeId={id}
                 label={data.label}

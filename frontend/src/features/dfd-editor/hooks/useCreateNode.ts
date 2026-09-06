@@ -28,7 +28,7 @@ export function useCreateNode(notationStyle: DFDNotationStyle) {
 
       const id = `${type}-${Date.now()}`
 
-      const data = { ...defaultData[type], isNewlyInserted: true }
+      const data: Record<string, unknown> = { ...defaultData[type], isNewlyInserted: true }
       if (options?.label) data.label = options.label
       if (options?.technology && 'technology' in data) data.technology = options.technology
 
