@@ -59,6 +59,7 @@ nav:
       - Importing & Exporting: guides/importing-exporting.md
       - Compliance Mapping: guides/compliance-mapping.md
       - Report Generation: guides/report-generation.md
+      - Collaborative Review and Handoff: guides/collaborative-review-and-handoff.md
       - AI Features: guides/ai-features.md
   - Recipes:
       - IEC 62443: recipes/iec-62443.md
