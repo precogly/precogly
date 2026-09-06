@@ -8,7 +8,7 @@ Early. Four tools, all read-only:
 
 - `list_threat_models` — threat models in the caller's organizations, most recently
   updated first, with `total` beside them. Mounted, that is everything the caller can
-  read; over stdio it is one page of twenty, and `total` is how you tell the difference.
+  read; over stdio it is one page of twenty, so `total` is how you tell the difference.
 - `search_threat_library`, `search_countermeasure_library`, `search_component_library` —
   the shared catalogs installed packs populate, with `matched` and `catalogSize` beside
   the rows.
@@ -20,8 +20,8 @@ REST API by construction ([0008](docs/0008-the-mcp-server-runs-inside-precogly.m
 
 ## Two transports
 
-Which one you run decides where the credential comes from, and nothing else. The tools,
-their schemas and their results are identical.
+Which one you run decides where the credential comes from. The tools, their schemas
+and their results are identical.
 
 | | mounted in Precogly | stdio |
 |---|---|---|
@@ -92,7 +92,7 @@ uv run precogly-mcp                  # console script
 uv run python -m precogly_mcp.server # equivalent
 ```
 
-Under the MCP Inspector, for poking at schemas by hand. `--with-editable .` is required —
+The MCP Inspector runs it too, for poking at schemas by hand. `--with-editable .` is required —
 `mcp dev` runs the file in an ephemeral environment containing only `mcp`, so without it
 nothing in this package imports:
 
