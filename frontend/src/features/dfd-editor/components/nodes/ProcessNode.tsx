@@ -41,7 +41,8 @@ export const ProcessNode = memo(function ProcessNode({
   selected,
 }: NodeProps<ProcessNodeType>) {
   const isNewlyInserted = data.isNewlyInserted
-  const { displayName: technologyDisplayName, iconSvg: technologyIcon } = useTechnologyInfo(data.technology)
+  const technologySlug = data.technology || (data as Record<string, unknown>).componentRef as string | undefined
+  const { displayName: technologyDisplayName, iconSvg: technologyIcon } = useTechnologyInfo(technologySlug)
   const [showLockAnimation, setShowLockAnimation] = useState(false)
   const [showReceiveAnimation, setShowReceiveAnimation] = useState(false)
   const { notationStyle } = useDFDNotation()

@@ -55,11 +55,13 @@ export interface DataStoreNodeData extends BaseNodeData {
 
 export interface HumanActorNodeData extends BaseNodeData {
   actorType?: string
+  technology?: string
 }
 
 export interface SystemActorNodeData extends BaseNodeData {
   systemType?: string
   vendor?: string
+  technology?: string
 }
 
 export interface TrustZoneNodeData extends BaseNodeData {

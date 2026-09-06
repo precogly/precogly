@@ -30,6 +30,10 @@ export interface GuestDiagramOutletContext {
   exportImageRef: React.MutableRefObject<((format: 'png' | 'svg', options?: ExportImageOptions) => void | Promise<void>) | null>
   captureImageRef: React.MutableRefObject<(() => Promise<Uint8Array | null>) | null>
   onCacheImage: (image: Uint8Array | null) => void
+  showComponentPanel: boolean
+  setShowComponentPanel: React.Dispatch<React.SetStateAction<boolean>>
+  exportDialogOpen: boolean
+  setExportDialogOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export function GuestLayout() {
@@ -39,6 +43,8 @@ export function GuestLayout() {
   const countermeasureOps = useGuestCountermeasures()
   const systemContextOps = useGuestSystemContext()
   const [notationStyle, setNotationStyle] = useState<DFDNotationStyle>('yourdon')
+  const [showComponentPanel, setShowComponentPanel] = useState(true)
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
   const fileHandleState = useFileHandle()
   const exportImageRef = useRef<((format: 'png' | 'svg', options?: ExportImageOptions) => void | Promise<void>) | null>(null)
   const captureImageRef = useRef<(() => Promise<Uint8Array | null>) | null>(null)
@@ -161,6 +167,10 @@ export function GuestLayout() {
       exportImageRef,
       captureImageRef,
       onCacheImage: handleCacheImage,
+      showComponentPanel,
+      setShowComponentPanel,
+      exportDialogOpen,
+      setExportDialogOpen,
     }),
     [
       diagramState.title,
@@ -176,6 +186,8 @@ export function GuestLayout() {
       diagramState.canRedo,
       notationStyle,
       handleCacheImage,
+      showComponentPanel,
+      exportDialogOpen,
     ]
   )
 
@@ -207,8 +219,16 @@ export function GuestLayout() {
           onMarkSaved={diagramState.markSaved}
           onLoadFromFile={handleLoadFromFile}
           notationStyle={notationStyle}
+          onNotationChange={setNotationStyle}
           onCaptureImage={async () => (await captureImageRef.current?.()) ?? cachedDiagramImage}
           onAnalyzeThreats={handleAnalyzeThreats}
+          onOpenExportDialog={() => setExportDialogOpen(true)}
+          onUndo={diagramState.undo}
+          onRedo={diagramState.redo}
+          canUndo={diagramState.canUndo}
+          canRedo={diagramState.canRedo}
+          showComponentPanel={showComponentPanel}
+          onToggleComponentPanel={() => setShowComponentPanel((prev) => !prev)}
           fileHandle={fileHandleState.fileHandle}
           fileName={fileHandleState.fileName}
           onFileHandleChange={fileHandleState.updateHandle}

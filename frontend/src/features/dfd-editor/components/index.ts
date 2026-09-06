@@ -17,7 +17,6 @@ import { TrustBoundaryEdge } from './edges/TrustBoundaryEdge'
 export * from './panels'
 
 // Other components
-export { DiagramToolbar } from './DiagramToolbar'
 export { TemplateBrowser } from './TemplateBrowser'
 export { TechnologyCombobox } from './technology-combobox'
 

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, useRef, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
   ReactFlow,
   Background,
@@ -14,19 +14,47 @@ import {
   reconnectEdge,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { ArrowLeft, Save, Clock, Loader2, Pencil, Trash2, ShieldAlert, Info } from 'lucide-react'
+import { Save, Clock, Loader2, Pencil, Trash2, ShieldAlert, Info, Undo2, Redo2, HelpCircle, LayoutTemplate, ImageDown, PanelLeft, MoreHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { DeleteDFDDialog } from '@/features/threat-models/components'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
 import { useThreatModel, useDeleteDFD } from '@/features/threat-models/api/threat-models'
+import { OwlMark } from '@/features/ai/components/OwlMark'
+import { AI_PROVIDER_SETTINGS_PATH } from '@/features/ai/constants'
 // DFD Editor internal imports
 import { canvasNodeTypes, canvasEdgeTypes } from './components/nodes/CanvasNodeWrapper'
-import { DiagramToolbar } from './components/DiagramToolbar'
 import { NodeEditPanel } from './components/panels/NodeEditPanel'
 import { EdgeEditPanel } from './components/panels/EdgeEditPanel'
 import { CanvasThreatSection } from './components/panels/CanvasThreatSection'
@@ -36,6 +64,7 @@ import { ComponentPanel } from './components/panels/ComponentPanel'
 import { TemplateBrowser } from './components/TemplateBrowser'
 import { GenerateDFDDialog } from './components/GenerateDFDDialog'
 import { useDfdAiAvailability } from './api/generate-dfd'
+import { ExportImageDialog } from './components/ExportImageDialog'
 import { CanvasOverlays } from './components/CanvasOverlays'
 import { DFDNotationProvider } from './context/DFDNotationContext'
 import { useDiagramState } from './hooks/useDiagramState'
@@ -60,6 +89,8 @@ function DFDEditorContent() {
   const [showGenerateDFD, setShowGenerateDFD] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showComponentPanel, setShowComponentPanel] = useState(true)
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
 
   // ReactFlow instance for coordinate conversion and edge queries
   const { screenToFlowPosition, getEdges, getViewport, setViewport, getNodesBounds } = useReactFlow()
@@ -503,6 +534,20 @@ function DFDEditorContent() {
     [diagramTitle, getNodesBounds, getViewport, nodes, setViewport]
   )
 
+  // Keyboard shortcut help (? key)
+  useEffect(() => {
+    const handleShortcutHelp = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return
+      if (event.key === '?') {
+        event.preventDefault()
+        setShortcutsOpen(true)
+      }
+    }
+    window.addEventListener('keydown', handleShortcutHelp)
+    return () => window.removeEventListener('keydown', handleShortcutHelp)
+  }, [])
+
   // Handle DFD deletion
   const handleConfirmDelete = useCallback(
     (deleteOrphanedComponents: boolean) => {
@@ -540,17 +585,27 @@ function DFDEditorContent() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-44px)]">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-background">
-        <div className="flex items-center gap-4">
-          <Link
-            to={`/threat-models/${threatModelId}`}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="text-sm">Back</span>
-          </Link>
-          <div>
+      {/* Merged header (diagram header + toolbar items) */}
+      <TooltipProvider delayDuration={300}>
+        <div className="flex items-center gap-2 px-4 py-2 border-b bg-background min-h-[48px]">
+          {/* Sidebar toggle */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn('gap-1', showComponentPanel && 'bg-muted')}
+                onClick={() => setShowComponentPanel((prev) => !prev)}
+              >
+                <PanelLeft className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              {showComponentPanel ? 'Hide' : 'Show'} component panel
+            </TooltipContent>
+          </Tooltip>
+
+          <div className="mr-2 min-w-0 max-w-[240px] shrink">
             {isEditingTitle ? (
               <input
                 ref={titleInputRef}
@@ -567,19 +622,158 @@ function DFDEditorContent() {
                 onClick={handleTitleClick}
                 className="flex items-center gap-2 group text-left"
               >
-                <h1 className="font-semibold">{diagramTitle}</h1>
-                <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                <h1 className="font-semibold truncate">{diagramTitle}</h1>
+                <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
               </button>
             )}
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground truncate">
               {threatModel?.name ? `${threatModel.name}` : 'Data Flow Diagram'}
             </p>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          {/* Save status */}
-          <TooltipProvider>
+          {/* Canvas tools (from toolbar) */}
+          <div className="hidden xl:flex items-center gap-0.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={undo} disabled={!canUndo} aria-label="Undo">
+                  <Undo2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Undo (Ctrl/Cmd + Z)</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={redo} disabled={!canRedo} aria-label="Redo">
+                  <Redo2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Redo (Ctrl/Cmd + Shift + Z)</TooltipContent>
+            </Tooltip>
+          </div>
+
+          <div className="hidden xl:block">
+            <Select
+              value={notationStyle}
+              onValueChange={(value) => handleNotationChange(value as DFDNotationStyle)}
+            >
+              <SelectTrigger className="h-8 w-[140px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="dfd3">DFD3</SelectItem>
+                <SelectItem value="yourdon">Yourdon</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="hidden xl:block">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  aria-label="Keyboard shortcuts"
+                  onClick={() => setShortcutsOpen(true)}
+                >
+                  <HelpCircle className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Keyboard shortcuts (?)</TooltipContent>
+            </Tooltip>
+          </div>
+
+          <Separator orientation="vertical" className="hidden xl:block h-6" />
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setShowTemplates(true)}
+              >
+                <LayoutTemplate className="h-4 w-4" />
+                <span className="hidden xl:inline">Templates</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Browse and insert pre-built diagram templates</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn('gap-2', !aiAvailable && 'text-muted-foreground')}
+                onClick={aiAvailable ? () => setShowGenerateDFD(true) : () => navigate(AI_PROVIDER_SETTINGS_PATH)}
+              >
+                <OwlMark className="h-4 w-4" />
+                <span className="hidden xl:inline">Generate</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              {aiAvailable ? 'Generate DFD with AI' : 'Set up an AI provider to use this'}
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2"
+                onClick={() => setExportDialogOpen(true)}
+              >
+                <ImageDown className="h-4 w-4" />
+                <span className="hidden xl:inline">Export Image</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Download diagram as PNG or SVG</TooltipContent>
+          </Tooltip>
+
+          {/* Overflow menu for narrow viewports */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="xl:hidden h-8 w-8" aria-label="More options">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={undo} disabled={!canUndo}>
+                <Undo2 className="h-4 w-4 mr-2" />
+                Undo
+                <DropdownMenuShortcut>⌘Z</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={redo} disabled={!canRedo}>
+                <Redo2 className="h-4 w-4 mr-2" />
+                Redo
+                <DropdownMenuShortcut>⇧⌘Z</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs text-muted-foreground">Notation</DropdownMenuLabel>
+              <DropdownMenuRadioGroup value={notationStyle} onValueChange={(value) => handleNotationChange(value as DFDNotationStyle)}>
+                <DropdownMenuRadioItem value="dfd3">DFD3</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="yourdon">Yourdon</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setShortcutsOpen(true)}>
+                <HelpCircle className="h-4 w-4 mr-2" />
+                Keyboard shortcuts
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-red-600 focus:text-red-600"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete diagram
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Right-aligned items */}
+          <div className="flex items-center gap-2 ml-auto shrink-0">
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -590,7 +784,7 @@ function DFDEditorContent() {
                   ) : (
                     <Clock className="h-4 w-4" />
                   )}
-                  <span className="hidden sm:inline">
+                  <span className="hidden xl:inline">
                     {isSaving
                       ? 'Saving...'
                       : hasUnsavedChanges
@@ -605,42 +799,42 @@ function DFDEditorContent() {
                   : `Last saved: ${lastSaved?.toLocaleString() || 'Never'}`}
               </TooltipContent>
             </Tooltip>
-          </TooltipProvider>
 
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => saveNow(notationStyle)}
-            disabled={isSaving || !hasUnsavedChanges}
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Save
-          </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => saveNow(notationStyle)}
+              disabled={isSaving || !hasUnsavedChanges}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Save
+            </Button>
 
-          <Button
-            size="sm"
-            onClick={async () => {
-              if (hasUnsavedChanges) {
-                await saveNow(notationStyle)
-              }
-              navigate(`/threat-models/${threatModelId}`)
-            }}
-          >
-            <ShieldAlert className="h-4 w-4 mr-2" />
-            Analyze Threats
-          </Button>
+            <Button
+              size="sm"
+              onClick={async () => {
+                if (hasUnsavedChanges) {
+                  await saveNow(notationStyle)
+                }
+                navigate(`/threat-models/${threatModelId}`)
+              }}
+            >
+              <ShieldAlert className="h-4 w-4 mr-2" />
+              Analyze Threats
+            </Button>
 
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setShowDeleteDialog(true)}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete
-          </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowDeleteDialog(true)}
+              className="hidden xl:inline-flex text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
+          </div>
         </div>
-      </div>
+      </TooltipProvider>
 
       {/* Reference diagram banner */}
       {diagram && !diagram.isPrimary && (
@@ -652,35 +846,18 @@ function DFDEditorContent() {
         </div>
       )}
 
-      {/* Toolbar */}
-      <DiagramToolbar
-        connectionMode={connectionMode}
-        onConnectionModeChange={handleConnectionModeChange}
-        boundaryMode={boundaryMode}
-        onBoundaryModeChange={handleBoundaryModeChange}
-        getCanvasCenterPosition={getCanvasCenterPosition}
-        onOpenTemplates={() => setShowTemplates(true)}
-        onOpenGenerateDFD={() => setShowGenerateDFD(true)}
-        aiAvailable={aiAvailable}
-        onOpenThreatAnalysis={() => {}}
-        hideAnalyzeThreats
-        notationStyle={notationStyle}
-        onNotationChange={handleNotationChange}
-        onExportImage={handleExportImage}
-        onUndo={undo}
-        onRedo={redo}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        showComponentPanel={showComponentPanel}
-        onToggleComponentPanel={() => setShowComponentPanel((prev) => !prev)}
-      />
-
       <div className="flex flex-1 overflow-hidden">
         {/* Component Panel */}
         {showComponentPanel && (
           <ComponentPanel
             threatModelId={threatModelId}
             onClose={() => setShowComponentPanel(false)}
+            connectionMode={connectionMode}
+            onConnectionModeChange={handleConnectionModeChange}
+            boundaryMode={boundaryMode}
+            onBoundaryModeChange={handleBoundaryModeChange}
+            getCanvasCenterPosition={getCanvasCenterPosition}
+            notationStyle={notationStyle}
           />
         )}
         {/* Canvas */}
@@ -813,6 +990,41 @@ function DFDEditorContent() {
         onConfirm={handleConfirmDelete}
         isDeleting={deleteDFDMutation.isPending}
       />
+
+      {/* Export Image Dialog */}
+      <ExportImageDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        onExport={handleExportImage}
+      />
+
+      {/* Keyboard Shortcuts Dialog */}
+      <Dialog open={shortcutsOpen} onOpenChange={setShortcutsOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Keyboard shortcuts</DialogTitle>
+            <DialogDescription>Shortcuts are active when the canvas is focused and a form field is not being edited.</DialogDescription>
+          </DialogHeader>
+          <div className="divide-y rounded-md border">
+            {[
+              ['Ctrl/Cmd + S', 'Save the diagram'],
+              ['Ctrl/Cmd + Z', 'Undo the last change'],
+              ['Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y', 'Redo the last undone change'],
+              ['Ctrl/Cmd + A', 'Select all nodes and edges'],
+              ['Ctrl/Cmd + C', 'Copy selected nodes'],
+              ['Ctrl/Cmd + V', 'Paste copied nodes or clipboard text into a selected node'],
+              ['Ctrl/Cmd + D', 'Duplicate selected nodes'],
+              ['Delete / Backspace', 'Delete selected nodes or edges'],
+              ['Escape', 'Deselect and cancel the active interaction'],
+            ].map(([shortcut, description]) => (
+              <div key={shortcut} className="flex items-center justify-between gap-4 px-3 py-2 text-sm">
+                <kbd className="rounded border bg-muted px-2 py-1 font-mono text-xs whitespace-nowrap">{shortcut}</kbd>
+                <span className="text-right text-muted-foreground">{description}</span>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

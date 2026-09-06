@@ -13,7 +13,6 @@ export { DFDEditor as default } from './DFDEditor'
 export {
   nodeTypes,
   edgeTypes,
-  DiagramToolbar,
   TemplateBrowser,
   TechnologyCombobox,
   ProcessNode,
