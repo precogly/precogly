@@ -15,7 +15,8 @@ import {
 import '@xyflow/react/dist/style.css'
 import { useOutletContext } from 'react-router-dom'
 import { CanvasOverlays } from '@/features/dfd-editor/components/CanvasOverlays'
-import { DiagramToolbar } from '@/features/dfd-editor/components/DiagramToolbar'
+import { ExportImageDialog } from '@/features/dfd-editor/components/ExportImageDialog'
+import { ComponentPanel } from '@/features/dfd-editor/components/panels/ComponentPanel'
 import { GuestNodeEditPanel } from './components/GuestNodeEditPanel'
 import { EdgeEditPanel } from '@/features/dfd-editor/components/panels/EdgeEditPanel'
 import { TrustBoundaryEdgeEditPanel } from '@/features/dfd-editor/components/panels/TrustBoundaryEdgeEditPanel'
@@ -32,7 +33,7 @@ import type {
   TrustBoundaryEdge,
 } from '@/features/dfd-editor/types'
 import { useCreateNode, useHandleDrop } from '@/features/dfd-editor/hooks/useCreateNode'
-import { type DFDNotationStyle, NOTATION_NODE_SIZES } from '@/features/dfd-editor/types/notation'
+import { NOTATION_NODE_SIZES } from '@/features/dfd-editor/types/notation'
 import { GuestThreatSection } from './components/GuestThreatSection'
 import { guestNodeTypes, guestEdgeTypes } from './components/GuestNodeWrapper'
 import { useGuestEditor } from './context/GuestEditorContext'
@@ -52,48 +53,48 @@ function GuestDFDEditorContent() {
     onEdgesChange,
     undo,
     redo,
-    canUndo,
-    canRedo,
     notationStyle,
-    setNotationStyle,
     exportImageRef,
     captureImageRef,
     onCacheImage,
+    showComponentPanel,
+    setShowComponentPanel,
+    exportDialogOpen,
+    setExportDialogOpen,
   } = useOutletContext<GuestDiagramOutletContext>()
 
-  // Handle notation change — resize affected nodes
-  const handleNotationChange = useCallback(
-    (newNotation: DFDNotationStyle) => {
-      setNotationStyle(newNotation)
-      const newSizes = NOTATION_NODE_SIZES[newNotation]
+  // Resize nodes when notation style changes (triggered from header dropdown)
+  const previousNotationRef = useRef(notationStyle)
+  useEffect(() => {
+    if (previousNotationRef.current === notationStyle) return
+    previousNotationRef.current = notationStyle
+    const newSizes = NOTATION_NODE_SIZES[notationStyle]
 
-      setNodes((currentNodes) => {
-        const containerProcessIds = new Set(
-          currentNodes
-            .filter((n) => n.parentId)
-            .map((n) => n.parentId!)
-            .filter((parentId) => currentNodes.find((n) => n.id === parentId)?.type === 'process')
-        )
+    setNodes((currentNodes) => {
+      const containerProcessIds = new Set(
+        currentNodes
+          .filter((n) => n.parentId)
+          .map((n) => n.parentId!)
+          .filter((parentId) => currentNodes.find((n) => n.id === parentId)?.type === 'process')
+      )
 
-        return currentNodes.map((node) => {
-          if (
-            (node.type === 'process' && !containerProcessIds.has(node.id)) ||
-            node.type === 'datastore'
-          ) {
-            const defaultSize = newSizes[node.type]
-            if (defaultSize) {
-              return {
-                ...node,
-                style: { ...node.style, width: defaultSize.width, height: defaultSize.height },
-              }
+      return currentNodes.map((node) => {
+        if (
+          (node.type === 'process' && !containerProcessIds.has(node.id)) ||
+          node.type === 'datastore'
+        ) {
+          const defaultSize = newSizes[node.type]
+          if (defaultSize) {
+            return {
+              ...node,
+              style: { ...node.style, width: defaultSize.width, height: defaultSize.height },
             }
           }
-          return node
-        })
+        }
+        return node
       })
-    },
-    [setNodes, setNotationStyle]
-  )
+    })
+  }, [notationStyle, setNodes])
 
   // State for UI
   const [selectedNode, setSelectedNode] = useState<DiagramNode | null>(null)
@@ -428,29 +429,21 @@ function GuestDFDEditorContent() {
 
   return (
     <>
-      {/* Toolbar */}
-      <DiagramToolbar
-        connectionMode={connectionMode}
-        onConnectionModeChange={handleConnectionModeChange}
-        boundaryMode={boundaryMode}
-        onBoundaryModeChange={handleBoundaryModeChange}
-        getCanvasCenterPosition={getCanvasCenterPosition}
-        onOpenTemplates={() => {}}
-        onOpenThreatAnalysis={() => {}}
-        hideTemplates
-        hideAnalyzeThreats
-        notationStyle={notationStyle}
-        onNotationChange={handleNotationChange}
-        onExportImage={(format, options) => exportImageRef.current?.(format, options)}
-        onUndo={undo}
-        onRedo={redo}
-        canUndo={canUndo}
-        canRedo={canRedo}
-      />
-
-      <div className="flex flex-1 overflow-hidden">
-        {/* Canvas */}
-        <div className={`flex-1 ${connectionMode ? 'connection-mode' : ''}`} ref={reactFlowWrapper} onMouseMove={handleMouseMove} onDragOver={handleDragOver} onDrop={handleDrop}>
+    <div className="flex flex-1 overflow-hidden">
+      {/* Component Panel (sidebar) */}
+      {showComponentPanel && (
+        <ComponentPanel
+          onClose={() => setShowComponentPanel(false)}
+          connectionMode={connectionMode}
+          onConnectionModeChange={handleConnectionModeChange}
+          boundaryMode={boundaryMode}
+          onBoundaryModeChange={handleBoundaryModeChange}
+          getCanvasCenterPosition={getCanvasCenterPosition}
+          notationStyle={notationStyle}
+        />
+      )}
+      {/* Canvas */}
+      <div className={`flex-1 ${connectionMode ? 'connection-mode' : ''}`} ref={reactFlowWrapper} onMouseMove={handleMouseMove} onDragOver={handleDragOver} onDrop={handleDrop}>
           <DFDNotationProvider notationStyle={notationStyle}>
             <ReactFlow
               nodes={nodes}
@@ -538,6 +531,11 @@ function GuestDFDEditorContent() {
           />
         )}
       </div>
+      <ExportImageDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        onExport={(format, options) => exportImageRef.current?.(format, options)}
+      />
     </>
   )
 }

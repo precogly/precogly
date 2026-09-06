@@ -41,7 +41,8 @@ export const ProcessNode = memo(function ProcessNode({
   selected,
 }: NodeProps<ProcessNodeType>) {
   const isNewlyInserted = data.isNewlyInserted
-  const { displayName: technologyDisplayName, iconSvg: technologyIcon } = useTechnologyInfo(data.technology)
+  const technologySlug = data.technology || (data as Record<string, unknown>).componentRef as string | undefined
+  const { displayName: technologyDisplayName, iconSvg: technologyIcon } = useTechnologyInfo(technologySlug)
   const [showLockAnimation, setShowLockAnimation] = useState(false)
   const [showReceiveAnimation, setShowReceiveAnimation] = useState(false)
   const { notationStyle } = useDFDNotation()
@@ -126,7 +127,12 @@ export const ProcessNode = memo(function ProcessNode({
           <>
             {/* Label badge at top-left */}
             <div className="absolute -top-3 left-3 px-2 py-0.5 rounded text-xs font-medium bg-blue-500 text-white flex items-center gap-1">
-              <TechIcon iconSvg={technologyIcon} className="h-3 w-3" />
+              {technologyIcon && (
+                <span
+                  className="h-3 w-3 [&>svg]:h-full [&>svg]:w-full"
+                  dangerouslySetInnerHTML={{ __html: technologyIcon }}
+                />
+              )}
               <InlineEditableLabel
                 nodeId={id}
                 label={data.label}

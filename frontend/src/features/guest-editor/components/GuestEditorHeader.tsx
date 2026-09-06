@@ -1,11 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Download, FileText, FolderOpen, Pencil, ArrowLeft, Save, ChevronDown, ShieldAlert } from 'lucide-react'
+import { Download, FileText, FolderOpen, Pencil, ArrowLeft, Save, ChevronDown, ShieldAlert, Undo2, Redo2, HelpCircle, ImageDown, PanelLeft, MoreHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
@@ -24,6 +37,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
+import type { DFDNotationStyle } from '@/features/dfd-editor/types/notation'
 import { useGuestEditor } from '../context/GuestEditorContext'
 import { serializeGuestToCycloneDx, deserializeCycloneDxToGuest } from '../lib/cyclonedx-guest'
 import {
@@ -46,10 +61,18 @@ interface GuestEditorHeaderProps {
   onTitleChange: (title: string) => void
   hasUnsavedChanges: boolean
   onMarkSaved: () => void
-  onLoadFromFile: (data: { title: string; nodes: import('@/features/dfd-editor/types').DiagramNode[]; edges: import('@/features/dfd-editor/types').DiagramEdge[]; notationStyle?: import('@/features/dfd-editor/types/notation').DFDNotationStyle; systemContext?: import('../types').GuestSystemContext }) => void
-  notationStyle?: import('@/features/dfd-editor/types/notation').DFDNotationStyle
+  onLoadFromFile: (data: { title: string; nodes: import('@/features/dfd-editor/types').DiagramNode[]; edges: import('@/features/dfd-editor/types').DiagramEdge[]; notationStyle?: DFDNotationStyle; systemContext?: import('../types').GuestSystemContext }) => void
+  notationStyle?: DFDNotationStyle
+  onNotationChange?: (notation: DFDNotationStyle) => void
   onCaptureImage: () => Promise<Uint8Array | null>
   onAnalyzeThreats: () => void
+  onOpenExportDialog?: () => void
+  onUndo?: () => void
+  onRedo?: () => void
+  canUndo?: boolean
+  canRedo?: boolean
+  showComponentPanel?: boolean
+  onToggleComponentPanel?: () => void
   fileHandle: FileSystemFileHandle | null
   fileName: string | null
   onFileHandleChange: (handle: FileSystemFileHandle) => void
@@ -63,8 +86,16 @@ export function GuestEditorHeader({
   onMarkSaved,
   onLoadFromFile,
   notationStyle,
+  onNotationChange,
   onCaptureImage,
   onAnalyzeThreats,
+  onOpenExportDialog,
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
+  showComponentPanel = false,
+  onToggleComponentPanel,
   fileHandle,
   fileName,
   onFileHandleChange,
@@ -77,6 +108,7 @@ export function GuestEditorHeader({
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [titleValue, setTitleValue] = useState('')
   const titleInputRef = useRef<HTMLInputElement>(null)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
 
   // System context modal state
   const [showSystemContextModal, setShowSystemContextModal] = useState(false)
@@ -85,6 +117,20 @@ export function GuestEditorHeader({
   const [showSaveDialog, setShowSaveDialog] = useState(false)
   const [saveFilename, setSaveFilename] = useState('')
   const filenameInputRef = useRef<HTMLInputElement>(null)
+
+  // Keyboard shortcut help (? key)
+  useEffect(() => {
+    const handleShortcutHelp = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return
+      if (event.key === '?') {
+        event.preventDefault()
+        setShortcutsOpen(true)
+      }
+    }
+    window.addEventListener('keydown', handleShortcutHelp)
+    return () => window.removeEventListener('keydown', handleShortcutHelp)
+  }, [])
 
   const handleTitleClick = useCallback(() => {
     setTitleValue(title)
@@ -280,8 +326,30 @@ export function GuestEditorHeader({
 
   return (
     <>
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-background">
-        <div className="flex items-center gap-4">
+      <TooltipProvider delayDuration={300}>
+        <div className="flex items-center gap-2 px-4 py-2 border-b bg-background min-h-[48px]">
+          {/* Sidebar toggle */}
+          {onToggleComponentPanel && (
+            <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn('gap-1', showComponentPanel && 'bg-muted')}
+                    onClick={onToggleComponentPanel}
+                  >
+                    <PanelLeft className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  {showComponentPanel ? 'Hide' : 'Show'} component panel
+                </TooltipContent>
+              </Tooltip>
+              <Separator orientation="vertical" className="h-6" />
+            </>
+          )}
+
           <button
             onClick={() => {
               if (!hasUnsavedChanges || window.confirm('Changes that you made may not be saved.')) {
@@ -293,7 +361,7 @@ export function GuestEditorHeader({
             <ArrowLeft className="h-4 w-4" />
             <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">Guest</span>
           </button>
-          <div>
+          <div className="mr-2 min-w-0 max-w-[240px] shrink">
             {isEditingTitle ? (
               <input
                 ref={titleInputRef}
@@ -310,11 +378,11 @@ export function GuestEditorHeader({
                 onClick={handleTitleClick}
                 className="flex items-center gap-2 group text-left"
               >
-                <h1 className="font-semibold">{title}</h1>
-                <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                <h1 className="font-semibold truncate">{title}</h1>
+                <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
               </button>
             )}
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground truncate">
               {fileName ? fileName : 'Data Flow Diagram'}
             </p>
           </div>
@@ -324,21 +392,131 @@ export function GuestEditorHeader({
               <span>Unsaved</span>
             </div>
           )}
-          <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" className="bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100" onClick={() => setShowSystemContextModal(true)}>
+                <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                Add / Edit Context
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Define system context, data assets, and assumptions</TooltipContent>
+          </Tooltip>
+
+          {/* Canvas tools (from toolbar) */}
+          {(onUndo || onRedo) && (
+            <div className="hidden xl:flex items-center gap-0.5">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onUndo} disabled={!canUndo} aria-label="Undo">
+                    <Undo2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Undo (Ctrl/Cmd + Z)</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onRedo} disabled={!canRedo} aria-label="Redo">
+                    <Redo2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Redo (Ctrl/Cmd + Shift + Z)</TooltipContent>
+              </Tooltip>
+            </div>
+          )}
+
+          {onNotationChange && notationStyle && (
+            <div className="hidden xl:block">
+              <Select
+                value={notationStyle}
+                onValueChange={(value) => onNotationChange(value as DFDNotationStyle)}
+              >
+                <SelectTrigger className="h-8 w-[140px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="dfd3">DFD3</SelectItem>
+                  <SelectItem value="yourdon">Yourdon</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="hidden xl:block">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="outline" size="sm" className="bg-teal-50 text-teal-700 border-teal-200 hover:bg-teal-100" onClick={() => setShowSystemContextModal(true)}>
-                  <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                  Add / Edit Context
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  aria-label="Keyboard shortcuts"
+                  onClick={() => setShortcutsOpen(true)}
+                >
+                  <HelpCircle className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Define system context, data assets, and assumptions</TooltipContent>
+              <TooltipContent side="bottom">Keyboard shortcuts (?)</TooltipContent>
             </Tooltip>
-          </TooltipProvider>
-        </div>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <TooltipProvider>
+          {onOpenExportDialog && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2"
+                  onClick={onOpenExportDialog}
+                >
+                  <ImageDown className="h-4 w-4" />
+                  <span className="hidden xl:inline">Export Image</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">Download diagram as PNG or SVG</TooltipContent>
+            </Tooltip>
+          )}
+
+          {/* Overflow menu for narrow viewports */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="xl:hidden h-8 w-8" aria-label="More options">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {(onUndo || onRedo) && (
+                <>
+                  <DropdownMenuItem onClick={onUndo} disabled={!canUndo}>
+                    <Undo2 className="h-4 w-4 mr-2" />
+                    Undo
+                    <DropdownMenuShortcut>⌘Z</DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={onRedo} disabled={!canRedo}>
+                    <Redo2 className="h-4 w-4 mr-2" />
+                    Redo
+                    <DropdownMenuShortcut>⇧⌘Z</DropdownMenuShortcut>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              {onNotationChange && notationStyle && (
+                <>
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Notation</DropdownMenuLabel>
+                  <DropdownMenuRadioGroup value={notationStyle} onValueChange={(value) => onNotationChange(value as DFDNotationStyle)}>
+                    <DropdownMenuRadioItem value="dfd3">DFD3</DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="yourdon">Yourdon</DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                  <DropdownMenuSeparator />
+                </>
+              )}
+              <DropdownMenuItem onClick={() => setShortcutsOpen(true)}>
+                <HelpCircle className="h-4 w-4 mr-2" />
+                Keyboard shortcuts
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Right-aligned items */}
+          <div className="flex items-center gap-2 ml-auto shrink-0">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" onClick={handleOpen}>
@@ -411,9 +589,37 @@ export function GuestEditorHeader({
                 <TooltipContent>Download threat model report as Word document</TooltipContent>
               </Tooltip>
             )}
-          </TooltipProvider>
+          </div>
         </div>
-      </div>
+      </TooltipProvider>
+
+      {/* Keyboard Shortcuts Dialog */}
+      <Dialog open={shortcutsOpen} onOpenChange={setShortcutsOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Keyboard shortcuts</DialogTitle>
+            <DialogDescription>Shortcuts are active when the canvas is focused and a form field is not being edited.</DialogDescription>
+          </DialogHeader>
+          <div className="divide-y rounded-md border">
+            {[
+              ['Ctrl/Cmd + S', 'Save the diagram'],
+              ['Ctrl/Cmd + Z', 'Undo the last change'],
+              ['Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y', 'Redo the last undone change'],
+              ['Ctrl/Cmd + A', 'Select all nodes and edges'],
+              ['Ctrl/Cmd + C', 'Copy selected nodes'],
+              ['Ctrl/Cmd + V', 'Paste copied nodes or clipboard text into a selected node'],
+              ['Ctrl/Cmd + D', 'Duplicate selected nodes'],
+              ['Delete / Backspace', 'Delete selected nodes or edges'],
+              ['Escape', 'Deselect and cancel the active interaction'],
+            ].map(([shortcut, description]) => (
+              <div key={shortcut} className="flex items-center justify-between gap-4 px-3 py-2 text-sm">
+                <kbd className="rounded border bg-muted px-2 py-1 font-mono text-xs whitespace-nowrap">{shortcut}</kbd>
+                <span className="text-right text-muted-foreground">{description}</span>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Save filename dialog (fallback for browsers without File System Access API) */}
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>

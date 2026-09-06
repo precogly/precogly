@@ -1,11 +1,11 @@
 import { useCallback } from 'react'
 import { useReactFlow, type XYPosition } from '@xyflow/react'
 import type { DiagramNode, DiagramNodeType } from '../types'
-import { type DFDNotationStyle, NOTATION_NODE_SIZES } from '../types/notation'
+import { type DFDNotationStyle, NOTATION_NODE_SIZES, TECHNOLOGY_NODE_SIZES } from '../types/notation'
 
 const defaultData: Record<DiagramNodeType, Record<string, unknown>> = {
-  humanActor: { label: 'New Human Actor' },
-  systemActor: { label: 'New System Actor' },
+  humanActor: { label: 'New Human Actor', technology: '' },
+  systemActor: { label: 'New System Actor', technology: '' },
   process: { label: 'New Process', technology: '' },
   datastore: { label: 'New Data Store', technology: '' },
   trustZone: { label: 'Trust Zone', trustLevel: 25, zoneColor: '#ef4444' },
@@ -19,7 +19,7 @@ export function useCreateNode(notationStyle: DFDNotationStyle) {
 
   const createNode = useCallback(
     (type: DiagramNodeType, dropPosition: XYPosition, options?: { technology?: string; label?: string }) => {
-      const nodeSize = nodeSizes[type] ?? { width: 120, height: 70 }
+      const nodeSize = (options?.technology && TECHNOLOGY_NODE_SIZES[type]) || nodeSizes[type] || { width: 120, height: 70 }
 
       const position = {
         x: dropPosition.x - nodeSize.width / 2,
@@ -28,7 +28,7 @@ export function useCreateNode(notationStyle: DFDNotationStyle) {
 
       const id = `${type}-${Date.now()}`
 
-      const data = { ...defaultData[type], isNewlyInserted: true }
+      const data: Record<string, unknown> = { ...defaultData[type], isNewlyInserted: true }
       if (options?.label) data.label = options.label
       if (options?.technology && 'technology' in data) data.technology = options.technology
 

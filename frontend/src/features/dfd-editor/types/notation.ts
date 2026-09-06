@@ -21,3 +21,10 @@ export const NOTATION_NODE_SIZES: Record<DFDNotationStyle, Record<string, { widt
     stickyNote: { width: 180, height: 120 },
   },
 }
+
+export const TECHNOLOGY_NODE_SIZES: Record<string, { width: number; height: number }> = {
+  process: { width: 90, height: 80 },
+  datastore: { width: 90, height: 80 },
+  humanActor: { width: 90, height: 80 },
+  systemActor: { width: 90, height: 80 },
+}
