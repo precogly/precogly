@@ -54,6 +54,7 @@ nav:
       - Magic Links: concepts/magic-links.md
   - Guides:
       - Creating a Threat Model: guides/creating-threat-model.md
+      - End-to-End Assessment Workflow: guides/end-to-end-assessment-workflow.md
       - Guest Editor: guides/guest-editor.md
       - Pentest Scope: guides/pentests.md
       - Importing & Exporting: guides/importing-exporting.md
