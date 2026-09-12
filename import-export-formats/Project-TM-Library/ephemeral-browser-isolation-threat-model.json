@@ -1,0 +1,1189 @@
+{
+  "$schema": "https://github.com/OWASP/www-project-threat-model-library/blob/v1.0.1/threat-model.schema.json",
+  "version": "1.0",
+  "scope": {
+    "title": "Ephemeral Browser Isolation Platform",
+    "description": "A disposable browser isolation system that treats each browsing session as a short-lived, containerized compute workload. Users access remote browser instances via encrypted streaming protocols, with sessions automatically destroyed after use or expiration. The platform provides privacy protection, credential safety, and malware containment by ensuring no browsing artifacts persist across sessions. Core architecture includes a control plane for session orchestration, container runtime for browser isolation, and streaming layer for remote rendering. Each session operates in a dedicated container with process/network/filesystem isolation, ephemeral storage, and enforced TTLs. The system addresses threats including persistent tracking, credential leakage, malware persistence, and shared endpoint risks while accepting trade-offs in performance, session continuity, and control plane security.",
+    "business_criticality": "moderate",
+    "data_sensitivity": [
+      "pii",
+      "cred",
+      "biz"
+    ],
+    "exposure": "external",
+    "tier": "business_critical"
+  },
+  "description": "Disposable browser isolation service for secure browsing sessions",
+  "frozen": false,
+  "reviewed_at": "2025-12-30",
+  "diagrams": [
+    {
+      "title": "Ephemeral Browser Isolation Architecture",
+      "type": "mermaid",
+      "source": "flowchart TB\n    USER[User Endpoint]\n    \n    subgraph CONTROL[\"Control Plane\"]\n        API[API Gateway]\n        AUTH[Authentication Service]\n        ORCHESTRATOR[Session Orchestrator]\n        POLICY[Policy Engine]\n        AUDIT[Audit Logger]\n    end\n    \n    subgraph RUNTIME[\"Container Runtime Environment\"]\n        subgraph SESSION1[\"Isolated Session 1\"]\n            BROWSER1[Browser Instance]\n            STORAGE1[Ephemeral Storage]\n            NETNS1[Network Namespace]\n        end\n        subgraph SESSION2[\"Isolated Session 2\"]\n            BROWSER2[Browser Instance]\n            STORAGE2[Ephemeral Storage]\n            NETNS2[Network Namespace]\n        end\n    end\n    \n    subgraph STREAM[\"Streaming Layer\"]\n        ENCODER[Video Encoder]\n        PROXY[Stream Proxy]\n    end\n    \n    INTERNET[Public Internet]\n    LOGS[(Audit Logs)]\n    \n    USER -->|HTTPS + E2E Encryption| API\n    API --> AUTH\n    AUTH --> ORCHESTRATOR\n    ORCHESTRATOR -->|Provision Container| SESSION1\n    ORCHESTRATOR -->|Provision Container| SESSION2\n    ORCHESTRATOR --> POLICY\n    API --> AUDIT\n    AUDIT --> LOGS\n    \n    SESSION1 -->|Rendered Output| ENCODER\n    SESSION2 -->|Rendered Output| ENCODER\n    ENCODER --> PROXY\n    PROXY -->|Encrypted Stream| USER\n    \n    BROWSER1 -->|Outbound Only| INTERNET\n    BROWSER2 -->|Outbound Only| INTERNET\n    \n    POLICY -.->|TTL Enforcement| SESSION1\n    POLICY -.->|TTL Enforcement| SESSION2"
+    }
+  ],
+  "trust_zones": [
+    {
+      "symbolic_name": "user-endpoint",
+      "title": "User Endpoint Zone",
+      "description": "Untrusted user devices accessing the platform over public internet. May include compromised or shared workstations."
+    },
+    {
+      "symbolic_name": "control-plane",
+      "title": "Control Plane Zone",
+      "description": "Trusted administrative layer responsible for authentication, session orchestration, policy enforcement, and audit logging."
+    },
+    {
+      "symbolic_name": "container-runtime",
+      "title": "Container Runtime Zone",
+      "description": "Isolated execution environment where ephemeral browser sessions run in dedicated containers with namespace isolation."
+    },
+    {
+      "symbolic_name": "streaming-layer",
+      "title": "Streaming Layer Zone",
+      "description": "Intermediary layer responsible for encoding browser output and delivering encrypted streams to user endpoints."
+    },
+    {
+      "symbolic_name": "public-internet",
+      "title": "Public Internet",
+      "description": "External websites and services accessed by isolated browser instances."
+    }
+  ],
+  "trust_boundaries": [
+    {
+      "trust_zone_a": "user-endpoint",
+      "trust_zone_b": "control-plane",
+      "access_control_methods": [
+        "rbac",
+        "acl"
+      ],
+      "authentication_methods": [
+        "password",
+        "token",
+        "sso"
+      ],
+      "access_token_expires": true,
+      "access_token_ttl": 3600,
+      "can_user_logout": true,
+      "can_system_logout": true
+    },
+    {
+      "trust_zone_a": "control-plane",
+      "trust_zone_b": "container-runtime",
+      "access_control_methods": [
+        "mac",
+        "rbac"
+      ],
+      "authentication_methods": [
+        "token",
+        "public_key"
+      ]
+    },
+    {
+      "trust_zone_a": "container-runtime",
+      "trust_zone_b": "streaming-layer",
+      "access_control_methods": [
+        "acl"
+      ],
+      "authentication_methods": [
+        "token"
+      ]
+    },
+    {
+      "trust_zone_a": "container-runtime",
+      "trust_zone_b": "public-internet",
+      "access_control_methods": [
+        "acl"
+      ],
+      "authentication_methods": [
+        "none"
+      ]
+    }
+  ],
+  "actors": [
+    {
+      "symbolic_name": "end-user",
+      "title": "End User",
+      "description": "Individual using the ephemeral browser service for private browsing, credential protection, or accessing untrusted websites.",
+      "type": "user",
+      "permissions": "Request new sessions, interact with isolated browser, terminate sessions.",
+      "trust_zone": "user-endpoint"
+    },
+    {
+      "symbolic_name": "platform-admin",
+      "title": "Platform Administrator",
+      "description": "Administrator responsible for platform operations, policy configuration, and infrastructure management.",
+      "type": "administrator",
+      "permissions": "Configure policies, manage infrastructure, access audit logs, modify session limits.",
+      "trust_zone": "control-plane"
+    },
+    {
+      "symbolic_name": "malicious-website",
+      "title": "Malicious Website Operator",
+      "description": "External threat actor operating compromised or malicious websites that attempt to exploit browsers or track users.",
+      "type": "third_party",
+      "permissions": "Serve content to isolated browsers, attempt exploits, deploy tracking mechanisms.",
+      "trust_zone": "public-internet"
+    }
+  ],
+  "components": [
+    {
+      "symbolic_name": "api-gateway",
+      "title": "API Gateway",
+      "description": "Entry point for all user requests, handles HTTPS termination, routing, and initial request validation.",
+      "trust_zone": "control-plane"
+    },
+    {
+      "symbolic_name": "auth-service",
+      "title": "Authentication Service",
+      "description": "Validates user credentials, issues session tokens, enforces rate limiting and account policies.",
+      "trust_zone": "control-plane"
+    },
+    {
+      "symbolic_name": "session-orchestrator",
+      "title": "Session Orchestrator",
+      "description": "Provisions and manages container lifecycles, enforces TTLs, handles session termination and cleanup.",
+      "trust_zone": "control-plane"
+    },
+    {
+      "symbolic_name": "policy-engine",
+      "title": "Policy Engine",
+      "description": "Enforces session TTLs, resource limits, network egress filtering, and security policies across sessions.",
+      "trust_zone": "control-plane"
+    },
+    {
+      "symbolic_name": "audit-logger",
+      "title": "Audit Logger",
+      "description": "Records all session creation, authentication events, policy violations, and administrative actions.",
+      "trust_zone": "control-plane"
+    },
+    {
+      "symbolic_name": "browser-instance",
+      "title": "Isolated Browser Instance",
+      "description": "Chromium or Firefox browser running inside a dedicated container with full process, network, and filesystem isolation.",
+      "trust_zone": "container-runtime"
+    },
+    {
+      "symbolic_name": "container-runtime",
+      "title": "Container Runtime Engine",
+      "description": "Docker or containerd runtime providing namespace isolation, resource constraints, and ephemeral filesystem layers.",
+      "trust_zone": "container-runtime"
+    },
+    {
+      "symbolic_name": "video-encoder",
+      "title": "Video Encoder",
+      "description": "Captures browser rendering output and encodes it into compressed video stream for transmission to user.",
+      "trust_zone": "streaming-layer"
+    },
+    {
+      "symbolic_name": "stream-proxy",
+      "title": "Stream Proxy",
+      "description": "Proxies encrypted video streams and user input events between container sessions and user endpoints.",
+      "trust_zone": "streaming-layer"
+    }
+  ],
+  "data_stores": [
+    {
+      "symbolic_name": "ephemeral-storage",
+      "title": "Ephemeral Container Storage",
+      "description": "Temporary writable filesystem layer destroyed on container termination. Stores cookies, cache, downloads, and browser state during session.",
+      "type": "object",
+      "vendor": "Linux",
+      "product": "OverlayFS",
+      "trust_zone": "container-runtime"
+    },
+    {
+      "symbolic_name": "audit-log-store",
+      "title": "Audit Log Storage",
+      "description": "Persistent storage for audit events, session metadata, authentication logs, and policy violations.",
+      "type": "time_series",
+      "vendor": "Cloud Provider",
+      "product": "Managed Log Service",
+      "trust_zone": "control-plane"
+    },
+    {
+      "symbolic_name": "user-credential-store",
+      "title": "User Credential Store",
+      "description": "Encrypted storage for user account credentials, API keys, and authentication tokens.",
+      "type": "key_value",
+      "vendor": "Cloud Provider",
+      "product": "Secrets Manager",
+      "trust_zone": "control-plane"
+    }
+  ],
+  "data_sets": [
+    {
+      "symbolic_name": "session-artifacts",
+      "title": "Session Browsing Artifacts",
+      "description": "Cookies, local storage, cache, credentials, tokens, and downloaded files generated during browser session.",
+      "placements": [
+        {
+          "data_store": "ephemeral-storage",
+          "encrypted": false
+        }
+      ],
+      "record_count": 50000,
+      "data_sensitivity": [
+        "pii",
+        "cred",
+        "biz"
+      ],
+      "access_control_methods": [
+        "mac"
+      ]
+    },
+    {
+      "symbolic_name": "user-credentials",
+      "title": "User Account Credentials",
+      "description": "Platform user passwords, API keys, OAuth tokens, and payment information.",
+      "placements": [
+        {
+          "data_store": "user-credential-store",
+          "encrypted": true
+        }
+      ],
+      "record_count": 25000,
+      "data_sensitivity": [
+        "cred",
+        "pii"
+      ],
+      "access_control_methods": [
+        "rbac"
+      ]
+    },
+    {
+      "symbolic_name": "audit-records",
+      "title": "Audit Log Records",
+      "description": "Session creation timestamps, user IDs, IP addresses, authentication events, and policy violations.",
+      "placements": [
+        {
+          "data_store": "audit-log-store",
+          "encrypted": true
+        }
+      ],
+      "record_count": 1000000,
+      "data_sensitivity": [
+        "pii",
+        "biz"
+      ],
+      "access_control_methods": [
+        "rbac"
+      ]
+    }
+  ],
+  "data_flows": [
+    {
+      "symbolic_name": "user-to-api",
+      "title": "User to API Gateway",
+      "description": "HTTPS requests from user endpoint to platform API for session management.",
+      "source": {
+        "type": "actor",
+        "object": "end-user"
+      },
+      "destination": {
+        "type": "component",
+        "object": "api-gateway"
+      },
+      "has_sensitive_data": true,
+      "encrypted": true
+    },
+    {
+      "symbolic_name": "api-to-auth",
+      "title": "API Gateway to Authentication Service",
+      "description": "Credential validation and token issuance requests.",
+      "source": {
+        "type": "component",
+        "object": "api-gateway"
+      },
+      "destination": {
+        "type": "component",
+        "object": "auth-service"
+      },
+      "has_sensitive_data": true,
+      "encrypted": true
+    },
+    {
+      "symbolic_name": "auth-to-orchestrator",
+      "title": "Authentication to Session Orchestrator",
+      "description": "Authenticated session provisioning requests with user context.",
+      "source": {
+        "type": "component",
+        "object": "auth-service"
+      },
+      "destination": {
+        "type": "component",
+        "object": "session-orchestrator"
+      },
+      "has_sensitive_data": false,
+      "encrypted": true
+    },
+    {
+      "symbolic_name": "orchestrator-to-container",
+      "title": "Orchestrator to Container Runtime",
+      "description": "Container provisioning commands with isolation parameters and resource limits.",
+      "source": {
+        "type": "component",
+        "object": "session-orchestrator"
+      },
+      "destination": {
+        "type": "component",
+        "object": "container-runtime"
+      },
+      "has_sensitive_data": false,
+      "encrypted": true
+    },
+    {
+      "symbolic_name": "container-to-browser",
+      "title": "Container Runtime to Browser Instance",
+      "description": "Browser process launch within isolated namespace.",
+      "source": {
+        "type": "component",
+        "object": "container-runtime"
+      },
+      "destination": {
+        "type": "component",
+        "object": "browser-instance"
+      },
+      "has_sensitive_data": false,
+      "encrypted": false
+    },
+    {
+      "symbolic_name": "browser-to-internet",
+      "title": "Browser to Public Internet",
+      "description": "Outbound HTTPS requests to external websites from isolated browser.",
+      "source": {
+        "type": "component",
+        "object": "browser-instance"
+      },
+      "destination": {
+        "type": "actor",
+        "object": "malicious-website"
+      },
+      "has_sensitive_data": true,
+      "encrypted": true
+    },
+    {
+      "symbolic_name": "browser-to-storage",
+      "title": "Browser to Ephemeral Storage",
+      "description": "Write cookies, cache, downloads, and browser state to ephemeral filesystem.",
+      "source": {
+        "type": "component",
+        "object": "browser-instance"
+      },
+      "destination": {
+        "type": "data_store",
+        "object": "ephemeral-storage"
+      },
+      "has_sensitive_data": true,
+      "encrypted": false
+    },
+    {
+      "symbolic_name": "browser-to-encoder",
+      "title": "Browser Output to Video Encoder",
+      "description": "Rendered browser output captured for video encoding.",
+      "source": {
+        "type": "component",
+        "object": "browser-instance"
+      },
+      "destination": {
+        "type": "component",
+        "object": "video-encoder"
+      },
+      "has_sensitive_data": true,
+      "encrypted": false
+    },
+    {
+      "symbolic_name": "encoder-to-proxy",
+      "title": "Video Encoder to Stream Proxy",
+      "description": "Compressed video stream forwarded to proxy for delivery.",
+      "source": {
+        "type": "component",
+        "object": "video-encoder"
+      },
+      "destination": {
+        "type": "component",
+        "object": "stream-proxy"
+      },
+      "has_sensitive_data": true,
+      "encrypted": true
+    },
+    {
+      "symbolic_name": "proxy-to-user",
+      "title": "Stream Proxy to User Endpoint",
+      "description": "End-to-end encrypted video stream of browser session delivered to user.",
+      "source": {
+        "type": "component",
+        "object": "stream-proxy"
+      },
+      "destination": {
+        "type": "actor",
+        "object": "end-user"
+      },
+      "has_sensitive_data": true,
+      "encrypted": true
+    },
+    {
+      "symbolic_name": "api-to-audit",
+      "title": "API Gateway to Audit Logger",
+      "description": "Session events, authentication attempts, and API calls logged for audit.",
+      "source": {
+        "type": "component",
+        "object": "api-gateway"
+      },
+      "destination": {
+        "type": "component",
+        "object": "audit-logger"
+      },
+      "has_sensitive_data": true,
+      "encrypted": true
+    },
+    {
+      "symbolic_name": "audit-to-logs",
+      "title": "Audit Logger to Log Storage",
+      "description": "Structured audit records persisted to long-term storage.",
+      "source": {
+        "type": "component",
+        "object": "audit-logger"
+      },
+      "destination": {
+        "type": "data_store",
+        "object": "audit-log-store"
+      },
+      "has_sensitive_data": true,
+      "encrypted": true
+    },
+    {
+      "symbolic_name": "policy-to-orchestrator",
+      "title": "Policy Engine to Session Orchestrator",
+      "description": "TTL enforcement and session termination signals.",
+      "source": {
+        "type": "component",
+        "object": "policy-engine"
+      },
+      "destination": {
+        "type": "component",
+        "object": "session-orchestrator"
+      },
+      "has_sensitive_data": false,
+      "encrypted": true
+    },
+    {
+      "symbolic_name": "auth-to-credential-store",
+      "title": "Authentication Service to User Credential Store",
+      "description": "Credential validation requests and token storage operations.",
+      "source": {
+        "type": "component",
+        "object": "auth-service"
+      },
+      "destination": {
+        "type": "data_store",
+        "object": "user-credential-store"
+      },
+      "has_sensitive_data": true,
+      "encrypted": true
+    },
+    {
+      "symbolic_name": "admin-to-api",
+      "title": "Platform Administrator to API Gateway",
+      "description": "Administrative requests for policy configuration, infrastructure management, and audit log access.",
+      "source": {
+        "type": "actor",
+        "object": "platform-admin"
+      },
+      "destination": {
+        "type": "component",
+        "object": "api-gateway"
+      },
+      "has_sensitive_data": true,
+      "encrypted": true
+    },
+    {
+      "symbolic_name": "admin-to-audit-logs",
+      "title": "Platform Administrator to Audit Log Storage",
+      "description": "Administrative access to audit logs for security monitoring and incident investigation.",
+      "source": {
+        "type": "actor",
+        "object": "platform-admin"
+      },
+      "destination": {
+        "type": "data_store",
+        "object": "audit-log-store"
+      },
+      "has_sensitive_data": true,
+      "encrypted": true
+    }
+  ],
+  "assumptions": [
+    {
+      "description": "Container namespace isolation (PID, network, filesystem) prevents cross-session visibility and data leakage.",
+      "validity": "confirmed"
+    },
+    {
+      "description": "Browser engine vulnerabilities (zero-days, sandbox escapes) remain exploitable but are contained within ephemeral session.",
+      "validity": "confirmed"
+    },
+    {
+      "description": "Host kernel-level exploits, hardware attacks, and physical access are out of scope.",
+      "validity": "confirmed"
+    },
+    {
+      "description": "Session streaming uses end-to-end encryption between encoder and client, though control plane can access unencrypted frames for policy enforcement.",
+      "validity": "confirmed"
+    },
+    {
+      "description": "Ephemeral storage is guaranteed to be destroyed on container termination with no persistent artifacts.",
+      "validity": "confirmed"
+    },
+    {
+      "description": "Control plane is a high-value target; compromise grants unauthorized session creation and policy bypass.",
+      "validity": "confirmed"
+    },
+    {
+      "description": "Session TTL enforcement is reliable and cannot be bypassed by users or compromised browsers.",
+      "validity": "confirmed"
+    },
+    {
+      "description": "Network egress from containers can be filtered but performance impacts are acceptable.",
+      "validity": "confirmed"
+    },
+    {
+      "description": "WebRTC and UDP-based protocols may bypass network filtering; additional controls needed for comprehensive egress filtering.",
+      "validity": "unconfirmed"
+    }
+  ],
+  "threat_personas": [
+    {
+      "symbolic_name": "tracking-advertiser",
+      "title": "Persistent Tracking Advertiser",
+      "description": "Advertising network attempting to track users across sessions via cookies, fingerprinting, and behavioral profiling.",
+      "is_person": false,
+      "skill_level": "engineer",
+      "access_level": "anonymous",
+      "malicious_intent": true,
+      "applicability_to_org": "maximal"
+    },
+    {
+      "symbolic_name": "malware-operator",
+      "title": "Malware Distribution Operator",
+      "description": "Threat actor operating drive-by download sites, cryptominers, and persistent malware attempting to compromise browsers.",
+      "is_person": true,
+      "skill_level": "expert_engineer",
+      "access_level": "anonymous",
+      "malicious_intent": true,
+      "applicability_to_org": "high"
+    },
+    {
+      "symbolic_name": "credential-harvester",
+      "title": "Credential Harvesting Attacker",
+      "description": "Phishing operator or network attacker attempting to steal credentials, OAuth tokens, and session cookies.",
+      "is_person": true,
+      "skill_level": "engineer",
+      "access_level": "anonymous",
+      "malicious_intent": true,
+      "applicability_to_org": "high"
+    },
+    {
+      "symbolic_name": "shared-endpoint-attacker",
+      "title": "Shared Endpoint Attacker",
+      "description": "Adversary with access to shared workstations, public Wi-Fi, or compromised local networks attempting session reuse.",
+      "is_person": true,
+      "skill_level": "insider",
+      "access_level": "user",
+      "malicious_intent": true,
+      "applicability_to_org": "moderate"
+    },
+    {
+      "symbolic_name": "control-plane-attacker",
+      "title": "Control Plane Attacker",
+      "description": "Sophisticated attacker targeting platform infrastructure to create unauthorized sessions or bypass policies.",
+      "is_person": true,
+      "skill_level": "expert_engineer",
+      "access_level": "anonymous",
+      "malicious_intent": true,
+      "applicability_to_org": "low"
+    }
+  ],
+  "threats": [
+    {
+      "symbolic_name": "persistent-tracking-fingerprinting",
+      "title": "Persistent tracking and fingerprinting across sessions",
+      "description": "Tracking networks use cookies, IndexedDB, local storage, and browser fingerprinting to correlate user identity across sessions, undermining privacy guarantees.",
+      "components_affected": [
+        "browser-instance"
+      ],
+      "threat_persona": "tracking-advertiser",
+      "event": "cross-session identity correlation",
+      "sources": [
+        "adversary"
+      ],
+      "attack_mechanisms": [
+        {
+          "capec_id": 148,
+          "capec_title": "Content Spoofing"
+        }
+      ],
+      "weaknesses": [
+        {
+          "cwe_id": 359,
+          "cwe_title": "Exposure of Private Personal Information to an Unauthorized Actor"
+        }
+      ]
+    },
+    {
+      "symbolic_name": "credential-token-leakage",
+      "title": "Credential and token leakage via session persistence",
+      "description": "OAuth tokens, session cookies, and saved credentials persist in browser storage, creating risk of theft if session is compromised or storage not properly destroyed.",
+      "components_affected": [
+        "browser-instance",
+        "container-runtime"
+      ],
+      "threat_persona": "credential-harvester",
+      "event": "credential exposure",
+      "sources": [
+        "adversary"
+      ],
+      "attack_mechanisms": [
+        {
+          "capec_id": 204,
+          "capec_title": "Lifting Sensitive Data Embedded in Cache"
+        }
+      ],
+      "weaknesses": [
+        {
+          "cwe_id": 522,
+          "cwe_title": "Insufficiently Protected Credentials"
+        }
+      ]
+    },
+    {
+      "symbolic_name": "malware-persistence",
+      "title": "Malware attempting to persist across session destruction",
+      "description": "Drive-by malware, cryptominers, or persistent XSS payloads attempt to survive session termination by exploiting storage, network callbacks, or browser engine bugs.",
+      "components_affected": [
+        "browser-instance",
+        "container-runtime"
+      ],
+      "threat_persona": "malware-operator",
+      "event": "malware persistence attempt",
+      "sources": [
+        "adversary"
+      ],
+      "attack_mechanisms": [
+        {
+          "capec_id": 549,
+          "capec_title": "Local Execution of Code"
+        }
+      ],
+      "weaknesses": [
+        {
+          "cwe_id": 94,
+          "cwe_title": "Improper Control of Generation of Code"
+        }
+      ]
+    },
+    {
+      "symbolic_name": "shared-endpoint-session-reuse",
+      "title": "Shared endpoint exploitation for session reuse",
+      "description": "Attackers on public Wi-Fi or shared workstations attempt to hijack active sessions or extract credentials from endpoint memory or cache.",
+      "components_affected": [
+        "stream-proxy",
+        "api-gateway"
+      ],
+      "threat_persona": "shared-endpoint-attacker",
+      "event": "session hijacking from compromised endpoint",
+      "sources": [
+        "adversary"
+      ],
+      "attack_mechanisms": [
+        {
+          "capec_id": 60,
+          "capec_title": "Reusing Session IDs (aka Session Replay)"
+        }
+      ],
+      "weaknesses": [
+        {
+          "cwe_id": 384,
+          "cwe_title": "Session Fixation"
+        }
+      ]
+    },
+    {
+      "symbolic_name": "control-plane-unauthorized-session",
+      "title": "Unauthorized session creation via control plane compromise",
+      "description": "Attacker exploits control plane vulnerabilities or stolen credentials to create unauthorized sessions, bypass rate limits, or disable audit logging.",
+      "components_affected": [
+        "api-gateway",
+        "auth-service",
+        "session-orchestrator"
+      ],
+      "threat_persona": "control-plane-attacker",
+      "event": "control plane compromise",
+      "sources": [
+        "adversary"
+      ],
+      "attack_mechanisms": [
+        {
+          "capec_id": 115,
+          "capec_title": "Authentication Bypass"
+        }
+      ],
+      "weaknesses": [
+        {
+          "cwe_id": 287,
+          "cwe_title": "Improper Authentication"
+        }
+      ]
+    },
+    {
+      "symbolic_name": "ttl-bypass-session-extension",
+      "title": "Session TTL bypass for indefinite session extension",
+      "description": "Attacker or compromised user manipulates session lifecycle to bypass TTL enforcement, maintaining long-lived sessions that accumulate tracking data.",
+      "components_affected": [
+        "policy-engine",
+        "session-orchestrator"
+      ],
+      "threat_persona": "control-plane-attacker",
+      "event": "TTL policy violation",
+      "sources": [
+        "adversary"
+      ],
+      "attack_mechanisms": [
+        {
+          "capec_id": 207,
+          "capec_title": "Removing Important Client Functionality"
+        }
+      ],
+      "weaknesses": [
+        {
+          "cwe_id": 613,
+          "cwe_title": "Insufficient Session Expiration"
+        }
+      ]
+    },
+    {
+      "symbolic_name": "container-escape",
+      "title": "Container escape to access other sessions or host system",
+      "description": "Attacker exploits container runtime or kernel vulnerabilities to escape isolation, access other sessions, or compromise host infrastructure.",
+      "components_affected": [
+        "container-runtime",
+        "browser-instance"
+      ],
+      "threat_persona": "malware-operator",
+      "event": "container breakout",
+      "sources": [
+        "adversary"
+      ],
+      "attack_mechanisms": [
+        {
+          "capec_id": 233,
+          "capec_title": "Privilege Escalation"
+        }
+      ],
+      "weaknesses": [
+        {
+          "cwe_id": 269,
+          "cwe_title": "Improper Privilege Management"
+        }
+      ]
+    },
+    {
+      "symbolic_name": "streaming-layer-exposure",
+      "title": "Streaming layer interception exposing browser session content",
+      "description": "Attacker intercepts or decrypts video stream to observe user browsing activity, credentials entered, or sensitive information displayed.",
+      "components_affected": [
+        "video-encoder",
+        "stream-proxy"
+      ],
+      "threat_persona": "credential-harvester",
+      "event": "man-in-the-middle on stream",
+      "sources": [
+        "adversary"
+      ],
+      "attack_mechanisms": [
+        {
+          "capec_id": 117,
+          "capec_title": "Interception"
+        }
+      ],
+      "weaknesses": [
+        {
+          "cwe_id": 311,
+          "cwe_title": "Missing Encryption of Sensitive Data"
+        }
+      ]
+    },
+    {
+      "symbolic_name": "resource-exhaustion-dos",
+      "title": "Resource exhaustion denial of service",
+      "description": "Attacker floods control plane with session requests or maintains excessive concurrent sessions to exhaust compute resources and prevent legitimate usage.",
+      "components_affected": [
+        "api-gateway",
+        "session-orchestrator",
+        "container-runtime"
+      ],
+      "threat_persona": "control-plane-attacker",
+      "event": "denial of service",
+      "sources": [
+        "adversary"
+      ],
+      "attack_mechanisms": [
+        {
+          "capec_id": 125,
+          "capec_title": "Flooding"
+        }
+      ],
+      "weaknesses": [
+        {
+          "cwe_id": 400,
+          "cwe_title": "Uncontrolled Resource Consumption"
+        }
+      ]
+    },
+    {
+      "symbolic_name": "incomplete-session-cleanup",
+      "title": "Incomplete session cleanup leaving residual artifacts",
+      "description": "Container destruction fails to fully remove ephemeral storage, leaving cookies, cache, or credentials accessible to subsequent sessions on same host.",
+      "components_affected": [
+        "container-runtime",
+        "session-orchestrator"
+      ],
+      "threat_persona": "shared-endpoint-attacker",
+      "event": "data remnant exposure",
+      "sources": [
+        "failure"
+      ],
+      "attack_mechanisms": [
+        {
+          "capec_id": 37,
+          "capec_title": "Retrieve Embedded Sensitive Data"
+        }
+      ],
+      "weaknesses": [
+        {
+          "cwe_id": 459,
+          "cwe_title": "Incomplete Cleanup"
+        }
+      ]
+    },
+    {
+      "symbolic_name": "browser-engine-zero-day",
+      "title": "Browser engine zero-day exploitation",
+      "description": "Attacker exploits unpatched browser vulnerability to achieve remote code execution, sandbox escape, or information disclosure within session.",
+      "components_affected": [
+        "browser-instance"
+      ],
+      "threat_persona": "malware-operator",
+      "event": "browser compromise",
+      "sources": [
+        "adversary"
+      ],
+      "attack_mechanisms": [
+        {
+          "capec_id": 233,
+          "capec_title": "Privilege Escalation"
+        }
+      ],
+      "weaknesses": [
+        {
+          "cwe_id": 416,
+          "cwe_title": "Use After Free"
+        }
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "symbolic_name": "per-session-container-isolation",
+      "title": "Per-session container runtime with full namespace isolation",
+      "description": "Deploy each browser session in dedicated container with PID, network, user, and filesystem namespace isolation to prevent cross-session contamination.",
+      "threats": [
+        "persistent-tracking-fingerprinting",
+        "credential-token-leakage",
+        "malware-persistence"
+      ],
+      "trust_boundary": {
+        "trust_zone_a": "control-plane",
+        "trust_zone_b": "container-runtime"
+      },
+      "status": "active",
+      "priority": "critical"
+    },
+    {
+      "symbolic_name": "forced-session-ttl",
+      "title": "Enforced session TTL with automatic termination",
+      "description": "Hard time limits on session duration (e.g., 1 hour) with automatic container termination, preventing long-lived credential accumulation.",
+      "threats": [
+        "credential-token-leakage",
+        "ttl-bypass-session-extension",
+        "persistent-tracking-fingerprinting"
+      ],
+      "trust_boundary": {
+        "trust_zone_a": "control-plane",
+        "trust_zone_b": "container-runtime"
+      },
+      "status": "active",
+      "priority": "critical"
+    },
+    {
+      "symbolic_name": "ephemeral-storage-destruction",
+      "title": "Guaranteed ephemeral storage cleanup on termination",
+      "description": "Use overlay filesystem with immediate destruction on container stop, ensuring no persistent cookies, cache, or credentials survive.",
+      "threats": [
+        "credential-token-leakage",
+        "incomplete-session-cleanup",
+        "persistent-tracking-fingerprinting"
+      ],
+      "trust_boundary": {
+        "trust_zone_a": "container-runtime",
+        "trust_zone_b": "container-runtime"
+      },
+      "status": "active",
+      "priority": "critical"
+    },
+    {
+      "symbolic_name": "end-to-end-stream-encryption",
+      "title": "End-to-end encryption of video stream",
+      "description": "Encrypt browser output stream from encoder to user endpoint with TLS 1.3 or application-level encryption, preventing MITM attacks.",
+      "threats": [
+        "streaming-layer-exposure"
+      ],
+      "trust_boundary": {
+        "trust_zone_a": "streaming-layer",
+        "trust_zone_b": "user-endpoint"
+      },
+      "status": "active",
+      "priority": "critical"
+    },
+    {
+      "symbolic_name": "network-egress-filtering",
+      "title": "Network egress filtering and sandboxing",
+      "description": "Isolate container network namespace with controlled outbound-only access, preventing lateral movement and unauthorized data exfiltration.",
+      "threats": [
+        "container-escape",
+        "malware-persistence"
+      ],
+      "trust_boundary": {
+        "trust_zone_a": "container-runtime",
+        "trust_zone_b": "public-internet"
+      },
+      "status": "active",
+      "priority": "high"
+    },
+    {
+      "symbolic_name": "strong-control-plane-auth",
+      "title": "Strong authentication and authorization for control plane",
+      "description": "Implement OAuth, SSO, or API key authentication with RBAC for control plane access, preventing unauthorized session creation.",
+      "threats": [
+        "control-plane-unauthorized-session",
+        "ttl-bypass-session-extension"
+      ],
+      "trust_boundary": {
+        "trust_zone_a": "user-endpoint",
+        "trust_zone_b": "control-plane"
+      },
+      "status": "active",
+      "priority": "critical"
+    },
+    {
+      "symbolic_name": "rate-limiting-session-creation",
+      "title": "Rate limiting on session creation",
+      "description": "Enforce per-user and per-IP rate limits to prevent resource exhaustion and unauthorized bulk session provisioning.",
+      "threats": [
+        "resource-exhaustion-dos",
+        "control-plane-unauthorized-session"
+      ],
+      "trust_boundary": {
+        "trust_zone_a": "user-endpoint",
+        "trust_zone_b": "control-plane"
+      },
+      "status": "active",
+      "priority": "high"
+    },
+    {
+      "symbolic_name": "audit-logging",
+      "title": "Audit logging of session lifecycle",
+      "description": "Log session creation, authentication events, policy violations, and termination to tamper-evident storage.",
+      "threats": [
+        "control-plane-unauthorized-session",
+        "ttl-bypass-session-extension"
+      ],
+      "trust_boundary": {
+        "trust_zone_a": "control-plane",
+        "trust_zone_b": "control-plane"
+      },
+      "status": "active",
+      "priority": "high"
+    },
+    {
+      "symbolic_name": "resource-quotas",
+      "title": "Per-session resource quotas (CPU, memory, disk)",
+      "description": "Enforce strict resource limits on containers to prevent single session from exhausting host resources and impacting other sessions.",
+      "threats": [
+        "resource-exhaustion-dos",
+        "malware-persistence"
+      ],
+      "trust_boundary": {
+        "trust_zone_a": "control-plane",
+        "trust_zone_b": "container-runtime"
+      },
+      "status": "active",
+      "priority": "medium"
+    },
+    {
+      "symbolic_name": "container-hardening",
+      "title": "Container security hardening (seccomp, AppArmor, read-only root)",
+      "description": "Apply seccomp profiles, AppArmor/SELinux policies, and read-only root filesystems to reduce container escape risk.",
+      "threats": [
+        "container-escape",
+        "malware-persistence"
+      ],
+      "trust_boundary": {
+        "trust_zone_a": "container-runtime",
+        "trust_zone_b": "container-runtime"
+      },
+      "status": "suggested",
+      "priority": "high"
+    },
+    {
+      "symbolic_name": "browser-auto-updates",
+      "title": "Automated browser engine updates",
+      "description": "Maintain up-to-date browser images with latest security patches to minimize zero-day exposure window.",
+      "threats": [
+        "browser-engine-zero-day"
+      ],
+      "trust_boundary": {
+        "trust_zone_a": "container-runtime",
+        "trust_zone_b": "public-internet"
+      },
+      "status": "active",
+      "priority": "critical"
+    },
+    {
+      "symbolic_name": "no-session-resume",
+      "title": "Disable session resume and persistence features",
+      "description": "Remove browser features that enable session restore, preventing rehydration of tracking data or credentials.",
+      "threats": [
+        "persistent-tracking-fingerprinting",
+        "credential-token-leakage"
+      ],
+      "trust_boundary": {
+        "trust_zone_a": "container-runtime",
+        "trust_zone_b": "container-runtime"
+      },
+      "status": "active",
+      "priority": "medium"
+    },
+    {
+      "symbolic_name": "monitoring-anomaly-detection",
+      "title": "Real-time monitoring and anomaly detection",
+      "description": "Monitor session behavior, resource usage, and network patterns to detect container escapes, policy violations, or abuse.",
+      "threats": [
+        "container-escape",
+        "resource-exhaustion-dos",
+        "ttl-bypass-session-extension"
+      ],
+      "status": "suggested",
+      "priority": "medium"
+    },
+    {
+      "symbolic_name": "webrtc-udp-filtering",
+      "title": "WebRTC and UDP protocol filtering",
+      "description": "Block or restrict WebRTC, WebSockets, and UDP-based protocols that could bypass standard HTTP egress filtering.",
+      "threats": [
+        "malware-persistence",
+        "streaming-layer-exposure"
+      ],
+      "trust_boundary": {
+        "trust_zone_a": "container-runtime",
+        "trust_zone_b": "public-internet"
+      },
+      "status": "under_review",
+      "priority": "medium"
+    }
+  ],
+  "risks": [
+    {
+      "symbolic_name": "tracking-privacy-violation",
+      "title": "Persistent tracking undermining privacy guarantees",
+      "description": "Despite container isolation, sophisticated fingerprinting or storage-based tracking may correlate user sessions, degrading core privacy value proposition.",
+      "threats": [
+        "persistent-tracking-fingerprinting"
+      ],
+      "likelihood": "possible",
+      "impact": "major",
+      "impact_description": "Erosion of user trust and privacy guarantees, potential regulatory compliance issues.",
+      "score": 12,
+      "level": "high"
+    },
+    {
+      "symbolic_name": "credential-exposure-risk",
+      "title": "Credential and token exposure during session",
+      "description": "Compromised sessions or incomplete cleanup could expose OAuth tokens, session cookies, or saved credentials to attackers.",
+      "threats": [
+        "credential-token-leakage",
+        "incomplete-session-cleanup"
+      ],
+      "likelihood": "unlikely",
+      "impact": "severe",
+      "impact_description": "User account compromise, unauthorized access to external services, identity theft.",
+      "score": 10,
+      "level": "medium"
+    },
+    {
+      "symbolic_name": "control-plane-compromise",
+      "title": "Control plane compromise enabling unauthorized access",
+      "description": "Successful attack on control plane grants ability to create unlimited sessions, bypass policies, and access audit logs.",
+      "threats": [
+        "control-plane-unauthorized-session",
+        "ttl-bypass-session-extension"
+      ],
+      "likelihood": "unlikely",
+      "impact": "severe",
+      "impact_description": "Platform-wide security breach, unauthorized session access, regulatory violations.",
+      "score": 10,
+      "level": "medium"
+    },
+    {
+      "symbolic_name": "container-isolation-failure",
+      "title": "Container isolation failure enabling cross-session attacks",
+      "description": "Container escape or kernel vulnerability allows attacker to break isolation and access other user sessions or host system.",
+      "threats": [
+        "container-escape",
+        "incomplete-session-cleanup"
+      ],
+      "likelihood": "rare",
+      "impact": "severe",
+      "impact_description": "Multi-tenant data breach, cross-user credential exposure, infrastructure compromise.",
+      "score": 5,
+      "level": "medium"
+    },
+    {
+      "symbolic_name": "availability-dos-risk",
+      "title": "Service availability disruption via resource exhaustion",
+      "description": "Resource exhaustion attacks or infrastructure failures could prevent legitimate users from accessing ephemeral browser sessions.",
+      "threats": [
+        "resource-exhaustion-dos"
+      ],
+      "likelihood": "possible",
+      "impact": "moderate",
+      "impact_description": "Service outages, user dissatisfaction, revenue loss.",
+      "score": 9,
+      "level": "medium"
+    },
+    {
+      "symbolic_name": "browser-zero-day-containment",
+      "title": "Browser zero-day exploitation contained to single session",
+      "description": "While browser exploits remain possible, ephemeral isolation limits blast radius to single session with guaranteed cleanup.",
+      "threats": [
+        "browser-engine-zero-day",
+        "malware-persistence"
+      ],
+      "likelihood": "unlikely",
+      "impact": "moderate",
+      "impact_description": "Temporary session compromise but limited to single user session with automatic cleanup.",
+      "score": 6,
+      "level": "low"
+    }
+  ]
+}
