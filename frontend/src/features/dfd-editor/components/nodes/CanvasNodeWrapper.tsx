@@ -13,6 +13,8 @@ import { SystemActorNode } from './SystemActorNode'
 import { TrustZoneNode } from './TrustZoneNode'
 import { SystemScopeNode } from './SystemScopeNode'
 import { StickyNoteNode } from './StickyNoteNode'
+import { TableNode } from './TableNode'
+import type { DiagramNodeType } from '../../types'
 import { DataFlowEdge as DataFlowEdgeComponent } from '../edges/DataFlowEdge'
 import { TrustBoundaryEdge as TrustBoundaryEdgeComponent } from '../edges/TrustBoundaryEdge'
 
@@ -61,8 +63,12 @@ export const canvasNodeTypes = {
   systemActor: withThreatBadge(SystemActorNode),
   trustZone: withThreatBadge(TrustZoneNode),
   systemScope: withThreatBadge(SystemScopeNode),
+  // Annotations carry no threats, so no badge wrapper.
   stickyNote: StickyNoteNode,
-} as const
+  table: TableNode,
+  // See GuestNodeWrapper: an unregistered type silently falls back to React
+  // Flow's default node instead of failing.
+} as const satisfies Record<DiagramNodeType, unknown>
 
 // Edge wrapper that adds a threat count badge
 function withEdgeThreatBadge<P extends EdgeProps>(EdgeComponent: ComponentType<P>) {

@@ -1,7 +1,15 @@
 import { useCallback } from 'react'
 import { useReactFlow, type XYPosition } from '@xyflow/react'
 import type { DiagramNode, DiagramNodeType } from '../types'
+import { createDefaultTableData } from '../types/diagram'
 import { type DFDNotationStyle, NOTATION_NODE_SIZES, TECHNOLOGY_NODE_SIZES } from '../types/notation'
+
+export interface CreateNodeOptions {
+  technology?: string
+  label?: string
+  /** Tables only: the size chosen in the palette's grid picker. */
+  tableSize?: { columns: number; rows: number }
+}
 
 const defaultData: Record<DiagramNodeType, Record<string, unknown>> = {
   humanActor: { label: 'New Human Actor', technology: '' },
@@ -11,6 +19,10 @@ const defaultData: Record<DiagramNodeType, Record<string, unknown>> = {
   trustZone: { label: 'Trust Zone', trustLevel: 25, zoneColor: '#ef4444' },
   systemScope: { label: 'System Scope' },
   stickyNote: { label: 'Add a note', noteColor: 'yellow', textSize: 'medium', bold: false, italic: false },
+  // The grid itself is built per node in createNode, not here: this literal is
+  // evaluated once at import, so every table created in a session would share
+  // one `rows` array.
+  table: { label: 'Table' },
 }
 
 export function useCreateNode(notationStyle: DFDNotationStyle) {
@@ -18,7 +30,7 @@ export function useCreateNode(notationStyle: DFDNotationStyle) {
   const nodeSizes = NOTATION_NODE_SIZES[notationStyle]
 
   const createNode = useCallback(
-    (type: DiagramNodeType, dropPosition: XYPosition, options?: { technology?: string; label?: string }) => {
+    (type: DiagramNodeType, dropPosition: XYPosition, options?: CreateNodeOptions) => {
       const nodeSize = (options?.technology && TECHNOLOGY_NODE_SIZES[type]) || nodeSizes[type] || { width: 120, height: 70 }
 
       const position = {
@@ -29,15 +41,24 @@ export function useCreateNode(notationStyle: DFDNotationStyle) {
       const id = `${type}-${Date.now()}`
 
       const data: Record<string, unknown> = { ...defaultData[type], isNewlyInserted: true }
+      if (type === 'table') {
+        Object.assign(
+          data,
+          createDefaultTableData(options?.tableSize?.columns, options?.tableSize?.rows)
+        )
+      }
       if (options?.label) data.label = options.label
       if (options?.technology && 'technology' in data) data.technology = options.technology
 
+      // The table derives its size from its own column widths and row heights,
+      // so it gets no style dimensions to fight with; React Flow measures it.
+      // `nodeSize` above is still used to centre it under the drop cursor.
       addNodes({
         id,
         type,
         position,
         data,
-        style: { width: nodeSize.width, height: nodeSize.height },
+        ...(type === 'table' ? {} : { style: { width: nodeSize.width, height: nodeSize.height } }),
       })
 
       setTimeout(() => {
@@ -70,7 +91,7 @@ export function useHandleDrop({
   setSelectedNode,
 }: {
   screenToFlowPosition: (position: { x: number; y: number }) => XYPosition
-  createNode: (type: DiagramNodeType, dropPosition: XYPosition, options?: { technology?: string; label?: string }) => string
+  createNode: (type: DiagramNodeType, dropPosition: XYPosition, options?: CreateNodeOptions) => string
   nodes: DiagramNode[]
   setNodes: React.Dispatch<React.SetStateAction<DiagramNode[]>>
   updateParentRelationships: (nodes: DiagramNode[], setNodes: React.Dispatch<React.SetStateAction<DiagramNode[]>>) => void

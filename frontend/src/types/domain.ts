@@ -282,7 +282,9 @@ export type ThreatFramework = 'stride' | 'linddun' | 'cia'
 // Node types for DFD
 // humanActor = external human entity (customer, admin, attacker)
 // systemActor = external non-human system (third-party API, partner system)
-export type DiagramNodeType = 'process' | 'datastore' | 'humanActor' | 'systemActor' | 'trustZone' | 'systemScope' | 'stickyNote'
+// stickyNote and table carry no DFD semantics — they annotate the diagram and
+// are excluded from threat analysis.
+export type DiagramNodeType = 'process' | 'datastore' | 'humanActor' | 'systemActor' | 'trustZone' | 'systemScope' | 'stickyNote' | 'table'
 
 // Compliance/Security Standards
 export type SecurityStandard =

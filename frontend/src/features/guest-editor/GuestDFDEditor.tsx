@@ -34,6 +34,7 @@ import type {
 } from '@/features/dfd-editor/types'
 import { useCreateNode, useHandleDrop } from '@/features/dfd-editor/hooks/useCreateNode'
 import { NOTATION_NODE_SIZES } from '@/features/dfd-editor/types/notation'
+import { nodeSupportsComponentThreats } from '@/features/dfd-editor/types/diagram'
 import { GuestThreatSection } from './components/GuestThreatSection'
 import { guestNodeTypes, guestEdgeTypes } from './components/GuestNodeWrapper'
 import { useGuestEditor } from './context/GuestEditorContext'
@@ -501,7 +502,7 @@ function GuestDFDEditorContent() {
             node={currentSelectedNode}
             onClose={() => setSelectedNode(null)}
             renderExtra={
-              currentSelectedNode.type !== 'trustZone' && currentSelectedNode.type !== 'stickyNote' ? (
+              nodeSupportsComponentThreats(currentSelectedNode.type) ? (
                 <GuestThreatSection
                   targetId={currentSelectedNode.id}
                   targetType={getNodeTargetType(currentSelectedNode)}

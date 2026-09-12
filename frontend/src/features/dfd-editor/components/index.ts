@@ -7,6 +7,8 @@ import { SystemActorNode } from './nodes/SystemActorNode'
 import { TrustZoneNode } from './nodes/TrustZoneNode'
 import { SystemScopeNode } from './nodes/SystemScopeNode'
 import { StickyNoteNode } from './nodes/StickyNoteNode'
+import { TableNode } from './nodes/TableNode'
+import type { DiagramNodeType } from '../types'
 
 // Edge components
 export * from './edges'
@@ -29,7 +31,10 @@ export const nodeTypes = {
   trustZone: TrustZoneNode,
   systemScope: SystemScopeNode,
   stickyNote: StickyNoteNode,
-} as const
+  table: TableNode,
+  // See GuestNodeWrapper: an unregistered type silently falls back to React
+  // Flow's default node instead of failing.
+} as const satisfies Record<DiagramNodeType, unknown>
 
 // Edge type registry for React Flow
 export const edgeTypes = {

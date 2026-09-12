@@ -73,6 +73,7 @@ import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import { useConnectionMode } from './hooks/useConnectionMode'
 import { useBoundaryMode } from './hooks/useBoundaryMode'
 import type { DiagramNode, DiagramEdge, DataFlowEdge, TrustBoundaryEdge } from './types'
+import { nodeSupportsComponentThreats } from './types/diagram'
 import { useCreateNode, useHandleDrop } from './hooks/useCreateNode'
 import { type DFDNotationStyle, NOTATION_NODE_SIZES } from './types/notation'
 import { exportDiagramImage, type ExportImageOptions } from './lib/export-diagram-image'
@@ -921,7 +922,7 @@ function DFDEditorContent() {
             onClose={() => setSelectedNode(null)}
             threatModelId={threatModelId}
             renderExtra={
-              currentSelectedNode.type !== 'trustZone' && currentSelectedNode.type !== 'stickyNote' ? (
+              nodeSupportsComponentThreats(currentSelectedNode.type) ? (
                 <CanvasThreatSection
                   threatModelId={threatModelId}
                   canvasId={currentSelectedNode.id}

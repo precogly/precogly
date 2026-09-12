@@ -1,15 +1,17 @@
-import { useState, useCallback, useMemo } from 'react'
+import { Fragment, useState, useCallback, useMemo } from 'react'
 import type { XYPosition } from '@xyflow/react'
-import { User, Server, Cog, Database, Shield, Box, StickyNote, ChevronRight, ChevronDown, Search, X, Package, ShieldCheck, ArrowUp } from 'lucide-react'
+import { User, Server, Cog, Database, Shield, Box, StickyNote, Table, ChevronRight, ChevronDown, Search, X, Package, ShieldCheck, ArrowUp } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import type { DiagramNodeType } from '../../types'
 import type { DFDNotationStyle } from '../../types/notation'
 import { useGroupedComponentLibrary, categoryToNodeType } from '../../api/component-library'
 import type { ComponentLibraryItem } from '../../api/component-library'
-import { useCreateNode } from '../../hooks/useCreateNode'
+import { useCreateNode, type CreateNodeOptions } from '../../hooks/useCreateNode'
+import { TableGridPicker } from './TableGridPicker'
 
 interface ComponentPanelProps {
   threatModelId?: string
@@ -37,6 +39,7 @@ const dfdTypes: DfdTypeItem[] = [
   { type: 'trustZone', label: 'Trust Zone', icon: Shield, color: 'text-orange-600' },
   { type: 'systemScope', label: 'System Scope', icon: Box, color: 'text-gray-600' },
   { type: 'stickyNote', label: 'Sticky Note', icon: StickyNote, color: 'text-amber-700' },
+  { type: 'table', label: 'Table', icon: Table, color: 'text-sky-700' },
 ]
 
 const categoryIcons: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
@@ -99,6 +102,7 @@ export function ComponentPanel({
   notationStyle = 'dfd3',
 }: ComponentPanelProps) {
   const [searchQuery, setSearchQuery] = useState('')
+  const [tablePickerOpen, setTablePickerOpen] = useState(false)
   const { groups, isLoading } = useGroupedComponentLibrary(threatModelId)
   const { createNode } = useCreateNode(notationStyle)
   const normalizedQuery = searchQuery.toLowerCase().trim()
@@ -128,10 +132,10 @@ export function ComponentPanel({
   const handleClearSearch = useCallback(() => setSearchQuery(''), [])
 
   const handleClickToPlace = useCallback(
-    (type: DiagramNodeType) => {
+    (type: DiagramNodeType, options?: CreateNodeOptions) => {
       if (!getCanvasCenterPosition) return
       const center = getCanvasCenterPosition()
-      createNode(type, center)
+      createNode(type, center, options)
     },
     [createNode, getCanvasCenterPosition]
   )
@@ -172,18 +176,38 @@ export function ComponentPanel({
         <div className="pb-4">
           {(filteredDfdTypes.length > 0 || showTrustBoundary || showFlow) && (
             <CollapsibleSection title="Threat Modeling" icon={<Shield className="h-3 w-3" />}>
-              {filteredDfdTypes.map((item) => (
-                <div
-                  key={item.type}
-                  draggable
-                  onDragStart={(e) => handleDfdTypeDragStart(e, item.type)}
-                  onClick={() => handleClickToPlace(item.type)}
-                  className="flex items-center gap-2 px-4 py-1.5 cursor-grab active:cursor-grabbing hover:bg-muted/50 text-sm select-none"
-                >
-                  <item.icon className={`h-4 w-4 flex-shrink-0 ${item.color}`} />
-                  <span className="truncate">{item.label}</span>
-                </div>
-              ))}
+              {filteredDfdTypes.map((item) => {
+                const row = (
+                  <div
+                    draggable
+                    onDragStart={(e) => handleDfdTypeDragStart(e, item.type)}
+                    onClick={item.type === 'table' ? undefined : () => handleClickToPlace(item.type)}
+                    className="flex items-center gap-2 px-4 py-1.5 cursor-grab active:cursor-grabbing hover:bg-muted/50 text-sm select-none"
+                  >
+                    <item.icon className={`h-4 w-4 flex-shrink-0 ${item.color}`} />
+                    <span className="truncate">{item.label}</span>
+                  </div>
+                )
+
+                // A table's size is chosen before it exists, so clicking opens a
+                // picker rather than placing immediately. Dragging still drops a
+                // default-sized table — a drag has nowhere to put the choice.
+                if (item.type !== 'table') return <Fragment key={item.type}>{row}</Fragment>
+
+                return (
+                  <Popover key={item.type} open={tablePickerOpen} onOpenChange={setTablePickerOpen}>
+                    <PopoverTrigger asChild>{row}</PopoverTrigger>
+                    <PopoverContent side="right" align="start" className="w-auto">
+                      <TableGridPicker
+                        onPick={(size) => {
+                          setTablePickerOpen(false)
+                          handleClickToPlace('table', { tableSize: size })
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                )
+              })}
               {showTrustBoundary && onBoundaryModeChange && (
                 <div
                   onClick={() => onBoundaryModeChange(!boundaryMode)}

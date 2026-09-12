@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { useReactFlow } from '@xyflow/react'
-import { X, Trash2, Cog, Database, User, Server, Shield, Box, ShieldCheck, ArrowRight } from 'lucide-react'
+import { X, Trash2, Cog, Database, User, Server, Shield, Box, Table, ShieldCheck, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -31,6 +31,8 @@ import {
   getProcessAncestorDepth,
   getProcessDescendantDepth,
 } from '@/features/dfd-editor/types'
+import type { TableNodeData } from '@/features/dfd-editor/types'
+import { TableSizeFields } from '@/features/dfd-editor/components/panels/TableSizeFields'
 
 interface GuestNodeEditPanelProps {
   node: DiagramNode
@@ -49,6 +51,7 @@ const nodeTypeConfig: Record<
   trustZone: { label: 'Trust Zone', icon: Shield, color: 'text-orange-600' },
   systemScope: { label: 'System Scope', icon: Box, color: 'text-gray-600' },
   stickyNote: { label: 'Sticky Note', icon: Box, color: 'text-amber-700' },
+  table: { label: 'Table', icon: Table, color: 'text-sky-700' },
 }
 
 export const GuestNodeEditPanel = memo(function GuestNodeEditPanel({
@@ -213,6 +216,13 @@ export const GuestNodeEditPanel = memo(function GuestNodeEditPanel({
             <label className="flex items-center gap-2 text-sm"><Checkbox checked={!!(node.data as { bold?: boolean }).bold} onCheckedChange={(checked) => updateNodeData({ bold: checked === true })} />Bold text</label>
             <label className="flex items-center gap-2 text-sm"><Checkbox checked={!!(node.data as { italic?: boolean }).italic} onCheckedChange={(checked) => updateNodeData({ italic: checked === true })} />Italic text</label>
           </div>
+        )}
+
+        {node.type === 'table' && (
+          <TableSizeFields
+            data={node.data as unknown as TableNodeData}
+            updateNodeData={updateNodeData}
+          />
         )}
 
         {/* Process / Datastore fields */}

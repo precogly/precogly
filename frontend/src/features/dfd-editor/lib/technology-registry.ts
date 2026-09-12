@@ -34,6 +34,7 @@ export const NODE_TYPE_CATEGORIES: Record<DiagramNodeType, TechnologyCategory[]>
   trustZone: ['networking'], // Will be further filtered by TRUST_ZONE_TECHNOLOGY_IDS
   systemScope: ['infrastructure', 'networking'],
   stickyNote: [],
+  table: [], // Annotation, not a component — nothing to assign a technology to
 }
 
 // Technology IDs that are appropriate for Trust Zones

@@ -1,6 +1,6 @@
 import { memo, useState } from 'react'
 import { useReactFlow } from '@xyflow/react'
-import { X, Trash2, Cog, Database, User, Server, Shield, Box, ShieldCheck, ArrowRight, Link, Lock, LockOpen, AlertTriangle } from 'lucide-react'
+import { X, Trash2, Cog, Database, User, Server, Shield, Box, Table, ShieldCheck, ArrowRight, Link, Lock, LockOpen, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -41,7 +41,9 @@ import type {
   DiagramNodeType,
   DataSensitivity,
   StickyNoteTextSize,
+  TableNodeData,
 } from '../../types'
+import { TableSizeFields } from './TableSizeFields'
 import {
   DATA_SENSITIVITY_CONFIG,
   ZONE_COLOR_OPTIONS,
@@ -69,6 +71,7 @@ const nodeTypeConfig: Record<
   trustZone: { label: 'Trust Zone', icon: Shield, color: 'text-orange-600' },
   systemScope: { label: 'System Scope', icon: Box, color: 'text-gray-600' },
   stickyNote: { label: 'Sticky Note', icon: Box, color: 'text-amber-700' },
+  table: { label: 'Table', icon: Table, color: 'text-sky-700' },
 }
 
 /**
@@ -404,6 +407,13 @@ export const NodeEditPanel = memo(function NodeEditPanel({
             <label className="flex items-center gap-2 text-sm"><Checkbox checked={!!(node.data as { bold?: boolean }).bold} onCheckedChange={(checked) => updateNodeData({ bold: checked === true })} />Bold text</label>
             <label className="flex items-center gap-2 text-sm"><Checkbox checked={!!(node.data as { italic?: boolean }).italic} onCheckedChange={(checked) => updateNodeData({ italic: checked === true })} />Italic text</label>
           </div>
+        )}
+
+        {node.type === 'table' && (
+          <TableSizeFields
+            data={node.data as unknown as TableNodeData}
+            updateNodeData={updateNodeData}
+          />
         )}
 
         {/* Type-specific fields */}
