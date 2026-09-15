@@ -55,3 +55,26 @@ jobs:
       # `.gitleaksignore` if that changes before one exists.
       - name: Scan PR commits for secrets
         run: gitleaks git . --log-opts=origin/main..HEAD --redact --verbose --no-banner
+
+  pip-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v5
+      - run: uv run pip-audit
+
+  npm-audit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm audit --audit-level=high
