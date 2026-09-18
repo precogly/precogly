@@ -1,0 +1,20 @@
+# Rootless-Podman overlay for local development.
+#
+# `docker-compose.yml` is the canonical local stack and works unchanged with
+# Docker. This overlay adds only the keys rootless Podman needs on hosts
+# *without* subuid/subgid delegation (common on managed Linux laptops where a
+# domain-account uid falls outside /etc/subuid). Layer it on top with:
+#
+#   podman-compose -f docker-compose.yml -f podman-compose.override.yml up -d
+#
+# Docker users do not need this file. See docs/getting-started/local-podman.md
+# for the one-time host configuration this expects.
+services:
+  db:
+    # Fully qualified so rootless Podman does not prompt for a registry.
+    image: docker.io/library/postgres:16-alpine
+    # Without subuid delegation a rootless user namespace has a single UID
+    # mapping (host uid -> container 0). The postgres entrypoint chowns
+    # /var/lib/postgresql/data to uid/gid 70, which then fails. Mapping uid 70
+    # back to the host user lets those writes succeed.
+    userns_mode: "keep-id:uid=70,gid=70"
