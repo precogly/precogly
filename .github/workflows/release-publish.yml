@@ -1,0 +1,107 @@
+name: Publish & Attest Artifacts
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - image: ghcr.io/${{ github.repository }}-backend
+            context: .
+            dockerfile: backend/Dockerfile
+            target: prod
+          - image: ghcr.io/${{ github.repository }}-frontend
+            context: ./frontend
+            dockerfile: frontend/Dockerfile
+            target: prod
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ matrix.image }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha
+
+      - name: Build and push Docker image
+        id: build-push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target }}
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      # 1. Attest Build Provenance (SLSA / Sigstore)
+      - name: Attest Build Provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ matrix.image }}
+          subject-digest: ${{ steps.build-push.outputs.digest }}
+          push-to-registry: true
+
+      # 2. Generate CycloneDX SBOM
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ matrix.image }}@${{ steps.build-push.outputs.digest }}
+          format: cyclonedx-json
+          output-file: ${{ runner.temp }}/sbom.cdx.json
+
+      # 3. Attest SBOM
+      - name: Attest SBOM
+        uses: actions/attest-sbom@v2
+        with:
+          subject-name: ${{ matrix.image }}
+          subject-digest: ${{ steps.build-push.outputs.digest }}
+          sbom-path: ${{ runner.temp }}/sbom.cdx.json
+          push-to-registry: true
+
+      # 4. Upload SBOM to GitHub Release
+      - name: Upload SBOM to Release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "${{ matrix.context }}" == "." ]]; then
+            ASSET_NAME="backend-sbom.cdx.json"
+          else
+            ASSET_NAME="frontend-sbom.cdx.json"
+          fi
+          cp ${{ runner.temp }}/sbom.cdx.json $ASSET_NAME
+          gh release upload ${{ github.event.release.tag_name }} $ASSET_NAME
