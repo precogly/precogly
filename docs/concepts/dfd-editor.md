@@ -19,7 +19,7 @@ The DFD editor is where you visually model your system — place components, dra
 | **Draw Connection** | Draw data flows between components |
 | **Trust Boundary** | Create security boundaries between trust zones |
 | **DFD3 / Yourdon** | Switch the notation used to render diagram nodes |
-| **Templates** | Insert pre-built diagrams from library packs |
+| **Templates** | Insert pre-built diagrams or worksheets from library packs |
 | **Generate** | Build a DFD from an architecture image with a configured AI provider |
 | **Analyze Threats** | Save and navigate to threat analysis |
 | **Export Image** | Download the current diagram as PNG or SVG |
@@ -55,6 +55,7 @@ Click **Export Image** to download the current diagram as a PNG or SVG file. Thi
 | **Data Store** | Purple, cylinder | Technology, Store type, Data sensitivity |
 | **Trust Zone** | Dashed border, shield | Trust level (0–100 slider), Zone color |
 | **System Scope** | Solid border, box | Technology, Owner |
+| **Table** | Grid with rows and columns | Header row, column widths, cell text and fill |
 
 Technology dropdowns are populated from your imported library packs. All components support a description field and can be linked to data assets. Drag components into a Trust Zone, System Scope, or Process to nest them (up to 3 levels for process-to-process nesting).
 
@@ -66,7 +67,7 @@ Technology dropdowns are populated from your imported library packs. All compone
 
 ## Templates
 
-Click **Templates** to browse pre-built diagrams from your library packs. Search by name, filter by category, and click to insert. Components with library links carry over their threats and countermeasures automatically.
+Click **Templates** to browse pre-built diagrams and worksheets from your library packs. Search by name, filter by category, and click to insert. DFD templates with library-linked components carry over their threats and countermeasures automatically. Worksheets (e.g., STRIDE per Interaction) insert annotation-only table grids for facilitating a threat modeling session.
 
 ![Template browser](../assets/images/dfd-browse-templates.png)
 

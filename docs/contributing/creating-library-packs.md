@@ -35,7 +35,7 @@ Your pack type determines which files you need to create.
 | `full` | Everything | `pack.yaml`, `components.yaml`, `threats.yaml`, `countermeasures.yaml`, `joins/` | `dfd-templates/`, compliance overlays |
 | `compliance` | Framework definitions | `pack.yaml` with `frameworks:` block (uses `slug`, not `id`) | None |
 | `taxonomy` | Classification entries | `pack.yaml` with `taxonomies:` block (uses `slug`, not `id`) | None |
-| `template` | DFD templates only | `pack.yaml`, `dfd-templates/` | None |
+| `template` | DFD templates or worksheets only | `pack.yaml`, `dfd-templates/` | None |
 
 Most community contributions will be `technology` packs (adding components for a new cloud provider or tool) or `full` packs (components with threats and countermeasures).
 
