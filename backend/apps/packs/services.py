@@ -1694,7 +1694,7 @@ def _import_pack(
                 _hard_delete_pack_items(existing)
 
             # Create/update LibraryPack
-            library_pack = _create_or_update_pack(pack_data)
+            library_pack = _create_or_update_pack(pack_data, pack_path, import_warnings)
 
             # Process dependencies
             _process_dependencies(library_pack, pack_data)
@@ -2057,10 +2057,25 @@ def _hard_delete_pack_items(pack: LibraryPack):
     StandardFramework.objects.filter(source_pack=pack).delete()
 
 
-def _create_or_update_pack(pack_data: dict) -> LibraryPack:
+def _create_or_update_pack(
+    pack_data: dict, pack_path: Path, import_warnings: list[str] | None = None
+) -> LibraryPack:
     """Create or update the LibraryPack record."""
     pack = pack_data["pack"]
     slug = pack["slug"]
+
+    icon_svg = ""
+    icon_path = pack.get("icon", "")
+    if icon_path:
+        icon_file = pack_path / icon_path
+        if icon_file.exists():
+            try:
+                icon_svg = icon_file.read_text(encoding="utf-8")
+            except Exception as e:
+                msg = f"Could not read pack icon '{icon_path}' for '{slug}': {e}"
+                logger.warning(msg)
+                if import_warnings is not None:
+                    import_warnings.append(msg)
 
     library_pack, _ = LibraryPack.objects.update_or_create(
         slug=slug,
@@ -2070,6 +2085,7 @@ def _create_or_update_pack(pack_data: dict) -> LibraryPack:
             "version": pack["version"],
             "pack_type": pack["pack_type"],
             "author": pack.get("author", ""),
+            "icon_svg": icon_svg,
             "tags": pack.get("tags", []),
         },
     )

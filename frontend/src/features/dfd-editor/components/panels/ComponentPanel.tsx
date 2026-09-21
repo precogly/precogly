@@ -259,8 +259,11 @@ export function ComponentPanel({
                     onDragStart={(e) => handleComponentDragStart(e, item)}
                     className="flex items-center gap-2 px-4 py-1.5 cursor-grab active:cursor-grabbing hover:bg-muted/50 text-sm select-none"
                   >
-                    {item.iconSvg ? (
-                      <SvgIcon svg={item.iconSvg} className="h-4 w-4 flex-shrink-0" />
+                    {item.iconSvg || item.sourcePackIconSvg ? (
+                      <SvgIcon
+                        svg={item.iconSvg || item.sourcePackIconSvg || ''}
+                        className="h-4 w-4 flex-shrink-0"
+                      />
                     ) : (
                       <FallbackIcon className={`h-4 w-4 flex-shrink-0 ${iconColor}`} />
                     )}

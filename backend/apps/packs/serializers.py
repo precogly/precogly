@@ -59,6 +59,7 @@ class LibraryPackListSerializer(serializers.ModelSerializer):
             "version",
             "pack_type",
             "author",
+            "icon_svg",
             "tags",
             "is_imported",
         ]
@@ -84,6 +85,7 @@ class LibraryPackDetailSerializer(serializers.ModelSerializer):
             "version",
             "pack_type",
             "author",
+            "icon_svg",
             "tags",
             "dependencies",
             "content_summary",

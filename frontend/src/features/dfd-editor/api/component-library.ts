@@ -21,6 +21,7 @@ export interface ComponentLibraryItem {
   sourcePack: number | null
   sourcePackName: string | null
   sourcePackSlug: string | null
+  sourcePackIconSvg: string | null
 }
 
 // Map backend provider to frontend vendor
@@ -79,7 +80,7 @@ function transformToTechnology(item: ComponentLibraryItem): Technology {
     category: mapComponentTypeToCategory(item.componentType),
     vendor: mapProviderToVendor(item.provider),
     description: item.sourcePackName ? `From ${item.sourcePackName}` : undefined,
-    icon: item.iconSvg || undefined,
+    icon: item.iconSvg || item.sourcePackIconSvg || undefined,
   }
 }
 

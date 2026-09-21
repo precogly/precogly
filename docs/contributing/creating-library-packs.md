@@ -102,6 +102,7 @@ Key points:
 - `schema_version` declares the pack format version. Always use `1` (the current version). This is checked at import time — packs with an unsupported version are rejected.
 - `slug` must be unique, lowercase, hyphens only.
 - `depends_on` lists taxonomy packs (using path-format strings) whose entries the join files reference. Without these, taxonomy mappings won't resolve on import.
+- `icon` (optional) points to an SVG file, relative to the pack directory (e.g. `icon: icons/aws.svg`). The importer reads the file's contents into `LibraryPack.icon_svg`; the frontend renders it the same way as component icons — as a base64-encoded `<img>` data URI, never as inline markup — so a malicious pack can't inject a script via its icon.
 
 **`components.yaml`** defines the technology building blocks:
 
