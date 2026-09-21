@@ -637,6 +637,42 @@ class InstanceCountermeasure(TimestampedModel):
     )
     format_metadata = models.JSONField(default=dict, blank=True)
 
+    class Source(models.TextChoices):
+        MANUAL = "manual", "Manual"
+        VAULT_IMPORT = "vault_import", "Vault Import"
+        PENTEST = "pentest", "Pentest"
+
+    source = models.CharField(
+        max_length=20,
+        choices=Source.choices,
+        default=Source.MANUAL,
+        help_text="Where this countermeasure instance originated",
+    )
+    poam_id = models.CharField(
+        max_length=50,
+        blank=True,
+        db_index=True,
+        help_text="OSCAL POA&M identifier (e.g. from a vault-derived CDX import)",
+    )
+    scheduled_completion = models.DateField(
+        null=True,
+        blank=True,
+        help_text="POA&M OSCAL scheduled-completion-date, distinct from due_date",
+    )
+
+    @property
+    def days_overdue(self) -> int | None:
+        """Days past scheduled_completion for an unresolved countermeasure, else None."""
+        if self.scheduled_completion and self.status not in (
+            self.Status.IMPLEMENTED,
+            self.Status.VERIFIED,
+        ):
+            from datetime import date
+
+            delta = (date.today() - self.scheduled_completion).days
+            return delta if delta > 0 else None
+        return None
+
     # Zone inheritance tracking
     is_inherited = models.BooleanField(default=False)
     inherited_from_component_name = models.CharField(max_length=255, blank=True)

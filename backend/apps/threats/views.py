@@ -76,6 +76,12 @@ def _is_security_team(user):
     return user.organization_memberships.filter(role="security_team").exists()
 
 
+def _truthy(value) -> bool:
+    if isinstance(value, str):
+        return value.lower() in {"1", "true", "yes", "on"}
+    return bool(value)
+
+
 def _check_platform_status_permission(user, current_status=None, new_status=None):
     """Raise PermissionDenied if non-Security Team user tries to set or remove platform status."""
     if (
@@ -729,7 +735,7 @@ class InstanceCountermeasureViewSet(viewsets.ModelViewSet):
         org_ids = self.request.user.organization_memberships.values_list(
             "organization_id", flat=True
         )
-        return (
+        qs = (
             InstanceCountermeasure.objects.filter(
                 threat_model__organization_id__in=org_ids
             )
@@ -744,6 +750,20 @@ class InstanceCountermeasureViewSet(viewsets.ModelViewSet):
                 "threat_links__flow_threat__data_flow",
             )
         )
+        if _truthy(self.request.query_params.get("has_poam")):
+            qs = qs.exclude(poam_id="")
+        if _truthy(self.request.query_params.get("overdue")):
+            from datetime import date
+
+            qs = qs.filter(
+                scheduled_completion__lt=date.today(),
+            ).exclude(
+                status__in=[
+                    InstanceCountermeasure.Status.IMPLEMENTED,
+                    InstanceCountermeasure.Status.VERIFIED,
+                ]
+            )
+        return qs
 
     filter_backends = [DjangoFilterBackend]
     filterset_fields = [
