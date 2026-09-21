@@ -12,7 +12,7 @@ Library packs are modular bundles of threat-modeling content (components, threat
 | `full` | Components + threats + countermeasures + joins + templates | `aws` |
 | `compliance` | Framework definitions with requirements | `nist-csf`, `pci-dss` |
 | `taxonomy` | Classification entries (STRIDE, CWE, CAPEC, etc.) | `stride-taxonomy`, `cwe` |
-| `template` | DFD templates only | — |
+| `template` | DFD templates or worksheets only | `stride-worksheets` |
 
 ---
 
@@ -24,7 +24,8 @@ Every pack is a directory under one of the category folders in `libraries/packs/
 libraries/packs/
 ├── taxonomies/          # Classification systems (STRIDE, CWE, CAPEC, ATT&CK)
 ├── standards/           # Compliance frameworks (NIST CSF, OWASP, SOC 2, etc.)
-└── threat-libraries/    # Technology-specific threats (AWS, Azure, GCP, etc.)
+├── threat-libraries/    # Technology-specific threats (AWS, Azure, GCP, etc.)
+└── worksheets/          # Method worksheets for facilitated sessions (STRIDE)
 ```
 
 Only `pack.yaml` is required; all other files are optional depending on pack type.
@@ -429,7 +430,7 @@ taxonomies:
 
 ## DFD Templates
 
-Templates are pre-built Data Flow Diagrams stored in the `dfd-templates/` directory. Each template produces a ready-to-use diagram when a user selects it.
+Templates are pre-built diagrams stored in the `dfd-templates/` directory. Each template produces a ready-to-use canvas when a user selects it. Templates can be traditional Data Flow Diagrams with DFD semantics (nodes, edges, trust zones) or worksheets: annotation-only canvases (typically table nodes) used to facilitate a threat modeling session rather than describe a system.
 
 ```yaml
 # dfd-templates/s3-lambda.yaml
@@ -518,7 +519,7 @@ canvas_data:
 
 ### Template Categories
 
-`webApplication`, `mobileApplication`, `microservices`, `dataPipeline`, `authentication`, `paymentProcessing`, `cloudInfrastructure`, `iot`, `apiGateway`, `other`
+`webApplication`, `mobileApplication`, `microservices`, `dataPipeline`, `authentication`, `paymentProcessing`, `cloudInfrastructure`, `iot`, `apiGateway`, `worksheet`, `other`
 
 ### Node Types
 
@@ -530,8 +531,11 @@ canvas_data:
 | `systemActor` | External APIs, third-party services | `systemType`, `vendor` |
 | `trustZone` | Network zones, security perimeters | `zoneType`, `technology` |
 | `systemScope` | Top-level system containers | `owner`, `classification` |
+| `table` | Workshop worksheets, annotation grids | `headerRow`, `columnWidths`, `rows` (array of `{ height, cells }`) |
 
 Containers (`trustZone`, `systemScope`) support nesting via `parentId` and must set `style: { width, height }`.
+
+Table nodes are canvas annotations with no DFD semantics. They do not participate in threat analysis. Each cell in `rows[].cells` supports `text`, `fill` (`yellow`, `gray`, etc.), `rowSpan`, and `colSpan`.
 
 ### Trust Zone Types
 

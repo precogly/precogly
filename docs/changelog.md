@@ -13,6 +13,7 @@ The v0.4.0 release adds AI-powered DFD generation, a vendor-neutral AI/ML threat
 - Added AI-powered DFD generation from architecture diagram images. A two-step flow uses a vision model to extract components, flows, and zones, then a text model generates canvas data with layout correction.
 - Added vendor-neutral AI/ML threat library pack with 55 threats, 53 countermeasures, 12 components, and OWASP LLM/Agentic/MCP Top 10 taxonomies. Cross-pack AI references wired into the AWS pack.
 - Expanded AWS library pack to 41 components with full taxonomy and compliance mappings, new DFD templates, and official AWS icons.
+- Added STRIDE Worksheets pack with a STRIDE per Interaction table template for facilitating threat modeling sessions.
 
 ### Threat triage and control classification
 
