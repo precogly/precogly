@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: docker.io/library/postgres:16-alpine
     container_name: precogly-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-precogly}
