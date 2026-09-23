@@ -1,0 +1,38 @@
+{
+  "_comment": "Schema-shaped golden pinning the compliance-matrix payload structure. Regenerate against the FPDF fixture TM (id 275 on the reference Precogly instance) with 'python manage.py shell -c \"import json; from apps.compliance.matrix import build_matrix; from apps.threat_models.models import ThreatModel; tm = ThreatModel.objects.get(pk=275); print(json.dumps(build_matrix(tm, 'NIST 800-53 Rev 5', include_empty=False), indent=2))\" > backend/apps/compliance/tests/fixtures/matrix_snapshot.json' once a real Postgres is reachable.",
+  "threat_model": {"id": 1, "name": "TM-A"},
+  "framework": {"id": 1, "name": "NIST 800-53 Rev 5"},
+  "families": [
+    {
+      "family": "AC",
+      "requirements": [
+        {
+          "section_code": "AC-3",
+          "description": "Access enforcement",
+          "countermeasures": [
+            {
+              "id": 1,
+              "name": "MFA everywhere",
+              "status": "implemented",
+              "mappings": [
+                {"sufficiency": "partial", "section_code": "AC-3", "evidence_url": ""}
+              ],
+              "inheritance": {
+                "is_inherited": true,
+                "providing_system": "Platform IAM",
+                "responsibility_source": "crm",
+                "control_type": "preventive"
+              },
+              "poam": {"poam_id": "POAM-123", "due_date": "2026-12-31"},
+              "evidence_url": ""
+            }
+          ],
+          "threats": [
+            {"id": 1, "kind": "component", "name": "Spoofing"},
+            {"id": 2, "kind": "flow", "name": "Sniffing"}
+          ]
+        }
+      ]
+    }
+  ]
+}

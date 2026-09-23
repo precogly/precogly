@@ -1,0 +1,119 @@
+{% comment %}Compliance matrix — one row per requirement, grouped by family.{% endcomment %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Compliance Matrix — {{ matrix.framework.name|default:"unknown framework" }} — {{ matrix.threat_model.name }}</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; }
+    .muted { color: #666; }
+    .empty { color: #999; font-style: italic; }
+    table.matrix { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
+    table.matrix th, table.matrix td { border: 1px solid #ddd; padding: .5rem; vertical-align: top; text-align: left; }
+    .col-req { width: 25%; }
+    .col-threats { width: 30%; }
+    .col-cms { width: 45%; }
+    .pill { display: inline-block; padding: 0 .4rem; border-radius: 4px; background: #eee; font-size: .8rem; margin-left: .25rem; }
+    .pill-full { background: #cfe8cf; }
+    .pill-partial { background: #fde9a9; }
+    .pill-inherited { background: #d1e0ff; }
+    .pill-poam { background: #ffd7d1; }
+    details.control-family { margin-bottom: 1.5rem; }
+    summary { cursor: pointer; font-weight: bold; padding: .25rem 0; }
+    .family-code { font-family: monospace; margin-right: .5rem; }
+    .family-count { color: #666; font-weight: normal; }
+    ul { margin: 0; padding-left: 1.25rem; }
+  </style>
+</head>
+<body>
+<section class="matrix-header">
+  <h1>{{ matrix.framework.name|default:"Compliance matrix" }}</h1>
+  <p class="muted">
+    Threat model: <strong>{{ matrix.threat_model.name }}</strong>
+    {% if matrix.framework %}
+      &middot; showing {{ matrix.families|length }} control families
+    {% else %}
+      &middot; <span class="empty">{{ matrix.warning }}</span>
+    {% endif %}
+  </p>
+  <form method="get" class="framework-picker">
+    <label for="framework">Framework:</label>
+    <input id="framework" name="framework" value="{{ matrix.framework.name|default:'NIST 800-53 Rev 5' }}">
+    <label>
+      <input type="checkbox" name="include_empty" value="true" {% if include_empty %}checked{% endif %}>
+      Show empty requirements
+    </label>
+    <button type="submit">Apply</button>
+  </form>
+</section>
+
+{% for family in matrix.families %}
+<details class="control-family" open>
+  <summary>
+    <span class="family-code">{{ family.family }}</span>
+    <span class="family-count">{{ family.requirements|length }} requirements</span>
+  </summary>
+  <table class="matrix">
+    <thead>
+      <tr>
+        <th class="col-req">Requirement</th>
+        <th class="col-threats">Threats</th>
+        <th class="col-cms">Countermeasures</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for req in family.requirements %}
+      <tr>
+        <td class="col-req">
+          <strong>{{ req.section_code }}</strong>
+          <div class="req-desc">{{ req.description|truncatechars:220 }}</div>
+        </td>
+        <td class="col-threats">
+          {% if req.threats %}
+            <ul>
+              {% for t in req.threats %}
+                <li>{{ t.name }} <span class="pill pill-{{ t.kind }}">{{ t.kind }}</span></li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <span class="empty">— none linked —</span>
+          {% endif %}
+        </td>
+        <td class="col-cms">
+          {% if req.countermeasures %}
+            <ul>
+              {% for cm in req.countermeasures %}
+                <li>
+                  <strong>{{ cm.name }}</strong>
+                  {% if cm.status %}<span class="pill pill-status">{{ cm.status }}</span>{% endif %}
+                  {% for m in cm.mappings %}
+                    {% if m.sufficiency %}<span class="pill pill-{{ m.sufficiency }}">{{ m.sufficiency }}</span>{% endif %}
+                    {% if m.evidence_url %}<a class="evidence" href="{{ m.evidence_url }}" target="_blank" rel="noopener">evidence</a>{% endif %}
+                  {% endfor %}
+                  {% if cm.inheritance.is_inherited %}
+                    <span class="pill pill-inherited">inherited</span>
+                    {% if cm.inheritance.providing_system %}<span class="muted">from {{ cm.inheritance.providing_system }}</span>{% endif %}
+                  {% endif %}
+                  {% if cm.inheritance.responsibility_source %}<span class="muted">source: {{ cm.inheritance.responsibility_source }}</span>{% endif %}
+                  {% if cm.inheritance.control_type %}<span class="muted">type: {{ cm.inheritance.control_type }}</span>{% endif %}
+                  {% if cm.poam.poam_id %}
+                    <span class="pill pill-poam">POA&amp;M {{ cm.poam.poam_id }}</span>
+                    {% if cm.poam.due_date %}<span class="muted">due {{ cm.poam.due_date }}</span>{% endif %}
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <span class="empty">— none linked —</span>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</details>
+{% empty %}
+<p>No requirements from this framework are linked to any countermeasure or threat in this model yet.</p>
+{% endfor %}
+</body>
+</html>
