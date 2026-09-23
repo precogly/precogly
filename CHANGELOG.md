@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.5.0](https://github.com/precogly/precogly/compare/v0.4.0...v0.5.0) (2026-09-23)
+
+
+### Features
+
+* **compose:** rootless Podman overlay for local dev ([b37da22](https://github.com/precogly/precogly/commit/b37da22a0c552cef664efa0ff6d96fa7ac9e5123))
+* **compose:** rootless Podman overlay for local dev ([0da0e3d](https://github.com/precogly/precogly/commit/0da0e3df6a6c294e813a23c4dc8fd8bcd92e7f1d))
+* **dfd-editor:** fill table cells with a colour ([1b86230](https://github.com/precogly/precogly/commit/1b8623029f9f0e90867cf3c156414300bad49b47))
+* **dfd-editor:** merge table cells ([06d83c6](https://github.com/precogly/precogly/commit/06d83c633d3817866b09dacc8e020e26c4cd7453))
+* **dfd-editor:** merge table cells and STRIDE worksheet template ([a68b406](https://github.com/precogly/precogly/commit/a68b406f385fb8b8ac6e37893c06e36ecfb7bdfe))
+* **dfd-editor:** move and extend the cell selection with the arrow keys ([4639bc0](https://github.com/precogly/precogly/commit/4639bc0581c24651a6aa44d2cce375ff50c1f9d7))
+* **dfd-editor:** select and fill table cells ([ae90f06](https://github.com/precogly/precogly/commit/ae90f06598a8516b570109f5ee94462fec973ddc))
+* **dfd-editor:** select cells and ranges in a table ([3c49a9e](https://github.com/precogly/precogly/commit/3c49a9edcd6506ebfb366d75b695f40a35d4c335))
+* **dfd-editor:** show the selection's current fill in the picker ([48822fe](https://github.com/precogly/precogly/commit/48822fe58d75f819d0136198f1439b730c5e1ec0))
+* **libraries:** add a STRIDE per Interaction worksheet pack ([bceb0e1](https://github.com/precogly/precogly/commit/bceb0e1a047befd32578003fc0a042cdc2480bbf))
+
+
+### Bug Fixes
+
+* **dfd-editor:** dismiss the context menu when a cell is pressed ([0a7dc56](https://github.com/precogly/precogly/commit/0a7dc5688de433e5e0f9983178d6facf4f92d7a3))
+* **dfd-editor:** keep the caret in a table cell opened after the menu closes ([b3a0468](https://github.com/precogly/precogly/commit/b3a04684a300c37efa2ee22fa4fad708631d9276))
+* **diagrams:** offer a template pack's templates without connecting it ([393e8e5](https://github.com/precogly/precogly/commit/393e8e5383634fa4c55003e1ea74a3dc90cecbe2))
+
 ## 0.4.0 (2026-09-15)
 
 
