@@ -1,0 +1,43 @@
+taxonomy:
+  slug: owasp-llm-top-10-2026
+  entries:
+    - id: "LLM01:2026"
+      title: Prompt Injection
+      rank: 1
+
+    - id: "LLM02:2026"
+      title: Sensitive Information Disclosure
+      rank: 2
+
+    - id: "LLM03:2026"
+      title: Excessive Agency
+      rank: 3
+
+    - id: "LLM04:2026"
+      title: Supply Chain
+      rank: 4
+
+    - id: "LLM05:2026"
+      title: Data and Model Poisoning
+      rank: 5
+
+    - id: "LLM06:2026"
+      title: Unbounded Consumption
+      rank: 6
+
+    - id: "LLM07:2026"
+      title: Misinformation
+      rank: 7
+
+    - id: "LLM08:2026"
+      title: Hidden Context Exposure
+      rank: 8
+
+    - id: "LLM09:2026"
+      title: Vector and Embedding Weaknesses
+      rank: 9
+
+    - id: "LLM10:2026"
+      title: Improper Output Handling
+      rank: 10
+

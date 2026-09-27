@@ -4,7 +4,8 @@ pack:
   name: MITRE ATLAS
   description: Full catalog of MITRE ATLAS (Adversarial Threat Landscape for AI Systems)
     tactics and techniques covering adversary behaviors that target AI/ML systems.
-  version: 2.0.0
+    Based on ATLAS 2026.08 release.
+  version: 3.0.0
   pack_type: taxonomy
   author: Precogly
   tags:

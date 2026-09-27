@@ -1,0 +1,36 @@
+pack:
+  schema_version: 1
+  slug: aidefend-ai-security
+  name: AIDEFEND AI Security Controls
+  version: 1.0.0
+  pack_type: countermeasure
+  author: AIDEFEND
+  description: |
+    307 actionable AI security controls from the AIDEFEND AI Defense Framework
+    (v1.20260925), covering seven tactical domains: Model governance, Harden,
+    Detect, Isolate, Evict, Restore, and Deceive.
+
+    Source: AIDEFEND AI Defense Framework by Edward Lee, licensed under CC BY 4.0.
+    https://aidefend.net
+
+    Claim boundary: a threat-to-control mapping indicates relevance, not proof of
+    mitigation or compliance. AISVS and ASVS requirement mappings in the consuming
+    ai pack are Precogly-authored and do not represent claims by AIDEFEND.
+
+    Update cadence: generated from AIDEFEND integration exports pinned to a
+    specific release tag. Do not hand-edit generated files.
+
+    Source tag: v1.20260925
+  tags:
+  - aidefend
+  - ai-security
+  - ai
+  - ml
+  - llm
+  - countermeasures
+  - vendor-neutral
+  depends_on:
+  - taxonomies/mitre-atlas
+  - taxonomies/owasp-llm-top-10-2026
+  - taxonomies/owasp-ml-top-10-2023
+  - taxonomies/owasp-agentic-top-10

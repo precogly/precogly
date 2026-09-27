@@ -1,248 +1,2115 @@
 mappings:
-  # LLM threats
-  - threat: llm-prompt-injection
+  # AI gateway threats
+  - threat: gateway-auth-bypass
     countermeasures:
-      - llm-input-guardrail
-      - llm-system-prompt-protection
-      - llm-least-privilege
-  - threat: llm-sensitive-info-disclosure
-    countermeasures:
-      - llm-output-guardrail
-      - llm-differential-privacy
-      - vecdb-metadata-filtering
-  - threat: llm-system-prompt-leakage
-    countermeasures:
-      - llm-system-prompt-protection
-      - llm-output-guardrail
-  - threat: llm-insecure-output-handling
-    countermeasures:
-      - llm-output-validation
-      - llm-output-guardrail
-  - threat: llm-misinformation
-    countermeasures:
-      - llm-rag-grounding
-      - eval-adversarial-testing
-  - threat: llm-unbounded-consumption
-    countermeasures:
-      - llm-rate-limiting
-      - gateway-rate-limiting
-  - threat: llm-excessive-agency
-    countermeasures:
-      - llm-least-privilege
-      - agent-hitl
-      - tool-allowlist
-  - threat: llm-training-data-extraction
-    countermeasures:
-      - llm-differential-privacy
-      - llm-output-guardrail
+      - aidefend-ai-security/aid-d-011-004
+      - aidefend-ai-security/aid-h-004-002
+      - aidefend-ai-security/aid-h-004-005
+      - aidefend-ai-security/aid-i-002-001
 
-  # Vector database threats
-  - threat: vecdb-poisoned-embeddings
+  - threat: gateway-logging-gap
     countermeasures:
-      - vecdb-input-validation
-      - docstore-content-screening
-  - threat: vecdb-unauthorized-retrieval
-    countermeasures:
-      - vecdb-access-control
-      - vecdb-metadata-filtering
-  - threat: vecdb-embedding-inversion
-    countermeasures:
-      - vecdb-access-control
-      - embed-transport-encryption
-  - threat: vecdb-cross-tenant-leakage
-    countermeasures:
-      - vecdb-tenant-isolation
-      - vecdb-metadata-filtering
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-005-004
+      - aidefend-ai-security/aid-h-007-002
+      - aidefend-ai-security/aid-h-032-003
 
-  # Embedding service threats
-  - threat: embed-model-substitution
+  - threat: gateway-model-routing-abuse
     countermeasures:
-      - embed-integrity-verification
-  - threat: embed-data-exfiltration
+      - aidefend-ai-security/aid-h-004-004
+      - aidefend-ai-security/aid-h-031-004
+      - aidefend-ai-security/aid-h-033-003
+      - aidefend-ai-security/aid-h-033-005
+
+  - threat: gateway-rate-limit-bypass
     countermeasures:
-      - embed-transport-encryption
-  - threat: embed-adversarial-perturbation
-    countermeasures:
-      - vecdb-input-validation
-      - embed-integrity-verification
+      - aidefend-ai-security/aid-h-034-008
+      - aidefend-ai-security/aid-i-003-001
+      - aidefend-ai-security/aid-i-003-002
+      - aidefend-ai-security/aid-i-003-003
 
   # Agent orchestrator threats
-  - threat: agent-goal-hijack
-    countermeasures:
-      - agent-goal-validation
-      - llm-input-guardrail
-      - agent-behavior-monitoring
-  - threat: agent-privilege-escalation
-    countermeasures:
-      - agent-least-privilege
-      - agent-hitl
-      - agent-behavior-monitoring
-  - threat: agent-memory-poisoning
-    countermeasures:
-      - agent-memory-isolation
-      - agent-behavior-monitoring
   - threat: agent-cascading-failure
     countermeasures:
-      - agent-circuit-breaker
-      - agent-behavior-monitoring
-  - threat: agent-insecure-delegation
-    countermeasures:
-      - agent-inter-agent-auth
-      - agent-least-privilege
-  - threat: agent-rogue-behavior
-    countermeasures:
-      - agent-behavior-monitoring
-      - agent-circuit-breaker
-      - agent-hitl
-  - threat: agent-human-trust-exploitation
-    countermeasures:
-      - agent-hitl
-      - agent-behavior-monitoring
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-003-004
+      - aidefend-ai-security/aid-d-004-006
+      - aidefend-ai-security/aid-d-005-005
+      - aidefend-ai-security/aid-d-005-007
+      - aidefend-ai-security/aid-d-008
+      - aidefend-ai-security/aid-d-009-002
+      - aidefend-ai-security/aid-d-010
+      - aidefend-ai-security/aid-e-002
+      - aidefend-ai-security/aid-e-005
+      - aidefend-ai-security/aid-h-017-001
+      - aidefend-ai-security/aid-h-017-006
+      - aidefend-ai-security/aid-h-018-008
+      - aidefend-ai-security/aid-h-033-002
+      - aidefend-ai-security/aid-h-034-001
+      - aidefend-ai-security/aid-h-034-007
+      - aidefend-ai-security/aid-h-034-008
+      - aidefend-ai-security/aid-h-034-009
+      - aidefend-ai-security/aid-h-035
+      - aidefend-ai-security/aid-i-002-001
+      - aidefend-ai-security/aid-i-003-001
+      - aidefend-ai-security/aid-i-003-002
+      - aidefend-ai-security/aid-i-003-003
+      - aidefend-ai-security/aid-i-004-001
+      - aidefend-ai-security/aid-i-004-009
+      - aidefend-ai-security/aid-i-005
+      - aidefend-ai-security/aid-m-006-003
+      - aidefend-ai-security/aid-m-007-002
+      - aidefend-ai-security/aid-m-009-006
+      - aidefend-ai-security/aid-r-005
+      - aidefend-ai-security/aid-r-007
+
   - threat: agent-excessive-autonomy
     countermeasures:
-      - agent-hitl
-      - agent-goal-validation
-      - agent-circuit-breaker
+      - aidefend-ai-security/aid-d-001-001
+      - aidefend-ai-security/aid-d-001-002
+      - aidefend-ai-security/aid-d-003-001
+      - aidefend-ai-security/aid-d-003-002
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-003-004
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-004-003
+      - aidefend-ai-security/aid-d-005-004
+      - aidefend-ai-security/aid-d-005-006
+      - aidefend-ai-security/aid-d-005-009
+      - aidefend-ai-security/aid-d-006
+      - aidefend-ai-security/aid-d-011-002
+      - aidefend-ai-security/aid-d-011-004
+      - aidefend-ai-security/aid-d-015
+      - aidefend-ai-security/aid-d-016-001
+      - aidefend-ai-security/aid-d-016-002
+      - aidefend-ai-security/aid-dv-002
+      - aidefend-ai-security/aid-e-001-001
+      - aidefend-ai-security/aid-e-001-002
+      - aidefend-ai-security/aid-e-001-003
+      - aidefend-ai-security/aid-e-001-004
+      - aidefend-ai-security/aid-e-004
+      - aidefend-ai-security/aid-h-004-001
+      - aidefend-ai-security/aid-h-004-002
+      - aidefend-ai-security/aid-h-004-003
+      - aidefend-ai-security/aid-h-004-004
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-017-006
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-018-003
+      - aidefend-ai-security/aid-h-018-004
+      - aidefend-ai-security/aid-h-018-006
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-018-009
+      - aidefend-ai-security/aid-h-020-003
+      - aidefend-ai-security/aid-h-021-004
+      - aidefend-ai-security/aid-h-027
+      - aidefend-ai-security/aid-h-028-002
+      - aidefend-ai-security/aid-h-028-004
+      - aidefend-ai-security/aid-h-028-005
+      - aidefend-ai-security/aid-h-028-007
+      - aidefend-ai-security/aid-h-028-008
+      - aidefend-ai-security/aid-h-034-002
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-034-005
+      - aidefend-ai-security/aid-h-034-006
+      - aidefend-ai-security/aid-h-034-007
+      - aidefend-ai-security/aid-h-035
+      - aidefend-ai-security/aid-i-002-001
+      - aidefend-ai-security/aid-i-003-001
+      - aidefend-ai-security/aid-i-003-004
+      - aidefend-ai-security/aid-i-004-001
+      - aidefend-ai-security/aid-i-004-002
+      - aidefend-ai-security/aid-i-004-007
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-i-008-001
+      - aidefend-ai-security/aid-i-008-002
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-i-008-005
+      - aidefend-ai-security/aid-m-005-002
+      - aidefend-ai-security/aid-m-006-002
+      - aidefend-ai-security/aid-m-006-003
+      - aidefend-ai-security/aid-m-009-003
+      - aidefend-ai-security/aid-m-009-006
+      - aidefend-ai-security/aid-r-003-001
+      - aidefend-ai-security/aid-r-003-003
 
-  # Tool executor threats
-  - threat: tool-misuse
+  - threat: agent-goal-hijack
     countermeasures:
-      - tool-parameter-validation
-      - tool-allowlist
-      - agent-behavior-monitoring
-  - threat: tool-injection
-    countermeasures:
-      - tool-parameter-validation
-      - tool-sandboxing
-  - threat: tool-rce
-    countermeasures:
-      - tool-sandboxing
-      - tool-least-privilege
-  - threat: tool-excessive-permissions
-    countermeasures:
-      - tool-least-privilege
-      - tool-allowlist
+      - aidefend-ai-security/aid-d-001-001
+      - aidefend-ai-security/aid-d-001-004
+      - aidefend-ai-security/aid-d-001-005
+      - aidefend-ai-security/aid-d-001-006
+      - aidefend-ai-security/aid-d-002-005
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-003-004
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-003-006
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-005-004
+      - aidefend-ai-security/aid-d-007-001
+      - aidefend-ai-security/aid-d-007-002
+      - aidefend-ai-security/aid-d-009-001
+      - aidefend-ai-security/aid-d-009-002
+      - aidefend-ai-security/aid-d-010
+      - aidefend-ai-security/aid-d-014-001
+      - aidefend-ai-security/aid-dv-005
+      - aidefend-ai-security/aid-e-002
+      - aidefend-ai-security/aid-e-005
+      - aidefend-ai-security/aid-h-002-002
+      - aidefend-ai-security/aid-h-002-008
+      - aidefend-ai-security/aid-h-007-005
+      - aidefend-ai-security/aid-h-016-001
+      - aidefend-ai-security/aid-h-016-002
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-017-007
+      - aidefend-ai-security/aid-h-018-003
+      - aidefend-ai-security/aid-h-018-004
+      - aidefend-ai-security/aid-h-018-005
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-019-002
+      - aidefend-ai-security/aid-h-019-003
+      - aidefend-ai-security/aid-h-020-004
+      - aidefend-ai-security/aid-h-028-008
+      - aidefend-ai-security/aid-h-030-002
+      - aidefend-ai-security/aid-h-036
+      - aidefend-ai-security/aid-h-037-003
+      - aidefend-ai-security/aid-i-004-004
+      - aidefend-ai-security/aid-i-004-005
+      - aidefend-ai-security/aid-i-004-006
+      - aidefend-ai-security/aid-i-004-007
+      - aidefend-ai-security/aid-i-004-008
+      - aidefend-ai-security/aid-i-004-009
+      - aidefend-ai-security/aid-i-005
+      - aidefend-ai-security/aid-i-008-002
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-m-008
+      - aidefend-ai-security/aid-m-009-005
+      - aidefend-ai-security/aid-m-009-006
+      - aidefend-ai-security/aid-r-005
 
-  # MCP server threats
-  - threat: mcp-tool-poisoning
+  - threat: agent-human-trust-exploitation
     countermeasures:
-      - mcp-tool-schema-validation
-      - mcp-dependency-verification
-  - threat: mcp-token-exposure
-    countermeasures:
-      - mcp-secret-management
-      - mcp-audit-logging
-  - threat: mcp-privilege-escalation
-    countermeasures:
-      - mcp-scope-enforcement
-      - mcp-auth-enforcement
-  - threat: mcp-supply-chain
-    countermeasures:
-      - mcp-dependency-verification
-      - mcp-server-inventory
-  - threat: mcp-shadow-server
-    countermeasures:
-      - mcp-server-inventory
-      - mcp-audit-logging
-  - threat: mcp-intent-subversion
-    countermeasures:
-      - mcp-tool-schema-validation
-      - mcp-context-isolation
-      - llm-input-guardrail
-  - threat: mcp-context-oversharing
-    countermeasures:
-      - mcp-context-isolation
-      - mcp-scope-enforcement
-  - threat: mcp-insufficient-auth
-    countermeasures:
-      - mcp-auth-enforcement
-      - mcp-audit-logging
+      - aidefend-ai-security/aid-d-001-002
+      - aidefend-ai-security/aid-d-003-001
+      - aidefend-ai-security/aid-d-006
+      - aidefend-ai-security/aid-d-015
+      - aidefend-ai-security/aid-h-018-003
+      - aidefend-ai-security/aid-h-028-004
+      - aidefend-ai-security/aid-i-008-002
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-m-006-002
 
-  # Guardrail threats
-  - threat: guardrail-bypass
+  - threat: agent-insecure-delegation
     countermeasures:
-      - guardrail-adversarial-testing
-      - guardrail-layered-defense
-  - threat: guardrail-misconfiguration
-    countermeasures:
-      - guardrail-policy-review
-      - guardrail-adversarial-testing
-  - threat: guardrail-output-failure
-    countermeasures:
-      - guardrail-layered-defense
-      - guardrail-adversarial-testing
+      - aidefend-ai-security/aid-d-004-005
+      - aidefend-ai-security/aid-d-005-006
+      - aidefend-ai-security/aid-d-011-002
+      - aidefend-ai-security/aid-d-016-001
+      - aidefend-ai-security/aid-h-004-003
+      - aidefend-ai-security/aid-h-004-005
+      - aidefend-ai-security/aid-h-028-001
+      - aidefend-ai-security/aid-h-034-001
+      - aidefend-ai-security/aid-i-002-001
+      - aidefend-ai-security/aid-i-002-002
+      - aidefend-ai-security/aid-i-004-009
 
-  # Training pipeline threats
-  - threat: training-data-poisoning
+  - threat: agent-memory-poisoning
     countermeasures:
-      - training-data-validation
-      - training-data-provenance
-  - threat: training-supply-chain
-    countermeasures:
-      - training-data-provenance
-      - registry-integrity-verification
-  - threat: training-data-leakage
-    countermeasures:
-      - training-pii-scrubbing
-      - llm-differential-privacy
-  - threat: training-unauthorized-modification
-    countermeasures:
-      - training-access-control
-      - training-data-provenance
+      - aidefend-ai-security/aid-d-001-005
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-003-006
+      - aidefend-ai-security/aid-d-004-005
+      - aidefend-ai-security/aid-d-004-007
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-005-004
+      - aidefend-ai-security/aid-d-009-001
+      - aidefend-ai-security/aid-d-009-002
+      - aidefend-ai-security/aid-d-010
+      - aidefend-ai-security/aid-d-014-001
+      - aidefend-ai-security/aid-d-014-002
+      - aidefend-ai-security/aid-d-014-003
+      - aidefend-ai-security/aid-dv-005
+      - aidefend-ai-security/aid-e-002
+      - aidefend-ai-security/aid-e-003-002
+      - aidefend-ai-security/aid-e-005
+      - aidefend-ai-security/aid-h-004-003
+      - aidefend-ai-security/aid-h-017-004
+      - aidefend-ai-security/aid-h-017-007
+      - aidefend-ai-security/aid-h-019-002
+      - aidefend-ai-security/aid-h-019-003
+      - aidefend-ai-security/aid-h-020-001
+      - aidefend-ai-security/aid-h-020-002
+      - aidefend-ai-security/aid-h-020-004
+      - aidefend-ai-security/aid-h-021-003
+      - aidefend-ai-security/aid-h-027
+      - aidefend-ai-security/aid-h-028-008
+      - aidefend-ai-security/aid-h-032-002
+      - aidefend-ai-security/aid-i-004-001
+      - aidefend-ai-security/aid-i-004-002
+      - aidefend-ai-security/aid-i-004-003
+      - aidefend-ai-security/aid-i-004-004
+      - aidefend-ai-security/aid-i-004-005
+      - aidefend-ai-security/aid-i-004-006
+      - aidefend-ai-security/aid-i-004-007
+      - aidefend-ai-security/aid-i-004-008
+      - aidefend-ai-security/aid-i-004-009
+      - aidefend-ai-security/aid-m-002-004
+      - aidefend-ai-security/aid-r-002
+      - aidefend-ai-security/aid-r-003-002
+      - aidefend-ai-security/aid-r-005
+      - aidefend-ai-security/aid-r-006
 
-  # Model registry threats
-  - threat: registry-model-tampering
+  - threat: agent-privilege-escalation
     countermeasures:
-      - registry-integrity-verification
-      - registry-access-control
-  - threat: registry-unauthorized-deployment
+      - aidefend-ai-security/aid-d-001-001
+      - aidefend-ai-security/aid-d-003-002
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-003-004
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-004-003
+      - aidefend-ai-security/aid-d-005-004
+      - aidefend-ai-security/aid-d-005-006
+      - aidefend-ai-security/aid-d-005-009
+      - aidefend-ai-security/aid-d-011-002
+      - aidefend-ai-security/aid-d-011-004
+      - aidefend-ai-security/aid-d-015
+      - aidefend-ai-security/aid-d-016-001
+      - aidefend-ai-security/aid-d-016-002
+      - aidefend-ai-security/aid-dv-002
+      - aidefend-ai-security/aid-e-001-001
+      - aidefend-ai-security/aid-e-001-002
+      - aidefend-ai-security/aid-e-001-003
+      - aidefend-ai-security/aid-e-001-004
+      - aidefend-ai-security/aid-e-004
+      - aidefend-ai-security/aid-h-004-001
+      - aidefend-ai-security/aid-h-004-002
+      - aidefend-ai-security/aid-h-004-003
+      - aidefend-ai-security/aid-h-004-004
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-017-006
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-018-003
+      - aidefend-ai-security/aid-h-018-004
+      - aidefend-ai-security/aid-h-018-006
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-018-009
+      - aidefend-ai-security/aid-h-020-003
+      - aidefend-ai-security/aid-h-021-004
+      - aidefend-ai-security/aid-h-027
+      - aidefend-ai-security/aid-h-028-002
+      - aidefend-ai-security/aid-h-028-005
+      - aidefend-ai-security/aid-h-028-007
+      - aidefend-ai-security/aid-h-028-008
+      - aidefend-ai-security/aid-h-034-002
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-034-005
+      - aidefend-ai-security/aid-h-034-006
+      - aidefend-ai-security/aid-h-034-007
+      - aidefend-ai-security/aid-h-035
+      - aidefend-ai-security/aid-i-002-001
+      - aidefend-ai-security/aid-i-003-001
+      - aidefend-ai-security/aid-i-003-004
+      - aidefend-ai-security/aid-i-004-001
+      - aidefend-ai-security/aid-i-004-002
+      - aidefend-ai-security/aid-i-004-007
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-i-008-001
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-i-008-005
+      - aidefend-ai-security/aid-m-005-002
+      - aidefend-ai-security/aid-m-006-003
+      - aidefend-ai-security/aid-m-009-003
+      - aidefend-ai-security/aid-m-009-006
+      - aidefend-ai-security/aid-r-003-001
+      - aidefend-ai-security/aid-r-003-003
+
+  - threat: agent-rogue-behavior
     countermeasures:
-      - registry-access-control
-      - registry-lineage-tracking
-  - threat: registry-lineage-manipulation
-    countermeasures:
-      - registry-lineage-tracking
-      - registry-integrity-verification
+      - aidefend-ai-security/aid-d-001-001
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-003-004
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-003-006
+      - aidefend-ai-security/aid-d-004-003
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-005-004
+      - aidefend-ai-security/aid-d-005-006
+      - aidefend-ai-security/aid-d-005-007
+      - aidefend-ai-security/aid-d-005-009
+      - aidefend-ai-security/aid-d-010
+      - aidefend-ai-security/aid-d-011-001
+      - aidefend-ai-security/aid-d-011-002
+      - aidefend-ai-security/aid-d-011-003
+      - aidefend-ai-security/aid-d-013
+      - aidefend-ai-security/aid-d-015
+      - aidefend-ai-security/aid-d-016-001
+      - aidefend-ai-security/aid-d-016-002
+      - aidefend-ai-security/aid-dv-001
+      - aidefend-ai-security/aid-dv-003
+      - aidefend-ai-security/aid-dv-005
+      - aidefend-ai-security/aid-e-001-003
+      - aidefend-ai-security/aid-e-002
+      - aidefend-ai-security/aid-e-005
+      - aidefend-ai-security/aid-h-017-001
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-017-006
+      - aidefend-ai-security/aid-h-017-007
+      - aidefend-ai-security/aid-h-018-001
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-018-003
+      - aidefend-ai-security/aid-h-018-004
+      - aidefend-ai-security/aid-h-018-005
+      - aidefend-ai-security/aid-h-018-006
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-018-009
+      - aidefend-ai-security/aid-h-021-004
+      - aidefend-ai-security/aid-h-028-004
+      - aidefend-ai-security/aid-h-028-008
+      - aidefend-ai-security/aid-h-034-002
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-034-009
+      - aidefend-ai-security/aid-h-035
+      - aidefend-ai-security/aid-i-001-001
+      - aidefend-ai-security/aid-i-001-002
+      - aidefend-ai-security/aid-i-001-003
+      - aidefend-ai-security/aid-i-002-001
+      - aidefend-ai-security/aid-i-003-001
+      - aidefend-ai-security/aid-i-003-004
+      - aidefend-ai-security/aid-i-005
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-m-006-003
+      - aidefend-ai-security/aid-m-008
+      - aidefend-ai-security/aid-m-009-004
+      - aidefend-ai-security/aid-m-009-006
+      - aidefend-ai-security/aid-r-003-003
+      - aidefend-ai-security/aid-r-006
 
   # Document store threats
   - threat: docstore-knowledge-poisoning
     countermeasures:
-      - docstore-content-screening
-      - vecdb-input-validation
-  - threat: docstore-unauthorized-access
-    countermeasures:
-      - docstore-access-control
-      - vecdb-metadata-filtering
+      - aidefend-ai-security/aid-d-001-005
+      - aidefend-ai-security/aid-d-004-001
+      - aidefend-ai-security/aid-d-004-002
+      - aidefend-ai-security/aid-d-004-003
+      - aidefend-ai-security/aid-d-004-004
+      - aidefend-ai-security/aid-d-004-006
+      - aidefend-ai-security/aid-d-004-007
+      - aidefend-ai-security/aid-d-004-008
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-009-001
+      - aidefend-ai-security/aid-d-011-003
+      - aidefend-ai-security/aid-d-014-001
+      - aidefend-ai-security/aid-d-014-002
+      - aidefend-ai-security/aid-d-014-003
+      - aidefend-ai-security/aid-e-003-001
+      - aidefend-ai-security/aid-e-003-002
+      - aidefend-ai-security/aid-e-003-003
+      - aidefend-ai-security/aid-e-003-005
+      - aidefend-ai-security/aid-e-004
+      - aidefend-ai-security/aid-h-002-002
+      - aidefend-ai-security/aid-h-002-009
+      - aidefend-ai-security/aid-h-003-001
+      - aidefend-ai-security/aid-h-003-002
+      - aidefend-ai-security/aid-h-003-003
+      - aidefend-ai-security/aid-h-003-004
+      - aidefend-ai-security/aid-h-003-006
+      - aidefend-ai-security/aid-h-003-007
+      - aidefend-ai-security/aid-h-003-008
+      - aidefend-ai-security/aid-h-003-009
+      - aidefend-ai-security/aid-h-003-010
+      - aidefend-ai-security/aid-h-003-011
+      - aidefend-ai-security/aid-h-007-003
+      - aidefend-ai-security/aid-h-007-004
+      - aidefend-ai-security/aid-h-007-006
+      - aidefend-ai-security/aid-h-007-007
+      - aidefend-ai-security/aid-h-009-001
+      - aidefend-ai-security/aid-h-009-002
+      - aidefend-ai-security/aid-h-009-003
+      - aidefend-ai-security/aid-h-020-001
+      - aidefend-ai-security/aid-h-020-002
+      - aidefend-ai-security/aid-h-020-004
+      - aidefend-ai-security/aid-h-021-003
+      - aidefend-ai-security/aid-h-022-001
+      - aidefend-ai-security/aid-h-022-002
+      - aidefend-ai-security/aid-h-023
+      - aidefend-ai-security/aid-h-028-006
+      - aidefend-ai-security/aid-h-031-002
+      - aidefend-ai-security/aid-h-033-004
+      - aidefend-ai-security/aid-h-033-005
+      - aidefend-ai-security/aid-i-001-002
+      - aidefend-ai-security/aid-i-001-005
+      - aidefend-ai-security/aid-i-004-002
+      - aidefend-ai-security/aid-i-004-003
+      - aidefend-ai-security/aid-i-004-004
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-m-001-002
+      - aidefend-ai-security/aid-m-002-002
+      - aidefend-ai-security/aid-m-002-004
+      - aidefend-ai-security/aid-m-002-005
+      - aidefend-ai-security/aid-m-010-002
+      - aidefend-ai-security/aid-m-010-003
+      - aidefend-ai-security/aid-r-001-001
+      - aidefend-ai-security/aid-r-002
+      - aidefend-ai-security/aid-r-005
+      - aidefend-ai-security/aid-r-006
+
   - threat: docstore-sensitive-data-exposure
     countermeasures:
-      - docstore-sensitive-data-redaction
-      - docstore-access-control
+      - aidefend-ai-security/aid-h-002-001
+      - aidefend-ai-security/aid-h-005-005
+      - aidefend-ai-security/aid-h-020-003
+      - aidefend-ai-security/aid-h-028-003
 
-  # AI gateway threats
-  - threat: gateway-rate-limit-bypass
+  - threat: docstore-unauthorized-access
     countermeasures:
-      - gateway-rate-limiting
-      - gateway-comprehensive-logging
-  - threat: gateway-auth-bypass
+      - aidefend-ai-security/aid-e-001-003
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-020-003
+      - aidefend-ai-security/aid-i-008-002
+
+  # Embedding service threats
+  - threat: embed-adversarial-perturbation
     countermeasures:
-      - gateway-auth
-      - gateway-comprehensive-logging
-  - threat: gateway-logging-gap
+      - aidefend-ai-security/aid-d-001-002
+      - aidefend-ai-security/aid-d-002-001
+      - aidefend-ai-security/aid-d-006
+      - aidefend-ai-security/aid-d-007-001
+      - aidefend-ai-security/aid-d-007-002
+      - aidefend-ai-security/aid-d-009-001
+      - aidefend-ai-security/aid-d-014-001
+      - aidefend-ai-security/aid-d-014-002
+      - aidefend-ai-security/aid-d-014-003
+      - aidefend-ai-security/aid-h-001
+      - aidefend-ai-security/aid-h-002-002
+      - aidefend-ai-security/aid-h-002-003
+      - aidefend-ai-security/aid-h-002-008
+      - aidefend-ai-security/aid-h-011-003
+      - aidefend-ai-security/aid-h-014
+      - aidefend-ai-security/aid-h-015
+      - aidefend-ai-security/aid-h-020-002
+      - aidefend-ai-security/aid-h-020-004
+      - aidefend-ai-security/aid-h-036
+      - aidefend-ai-security/aid-r-002
+      - aidefend-ai-security/aid-r-005
+
+  - threat: embed-data-exfiltration
     countermeasures:
-      - gateway-comprehensive-logging
-  - threat: gateway-model-routing-abuse
+      - aidefend-ai-security/aid-d-005-009
+      - aidefend-ai-security/aid-h-005-005
+      - aidefend-ai-security/aid-h-032-003
+      - aidefend-ai-security/aid-i-002-002
+
+  - threat: embed-model-substitution
     countermeasures:
-      - gateway-model-routing-control
-      - gateway-auth
+      - aidefend-ai-security/aid-d-002-001
+      - aidefend-ai-security/aid-d-002-002
+      - aidefend-ai-security/aid-d-002-003
+      - aidefend-ai-security/aid-d-004-001
+      - aidefend-ai-security/aid-e-003-001
+      - aidefend-ai-security/aid-h-003-002
+      - aidefend-ai-security/aid-h-003-006
+      - aidefend-ai-security/aid-m-002-002
+      - aidefend-ai-security/aid-m-002-005
+      - aidefend-ai-security/aid-r-001-001
+      - aidefend-ai-security/aid-r-006
 
   # Evaluation harness threats
-  - threat: eval-false-confidence
-    countermeasures:
-      - eval-adversarial-testing
-      - eval-data-separation
   - threat: eval-data-contamination
     countermeasures:
-      - eval-data-separation
+      - aidefend-ai-security/aid-e-003-002
+      - aidefend-ai-security/aid-h-002-001
+      - aidefend-ai-security/aid-h-002-004
+      - aidefend-ai-security/aid-h-002-005
+      - aidefend-ai-security/aid-h-002-006
+      - aidefend-ai-security/aid-h-007-004
+      - aidefend-ai-security/aid-h-011-001
+      - aidefend-ai-security/aid-h-012-002
+      - aidefend-ai-security/aid-h-020-001
+      - aidefend-ai-security/aid-h-021-003
+      - aidefend-ai-security/aid-m-002-002
+      - aidefend-ai-security/aid-m-002-003
+      - aidefend-ai-security/aid-m-002-005
+      - aidefend-ai-security/aid-r-001-002
+      - aidefend-ai-security/aid-r-002
+      - aidefend-ai-security/aid-r-005
+
+  - threat: eval-false-confidence
+    countermeasures:
+      - aidefend-ai-security/aid-d-001-001
+      - aidefend-ai-security/aid-d-001-006
+      - aidefend-ai-security/aid-d-002-001
+      - aidefend-ai-security/aid-d-002-002
+      - aidefend-ai-security/aid-d-002-003
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-006
+      - aidefend-ai-security/aid-d-007-001
+      - aidefend-ai-security/aid-d-007-002
+      - aidefend-ai-security/aid-d-008
+      - aidefend-ai-security/aid-d-018
+      - aidefend-ai-security/aid-h-001
+      - aidefend-ai-security/aid-h-002-003
+      - aidefend-ai-security/aid-h-002-008
+      - aidefend-ai-security/aid-h-010
+      - aidefend-ai-security/aid-h-011-002
+      - aidefend-ai-security/aid-h-011-003
+      - aidefend-ai-security/aid-h-014
+      - aidefend-ai-security/aid-h-015
+      - aidefend-ai-security/aid-h-026-001
+      - aidefend-ai-security/aid-h-026-002
+      - aidefend-ai-security/aid-h-026-003
+      - aidefend-ai-security/aid-h-036
+
   - threat: eval-tampering
     countermeasures:
-      - eval-pipeline-integrity
+      - aidefend-ai-security/aid-h-002-005
+      - aidefend-ai-security/aid-h-002-006
+      - aidefend-ai-security/aid-h-007-004
+      - aidefend-ai-security/aid-h-007-007
+      - aidefend-ai-security/aid-m-002-002
+
+  # Guardrail threats
+  - threat: guardrail-bypass
+    countermeasures:
+      - aidefend-ai-security/aid-d-001-001
+      - aidefend-ai-security/aid-d-001-004
+      - aidefend-ai-security/aid-d-001-005
+      - aidefend-ai-security/aid-d-001-006
+      - aidefend-ai-security/aid-d-002-005
+      - aidefend-ai-security/aid-d-003-001
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-007-001
+      - aidefend-ai-security/aid-d-007-002
+      - aidefend-ai-security/aid-d-008
+      - aidefend-ai-security/aid-d-010
+      - aidefend-ai-security/aid-d-014-001
+      - aidefend-ai-security/aid-dv-001
+      - aidefend-ai-security/aid-dv-005
+      - aidefend-ai-security/aid-e-002
+      - aidefend-ai-security/aid-e-005
+      - aidefend-ai-security/aid-h-002-002
+      - aidefend-ai-security/aid-h-002-003
+      - aidefend-ai-security/aid-h-002-008
+      - aidefend-ai-security/aid-h-007-005
+      - aidefend-ai-security/aid-h-007-006
+      - aidefend-ai-security/aid-h-016-001
+      - aidefend-ai-security/aid-h-016-002
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-017-004
+      - aidefend-ai-security/aid-h-017-006
+      - aidefend-ai-security/aid-h-017-007
+      - aidefend-ai-security/aid-h-018-001
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-018-003
+      - aidefend-ai-security/aid-h-018-004
+      - aidefend-ai-security/aid-h-018-005
+      - aidefend-ai-security/aid-h-018-006
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-019-002
+      - aidefend-ai-security/aid-h-019-003
+      - aidefend-ai-security/aid-h-020-004
+      - aidefend-ai-security/aid-h-021-002
+      - aidefend-ai-security/aid-h-024-001
+      - aidefend-ai-security/aid-h-024-002
+      - aidefend-ai-security/aid-h-024-003
+      - aidefend-ai-security/aid-h-026-001
+      - aidefend-ai-security/aid-h-026-002
+      - aidefend-ai-security/aid-h-026-003
+      - aidefend-ai-security/aid-h-028-001
+      - aidefend-ai-security/aid-h-028-004
+      - aidefend-ai-security/aid-h-028-008
+      - aidefend-ai-security/aid-h-030-001
+      - aidefend-ai-security/aid-h-030-002
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-034-004
+      - aidefend-ai-security/aid-h-034-005
+      - aidefend-ai-security/aid-h-036
+      - aidefend-ai-security/aid-h-037-003
+      - aidefend-ai-security/aid-i-001-004
+      - aidefend-ai-security/aid-i-002-002
+      - aidefend-ai-security/aid-i-004-001
+      - aidefend-ai-security/aid-i-004-002
+      - aidefend-ai-security/aid-i-004-004
+      - aidefend-ai-security/aid-i-004-005
+      - aidefend-ai-security/aid-i-004-006
+      - aidefend-ai-security/aid-i-004-007
+      - aidefend-ai-security/aid-i-004-008
+      - aidefend-ai-security/aid-i-004-009
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-m-008
+      - aidefend-ai-security/aid-r-003-002
+      - aidefend-ai-security/aid-r-005
+
+  - threat: guardrail-misconfiguration
+    countermeasures:
+      - aidefend-ai-security/aid-h-020-004
+      - aidefend-ai-security/aid-h-021-001
+      - aidefend-ai-security/aid-m-003-007
+      - aidefend-ai-security/aid-m-005-002
+
+  - threat: guardrail-output-failure
+    countermeasures:
+      - aidefend-ai-security/aid-d-001-005
+      - aidefend-ai-security/aid-d-002-001
+      - aidefend-ai-security/aid-d-002-002
+      - aidefend-ai-security/aid-d-002-003
+      - aidefend-ai-security/aid-d-003-006
+      - aidefend-ai-security/aid-d-004-001
+      - aidefend-ai-security/aid-d-004-007
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-006
+      - aidefend-ai-security/aid-d-013
+      - aidefend-ai-security/aid-d-014-001
+      - aidefend-ai-security/aid-d-014-003
+      - aidefend-ai-security/aid-dv-005
+      - aidefend-ai-security/aid-e-003-001
+      - aidefend-ai-security/aid-e-003-002
+      - aidefend-ai-security/aid-e-003-003
+      - aidefend-ai-security/aid-e-003-005
+      - aidefend-ai-security/aid-e-005
+      - aidefend-ai-security/aid-h-002-001
+      - aidefend-ai-security/aid-h-002-004
+      - aidefend-ai-security/aid-h-002-005
+      - aidefend-ai-security/aid-h-002-007
+      - aidefend-ai-security/aid-h-003-002
+      - aidefend-ai-security/aid-h-003-003
+      - aidefend-ai-security/aid-h-003-006
+      - aidefend-ai-security/aid-h-003-007
+      - aidefend-ai-security/aid-h-007-001
+      - aidefend-ai-security/aid-h-007-002
+      - aidefend-ai-security/aid-h-007-003
+      - aidefend-ai-security/aid-h-007-005
+      - aidefend-ai-security/aid-h-007-006
+      - aidefend-ai-security/aid-h-008-002
+      - aidefend-ai-security/aid-h-008-003
+      - aidefend-ai-security/aid-h-012-002
+      - aidefend-ai-security/aid-h-012-004
+      - aidefend-ai-security/aid-h-017-004
+      - aidefend-ai-security/aid-h-020-001
+      - aidefend-ai-security/aid-h-020-002
+      - aidefend-ai-security/aid-h-020-004
+      - aidefend-ai-security/aid-h-021-002
+      - aidefend-ai-security/aid-h-021-003
+      - aidefend-ai-security/aid-h-035
+      - aidefend-ai-security/aid-h-038-002
+      - aidefend-ai-security/aid-i-001-002
+      - aidefend-ai-security/aid-i-004-002
+      - aidefend-ai-security/aid-i-004-003
+      - aidefend-ai-security/aid-i-004-004
+      - aidefend-ai-security/aid-i-004-006
+      - aidefend-ai-security/aid-i-006
+      - aidefend-ai-security/aid-m-002-001
+      - aidefend-ai-security/aid-m-002-002
+      - aidefend-ai-security/aid-m-002-003
+      - aidefend-ai-security/aid-m-002-004
+      - aidefend-ai-security/aid-m-002-005
+      - aidefend-ai-security/aid-r-001-001
+      - aidefend-ai-security/aid-r-001-002
+      - aidefend-ai-security/aid-r-002
+      - aidefend-ai-security/aid-r-003-002
+      - aidefend-ai-security/aid-r-005
+
+  # LLM threats
+  - threat: llm-excessive-agency
+    countermeasures:
+      - aidefend-ai-security/aid-d-001-001
+      - aidefend-ai-security/aid-d-002-004
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-003-004
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-005-004
+      - aidefend-ai-security/aid-d-005-005
+      - aidefend-ai-security/aid-d-005-007
+      - aidefend-ai-security/aid-d-015
+      - aidefend-ai-security/aid-dv-003
+      - aidefend-ai-security/aid-dv-004
+      - aidefend-ai-security/aid-dv-005
+      - aidefend-ai-security/aid-e-002
+      - aidefend-ai-security/aid-h-002-002
+      - aidefend-ai-security/aid-h-002-003
+      - aidefend-ai-security/aid-h-002-008
+      - aidefend-ai-security/aid-h-006-003
+      - aidefend-ai-security/aid-h-013-002
+      - aidefend-ai-security/aid-h-013-003
+      - aidefend-ai-security/aid-h-017-001
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-017-006
+      - aidefend-ai-security/aid-h-017-007
+      - aidefend-ai-security/aid-h-018-001
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-018-003
+      - aidefend-ai-security/aid-h-018-004
+      - aidefend-ai-security/aid-h-018-005
+      - aidefend-ai-security/aid-h-018-006
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-018-009
+      - aidefend-ai-security/aid-h-028-004
+      - aidefend-ai-security/aid-h-028-008
+      - aidefend-ai-security/aid-h-033-006
+      - aidefend-ai-security/aid-h-034-001
+      - aidefend-ai-security/aid-h-034-002
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-034-005
+      - aidefend-ai-security/aid-h-034-008
+      - aidefend-ai-security/aid-h-034-009
+      - aidefend-ai-security/aid-h-035
+      - aidefend-ai-security/aid-h-037-002
+      - aidefend-ai-security/aid-h-038-002
+      - aidefend-ai-security/aid-i-001-001
+      - aidefend-ai-security/aid-i-001-002
+      - aidefend-ai-security/aid-i-001-003
+      - aidefend-ai-security/aid-i-003-001
+      - aidefend-ai-security/aid-i-003-002
+      - aidefend-ai-security/aid-i-003-003
+      - aidefend-ai-security/aid-i-003-004
+      - aidefend-ai-security/aid-i-004-001
+      - aidefend-ai-security/aid-i-005
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-m-006-003
+      - aidefend-ai-security/aid-m-008
+      - aidefend-ai-security/aid-m-009-006
+      - aidefend-ai-security/aid-r-003-003
+
+  - threat: llm-insecure-output-handling
+    countermeasures:
+      - aidefend-ai-security/aid-d-001-001
+      - aidefend-ai-security/aid-d-001-004
+      - aidefend-ai-security/aid-d-001-005
+      - aidefend-ai-security/aid-d-001-006
+      - aidefend-ai-security/aid-d-002-001
+      - aidefend-ai-security/aid-d-002-002
+      - aidefend-ai-security/aid-d-002-003
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-003-004
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-003-006
+      - aidefend-ai-security/aid-d-004-001
+      - aidefend-ai-security/aid-d-004-007
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-006
+      - aidefend-ai-security/aid-d-007-001
+      - aidefend-ai-security/aid-d-007-002
+      - aidefend-ai-security/aid-d-010
+      - aidefend-ai-security/aid-d-013
+      - aidefend-ai-security/aid-d-014-001
+      - aidefend-ai-security/aid-d-014-003
+      - aidefend-ai-security/aid-dv-005
+      - aidefend-ai-security/aid-e-003-001
+      - aidefend-ai-security/aid-e-003-002
+      - aidefend-ai-security/aid-e-003-003
+      - aidefend-ai-security/aid-e-003-005
+      - aidefend-ai-security/aid-e-005
+      - aidefend-ai-security/aid-h-002-001
+      - aidefend-ai-security/aid-h-002-002
+      - aidefend-ai-security/aid-h-002-004
+      - aidefend-ai-security/aid-h-002-005
+      - aidefend-ai-security/aid-h-002-007
+      - aidefend-ai-security/aid-h-002-008
+      - aidefend-ai-security/aid-h-003-002
+      - aidefend-ai-security/aid-h-003-003
+      - aidefend-ai-security/aid-h-003-006
+      - aidefend-ai-security/aid-h-003-007
+      - aidefend-ai-security/aid-h-007-001
+      - aidefend-ai-security/aid-h-007-002
+      - aidefend-ai-security/aid-h-007-003
+      - aidefend-ai-security/aid-h-007-005
+      - aidefend-ai-security/aid-h-007-006
+      - aidefend-ai-security/aid-h-008-002
+      - aidefend-ai-security/aid-h-008-003
+      - aidefend-ai-security/aid-h-012-002
+      - aidefend-ai-security/aid-h-012-004
+      - aidefend-ai-security/aid-h-016-001
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-017-004
+      - aidefend-ai-security/aid-h-017-007
+      - aidefend-ai-security/aid-h-018-004
+      - aidefend-ai-security/aid-h-018-005
+      - aidefend-ai-security/aid-h-019-002
+      - aidefend-ai-security/aid-h-019-003
+      - aidefend-ai-security/aid-h-020-001
+      - aidefend-ai-security/aid-h-020-002
+      - aidefend-ai-security/aid-h-020-004
+      - aidefend-ai-security/aid-h-021-002
+      - aidefend-ai-security/aid-h-021-003
+      - aidefend-ai-security/aid-h-035
+      - aidefend-ai-security/aid-h-038-002
+      - aidefend-ai-security/aid-i-001-002
+      - aidefend-ai-security/aid-i-004-002
+      - aidefend-ai-security/aid-i-004-003
+      - aidefend-ai-security/aid-i-004-004
+      - aidefend-ai-security/aid-i-004-006
+      - aidefend-ai-security/aid-i-004-009
+      - aidefend-ai-security/aid-i-006
+      - aidefend-ai-security/aid-i-008-002
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-m-002-001
+      - aidefend-ai-security/aid-m-002-002
+      - aidefend-ai-security/aid-m-002-003
+      - aidefend-ai-security/aid-m-002-004
+      - aidefend-ai-security/aid-m-002-005
+      - aidefend-ai-security/aid-r-001-001
+      - aidefend-ai-security/aid-r-001-002
+      - aidefend-ai-security/aid-r-002
+      - aidefend-ai-security/aid-r-003-002
+      - aidefend-ai-security/aid-r-005
+
+  - threat: llm-misinformation
+    countermeasures:
+      - aidefend-ai-security/aid-d-002-001
+      - aidefend-ai-security/aid-d-002-002
+      - aidefend-ai-security/aid-d-002-003
+      - aidefend-ai-security/aid-d-006
+      - aidefend-ai-security/aid-d-014-002
+      - aidefend-ai-security/aid-d-014-003
+      - aidefend-ai-security/aid-e-004
+      - aidefend-ai-security/aid-h-005-005
+      - aidefend-ai-security/aid-h-007-002
+      - aidefend-ai-security/aid-h-007-005
+      - aidefend-ai-security/aid-h-007-006
+      - aidefend-ai-security/aid-h-011-002
+      - aidefend-ai-security/aid-h-020-001
+      - aidefend-ai-security/aid-h-020-002
+      - aidefend-ai-security/aid-i-004-002
+      - aidefend-ai-security/aid-i-004-005
+      - aidefend-ai-security/aid-r-001-001
+      - aidefend-ai-security/aid-r-001-002
+      - aidefend-ai-security/aid-r-005
+
+  - threat: llm-prompt-injection
+    countermeasures:
+      - aidefend-ai-security/aid-d-001-001
+      - aidefend-ai-security/aid-d-001-004
+      - aidefend-ai-security/aid-d-001-005
+      - aidefend-ai-security/aid-d-001-006
+      - aidefend-ai-security/aid-d-002-005
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-003-004
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-003-006
+      - aidefend-ai-security/aid-d-007-001
+      - aidefend-ai-security/aid-d-007-002
+      - aidefend-ai-security/aid-d-008
+      - aidefend-ai-security/aid-d-010
+      - aidefend-ai-security/aid-d-014-001
+      - aidefend-ai-security/aid-dv-001
+      - aidefend-ai-security/aid-dv-005
+      - aidefend-ai-security/aid-e-002
+      - aidefend-ai-security/aid-e-005
+      - aidefend-ai-security/aid-h-002-002
+      - aidefend-ai-security/aid-h-002-003
+      - aidefend-ai-security/aid-h-002-008
+      - aidefend-ai-security/aid-h-007-005
+      - aidefend-ai-security/aid-h-007-006
+      - aidefend-ai-security/aid-h-016-001
+      - aidefend-ai-security/aid-h-016-002
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-017-004
+      - aidefend-ai-security/aid-h-017-006
+      - aidefend-ai-security/aid-h-017-007
+      - aidefend-ai-security/aid-h-018-001
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-018-003
+      - aidefend-ai-security/aid-h-018-004
+      - aidefend-ai-security/aid-h-018-005
+      - aidefend-ai-security/aid-h-018-006
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-019-002
+      - aidefend-ai-security/aid-h-019-003
+      - aidefend-ai-security/aid-h-020-004
+      - aidefend-ai-security/aid-h-021-002
+      - aidefend-ai-security/aid-h-024-001
+      - aidefend-ai-security/aid-h-024-002
+      - aidefend-ai-security/aid-h-024-003
+      - aidefend-ai-security/aid-h-026-001
+      - aidefend-ai-security/aid-h-026-002
+      - aidefend-ai-security/aid-h-026-003
+      - aidefend-ai-security/aid-h-028-001
+      - aidefend-ai-security/aid-h-028-004
+      - aidefend-ai-security/aid-h-028-008
+      - aidefend-ai-security/aid-h-030-001
+      - aidefend-ai-security/aid-h-030-002
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-034-004
+      - aidefend-ai-security/aid-h-034-005
+      - aidefend-ai-security/aid-h-036
+      - aidefend-ai-security/aid-h-037-003
+      - aidefend-ai-security/aid-i-001-004
+      - aidefend-ai-security/aid-i-002-002
+      - aidefend-ai-security/aid-i-004-001
+      - aidefend-ai-security/aid-i-004-002
+      - aidefend-ai-security/aid-i-004-004
+      - aidefend-ai-security/aid-i-004-005
+      - aidefend-ai-security/aid-i-004-006
+      - aidefend-ai-security/aid-i-004-007
+      - aidefend-ai-security/aid-i-004-008
+      - aidefend-ai-security/aid-i-004-009
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-i-008-002
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-m-008
+      - aidefend-ai-security/aid-r-003-002
+      - aidefend-ai-security/aid-r-005
+
+  - threat: llm-sensitive-info-disclosure
+    countermeasures:
+      - aidefend-ai-security/aid-d-002-004
+      - aidefend-ai-security/aid-d-003-002
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-003-007
+      - aidefend-ai-security/aid-d-004-002
+      - aidefend-ai-security/aid-d-004-006
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-005-004
+      - aidefend-ai-security/aid-d-005-005
+      - aidefend-ai-security/aid-d-005-009
+      - aidefend-ai-security/aid-d-011-004
+      - aidefend-ai-security/aid-dv-001
+      - aidefend-ai-security/aid-dv-002
+      - aidefend-ai-security/aid-dv-004
+      - aidefend-ai-security/aid-dv-006
+      - aidefend-ai-security/aid-dv-007
+      - aidefend-ai-security/aid-e-001-001
+      - aidefend-ai-security/aid-e-001-002
+      - aidefend-ai-security/aid-e-005
+      - aidefend-ai-security/aid-h-002-001
+      - aidefend-ai-security/aid-h-002-009
+      - aidefend-ai-security/aid-h-005-001
+      - aidefend-ai-security/aid-h-005-002
+      - aidefend-ai-security/aid-h-005-003
+      - aidefend-ai-security/aid-h-005-004
+      - aidefend-ai-security/aid-h-005-005
+      - aidefend-ai-security/aid-h-006-002
+      - aidefend-ai-security/aid-h-006-003
+      - aidefend-ai-security/aid-h-007-001
+      - aidefend-ai-security/aid-h-007-005
+      - aidefend-ai-security/aid-h-007-006
+      - aidefend-ai-security/aid-h-008-001
+      - aidefend-ai-security/aid-h-009-004
+      - aidefend-ai-security/aid-h-009-005
+      - aidefend-ai-security/aid-h-018-005
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-018-009
+      - aidefend-ai-security/aid-h-020-003
+      - aidefend-ai-security/aid-h-027
+      - aidefend-ai-security/aid-h-028-003
+      - aidefend-ai-security/aid-h-028-005
+      - aidefend-ai-security/aid-h-029-002
+      - aidefend-ai-security/aid-h-029-003
+      - aidefend-ai-security/aid-h-032-001
+      - aidefend-ai-security/aid-h-032-002
+      - aidefend-ai-security/aid-h-032-003
+      - aidefend-ai-security/aid-h-032-004
+      - aidefend-ai-security/aid-h-033-002
+      - aidefend-ai-security/aid-h-033-003
+      - aidefend-ai-security/aid-h-033-005
+      - aidefend-ai-security/aid-h-033-006
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-034-005
+      - aidefend-ai-security/aid-h-034-006
+      - aidefend-ai-security/aid-h-034-007
+      - aidefend-ai-security/aid-h-037-001
+      - aidefend-ai-security/aid-i-001-004
+      - aidefend-ai-security/aid-i-002-002
+      - aidefend-ai-security/aid-i-003-002
+      - aidefend-ai-security/aid-i-003-003
+      - aidefend-ai-security/aid-i-004-001
+      - aidefend-ai-security/aid-i-004-002
+      - aidefend-ai-security/aid-i-004-005
+      - aidefend-ai-security/aid-i-004-007
+      - aidefend-ai-security/aid-i-004-008
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-i-008-001
+      - aidefend-ai-security/aid-i-008-003
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-i-008-005
+      - aidefend-ai-security/aid-m-002-003
+      - aidefend-ai-security/aid-m-007-002
+      - aidefend-ai-security/aid-m-008
+      - aidefend-ai-security/aid-m-010-001
+      - aidefend-ai-security/aid-m-010-002
+      - aidefend-ai-security/aid-m-010-003
+
+  - threat: llm-system-prompt-leakage
+    countermeasures:
+      - aidefend-ai-security/aid-d-001-002
+      - aidefend-ai-security/aid-d-001-004
+      - aidefend-ai-security/aid-d-002-002
+      - aidefend-ai-security/aid-d-003-002
+      - aidefend-ai-security/aid-d-006
+      - aidefend-ai-security/aid-d-007-001
+      - aidefend-ai-security/aid-d-009-001
+      - aidefend-ai-security/aid-d-009-002
+      - aidefend-ai-security/aid-dv-006
+      - aidefend-ai-security/aid-h-002-007
+      - aidefend-ai-security/aid-h-013-001
+      - aidefend-ai-security/aid-h-018-003
+      - aidefend-ai-security/aid-h-020-002
+      - aidefend-ai-security/aid-h-020-004
+      - aidefend-ai-security/aid-h-021-003
+      - aidefend-ai-security/aid-h-037-001
+      - aidefend-ai-security/aid-i-003-001
+      - aidefend-ai-security/aid-i-003-004
+      - aidefend-ai-security/aid-i-004-005
+      - aidefend-ai-security/aid-i-004-008
+      - aidefend-ai-security/aid-i-008-002
+
+  - threat: llm-training-data-extraction
+    countermeasures:
+      - aidefend-ai-security/aid-d-002-004
+      - aidefend-ai-security/aid-d-003-002
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-003-007
+      - aidefend-ai-security/aid-d-004-002
+      - aidefend-ai-security/aid-d-004-006
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-005-004
+      - aidefend-ai-security/aid-d-005-005
+      - aidefend-ai-security/aid-d-005-009
+      - aidefend-ai-security/aid-d-011-004
+      - aidefend-ai-security/aid-dv-001
+      - aidefend-ai-security/aid-dv-002
+      - aidefend-ai-security/aid-dv-004
+      - aidefend-ai-security/aid-dv-006
+      - aidefend-ai-security/aid-dv-007
+      - aidefend-ai-security/aid-e-001-001
+      - aidefend-ai-security/aid-e-001-002
+      - aidefend-ai-security/aid-e-005
+      - aidefend-ai-security/aid-h-002-001
+      - aidefend-ai-security/aid-h-002-009
+      - aidefend-ai-security/aid-h-005-001
+      - aidefend-ai-security/aid-h-005-002
+      - aidefend-ai-security/aid-h-005-003
+      - aidefend-ai-security/aid-h-005-004
+      - aidefend-ai-security/aid-h-005-005
+      - aidefend-ai-security/aid-h-006-002
+      - aidefend-ai-security/aid-h-006-003
+      - aidefend-ai-security/aid-h-007-001
+      - aidefend-ai-security/aid-h-007-005
+      - aidefend-ai-security/aid-h-007-006
+      - aidefend-ai-security/aid-h-008-001
+      - aidefend-ai-security/aid-h-009-004
+      - aidefend-ai-security/aid-h-009-005
+      - aidefend-ai-security/aid-h-018-005
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-018-009
+      - aidefend-ai-security/aid-h-020-003
+      - aidefend-ai-security/aid-h-027
+      - aidefend-ai-security/aid-h-028-003
+      - aidefend-ai-security/aid-h-028-005
+      - aidefend-ai-security/aid-h-029-002
+      - aidefend-ai-security/aid-h-029-003
+      - aidefend-ai-security/aid-h-032-001
+      - aidefend-ai-security/aid-h-032-002
+      - aidefend-ai-security/aid-h-032-003
+      - aidefend-ai-security/aid-h-032-004
+      - aidefend-ai-security/aid-h-033-002
+      - aidefend-ai-security/aid-h-033-003
+      - aidefend-ai-security/aid-h-033-005
+      - aidefend-ai-security/aid-h-033-006
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-034-005
+      - aidefend-ai-security/aid-h-034-006
+      - aidefend-ai-security/aid-h-034-007
+      - aidefend-ai-security/aid-h-037-001
+      - aidefend-ai-security/aid-i-001-004
+      - aidefend-ai-security/aid-i-002-002
+      - aidefend-ai-security/aid-i-003-002
+      - aidefend-ai-security/aid-i-003-003
+      - aidefend-ai-security/aid-i-004-001
+      - aidefend-ai-security/aid-i-004-002
+      - aidefend-ai-security/aid-i-004-005
+      - aidefend-ai-security/aid-i-004-007
+      - aidefend-ai-security/aid-i-004-008
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-i-008-001
+      - aidefend-ai-security/aid-i-008-003
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-i-008-005
+      - aidefend-ai-security/aid-m-002-003
+      - aidefend-ai-security/aid-m-007-002
+      - aidefend-ai-security/aid-m-008
+      - aidefend-ai-security/aid-m-010-001
+      - aidefend-ai-security/aid-m-010-002
+      - aidefend-ai-security/aid-m-010-003
+
+  - threat: llm-unbounded-consumption
+    countermeasures:
+      - aidefend-ai-security/aid-d-002-004
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-003-008
+      - aidefend-ai-security/aid-d-005-005
+      - aidefend-ai-security/aid-d-005-006
+      - aidefend-ai-security/aid-d-005-007
+      - aidefend-ai-security/aid-e-002
+      - aidefend-ai-security/aid-h-006-001
+      - aidefend-ai-security/aid-h-006-002
+      - aidefend-ai-security/aid-h-006-004
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-017-006
+      - aidefend-ai-security/aid-h-018-001
+      - aidefend-ai-security/aid-h-018-003
+      - aidefend-ai-security/aid-h-018-005
+      - aidefend-ai-security/aid-h-018-009
+      - aidefend-ai-security/aid-h-019-001
+      - aidefend-ai-security/aid-h-025-001
+      - aidefend-ai-security/aid-h-025-002
+      - aidefend-ai-security/aid-h-031-002
+      - aidefend-ai-security/aid-h-031-003
+      - aidefend-ai-security/aid-h-031-004
+      - aidefend-ai-security/aid-h-033-006
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-034-008
+      - aidefend-ai-security/aid-h-037-002
+      - aidefend-ai-security/aid-h-038-002
+      - aidefend-ai-security/aid-i-001-001
+      - aidefend-ai-security/aid-i-001-002
+      - aidefend-ai-security/aid-i-001-004
+      - aidefend-ai-security/aid-i-002-002
+      - aidefend-ai-security/aid-i-003-001
+      - aidefend-ai-security/aid-i-003-002
+      - aidefend-ai-security/aid-i-003-003
+      - aidefend-ai-security/aid-i-004-008
+      - aidefend-ai-security/aid-i-004-009
+      - aidefend-ai-security/aid-i-005
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-i-008-003
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-i-008-005
+
+  # MCP server threats
+  - threat: mcp-context-oversharing
+    countermeasures:
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-h-032-002
+      - aidefend-ai-security/aid-h-034-006
+      - aidefend-ai-security/aid-i-004-001
+      - aidefend-ai-security/aid-i-004-007
+
+  - threat: mcp-insufficient-auth
+    countermeasures:
+      - aidefend-ai-security/aid-d-011-002
+      - aidefend-ai-security/aid-d-011-004
+      - aidefend-ai-security/aid-h-004-003
+      - aidefend-ai-security/aid-h-028-002
+      - aidefend-ai-security/aid-h-034-002
+
+  - threat: mcp-intent-subversion
+    countermeasures:
+      - aidefend-ai-security/aid-d-001-001
+      - aidefend-ai-security/aid-d-001-004
+      - aidefend-ai-security/aid-d-001-005
+      - aidefend-ai-security/aid-d-001-006
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-003-004
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-003-006
+      - aidefend-ai-security/aid-d-007-001
+      - aidefend-ai-security/aid-d-007-002
+      - aidefend-ai-security/aid-d-010
+      - aidefend-ai-security/aid-d-014-001
+      - aidefend-ai-security/aid-dv-005
+      - aidefend-ai-security/aid-h-002-002
+      - aidefend-ai-security/aid-h-002-008
+      - aidefend-ai-security/aid-h-016-001
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-017-007
+      - aidefend-ai-security/aid-h-018-004
+      - aidefend-ai-security/aid-h-018-005
+      - aidefend-ai-security/aid-h-019-002
+      - aidefend-ai-security/aid-h-019-003
+      - aidefend-ai-security/aid-h-020-004
+      - aidefend-ai-security/aid-i-004-009
+      - aidefend-ai-security/aid-i-008-002
+      - aidefend-ai-security/aid-i-008-004
+
+  - threat: mcp-privilege-escalation
+    countermeasures:
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-024-004
+      - aidefend-ai-security/aid-h-034-002
+      - aidefend-ai-security/aid-h-034-004
+
+  - threat: mcp-shadow-server
+    countermeasures:
+      - aidefend-ai-security/aid-i-004-006
+      - aidefend-ai-security/aid-m-001-004
+      - aidefend-ai-security/aid-m-001-005
+      - aidefend-ai-security/aid-m-001-006
+
+  - threat: mcp-supply-chain
+    countermeasures:
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-003-004
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-004-001
+      - aidefend-ai-security/aid-d-004-002
+      - aidefend-ai-security/aid-d-004-003
+      - aidefend-ai-security/aid-d-004-004
+      - aidefend-ai-security/aid-d-004-006
+      - aidefend-ai-security/aid-d-004-008
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-005-004
+      - aidefend-ai-security/aid-d-005-006
+      - aidefend-ai-security/aid-d-010
+      - aidefend-ai-security/aid-d-011-003
+      - aidefend-ai-security/aid-d-011-004
+      - aidefend-ai-security/aid-d-015
+      - aidefend-ai-security/aid-dv-003
+      - aidefend-ai-security/aid-dv-005
+      - aidefend-ai-security/aid-e-001-003
+      - aidefend-ai-security/aid-e-001-004
+      - aidefend-ai-security/aid-e-002
+      - aidefend-ai-security/aid-e-003-001
+      - aidefend-ai-security/aid-e-003-002
+      - aidefend-ai-security/aid-e-003-003
+      - aidefend-ai-security/aid-e-003-005
+      - aidefend-ai-security/aid-e-004
+      - aidefend-ai-security/aid-h-002-001
+      - aidefend-ai-security/aid-h-002-005
+      - aidefend-ai-security/aid-h-002-009
+      - aidefend-ai-security/aid-h-003-001
+      - aidefend-ai-security/aid-h-003-002
+      - aidefend-ai-security/aid-h-003-003
+      - aidefend-ai-security/aid-h-003-004
+      - aidefend-ai-security/aid-h-003-005
+      - aidefend-ai-security/aid-h-003-006
+      - aidefend-ai-security/aid-h-003-007
+      - aidefend-ai-security/aid-h-003-008
+      - aidefend-ai-security/aid-h-003-009
+      - aidefend-ai-security/aid-h-003-010
+      - aidefend-ai-security/aid-h-004-004
+      - aidefend-ai-security/aid-h-007-004
+      - aidefend-ai-security/aid-h-007-005
+      - aidefend-ai-security/aid-h-007-006
+      - aidefend-ai-security/aid-h-007-007
+      - aidefend-ai-security/aid-h-009-001
+      - aidefend-ai-security/aid-h-009-003
+      - aidefend-ai-security/aid-h-017-001
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-017-006
+      - aidefend-ai-security/aid-h-018-001
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-018-003
+      - aidefend-ai-security/aid-h-018-004
+      - aidefend-ai-security/aid-h-018-006
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-018-009
+      - aidefend-ai-security/aid-h-021-001
+      - aidefend-ai-security/aid-h-021-002
+      - aidefend-ai-security/aid-h-021-003
+      - aidefend-ai-security/aid-h-021-004
+      - aidefend-ai-security/aid-h-021-005
+      - aidefend-ai-security/aid-h-022-001
+      - aidefend-ai-security/aid-h-022-002
+      - aidefend-ai-security/aid-h-023
+      - aidefend-ai-security/aid-h-024-001
+      - aidefend-ai-security/aid-h-024-002
+      - aidefend-ai-security/aid-h-024-003
+      - aidefend-ai-security/aid-h-024-004
+      - aidefend-ai-security/aid-h-025-002
+      - aidefend-ai-security/aid-h-028-001
+      - aidefend-ai-security/aid-h-028-004
+      - aidefend-ai-security/aid-h-028-006
+      - aidefend-ai-security/aid-h-028-008
+      - aidefend-ai-security/aid-h-030-001
+      - aidefend-ai-security/aid-h-030-002
+      - aidefend-ai-security/aid-h-030-003
+      - aidefend-ai-security/aid-h-030-004
+      - aidefend-ai-security/aid-h-030-005
+      - aidefend-ai-security/aid-h-031-002
+      - aidefend-ai-security/aid-h-031-003
+      - aidefend-ai-security/aid-h-031-004
+      - aidefend-ai-security/aid-h-033-002
+      - aidefend-ai-security/aid-h-033-004
+      - aidefend-ai-security/aid-h-033-005
+      - aidefend-ai-security/aid-h-034-002
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-034-004
+      - aidefend-ai-security/aid-h-034-006
+      - aidefend-ai-security/aid-h-034-007
+      - aidefend-ai-security/aid-h-034-009
+      - aidefend-ai-security/aid-h-035
+      - aidefend-ai-security/aid-i-001-001
+      - aidefend-ai-security/aid-i-001-002
+      - aidefend-ai-security/aid-i-001-004
+      - aidefend-ai-security/aid-i-002-001
+      - aidefend-ai-security/aid-i-002-002
+      - aidefend-ai-security/aid-i-003-001
+      - aidefend-ai-security/aid-i-003-004
+      - aidefend-ai-security/aid-i-004-006
+      - aidefend-ai-security/aid-i-004-009
+      - aidefend-ai-security/aid-i-005
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-i-008-002
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-i-008-005
+      - aidefend-ai-security/aid-m-001-002
+      - aidefend-ai-security/aid-m-001-003
+      - aidefend-ai-security/aid-m-002-002
+      - aidefend-ai-security/aid-m-002-003
+      - aidefend-ai-security/aid-m-002-005
+      - aidefend-ai-security/aid-m-005-002
+      - aidefend-ai-security/aid-m-006-003
+      - aidefend-ai-security/aid-m-007-002
+      - aidefend-ai-security/aid-m-008
+      - aidefend-ai-security/aid-m-009-005
+      - aidefend-ai-security/aid-m-009-006
+      - aidefend-ai-security/aid-m-010-002
+      - aidefend-ai-security/aid-r-001-001
+      - aidefend-ai-security/aid-r-001-002
+      - aidefend-ai-security/aid-r-003-003
+      - aidefend-ai-security/aid-r-006
+      - aidefend-ai-security/aid-r-007
+
+  - threat: mcp-token-exposure
+    countermeasures:
+      - aidefend-ai-security/aid-d-003-002
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-dv-002
+      - aidefend-ai-security/aid-h-006-002
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-018-004
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-018-009
+      - aidefend-ai-security/aid-h-028-002
+      - aidefend-ai-security/aid-h-034-002
+      - aidefend-ai-security/aid-h-034-005
+
+  - threat: mcp-tool-poisoning
+    countermeasures:
+      - aidefend-ai-security/aid-d-004-008
+      - aidefend-ai-security/aid-e-003-003
+      - aidefend-ai-security/aid-h-002-002
+      - aidefend-ai-security/aid-h-016-001
+      - aidefend-ai-security/aid-h-017-007
+      - aidefend-ai-security/aid-h-018-005
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-024-002
+      - aidefend-ai-security/aid-h-024-004
+      - aidefend-ai-security/aid-h-025-001
+      - aidefend-ai-security/aid-h-030-001
+      - aidefend-ai-security/aid-h-030-002
+      - aidefend-ai-security/aid-h-030-003
+      - aidefend-ai-security/aid-h-030-005
+      - aidefend-ai-security/aid-h-034-004
+      - aidefend-ai-security/aid-h-034-005
+      - aidefend-ai-security/aid-i-001-005
+
+  # Model registry threats
+  - threat: registry-lineage-manipulation
+    countermeasures:
+      - aidefend-ai-security/aid-d-004-001
+      - aidefend-ai-security/aid-d-004-004
+      - aidefend-ai-security/aid-d-004-008
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-012-001
+      - aidefend-ai-security/aid-d-013
+      - aidefend-ai-security/aid-e-003-001
+      - aidefend-ai-security/aid-e-003-005
+      - aidefend-ai-security/aid-h-003-002
+      - aidefend-ai-security/aid-h-003-006
+      - aidefend-ai-security/aid-h-003-007
+      - aidefend-ai-security/aid-h-007-002
+      - aidefend-ai-security/aid-h-007-005
+      - aidefend-ai-security/aid-h-007-006
+      - aidefend-ai-security/aid-h-008-002
+      - aidefend-ai-security/aid-h-038-002
+      - aidefend-ai-security/aid-i-001-002
+      - aidefend-ai-security/aid-i-006
+      - aidefend-ai-security/aid-r-001-001
+      - aidefend-ai-security/aid-r-001-002
+
+  - threat: registry-model-tampering
+    countermeasures:
+      - aidefend-ai-security/aid-d-002-001
+      - aidefend-ai-security/aid-d-002-002
+      - aidefend-ai-security/aid-d-002-003
+      - aidefend-ai-security/aid-d-004-001
+      - aidefend-ai-security/aid-d-004-004
+      - aidefend-ai-security/aid-d-004-008
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-012-001
+      - aidefend-ai-security/aid-d-013
+      - aidefend-ai-security/aid-e-003-001
+      - aidefend-ai-security/aid-e-003-005
+      - aidefend-ai-security/aid-h-003-002
+      - aidefend-ai-security/aid-h-003-006
+      - aidefend-ai-security/aid-h-003-007
+      - aidefend-ai-security/aid-h-007-002
+      - aidefend-ai-security/aid-h-007-005
+      - aidefend-ai-security/aid-h-007-006
+      - aidefend-ai-security/aid-h-008-002
+      - aidefend-ai-security/aid-h-038-002
+      - aidefend-ai-security/aid-i-001-002
+      - aidefend-ai-security/aid-i-006
+      - aidefend-ai-security/aid-m-002-002
+      - aidefend-ai-security/aid-m-002-005
+      - aidefend-ai-security/aid-r-001-001
+      - aidefend-ai-security/aid-r-001-002
+      - aidefend-ai-security/aid-r-006
+
+  - threat: registry-unauthorized-deployment
+    countermeasures:
+      - aidefend-ai-security/aid-h-004-004
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-031-004
+      - aidefend-ai-security/aid-m-009-001
+
+  # Tool executor threats
+  - threat: tool-excessive-permissions
+    countermeasures:
+      - aidefend-ai-security/aid-d-001-001
+      - aidefend-ai-security/aid-d-003-002
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-003-004
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-003-007
+      - aidefend-ai-security/aid-d-004-003
+      - aidefend-ai-security/aid-d-005-004
+      - aidefend-ai-security/aid-d-005-006
+      - aidefend-ai-security/aid-d-005-007
+      - aidefend-ai-security/aid-d-005-009
+      - aidefend-ai-security/aid-d-011-002
+      - aidefend-ai-security/aid-d-011-004
+      - aidefend-ai-security/aid-d-015
+      - aidefend-ai-security/aid-d-016-001
+      - aidefend-ai-security/aid-d-016-002
+      - aidefend-ai-security/aid-dv-001
+      - aidefend-ai-security/aid-dv-002
+      - aidefend-ai-security/aid-dv-003
+      - aidefend-ai-security/aid-dv-005
+      - aidefend-ai-security/aid-e-001-001
+      - aidefend-ai-security/aid-e-001-002
+      - aidefend-ai-security/aid-e-001-003
+      - aidefend-ai-security/aid-e-001-004
+      - aidefend-ai-security/aid-e-002
+      - aidefend-ai-security/aid-e-004
+      - aidefend-ai-security/aid-e-005
+      - aidefend-ai-security/aid-h-004-001
+      - aidefend-ai-security/aid-h-004-002
+      - aidefend-ai-security/aid-h-004-003
+      - aidefend-ai-security/aid-h-004-004
+      - aidefend-ai-security/aid-h-017-001
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-017-006
+      - aidefend-ai-security/aid-h-017-007
+      - aidefend-ai-security/aid-h-018-001
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-018-003
+      - aidefend-ai-security/aid-h-018-004
+      - aidefend-ai-security/aid-h-018-005
+      - aidefend-ai-security/aid-h-018-006
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-018-009
+      - aidefend-ai-security/aid-h-019-001
+      - aidefend-ai-security/aid-h-019-003
+      - aidefend-ai-security/aid-h-020-003
+      - aidefend-ai-security/aid-h-021-004
+      - aidefend-ai-security/aid-h-025-002
+      - aidefend-ai-security/aid-h-027
+      - aidefend-ai-security/aid-h-028-002
+      - aidefend-ai-security/aid-h-028-004
+      - aidefend-ai-security/aid-h-028-005
+      - aidefend-ai-security/aid-h-028-007
+      - aidefend-ai-security/aid-h-028-008
+      - aidefend-ai-security/aid-h-034-002
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-034-005
+      - aidefend-ai-security/aid-h-034-006
+      - aidefend-ai-security/aid-h-034-007
+      - aidefend-ai-security/aid-h-034-009
+      - aidefend-ai-security/aid-h-035
+      - aidefend-ai-security/aid-i-001-001
+      - aidefend-ai-security/aid-i-001-002
+      - aidefend-ai-security/aid-i-001-003
+      - aidefend-ai-security/aid-i-001-004
+      - aidefend-ai-security/aid-i-002-001
+      - aidefend-ai-security/aid-i-002-002
+      - aidefend-ai-security/aid-i-003-001
+      - aidefend-ai-security/aid-i-003-004
+      - aidefend-ai-security/aid-i-004-001
+      - aidefend-ai-security/aid-i-004-002
+      - aidefend-ai-security/aid-i-004-007
+      - aidefend-ai-security/aid-i-005
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-i-008-001
+      - aidefend-ai-security/aid-i-008-002
+      - aidefend-ai-security/aid-i-008-003
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-i-008-005
+      - aidefend-ai-security/aid-m-005-002
+      - aidefend-ai-security/aid-m-006-003
+      - aidefend-ai-security/aid-m-007-002
+      - aidefend-ai-security/aid-m-008
+      - aidefend-ai-security/aid-m-009-003
+      - aidefend-ai-security/aid-m-009-006
+      - aidefend-ai-security/aid-r-003-001
+      - aidefend-ai-security/aid-r-003-003
+      - aidefend-ai-security/aid-r-007
+
+  - threat: tool-injection
+    countermeasures:
+      - aidefend-ai-security/aid-d-003-002
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-003-004
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-003-007
+      - aidefend-ai-security/aid-d-003-008
+      - aidefend-ai-security/aid-d-004-008
+      - aidefend-ai-security/aid-d-005-004
+      - aidefend-ai-security/aid-d-005-007
+      - aidefend-ai-security/aid-d-005-009
+      - aidefend-ai-security/aid-d-011-004
+      - aidefend-ai-security/aid-d-015
+      - aidefend-ai-security/aid-d-016-002
+      - aidefend-ai-security/aid-dv-001
+      - aidefend-ai-security/aid-dv-003
+      - aidefend-ai-security/aid-dv-005
+      - aidefend-ai-security/aid-e-001-002
+      - aidefend-ai-security/aid-e-001-004
+      - aidefend-ai-security/aid-e-002
+      - aidefend-ai-security/aid-e-003-003
+      - aidefend-ai-security/aid-e-004
+      - aidefend-ai-security/aid-e-005
+      - aidefend-ai-security/aid-h-002-009
+      - aidefend-ai-security/aid-h-003-001
+      - aidefend-ai-security/aid-h-003-009
+      - aidefend-ai-security/aid-h-003-010
+      - aidefend-ai-security/aid-h-006-002
+      - aidefend-ai-security/aid-h-006-004
+      - aidefend-ai-security/aid-h-017-001
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-017-006
+      - aidefend-ai-security/aid-h-017-007
+      - aidefend-ai-security/aid-h-018-001
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-018-003
+      - aidefend-ai-security/aid-h-018-004
+      - aidefend-ai-security/aid-h-018-005
+      - aidefend-ai-security/aid-h-018-006
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-018-009
+      - aidefend-ai-security/aid-h-019-001
+      - aidefend-ai-security/aid-h-019-003
+      - aidefend-ai-security/aid-h-020-003
+      - aidefend-ai-security/aid-h-021-005
+      - aidefend-ai-security/aid-h-022-001
+      - aidefend-ai-security/aid-h-025-001
+      - aidefend-ai-security/aid-h-025-002
+      - aidefend-ai-security/aid-h-028-004
+      - aidefend-ai-security/aid-h-028-008
+      - aidefend-ai-security/aid-h-030-002
+      - aidefend-ai-security/aid-h-030-003
+      - aidefend-ai-security/aid-h-030-004
+      - aidefend-ai-security/aid-h-031-002
+      - aidefend-ai-security/aid-h-031-003
+      - aidefend-ai-security/aid-h-031-004
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-034-005
+      - aidefend-ai-security/aid-h-034-009
+      - aidefend-ai-security/aid-h-035
+      - aidefend-ai-security/aid-i-001-001
+      - aidefend-ai-security/aid-i-001-002
+      - aidefend-ai-security/aid-i-001-003
+      - aidefend-ai-security/aid-i-001-004
+      - aidefend-ai-security/aid-i-001-005
+      - aidefend-ai-security/aid-i-002-002
+      - aidefend-ai-security/aid-i-003-001
+      - aidefend-ai-security/aid-i-003-004
+      - aidefend-ai-security/aid-i-005
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-i-008-002
+      - aidefend-ai-security/aid-i-008-003
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-i-008-005
+      - aidefend-ai-security/aid-m-006-003
+      - aidefend-ai-security/aid-m-007-002
+      - aidefend-ai-security/aid-m-008
+      - aidefend-ai-security/aid-m-009-006
+      - aidefend-ai-security/aid-r-003-003
+      - aidefend-ai-security/aid-r-007
+
+  - threat: tool-misuse
+    countermeasures:
+      - aidefend-ai-security/aid-d-001-001
+      - aidefend-ai-security/aid-d-003-002
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-003-004
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-003-007
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-005-004
+      - aidefend-ai-security/aid-d-005-007
+      - aidefend-ai-security/aid-d-005-009
+      - aidefend-ai-security/aid-d-011-004
+      - aidefend-ai-security/aid-d-014-001
+      - aidefend-ai-security/aid-d-014-003
+      - aidefend-ai-security/aid-d-015
+      - aidefend-ai-security/aid-d-016-002
+      - aidefend-ai-security/aid-dv-001
+      - aidefend-ai-security/aid-dv-003
+      - aidefend-ai-security/aid-dv-005
+      - aidefend-ai-security/aid-e-001-002
+      - aidefend-ai-security/aid-e-001-004
+      - aidefend-ai-security/aid-e-002
+      - aidefend-ai-security/aid-e-004
+      - aidefend-ai-security/aid-e-005
+      - aidefend-ai-security/aid-h-002-002
+      - aidefend-ai-security/aid-h-017-001
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-017-006
+      - aidefend-ai-security/aid-h-017-007
+      - aidefend-ai-security/aid-h-018-001
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-018-003
+      - aidefend-ai-security/aid-h-018-004
+      - aidefend-ai-security/aid-h-018-005
+      - aidefend-ai-security/aid-h-018-006
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-018-009
+      - aidefend-ai-security/aid-h-019-001
+      - aidefend-ai-security/aid-h-019-003
+      - aidefend-ai-security/aid-h-020-001
+      - aidefend-ai-security/aid-h-020-002
+      - aidefend-ai-security/aid-h-020-003
+      - aidefend-ai-security/aid-h-020-004
+      - aidefend-ai-security/aid-h-021-003
+      - aidefend-ai-security/aid-h-025-002
+      - aidefend-ai-security/aid-h-028-004
+      - aidefend-ai-security/aid-h-028-008
+      - aidefend-ai-security/aid-h-034-002
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-034-005
+      - aidefend-ai-security/aid-h-034-009
+      - aidefend-ai-security/aid-h-035
+      - aidefend-ai-security/aid-i-001-001
+      - aidefend-ai-security/aid-i-001-002
+      - aidefend-ai-security/aid-i-001-003
+      - aidefend-ai-security/aid-i-001-004
+      - aidefend-ai-security/aid-i-002-002
+      - aidefend-ai-security/aid-i-003-001
+      - aidefend-ai-security/aid-i-003-004
+      - aidefend-ai-security/aid-i-004-004
+      - aidefend-ai-security/aid-i-005
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-i-008-002
+      - aidefend-ai-security/aid-i-008-003
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-i-008-005
+      - aidefend-ai-security/aid-m-002-003
+      - aidefend-ai-security/aid-m-006-003
+      - aidefend-ai-security/aid-m-007-002
+      - aidefend-ai-security/aid-m-008
+      - aidefend-ai-security/aid-m-009-006
+      - aidefend-ai-security/aid-r-002
+      - aidefend-ai-security/aid-r-003-003
+      - aidefend-ai-security/aid-r-005
+      - aidefend-ai-security/aid-r-007
+
+  - threat: tool-rce
+    countermeasures:
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-003-008
+      - aidefend-ai-security/aid-d-004-008
+      - aidefend-ai-security/aid-e-002
+      - aidefend-ai-security/aid-e-003-003
+      - aidefend-ai-security/aid-e-004
+      - aidefend-ai-security/aid-h-002-009
+      - aidefend-ai-security/aid-h-003-001
+      - aidefend-ai-security/aid-h-003-009
+      - aidefend-ai-security/aid-h-003-010
+      - aidefend-ai-security/aid-h-006-002
+      - aidefend-ai-security/aid-h-006-004
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-018-003
+      - aidefend-ai-security/aid-h-018-004
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-018-009
+      - aidefend-ai-security/aid-h-019-003
+      - aidefend-ai-security/aid-h-021-005
+      - aidefend-ai-security/aid-h-022-001
+      - aidefend-ai-security/aid-h-025-001
+      - aidefend-ai-security/aid-h-025-002
+      - aidefend-ai-security/aid-h-028-004
+      - aidefend-ai-security/aid-h-030-002
+      - aidefend-ai-security/aid-h-030-003
+      - aidefend-ai-security/aid-h-030-004
+      - aidefend-ai-security/aid-h-031-002
+      - aidefend-ai-security/aid-h-031-003
+      - aidefend-ai-security/aid-h-031-004
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-034-009
+      - aidefend-ai-security/aid-h-035
+      - aidefend-ai-security/aid-i-001-001
+      - aidefend-ai-security/aid-i-001-002
+      - aidefend-ai-security/aid-i-001-003
+      - aidefend-ai-security/aid-i-001-005
+      - aidefend-ai-security/aid-i-003-004
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-i-008-002
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-m-006-003
+      - aidefend-ai-security/aid-m-008
+      - aidefend-ai-security/aid-m-009-006
+      - aidefend-ai-security/aid-r-006
+      - aidefend-ai-security/aid-r-007
+
+  # Training pipeline threats
+  - threat: training-data-leakage
+    countermeasures:
+      - aidefend-ai-security/aid-d-002-004
+      - aidefend-ai-security/aid-d-003-002
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-003-007
+      - aidefend-ai-security/aid-d-004-002
+      - aidefend-ai-security/aid-d-004-006
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-005-004
+      - aidefend-ai-security/aid-d-005-005
+      - aidefend-ai-security/aid-d-005-009
+      - aidefend-ai-security/aid-d-011-004
+      - aidefend-ai-security/aid-dv-001
+      - aidefend-ai-security/aid-dv-002
+      - aidefend-ai-security/aid-dv-004
+      - aidefend-ai-security/aid-dv-006
+      - aidefend-ai-security/aid-dv-007
+      - aidefend-ai-security/aid-e-001-001
+      - aidefend-ai-security/aid-e-001-002
+      - aidefend-ai-security/aid-e-005
+      - aidefend-ai-security/aid-h-002-001
+      - aidefend-ai-security/aid-h-002-009
+      - aidefend-ai-security/aid-h-005-001
+      - aidefend-ai-security/aid-h-005-002
+      - aidefend-ai-security/aid-h-005-003
+      - aidefend-ai-security/aid-h-005-004
+      - aidefend-ai-security/aid-h-005-005
+      - aidefend-ai-security/aid-h-006-002
+      - aidefend-ai-security/aid-h-006-003
+      - aidefend-ai-security/aid-h-007-001
+      - aidefend-ai-security/aid-h-007-005
+      - aidefend-ai-security/aid-h-007-006
+      - aidefend-ai-security/aid-h-008-001
+      - aidefend-ai-security/aid-h-009-004
+      - aidefend-ai-security/aid-h-009-005
+      - aidefend-ai-security/aid-h-018-005
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-018-009
+      - aidefend-ai-security/aid-h-020-003
+      - aidefend-ai-security/aid-h-027
+      - aidefend-ai-security/aid-h-028-003
+      - aidefend-ai-security/aid-h-028-005
+      - aidefend-ai-security/aid-h-029-002
+      - aidefend-ai-security/aid-h-029-003
+      - aidefend-ai-security/aid-h-032-001
+      - aidefend-ai-security/aid-h-032-002
+      - aidefend-ai-security/aid-h-032-003
+      - aidefend-ai-security/aid-h-032-004
+      - aidefend-ai-security/aid-h-033-002
+      - aidefend-ai-security/aid-h-033-003
+      - aidefend-ai-security/aid-h-033-005
+      - aidefend-ai-security/aid-h-033-006
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-034-005
+      - aidefend-ai-security/aid-h-034-006
+      - aidefend-ai-security/aid-h-034-007
+      - aidefend-ai-security/aid-h-037-001
+      - aidefend-ai-security/aid-i-001-004
+      - aidefend-ai-security/aid-i-002-002
+      - aidefend-ai-security/aid-i-003-002
+      - aidefend-ai-security/aid-i-003-003
+      - aidefend-ai-security/aid-i-004-001
+      - aidefend-ai-security/aid-i-004-002
+      - aidefend-ai-security/aid-i-004-005
+      - aidefend-ai-security/aid-i-004-007
+      - aidefend-ai-security/aid-i-004-008
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-i-008-001
+      - aidefend-ai-security/aid-i-008-003
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-i-008-005
+      - aidefend-ai-security/aid-m-002-003
+      - aidefend-ai-security/aid-m-007-002
+      - aidefend-ai-security/aid-m-008
+      - aidefend-ai-security/aid-m-010-001
+      - aidefend-ai-security/aid-m-010-002
+      - aidefend-ai-security/aid-m-010-003
+
+  - threat: training-data-poisoning
+    countermeasures:
+      - aidefend-ai-security/aid-d-002-001
+      - aidefend-ai-security/aid-d-002-002
+      - aidefend-ai-security/aid-d-004-001
+      - aidefend-ai-security/aid-d-004-002
+      - aidefend-ai-security/aid-d-004-003
+      - aidefend-ai-security/aid-d-004-004
+      - aidefend-ai-security/aid-d-004-006
+      - aidefend-ai-security/aid-d-004-007
+      - aidefend-ai-security/aid-d-004-008
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-011-003
+      - aidefend-ai-security/aid-d-012-001
+      - aidefend-ai-security/aid-d-012-002
+      - aidefend-ai-security/aid-d-012-003
+      - aidefend-ai-security/aid-d-013
+      - aidefend-ai-security/aid-e-003-001
+      - aidefend-ai-security/aid-e-003-002
+      - aidefend-ai-security/aid-e-003-003
+      - aidefend-ai-security/aid-e-003-005
+      - aidefend-ai-security/aid-e-004
+      - aidefend-ai-security/aid-h-002-001
+      - aidefend-ai-security/aid-h-002-004
+      - aidefend-ai-security/aid-h-002-005
+      - aidefend-ai-security/aid-h-002-006
+      - aidefend-ai-security/aid-h-002-009
+      - aidefend-ai-security/aid-h-003-001
+      - aidefend-ai-security/aid-h-003-002
+      - aidefend-ai-security/aid-h-003-003
+      - aidefend-ai-security/aid-h-003-004
+      - aidefend-ai-security/aid-h-003-006
+      - aidefend-ai-security/aid-h-003-007
+      - aidefend-ai-security/aid-h-003-008
+      - aidefend-ai-security/aid-h-003-009
+      - aidefend-ai-security/aid-h-003-010
+      - aidefend-ai-security/aid-h-003-011
+      - aidefend-ai-security/aid-h-007-002
+      - aidefend-ai-security/aid-h-007-003
+      - aidefend-ai-security/aid-h-007-004
+      - aidefend-ai-security/aid-h-007-006
+      - aidefend-ai-security/aid-h-007-007
+      - aidefend-ai-security/aid-h-008-002
+      - aidefend-ai-security/aid-h-009-001
+      - aidefend-ai-security/aid-h-009-002
+      - aidefend-ai-security/aid-h-009-003
+      - aidefend-ai-security/aid-h-011-001
+      - aidefend-ai-security/aid-h-011-002
+      - aidefend-ai-security/aid-h-012-002
+      - aidefend-ai-security/aid-h-012-004
+      - aidefend-ai-security/aid-h-020-001
+      - aidefend-ai-security/aid-h-021-003
+      - aidefend-ai-security/aid-h-022-001
+      - aidefend-ai-security/aid-h-022-002
+      - aidefend-ai-security/aid-h-023
+      - aidefend-ai-security/aid-h-028-006
+      - aidefend-ai-security/aid-h-031-002
+      - aidefend-ai-security/aid-h-033-004
+      - aidefend-ai-security/aid-h-033-005
+      - aidefend-ai-security/aid-i-001-002
+      - aidefend-ai-security/aid-i-001-005
+      - aidefend-ai-security/aid-i-006
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-m-001-002
+      - aidefend-ai-security/aid-m-002-002
+      - aidefend-ai-security/aid-m-002-003
+      - aidefend-ai-security/aid-m-002-005
+      - aidefend-ai-security/aid-m-010-002
+      - aidefend-ai-security/aid-m-010-003
+      - aidefend-ai-security/aid-r-001-001
+      - aidefend-ai-security/aid-r-001-002
+      - aidefend-ai-security/aid-r-002
+      - aidefend-ai-security/aid-r-005
+      - aidefend-ai-security/aid-r-006
+
+  - threat: training-supply-chain
+    countermeasures:
+      - aidefend-ai-security/aid-d-003-003
+      - aidefend-ai-security/aid-d-003-004
+      - aidefend-ai-security/aid-d-003-005
+      - aidefend-ai-security/aid-d-004-001
+      - aidefend-ai-security/aid-d-004-002
+      - aidefend-ai-security/aid-d-004-003
+      - aidefend-ai-security/aid-d-004-004
+      - aidefend-ai-security/aid-d-004-006
+      - aidefend-ai-security/aid-d-004-008
+      - aidefend-ai-security/aid-d-005-003
+      - aidefend-ai-security/aid-d-005-004
+      - aidefend-ai-security/aid-d-010
+      - aidefend-ai-security/aid-d-011-004
+      - aidefend-ai-security/aid-d-015
+      - aidefend-ai-security/aid-dv-003
+      - aidefend-ai-security/aid-dv-005
+      - aidefend-ai-security/aid-e-001-003
+      - aidefend-ai-security/aid-e-001-004
+      - aidefend-ai-security/aid-e-002
+      - aidefend-ai-security/aid-e-003-001
+      - aidefend-ai-security/aid-e-003-002
+      - aidefend-ai-security/aid-e-003-003
+      - aidefend-ai-security/aid-e-003-005
+      - aidefend-ai-security/aid-e-004
+      - aidefend-ai-security/aid-h-002-009
+      - aidefend-ai-security/aid-h-003-001
+      - aidefend-ai-security/aid-h-003-002
+      - aidefend-ai-security/aid-h-003-003
+      - aidefend-ai-security/aid-h-003-004
+      - aidefend-ai-security/aid-h-003-005
+      - aidefend-ai-security/aid-h-003-006
+      - aidefend-ai-security/aid-h-003-007
+      - aidefend-ai-security/aid-h-003-008
+      - aidefend-ai-security/aid-h-003-009
+      - aidefend-ai-security/aid-h-003-010
+      - aidefend-ai-security/aid-h-007-004
+      - aidefend-ai-security/aid-h-007-005
+      - aidefend-ai-security/aid-h-007-006
+      - aidefend-ai-security/aid-h-007-007
+      - aidefend-ai-security/aid-h-009-001
+      - aidefend-ai-security/aid-h-009-003
+      - aidefend-ai-security/aid-h-017-001
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-017-006
+      - aidefend-ai-security/aid-h-018-001
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-018-003
+      - aidefend-ai-security/aid-h-018-004
+      - aidefend-ai-security/aid-h-018-006
+      - aidefend-ai-security/aid-h-018-007
+      - aidefend-ai-security/aid-h-018-009
+      - aidefend-ai-security/aid-h-021-001
+      - aidefend-ai-security/aid-h-021-002
+      - aidefend-ai-security/aid-h-021-004
+      - aidefend-ai-security/aid-h-021-005
+      - aidefend-ai-security/aid-h-022-001
+      - aidefend-ai-security/aid-h-022-002
+      - aidefend-ai-security/aid-h-023
+      - aidefend-ai-security/aid-h-024-001
+      - aidefend-ai-security/aid-h-024-002
+      - aidefend-ai-security/aid-h-024-003
+      - aidefend-ai-security/aid-h-024-004
+      - aidefend-ai-security/aid-h-025-002
+      - aidefend-ai-security/aid-h-028-001
+      - aidefend-ai-security/aid-h-028-004
+      - aidefend-ai-security/aid-h-028-006
+      - aidefend-ai-security/aid-h-028-008
+      - aidefend-ai-security/aid-h-030-001
+      - aidefend-ai-security/aid-h-030-002
+      - aidefend-ai-security/aid-h-030-003
+      - aidefend-ai-security/aid-h-030-004
+      - aidefend-ai-security/aid-h-030-005
+      - aidefend-ai-security/aid-h-031-002
+      - aidefend-ai-security/aid-h-031-003
+      - aidefend-ai-security/aid-h-031-004
+      - aidefend-ai-security/aid-h-033-002
+      - aidefend-ai-security/aid-h-033-004
+      - aidefend-ai-security/aid-h-033-005
+      - aidefend-ai-security/aid-h-034-002
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-034-004
+      - aidefend-ai-security/aid-h-034-006
+      - aidefend-ai-security/aid-h-034-007
+      - aidefend-ai-security/aid-h-034-009
+      - aidefend-ai-security/aid-h-035
+      - aidefend-ai-security/aid-i-001-001
+      - aidefend-ai-security/aid-i-001-002
+      - aidefend-ai-security/aid-i-001-004
+      - aidefend-ai-security/aid-i-002-001
+      - aidefend-ai-security/aid-i-002-002
+      - aidefend-ai-security/aid-i-003-001
+      - aidefend-ai-security/aid-i-003-004
+      - aidefend-ai-security/aid-i-004-006
+      - aidefend-ai-security/aid-i-004-009
+      - aidefend-ai-security/aid-i-005
+      - aidefend-ai-security/aid-i-007
+      - aidefend-ai-security/aid-i-008-002
+      - aidefend-ai-security/aid-i-008-004
+      - aidefend-ai-security/aid-i-008-005
+      - aidefend-ai-security/aid-m-001-002
+      - aidefend-ai-security/aid-m-001-003
+      - aidefend-ai-security/aid-m-002-002
+      - aidefend-ai-security/aid-m-002-003
+      - aidefend-ai-security/aid-m-002-005
+      - aidefend-ai-security/aid-m-005-002
+      - aidefend-ai-security/aid-m-006-003
+      - aidefend-ai-security/aid-m-007-002
+      - aidefend-ai-security/aid-m-008
+      - aidefend-ai-security/aid-m-009-005
+      - aidefend-ai-security/aid-m-009-006
+      - aidefend-ai-security/aid-m-010-002
+      - aidefend-ai-security/aid-r-003-003
+      - aidefend-ai-security/aid-r-006
+      - aidefend-ai-security/aid-r-007
+
+  - threat: training-unauthorized-modification
+    countermeasures:
+      - aidefend-ai-security/aid-h-002-004
+      - aidefend-ai-security/aid-h-002-005
+      - aidefend-ai-security/aid-h-002-006
+      - aidefend-ai-security/aid-h-007-001
+      - aidefend-ai-security/aid-h-007-004
+
+  # Vector database threats
+  - threat: vecdb-cross-tenant-leakage
+    countermeasures:
+      - aidefend-ai-security/aid-d-001-004
+      - aidefend-ai-security/aid-h-006-002
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-037-001
+      - aidefend-ai-security/aid-i-004-007
+      - aidefend-ai-security/aid-i-004-008
+
+  - threat: vecdb-embedding-inversion
+    countermeasures:
+      - aidefend-ai-security/aid-d-001-004
+      - aidefend-ai-security/aid-d-003-007
+      - aidefend-ai-security/aid-dv-001
+      - aidefend-ai-security/aid-h-005-001
+      - aidefend-ai-security/aid-h-005-005
+      - aidefend-ai-security/aid-h-006-002
+      - aidefend-ai-security/aid-h-006-003
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-037-001
+      - aidefend-ai-security/aid-i-004-007
+      - aidefend-ai-security/aid-i-004-008
+
+  - threat: vecdb-poisoned-embeddings
+    countermeasures:
+      - aidefend-ai-security/aid-d-001-004
+      - aidefend-ai-security/aid-d-001-005
+      - aidefend-ai-security/aid-d-009-001
+      - aidefend-ai-security/aid-d-014-001
+      - aidefend-ai-security/aid-d-014-002
+      - aidefend-ai-security/aid-d-014-003
+      - aidefend-ai-security/aid-e-003-002
+      - aidefend-ai-security/aid-h-002-002
+      - aidefend-ai-security/aid-h-006-002
+      - aidefend-ai-security/aid-h-017-002
+      - aidefend-ai-security/aid-h-017-003
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-020-001
+      - aidefend-ai-security/aid-h-020-002
+      - aidefend-ai-security/aid-h-020-004
+      - aidefend-ai-security/aid-h-021-003
+      - aidefend-ai-security/aid-h-034-003
+      - aidefend-ai-security/aid-h-037-001
+      - aidefend-ai-security/aid-i-004-002
+      - aidefend-ai-security/aid-i-004-003
+      - aidefend-ai-security/aid-i-004-004
+      - aidefend-ai-security/aid-i-004-007
+      - aidefend-ai-security/aid-i-004-008
+      - aidefend-ai-security/aid-m-002-004
+      - aidefend-ai-security/aid-r-002
+      - aidefend-ai-security/aid-r-005
+
+  - threat: vecdb-unauthorized-retrieval
+    countermeasures:
+      - aidefend-ai-security/aid-d-014-002
+      - aidefend-ai-security/aid-h-018-002
+      - aidefend-ai-security/aid-h-020-003
+      - aidefend-ai-security/aid-i-004-002

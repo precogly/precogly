@@ -1,0 +1,228 @@
+taxonomy: owasp-ml-top-10-2023
+
+mappings:
+  # Input Manipulation Attack
+  - entry: "ML01:2023"
+    countermeasures:
+      - aid-m-008
+      - aid-h-001
+      - aid-h-002-002
+      - aid-h-002-003
+      - aid-h-002-008
+      - aid-h-011-002
+      - aid-h-011-003
+      - aid-h-014
+      - aid-h-015
+      - aid-h-026-001
+      - aid-h-026-002
+      - aid-h-026-003
+      - aid-h-036
+      - aid-d-001-001
+      - aid-d-001-002
+      - aid-d-001-004
+      - aid-d-001-005
+      - aid-d-001-006
+      - aid-d-002-001
+      - aid-d-002-002
+      - aid-d-002-003
+      - aid-d-003-005
+      - aid-d-004-005
+      - aid-d-006
+      - aid-d-007-001
+      - aid-d-007-002
+      - aid-d-008
+      - aid-d-010
+      - aid-d-018
+
+  # Data Poisoning Attack
+  - entry: "ML02:2023"
+    countermeasures:
+      - aid-m-002-003
+      - aid-h-002-001
+      - aid-h-002-004
+      - aid-h-002-005
+      - aid-h-007-002
+      - aid-h-007-005
+      - aid-h-008-002
+      - aid-h-011-001
+      - aid-h-011-002
+      - aid-d-002-001
+      - aid-d-002-002
+      - aid-d-004-007
+      - aid-d-012-001
+      - aid-d-012-002
+      - aid-d-012-003
+      - aid-d-013
+      - aid-i-006
+      - aid-e-003-002
+      - aid-r-001-002
+      - aid-r-002
+
+  # Model Inversion Attack
+  - entry: "ML03:2023"
+    countermeasures:
+      - aid-h-005-001
+      - aid-h-005-005
+      - aid-h-006-003
+      - aid-h-008-001
+      - aid-d-003-007
+
+  # Membership Inference Attack
+  - entry: "ML04:2023"
+    countermeasures:
+      - aid-h-002-001
+      - aid-h-005-001
+      - aid-h-005-003
+      - aid-h-005-005
+      - aid-h-006-003
+      - aid-h-008-001
+      - aid-d-005-003
+
+  # Model Theft
+  - entry: "ML05:2023"
+    countermeasures:
+      - aid-m-001-005
+      - aid-m-001-006
+      - aid-m-005-002
+      - aid-m-010-001
+      - aid-m-010-002
+      - aid-m-010-003
+      - aid-h-003-011
+      - aid-h-004-001
+      - aid-h-006-003
+      - aid-h-007-001
+      - aid-h-009-004
+      - aid-h-009-005
+      - aid-h-013-002
+      - aid-h-013-003
+      - aid-h-038-001
+      - aid-d-005-003
+      - aid-i-001-004
+      - aid-i-002-001
+      - aid-i-003-002
+      - aid-dv-001
+      - aid-dv-003
+      - aid-dv-004
+      - aid-e-001-001
+      - aid-e-001-002
+
+  # AI Supply Chain Attacks
+  - entry: "ML06:2023"
+    countermeasures:
+      - aid-m-001-002
+      - aid-m-002-002
+      - aid-m-002-003
+      - aid-m-002-005
+      - aid-m-005-002
+      - aid-m-010-002
+      - aid-h-002-009
+      - aid-h-003-001
+      - aid-h-003-002
+      - aid-h-003-003
+      - aid-h-003-006
+      - aid-h-003-007
+      - aid-h-003-008
+      - aid-h-003-009
+      - aid-h-003-010
+      - aid-h-003-011
+      - aid-h-007-004
+      - aid-h-007-006
+      - aid-h-007-007
+      - aid-h-021-002
+      - aid-h-021-003
+      - aid-h-022-001
+      - aid-h-022-002
+      - aid-h-023
+      - aid-h-024-001
+      - aid-h-024-002
+      - aid-h-024-004
+      - aid-h-028-006
+      - aid-h-030-001
+      - aid-h-030-003
+      - aid-h-030-004
+      - aid-h-030-005
+      - aid-h-031-002
+      - aid-h-031-003
+      - aid-h-031-004
+      - aid-h-033-004
+      - aid-h-033-005
+      - aid-h-034-004
+      - aid-d-004-001
+      - aid-d-004-002
+      - aid-d-004-003
+      - aid-d-004-004
+      - aid-d-004-006
+      - aid-d-004-008
+      - aid-d-011-003
+      - aid-i-001-001
+      - aid-i-001-002
+      - aid-i-007
+      - aid-e-003-001
+      - aid-e-003-003
+      - aid-e-003-005
+      - aid-e-004
+      - aid-r-001-001
+      - aid-r-006
+
+  # Transfer Learning Attack
+  - entry: "ML07:2023"
+    countermeasures:
+      - aid-h-003-007
+      - aid-d-004-001
+      - aid-d-004-004
+      - aid-r-001-001
+      - aid-r-001-002
+
+  # Model Skewing
+  - entry: "ML08:2023"
+    countermeasures:
+      - aid-h-002-004
+      - aid-h-002-005
+      - aid-h-012-002
+      - aid-h-012-004
+      - aid-d-002-001
+      - aid-d-002-002
+      - aid-d-002-003
+      - aid-d-006
+      - aid-d-013
+
+  # Output Integrity Attack
+  - entry: "ML09:2023"
+    countermeasures:
+      - aid-h-006-001
+      - aid-h-006-002
+      - aid-h-006-004
+      - aid-h-013-001
+      - aid-h-025-001
+      - aid-h-027
+      - aid-h-028-004
+      - aid-h-034-005
+      - aid-d-004-005
+      - aid-d-009-001
+      - aid-d-009-002
+
+  # Model Poisoning
+  - entry: "ML10:2023"
+    countermeasures:
+      - aid-m-002-002
+      - aid-m-002-005
+      - aid-h-003-002
+      - aid-h-003-006
+      - aid-h-003-007
+      - aid-h-007-002
+      - aid-h-007-005
+      - aid-h-007-006
+      - aid-h-008-002
+      - aid-h-038-002
+      - aid-d-002-002
+      - aid-d-002-003
+      - aid-d-004-004
+      - aid-d-006
+      - aid-d-012-001
+      - aid-i-006
+      - aid-e-003-001
+      - aid-e-003-005
+      - aid-r-001-001
+      - aid-r-001-002
+      - aid-r-006
+
