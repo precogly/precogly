@@ -40,6 +40,8 @@ mappings:
     entries: [AML.T0053]
   - threat: agent-privilege-escalation
     entries: [AML.T0098]
+  - threat: agent-excessive-autonomy
+    entries: [AML.T0053, AML.T0101]
 
   # Tool executor threats
   - threat: tool-misuse
