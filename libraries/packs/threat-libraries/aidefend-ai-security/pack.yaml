@@ -29,8 +29,4 @@ pack:
   - llm
   - countermeasures
   - vendor-neutral
-  depends_on:
-  - taxonomies/mitre-atlas
-  - taxonomies/owasp-llm-top-10-2026
-  - taxonomies/owasp-ml-top-10-2023
-  - taxonomies/owasp-agentic-top-10
+  depends_on: []

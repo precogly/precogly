@@ -1,0 +1,184 @@
+framework: owasp-aisvs-1-0-l1
+mappings:
+- countermeasure: aidefend-ai-security/aid-h-002-001
+  requirements:
+  - 1.1.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-007-001
+  requirements:
+  - 1.2.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-002-002
+  requirements:
+  - 2.1.1
+  - 2.1.2
+  - 2.1.3
+  - 2.2.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-i-003-002
+  requirements:
+  - 2.1.4
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-d-001-001
+  requirements:
+  - 2.1.3
+  - 2.2.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-026-002
+  requirements:
+  - 2.1.5
+  - 2.2.2
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-m-002-002
+  requirements:
+  - 3.1.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-004-001
+  requirements:
+  - 3.1.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-003-006
+  requirements:
+  - 3.1.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-001
+  requirements:
+  - 3.2.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-002-006
+  requirements:
+  - 3.4.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-i-001-003
+  requirements:
+  - 4.1.1
+  - 4.1.2
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-004-002
+  requirements:
+  - 4.3.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-m-002-002
+  requirements:
+  - 6.1.1
+  - 6.1.2
+  - 6.2.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-003-006
+  requirements:
+  - 6.2.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-024-001
+  requirements:
+  - 6.1.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-006-002
+  requirements:
+  - 7.1.1
+  - 7.1.2
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-d-003-001
+  requirements:
+  - 7.3.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-d-009-001
+  requirements:
+  - 7.4.1
+  - 7.4.2
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-d-001-001
+  requirements:
+  - 7.3.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-i-004-002
+  requirements:
+  - 8.1.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-d-003-002
+  requirements:
+  - 8.2.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-017-001
+  requirements:
+  - 9.1.1
+  - 9.1.2
+  - 9.6.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-m-006-001
+  requirements:
+  - 9.2.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-i-001-003
+  requirements:
+  - 9.3.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-018-001
+  requirements:
+  - 9.3.2
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-017-002
+  requirements:
+  - 9.3.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-024-001
+  requirements:
+  - 10.1.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-024-002
+  requirements:
+  - 10.4.1
+  - 10.4.3
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-028-001
+  requirements:
+  - 10.2.1
+  - 10.2.2
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-028-002
+  requirements:
+  - 10.2.3
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-i-004-001
+  requirements:
+  - 10.4.2
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-002-002
+  requirements:
+  - 10.4.2
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-001
+  requirements:
+  - 11.1.1
+  - 11.1.2
+  - 11.1.3
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-026-002
+  requirements:
+  - 11.1.3
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-d-003-001
+  requirements:
+  - 11.2.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-i-003-002
+  requirements:
+  - 11.2.2
+  - 11.3.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-d-005-001
+  requirements:
+  - 12.1.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-d-011-001
+  requirements:
+  - 12.2.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-007-004
+  requirements:
+  - 12.3.1
+  sufficiency: full
+- countermeasure: aidefend-ai-security/aid-h-003-003
+  requirements:
+  - 12.5.1
+  - 12.5.2
+  sufficiency: full

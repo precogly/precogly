@@ -1,7 +1,7 @@
 template:
   slug: aws-rag-genai
   name: "RAG / Generative AI Application"
-  description: "Retrieval-Augmented Generation application using Bedrock Agents, Knowledge Bases, and vector search via OpenSearch Serverless"
+  description: "Retrieval-Augmented Generation application using Bedrock Agents, Knowledge Bases, vector search via OpenSearch Serverless, and external tool access via MCP"
   category: ai
   diagram_type: level1
 
@@ -24,6 +24,15 @@ canvas_data:
         systemType: "service"
         component_ref: "bedrock"
         description: "Foundation model service for LLM inference"
+
+    - id: "actor-mcp-server"
+      type: "systemActor"
+      position: { x: 1220, y: 420 }
+      data:
+        label: "MCP Server"
+        systemType: "service"
+        component_ref: "ai/mcp-server"
+        description: "External tool server accessed via Model Context Protocol"
 
     # ---- System Scope ----
     - id: "scope-aws"
@@ -427,6 +436,28 @@ canvas_data:
       type: "dataFlow"
       data:
         label: "Training data read"
+        protocol: "HTTPS"
+        encrypted: true
+        authenticated: true
+
+    # Bedrock Agents → MCP Server (tool invocation)
+    - id: "edge-agents-to-mcp"
+      source: "process-bedrock-agents"
+      target: "actor-mcp-server"
+      type: "dataFlow"
+      data:
+        label: "MCP tool call"
+        protocol: "HTTPS"
+        encrypted: true
+        authenticated: true
+
+    # MCP Server → Bedrock Agents (tool response)
+    - id: "edge-mcp-to-agents"
+      source: "actor-mcp-server"
+      target: "process-bedrock-agents"
+      type: "dataFlow"
+      data:
+        label: "Tool result"
         protocol: "HTTPS"
         encrypted: true
         authenticated: true
