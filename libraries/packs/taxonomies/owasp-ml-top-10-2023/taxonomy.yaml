@@ -1,43 +1,43 @@
 taxonomy:
   slug: owasp-ml-top-10-2023
   entries:
-    - id: "ML01:2023"
+    - external_id: "ML01:2023"
       title: Input Manipulation Attack
       rank: 1
 
-    - id: "ML02:2023"
+    - external_id: "ML02:2023"
       title: Data Poisoning Attack
       rank: 2
 
-    - id: "ML03:2023"
+    - external_id: "ML03:2023"
       title: Model Inversion Attack
       rank: 3
 
-    - id: "ML04:2023"
+    - external_id: "ML04:2023"
       title: Membership Inference Attack
       rank: 4
 
-    - id: "ML05:2023"
+    - external_id: "ML05:2023"
       title: Model Theft
       rank: 5
 
-    - id: "ML06:2023"
+    - external_id: "ML06:2023"
       title: AI Supply Chain Attacks
       rank: 6
 
-    - id: "ML07:2023"
+    - external_id: "ML07:2023"
       title: Transfer Learning Attack
       rank: 7
 
-    - id: "ML08:2023"
+    - external_id: "ML08:2023"
       title: Model Skewing
       rank: 8
 
-    - id: "ML09:2023"
+    - external_id: "ML09:2023"
       title: Output Integrity Attack
       rank: 9
 
-    - id: "ML10:2023"
+    - external_id: "ML10:2023"
       title: Model Poisoning
       rank: 10
 
