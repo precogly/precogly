@@ -1,0 +1,74 @@
+framework: owasp-aisvs-1-0-l1
+mappings:
+- countermeasure: bedrock-input-validation
+  requirements:
+  - 2.1.1
+  - 2.1.2
+  - 2.1.3
+  - 2.1.5
+  sufficiency: full
+- countermeasure: bedrock-guardrails
+  requirements:
+  - 2.1.3
+  - 2.1.4
+  - 7.1.1
+  - 7.3.1
+  sufficiency: full
+- countermeasure: bedrock-output-filtering
+  requirements:
+  - 7.1.1
+  - 7.1.2
+  - 7.3.1
+  sufficiency: full
+- countermeasure: bedrock-data-masking
+  requirements:
+  - 8.2.1
+  sufficiency: full
+- countermeasure: bedrock-model-invocation-logging
+  requirements:
+  - 12.1.1
+  - 12.3.1
+  sufficiency: full
+- countermeasure: bedrock-token-budget
+  requirements:
+  - 9.2.1
+  sufficiency: full
+- countermeasure: rag-data-sanitization
+  requirements:
+  - 1.2.1
+  - 8.1.1
+  sufficiency: partial
+- countermeasure: waf-managed-rules
+  requirements:
+  - 2.1.1
+  - 2.1.5
+  sufficiency: partial
+- countermeasure: cloudwatch-alarm
+  requirements:
+  - 12.2.1
+  - 12.3.1
+  sufficiency: partial
+- countermeasure: sagemaker-vpc-isolation
+  requirements:
+  - 8.1.1
+  sufficiency: partial
+- countermeasure: sagemaker-training-data-protection
+  requirements:
+  - 12.1.1
+  sufficiency: partial
+- countermeasure: sagemaker-endpoint-auth
+  requirements:
+  - 4.1.1
+  sufficiency: partial
+- countermeasure: bedrock-agent-input-validation
+  requirements:
+  - 9.2.1
+  sufficiency: partial
+- countermeasure: bedrock-agent-least-privilege
+  requirements:
+  - 9.2.1
+  sufficiency: partial
+- countermeasure: bedrock-agent-role-restriction
+  requirements:
+  - 9.1.1
+  sufficiency: partial

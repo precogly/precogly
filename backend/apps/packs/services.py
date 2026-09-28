@@ -55,6 +55,20 @@ def _find_pack_dir(base_path: Path, pack_path: str) -> Path | None:
     return None
 
 
+def _get_taxonomies_list(data: dict) -> list[dict]:
+    """Extract taxonomy definitions supporting both singular and plural formats.
+
+    Handles ``taxonomies: [...]`` (list of dicts) and ``taxonomy: {...}``
+    (single dict).
+    """
+    taxonomies = data.get("taxonomies", [])
+    if not taxonomies:
+        singular = data.get("taxonomy")
+        if isinstance(singular, dict):
+            taxonomies = [singular]
+    return taxonomies
+
+
 @dataclass
 class PackInfo:
     """Information about a pack discovered from the libraries folder."""
@@ -496,7 +510,7 @@ def _extract_pack_preview(pack_dir: Path, pack_data: dict) -> dict:
         try:
             with open(taxonomy_file) as f:
                 tax_data = yaml.safe_load(f) or {}
-            for taxonomy in tax_data.get("taxonomies", []):
+            for taxonomy in _get_taxonomies_list(tax_data):
                 raw_entries = taxonomy.get("entries", [])
                 entries = [
                     {
@@ -807,7 +821,7 @@ def validate_pack(pack_path: Path) -> ValidationResult:
         try:
             with open(taxonomy_file) as f:
                 tax_data = yaml.safe_load(f) or {}
-            for taxonomy_data in tax_data.get("taxonomies", []):
+            for taxonomy_data in _get_taxonomies_list(tax_data):
                 if "id" in taxonomy_data and "slug" not in taxonomy_data:
                     warnings.append(
                         ValidationWarning(
@@ -1278,7 +1292,7 @@ def validate_pack(pack_path: Path) -> ValidationResult:
             try:
                 with open(taxonomy_file) as f:
                     own_tax_data = yaml.safe_load(f) or {}
-                for t in own_tax_data.get("taxonomies", []):
+                for t in _get_taxonomies_list(own_tax_data):
                     if t.get("slug"):
                         known_taxonomy_slugs.add(t["slug"])
             except Exception:
@@ -1318,7 +1332,7 @@ def validate_pack(pack_path: Path) -> ValidationResult:
                         try:
                             with open(dep_tax_file) as f:
                                 dep_tax_data = yaml.safe_load(f) or {}
-                            for t in dep_tax_data.get("taxonomies", []):
+                            for t in _get_taxonomies_list(dep_tax_data):
                                 if t.get("slug"):
                                     known_taxonomy_slugs.add(t["slug"])
                         except Exception:
@@ -1585,7 +1599,7 @@ def _import_pack(
     # Run validation before import unless skipped
     if not skip_validation:
         validation_result = validate_pack(pack_path)
-        if not validation_result.success or validation_result.warnings:
+        if not validation_result.success:
             return validation_result
 
     pack_yaml = pack_path / "pack.yaml"
@@ -2243,7 +2257,7 @@ def _load_taxonomy(
         return 0
 
     count = 0
-    for taxonomy_data in data.get("taxonomies", []):
+    for taxonomy_data in _get_taxonomies_list(data):
         slug = taxonomy_data.get("slug", "")
         if not slug:
             msg = "Skipping taxonomy without slug"

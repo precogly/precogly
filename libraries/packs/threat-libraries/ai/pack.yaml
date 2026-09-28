@@ -2,18 +2,19 @@ pack:
   schema_version: 1
   slug: ai
   name: AI / ML
-  version: 1.0.0
+  version: 2.0.0
   pack_type: full
   author: Precogly
   description: |
     Vendor-neutral AI/ML threat library covering LLMs, vector databases, embedding
     services, agent orchestrators, tool executors, MCP servers, guardrails, training
     pipelines, model registries, and AI gateways. Threats sourced from OWASP GenAI
-    LLM Top 10, OWASP Agentic Top 10, OWASP MCP Top 10, OWASP RAG Security Cheat
-    Sheet, and MITRE ATLAS. Countermeasures mapped to OWASP AISVS and OWASP ASVS,
-    informed by AIDEFEND defensive controls. Designed as a base layer that
-    provider-specific packs (AWS, Azure, GCP) overlay with service-specific threats
-    and controls.
+    LLM Top 10 (2025 and 2026), OWASP Agentic Top 10, OWASP MCP Top 10, OWASP RAG
+    Security Cheat Sheet, and MITRE ATLAS. Countermeasures sourced from the AIDEFEND
+    AI Defense Framework (307 controls). Mapped to OWASP AISVS and OWASP ASVS.
+    AISVS and ASVS requirement mappings are Precogly-authored and do not represent
+    claims by AIDEFEND. Designed as a base layer that provider-specific packs
+    (AWS, Azure, GCP) overlay with service-specific threats and controls.
   tags:
   - ai
   - ml
@@ -29,8 +30,11 @@ pack:
   - taxonomies/mitre-attack
   - taxonomies/mitre-atlas
   - taxonomies/owasp-llm-top-10
+  - taxonomies/owasp-llm-top-10-2026
+  - taxonomies/owasp-ml-top-10-2023
   - taxonomies/owasp-agentic-top-10
   - taxonomies/owasp-mcp-top-10
+  - threat-libraries/aidefend-ai-security
   - standards/owasp-aisvs
   - standards/owasp-asvs
   - standards/owasp-top-10

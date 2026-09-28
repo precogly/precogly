@@ -1,686 +1,978 @@
-taxonomies:
-  - slug: mitre-atlas
-    name: MITRE ATLAS Techniques
-    description: "Adversarial Threat Landscape for AI Systems (ATLAS) tactics and techniques targeting AI/ML systems"
-    source_url: "https://atlas.mitre.org/"
-    entries:
-      - external_id: AML.T0000
-        title: Search Open Technical Databases
-        description: "Adversaries may search for publicly available research and technical documentation to learn how and where AI is used within a victim organization. The adversary can use this information to identify targets for attack, or to tailor an existing attack to make it more effective."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0000"
-      - external_id: AML.T0000.000
-        title: "Search Open Technical Databases: Journals and Conference Proceedings"
-        description: "Many of the publications accepted at premier artificial intelligence conferences and journals come from commercial labs. Some journals and conferences are open access, others may require paying for access or a membership."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0000.000"
-      - external_id: AML.T0000.001
-        title: "Search Open Technical Databases: Pre-Print Repositories"
-        description: "Pre-Print repositories, such as arXiv, contain the latest academic research papers that haven't been peer reviewed. They may contain research notes, or technical reports that aren't typically published in journals or conference proceedings."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0000.001"
-      - external_id: AML.T0000.002
-        title: "Search Open Technical Databases: Technical Blogs"
-        description: "Research labs at academic institutions and company R&D divisions often have blogs that highlight their use of artificial intelligence and its application to the organization's unique problems. Individual researchers also frequently document their work in blogposts."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0000.002"
-      - external_id: AML.T0001
-        title: Search Open AI Vulnerability Analysis
-        description: "Much like the Search Open Technical Databases, there is often ample research available on the vulnerabilities of common AI models. Once a target has been identified, an adversary will likely try to identify any pre-existing work that has been done for this class of models."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0001"
-      - external_id: AML.T0002
-        title: Acquire Public AI Artifacts
-        description: "Adversaries may search public sources, including cloud storage, public-facing services, and software or data repositories, to identify AI artifacts. These AI artifacts may include the software stack used to train and deploy models, training and testing data, model configurations and parameters."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0002"
-      - external_id: AML.T0002.000
-        title: "Acquire Public AI Artifacts: Datasets"
-        description: "Adversaries may collect public datasets to use in their operations. Datasets used by the victim organization or datasets that are representative of the data used by the victim organization may be valuable to adversaries."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0002.000"
-      - external_id: AML.T0002.001
-        title: "Acquire Public AI Artifacts: Models"
-        description: "Adversaries may acquire public models to use in their operations. Adversaries may seek models used by the victim organization or models that are representative of those used by the victim organization."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0002.001"
-      - external_id: AML.T0002.002
-        title: "Acquire Public AI Artifacts: AI Agent Configuration"
-        description: "Adversaries may acquire publicly accessible AI agent configuration files to understand agent capabilities, gain unauthorized access to tools and data sources, or identify credentials for further attacks. Configuration files define what tools an agent can use, credentials for external services, system prompts, and behavioral settings, making valuable resources for adversaries targeting AI agent deployments."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0002.002"
-      - external_id: AML.T0003
-        title: Search Victim-Owned Websites
-        description: "Adversaries may search websites owned by the victim for information that can be used during targeting. Victim-owned websites may contain technical details about their AI-enabled products or services."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0003"
-      - external_id: AML.T0004
-        title: Search Application Repositories
-        description: "Adversaries may search open application repositories during targeting. Examples of these include Google Play, the iOS App store, the macOS App Store, and the Microsoft Store."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0004"
-      - external_id: AML.T0005
-        title: Create Proxy AI Model
-        description: "Adversaries may obtain models to serve as proxies for the target model in use at the victim organization. Proxy models are used to simulate complete access to the target model in a fully offline manner."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0005"
-      - external_id: AML.T0005.000
-        title: "Create Proxy AI Model: Train Proxy via Gathered AI Artifacts"
-        description: "Proxy models may be trained from AI artifacts (such as data, model architectures, and pre-trained models) that are representative of the target model gathered by the adversary. This can be used to develop attacks that require higher levels of access than the adversary has available or as a means to validate pre-existing attacks without interacting with the target model."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0005.000"
-      - external_id: AML.T0005.001
-        title: "Create Proxy AI Model: Train Proxy via Replication"
-        description: "Adversaries may replicate a private model. By repeatedly querying the victim's AI Model Inference API Access, the adversary can collect the target model's inferences into a dataset."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0005.001"
-      - external_id: AML.T0005.002
-        title: "Create Proxy AI Model: Use Pre-Trained Model"
-        description: "Adversaries may use an off-the-shelf pre-trained model as a proxy for the victim model to aid in staging the attack."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0005.002"
-      - external_id: AML.T0006
-        title: Active Scanning
-        description: "An adversary may probe or scan the victim system to gather information for targeting. This is distinct from other reconnaissance techniques that do not involve direct interaction with the victim system."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0006"
-      - external_id: AML.T0007
-        title: Discover AI Artifacts
-        description: "Adversaries may search private sources to identify AI learning artifacts that exist on the system and gather information about them. These artifacts can include the software stack used to train and deploy models, training and testing data management systems, container registries, software repositories, and model zoos."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0007"
-      - external_id: AML.T0008
-        title: Acquire Infrastructure
-        description: "Adversaries may buy, lease, or rent infrastructure for use throughout their operation. A wide variety of infrastructure exists for hosting and orchestrating adversary operations."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0008"
-      - external_id: AML.T0008.000
-        title: "Acquire Infrastructure: AI Development Workspaces"
-        description: "Developing and staging AI attacks often requires expensive compute resources. Adversaries may need access to one or many GPUs in order to develop an attack."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0008.000"
-      - external_id: AML.T0008.001
-        title: "Acquire Infrastructure: Consumer Hardware"
-        description: "Adversaries may acquire consumer hardware to conduct their attacks. Owning the hardware provides the adversary with complete control of the environment."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0008.001"
-      - external_id: AML.T0008.002
-        title: "Acquire Infrastructure: Domains"
-        description: "Adversaries may acquire domains that can be used during targeting. Domain names are the human readable names used to represent one or more IP addresses."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0008.002"
-      - external_id: AML.T0008.003
-        title: "Acquire Infrastructure: Physical Countermeasures"
-        description: "Adversaries may acquire or manufacture physical countermeasures to aid or support their attack. These components may be used to disrupt or degrade the model, such as adversarial patterns printed on stickers or T-shirts, disguises, or decoys."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0008.003"
-      - external_id: AML.T0008.004
-        title: "Acquire Infrastructure: Serverless"
-        description: "Adversaries may purchase and configure serverless cloud infrastructure, such as Cloudflare Workers, AWS Lambda functions, or Google Apps Scripts, that can be used during targeting. By utilizing serverless infrastructure, adversaries can make it more difficult to attribute infrastructure used during operations back to them."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0008.004"
-      - external_id: AML.T0008.005
-        title: "Acquire Infrastructure: AI Service Proxies"
-        description: "Adversaries may utilize commercial proxy services that resell access to AI services such as frontier model APIs. This infrastructure can be used to conduct large-scale campaigns to perform Exfiltration via AI Inference API via distillation."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0008.005"
-      - external_id: AML.T0010
-        title: AI Supply Chain Compromise
-        description: "Adversaries may gain initial access to a system by compromising the unique portions of the AI supply chain. This could include Hardware, Data and its annotations, parts of the AI AI Software stack, or the Model itself."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0010"
-      - external_id: AML.T0010.000
-        title: "AI Supply Chain Compromise: Hardware"
-        description: "Adversaries may target AI systems by disrupting or manipulating the hardware supply chain. AI models often run on specialized hardware such as GPUs, TPUs, or embedded devices, but may also be optimized to operate on CPUs."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0010.000"
-      - external_id: AML.T0010.001
-        title: "AI Supply Chain Compromise: AI Software"
-        description: "Adversaries may target software packages that are commonly used in AI-enabled systems or are part of the AI DevOps lifecycle. This can include deep learning frameworks used to build AI models (e.g. PyTorch, TensorFlow, Jax), generative AI integration frameworks (e.g. LangChain, LangFlow), inference engines, and AI DevOps tools."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0010.001"
-      - external_id: AML.T0010.002
-        title: "AI Supply Chain Compromise: Data"
-        description: "Data is a key vector of supply chain compromise for adversaries. Every AI project will require some form of data."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0010.002"
-      - external_id: AML.T0010.003
-        title: "AI Supply Chain Compromise: Model"
-        description: "AI-enabled systems often rely on open sourced models in various ways. Most commonly, the victim organization may be using these models for fine tuning."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0010.003"
-      - external_id: AML.T0010.004
-        title: "AI Supply Chain Compromise: Container Registry"
-        description: "An adversary may compromise a victim's container registry by pushing a manipulated container image and overwriting an existing container name and/or tag. Users of the container registry as well as automated CI/CD pipelines may pull the adversary's container image, compromising their AI Supply Chain."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0010.004"
-      - external_id: AML.T0010.005
-        title: "AI Supply Chain Compromise: AI Agent Tool"
-        description: "Adversaries may target AI agent tools as a means to compromise a victim's AI supply chain. Tools add capabilities to AI agents, allowing them to interact with other services, connect to data sources, access internet resources, run system tools, and execute code."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0010.005"
-      - external_id: AML.T0011
-        title: User Execution
-        description: "An adversary may rely upon specific actions by a user in order to gain execution. Users may inadvertently execute unsafe code introduced via AI Supply Chain Compromise."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0011"
-      - external_id: AML.T0011.000
-        title: "User Execution: Unsafe AI Artifacts"
-        description: "Adversaries may develop unsafe AI artifacts that when executed have a deleterious effect. The adversary can use this technique to establish persistent access to systems."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0011.000"
-      - external_id: AML.T0011.001
-        title: "User Execution: Malicious Package"
-        description: "Adversaries may develop malicious software packages that when imported by a user have a deleterious effect. Malicious packages may behave as expected to the user."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0011.001"
-      - external_id: AML.T0011.002
-        title: "User Execution: Poisoned AI Agent Tool"
-        description: "A victim may invoke a poisoned tool when interacting with their AI agent. A poisoned tool may execute an LLM Prompt Injection or perform AI Agent Tool Invocation."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0011.002"
-      - external_id: AML.T0011.003
-        title: "User Execution: Malicious Link"
-        description: "An adversary may rely upon a user clicking a malicious link in order to gain execution. Users may be subjected to social engineering to get them to click on a link that will lead to code execution."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0011.003"
-      - external_id: AML.T0012
-        title: Valid Accounts
-        description: "Adversaries may obtain and abuse credentials of existing accounts as a means of gaining Initial Access. Credentials may take the form of usernames and passwords of individual user accounts or API keys that provide access to various AI resources and services."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0012"
-      - external_id: AML.T0013
-        title: Discover AI Model Ontology
-        description: "Adversaries may discover the ontology of an AI model's output space, for example, the types of objects a model can detect. The adversary may discovery the ontology by repeated queries to the model, forcing it to enumerate its output space."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0013"
-      - external_id: AML.T0014
-        title: Discover AI Model Family
-        description: "Adversaries may discover the general family of model. General information about the model may be revealed in documentation, or the adversary may use carefully constructed examples and analyze the model's responses to categorize it."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0014"
-      - external_id: AML.T0015
-        title: Evade AI Model
-        description: "Adversaries can Craft Adversarial Data that prevents an AI model from correctly identifying the contents of the data or Generate Deepfakes that fools an AI model expecting authentic data. This technique can be used to evade a downstream task where AI is utilized."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0015"
-      - external_id: AML.T0016
-        title: Obtain Capabilities
-        description: "Adversaries may search for and obtain software capabilities for use in their operations. Capabilities may be specific to AI-based attacks Adversarial AI Attack Implementations or generic software tools repurposed for malicious intent (Software Tools)."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0016"
-      - external_id: AML.T0016.000
-        title: "Obtain Capabilities: Adversarial AI Attack Implementations"
-        description: "Adversaries may search for existing open source implementations of AI attacks. The research community often publishes their code for reproducibility and to further future research."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0016.000"
-      - external_id: AML.T0016.001
-        title: "Obtain Capabilities: Software Tools"
-        description: "Adversaries may search for and obtain software tools to support their operations. Software designed for legitimate use may be repurposed by an adversary for malicious intent."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0016.001"
-      - external_id: AML.T0016.002
-        title: "Obtain Capabilities: Generative AI"
-        description: "Adversaries may search for and obtain generative AI models or tools, such as large language models (LLMs), to assist them in various steps of their operation. Generative AI can be used in a variety of malicious ways, such as to generating malware, to Generate Deepfakes, to Generate Malicious Commands, for Retrieval Content Crafting, or to generate Phishing content."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0016.002"
-      - external_id: AML.T0017
-        title: Develop Capabilities
-        description: "Adversaries may develop their own capabilities to support operations. This process encompasses identifying requirements, building solutions, and deploying capabilities."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0017"
-      - external_id: AML.T0017.000
-        title: "Develop Capabilities: Adversarial AI Attacks"
-        description: "Adversaries may develop their own adversarial attacks. They may leverage existing libraries as a starting point (Adversarial AI Attack Implementations)."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0017.000"
-      - external_id: AML.T0018
-        title: Manipulate AI Model
-        description: "Adversaries may directly manipulate an AI model to change its behavior or introduce malicious code. Manipulating a model gives the adversary a persistent change in the system."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0018"
-      - external_id: AML.T0018.000
-        title: "Manipulate AI Model: Poison AI Model"
-        description: "Adversaries may manipulate an AI model's weights to change it's behavior or performance, resulting in a poisoned model. Adversaries may poison a model by directly manipulating its weights, training the model on poisoned data, further fine-tuning the model, or otherwise interfering with its training process."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0018.000"
-      - external_id: AML.T0018.001
-        title: "Manipulate AI Model: Modify AI Model Architecture"
-        description: "Adversaries may directly modify an AI model's architecture to re-define it's behavior. This can include adding or removing layers as well as adding pre or post-processing operations."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0018.001"
-      - external_id: AML.T0018.002
-        title: "Manipulate AI Model: Embed Malware"
-        description: "Adversaries may embed malicious code into AI Model files. AI models may be packaged as a combination of instructions and weights."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0018.002"
-      - external_id: AML.T0019
-        title: Publish Poisoned Datasets
-        description: "Adversaries may Poison Training Data and publish it to a public location. The poisoned dataset may be a novel dataset or a poisoned variant of an existing open source dataset."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0019"
-      - external_id: AML.T0020
-        title: Poison Training Data
-        description: "Adversaries may attempt to poison datasets used by an AI model by modifying the underlying data or its labels. This allows the adversary to embed vulnerabilities in AI models trained on the data that may not be easily detectable."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0020"
-      - external_id: AML.T0021
-        title: Establish Accounts
-        description: "Adversaries may create accounts with various services for use in targeting, to gain access to resources needed in AI Attack Staging, or for victim impersonation."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0021"
-      - external_id: AML.T0024
-        title: Exfiltration via AI Inference API
-        description: "Adversaries may exfiltrate private information via AI Model Inference API Access. AI Models have been shown leak private information about their training data (e.g. Infer Training Data Membership, Invert AI Model)."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0024"
-      - external_id: AML.T0024.000
-        title: "Exfiltration via AI Inference API: Infer Training Data Membership"
-        description: "Adversaries may infer the membership of a data sample or global characteristics of the data in its training set, which raises privacy concerns. Some strategies make use of a shadow model that could be obtained via Train Proxy via Replication, others use statistics of model prediction scores."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0024.000"
-      - external_id: AML.T0024.001
-        title: "Exfiltration via AI Inference API: Invert AI Model"
-        description: "AI models' training data could be reconstructed by exploiting the confidence scores that are available via an inference API. By querying the inference API strategically, adversaries can back out potentially private information embedded within the training data."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0024.001"
-      - external_id: AML.T0024.002
-        title: "Exfiltration via AI Inference API: Extract AI Model"
-        description: "Adversaries may extract a functional copy of a private model. By repeatedly querying the victim's AI Model Inference API Access, the adversary can collect the target model's inferences into a dataset."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0024.002"
-      - external_id: AML.T0025
-        title: Exfiltration via Cyber Means
-        description: "Adversaries may exfiltrate AI artifacts or other information relevant to their goals via traditional cyber means. See the ATT&CK Exfiltration tactic for more information."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0025"
-      - external_id: AML.T0029
-        title: Denial of AI Service
-        description: "Adversaries may target AI-enabled systems with a flood of requests for the purpose of degrading or shutting down the service. Since many AI systems require significant amounts of specialized compute, they are often expensive bottlenecks that can become overloaded."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0029"
-      - external_id: AML.T0031
-        title: Erode AI Model Integrity
-        description: "Adversaries may degrade the target model's performance with adversarial data inputs to erode confidence in the system over time. This can lead to the victim organization wasting time and money both attempting to fix the system and performing the tasks it was meant to automate by hand."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0031"
-      - external_id: AML.T0034
-        title: Cost Harvesting
-        description: "Adversaries may deliberately drive a victim's AI services beyond normal operating capacity with the intent of increasing the cost of services. This may be achieved via high-volume, low-complexity queries (Excessive Queries) or low-volume, high-complexity queries (Resource-Intensive Queries)."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0034"
-      - external_id: AML.T0034.000
-        title: "Cost Harvesting: Excessive Queries"
-        description: "Adversaries may send an excessive number of otherwise normal or low-complexity queries to an AI system with the goal of overwhelming its capacity and increasing operating costs. The attacker can automate high-volume request generation, exploiting rate limits, autoscaling policies, and pay-per-use billing models to drive sustained resource consumption without relying on specially crafted, computationally expensive inputs."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0034.000"
-      - external_id: AML.T0034.001
-        title: "Cost Harvesting: Resource-Intensive Queries"
-        description: "Adversaries may craft inputs specifically designed to increase the compute resources required for processing. For generative AI models, adversaries may use long input sequences, requests for extremely long outputs, or prompts that require complex reasoning as strategies for increasing compute costs [[genai]]."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0034.001"
-      - external_id: AML.T0034.002
-        title: "Cost Harvesting: Agentic Resource Consumption"
-        description: "Adversaries may coerce an agentic AI system into performing computationally expensive tool calls that waste resources and consume API budgets. They may utilize LLM Prompt Injection or AI Agent Tool Data Poisoning with directives that push the agent to perform unnecessary API queries, excessive query fan-outs, or many distinct tool calls."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0034.002"
-      - external_id: AML.T0035
-        title: AI Artifact Collection
-        description: "Adversaries may collect AI artifacts for Exfiltration or for use in AI Attack Staging. AI artifacts include models and datasets as well as other telemetry data produced when interacting with a model."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0035"
-      - external_id: AML.T0036
-        title: Data from Information Repositories
-        description: "Adversaries may leverage information repositories to mine valuable information. Information repositories are tools that allow for storage of information, typically to facilitate collaboration or information sharing between users, and can store a wide variety of data that may aid adversaries in further objectives, or direct access to the target information."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0036"
-      - external_id: AML.T0037
-        title: Data from Local System
-        description: "Adversaries may search local system sources, such as file systems and configuration files or local databases, to find files of interest and sensitive data prior to Exfiltration. This can include basic fingerprinting information and sensitive data such as ssh keys."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0037"
-      - external_id: AML.T0040
-        title: AI Model Inference API Access
-        description: "Adversaries may gain access to a model via legitimate access to the inference API. Inference API access can be a source of information to the adversary (Discover AI Model Ontology, Discover AI Model Family), a means of staging the attack (Verify Attack, Craft Adversarial Data), or for introducing data to the target system for Impact (Evade AI Model, Erode AI Model Integrity)."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0040"
-      - external_id: AML.T0041
-        title: Physical Environment Access
-        description: "In addition to the attacks that take place purely in the digital domain, adversaries may also exploit the physical environment for their attacks. If the model is interacting with data collected from the real world in some way, the adversary can influence the model through access to wherever the data is being collected."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0041"
-      - external_id: AML.T0042
-        title: Verify Attack
-        description: "Adversaries can verify the efficacy of their attack via an inference API or access to an offline copy of the target model. This gives the adversary confidence that their approach works and allows them to carry out the attack at a later time of their choosing."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0042"
-      - external_id: AML.T0043
-        title: Craft Adversarial Data
-        description: "Adversarial data are inputs to an AI model that have been modified such that they cause the adversary's desired effect in the target model. Effects can range from misclassification, to missed detections, to maximizing energy consumption."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0043"
-      - external_id: AML.T0043.000
-        title: "Craft Adversarial Data: White-Box Optimization"
-        description: "In White-Box Optimization, the adversary has full access to the target model and optimizes the adversarial example directly. Adversarial examples trained in this manner are most effective against the target model."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0043.000"
-      - external_id: AML.T0043.001
-        title: "Craft Adversarial Data: Black-Box Optimization"
-        description: "In Black-Box attacks, the adversary has black-box (i.e. AI Model Inference API Access via API access) access to the target model. With black-box attacks, the adversary may be using an API that the victim is monitoring."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0043.001"
-      - external_id: AML.T0043.002
-        title: "Craft Adversarial Data: Black-Box Transfer"
-        description: "In Black-Box Transfer attacks, the adversary uses one or more proxy models (trained via Create Proxy AI Model or Train Proxy via Replication) they have full access to and are representative of the target model. The adversary uses White-Box Optimization on the proxy models to generate adversarial examples."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0043.002"
-      - external_id: AML.T0043.003
-        title: "Craft Adversarial Data: Manual Modification"
-        description: "Adversaries may manually modify the input data to craft adversarial data. They may use their knowledge of the target model to modify parts of the data they suspect helps the model in performing its task."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0043.003"
-      - external_id: AML.T0043.004
-        title: "Craft Adversarial Data: Insert Backdoor Trigger"
-        description: "The adversary may add a perceptual trigger into inference data. The trigger may be imperceptible or non-obvious to humans."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0043.004"
-      - external_id: AML.T0044
-        title: Full AI Model Access
-        description: "Adversaries may gain full \"white-box\" access to an AI model. This means the adversary has complete knowledge of the model architecture, its parameters, and class ontology."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0044"
-      - external_id: AML.T0046
-        title: Spamming AI System with Chaff Data
-        description: "Adversaries may spam the AI system with chaff data that causes increase in the number of detections. This can cause analysts at the victim organization to waste time reviewing and correcting incorrect inferences."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0046"
-      - external_id: AML.T0047
-        title: AI-Enabled Product or Service
-        description: "Adversaries may use a product or service that uses artificial intelligence under the hood to gain access to the underlying AI model. This type of indirect model access may reveal details of the AI model or its inferences in logs or metadata."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0047"
-      - external_id: AML.T0048
-        title: External Harms
-        description: "Adversaries may abuse their access to a victim system and use its resources or capabilities to further their goals by causing harms external to that system. These harms could affect the organization (e.g. Financial Harm, Reputational Harm), its users (e.g. User Harm), or the general public (e.g. Societal Harm)."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0048"
-      - external_id: AML.T0048.000
-        title: "External Harms: Financial Harm"
-        description: "Financial harm involves the loss of wealth, property, or other monetary assets due to theft, fraud or forgery, or pressure to provide financial resources to the adversary."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0048.000"
-      - external_id: AML.T0048.001
-        title: "External Harms: Reputational Harm"
-        description: "Reputational harm involves a degradation of public perception and trust in organizations. Examples of reputation-harming incidents include scandals or false impersonations."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0048.001"
-      - external_id: AML.T0048.002
-        title: "External Harms: Societal Harm"
-        description: "Societal harms might generate harmful outcomes that reach either the general public or specific vulnerable groups such as the exposure of children to vulgar content."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0048.002"
-      - external_id: AML.T0048.003
-        title: "External Harms: User Harm"
-        description: "User harms may encompass a variety of harm types including financial and reputational that are directed at or felt by individual victims of the attack rather than at the organization level."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0048.003"
-      - external_id: AML.T0048.004
-        title: "External Harms: AI Intellectual Property Theft"
-        description: "Adversaries may exfiltrate AI artifacts to steal intellectual property and cause economic harm to the victim organization. Proprietary training data is costly to collect and annotate and may be a target for Exfiltration and theft."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0048.004"
-      - external_id: AML.T0049
-        title: Exploit Public-Facing Application
-        description: "Adversaries may attempt to take advantage of a weakness in an Internet-facing computer or program using software, data, or commands in order to cause unintended or unanticipated behavior. The weakness in the system can be a bug, a glitch, or a design vulnerability."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0049"
-      - external_id: AML.T0050
-        title: Command and Scripting Interpreter
-        description: "Adversaries may abuse command and script interpreters to execute commands, scripts, or binaries. These interfaces and languages provide ways of interacting with computer systems and are a common feature across many different platforms."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0050"
-      - external_id: AML.T0051
-        title: LLM Prompt Injection
-        description: "An adversary may craft malicious prompts as inputs to an LLM that cause the LLM to act in unintended ways. These \"prompt injections\" are often designed to cause the model to ignore aspects of its original instructions and follow the adversary's instructions instead."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0051"
-      - external_id: AML.T0051.000
-        title: "LLM Prompt Injection: Direct"
-        description: "An adversary may inject prompts directly as a user of the LLM. This type of injection may be used by the adversary to gain a foothold in the system or to misuse the LLM itself, as for example to generate harmful content."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0051.000"
-      - external_id: AML.T0051.001
-        title: "LLM Prompt Injection: Indirect"
-        description: "An adversary may inject prompts indirectly via separate data channel ingested by the LLM such as include text or multimedia pulled from databases or websites. These malicious prompts may be hidden or obfuscated from the user."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0051.001"
-      - external_id: AML.T0051.002
-        title: "LLM Prompt Injection: Triggered"
-        description: "An adversary may trigger a prompt injection via a user action or event that occurs within the victim's environment. Triggered prompt injections often target AI agents, which can be activated by means the adversary identifies during Discovery (See Activation Triggers)."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0051.002"
-      - external_id: AML.T0052
-        title: Phishing
-        description: "Adversaries may send phishing messages to gain access to victim systems. All forms of phishing are electronically delivered social engineering."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0052"
-      - external_id: AML.T0052.000
-        title: "Phishing: Spearphishing via Social Engineering LLM"
-        description: "Adversaries may turn LLMs into targeted social engineers. LLMs are capable of interacting with users via text conversations."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0052.000"
-      - external_id: AML.T0052.001
-        title: "Phishing: Deepfake-Assisted Phishing"
-        description: "Adversaries may use deepfakes (AI-generated synthetic images, audio, or video) in phishing campaigns to impersonate trusted individuals, executives, or organizations. These attacks exploit human trust by presenting fraudulent voice or video communications as legitimate, enabling adversaries to manipulate targets into disclosing credentials, transferring funds, or granting access to systems."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0052.001"
-      - external_id: AML.T0053
-        title: AI Agent Tool Invocation
-        description: "Adversaries may use their access to an AI agent to invoke tools the agent has access to. LLMs are often connected to other services or resources via tools to increase their capabilities."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0053"
-      - external_id: AML.T0054
-        title: LLM Jailbreak
-        description: "Adversaries may induce a large language model (LLM) to ignore, circumvent, or override its safety/alignment behaviors and/or guardrails to elicit outputs the model is intended to withhold. Once jailbroken, the LLM may be used in unintended ways by the adversary."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0054"
-      - external_id: AML.T0055
-        title: Unsecured Credentials
-        description: "Adversaries may search compromised systems to find and obtain insecurely stored credentials. These credentials can be stored and/or misplaced in many locations on a system, including plaintext files (e.g. bash history), environment variables, operating system, or application-specific repositories (e.g. Credentials in Registry), or other specialized files/artifacts (e.g. private keys)."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0055"
-      - external_id: AML.T0056
-        title: Extract LLM System Prompt
-        description: "Adversaries may attempt to extract a large language model's (LLM) system prompt. This can be done via prompt injection to induce the model to reveal its own system prompt or may be extracted from a configuration file."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0056"
-      - external_id: AML.T0057
-        title: LLM Data Leakage
-        description: "Adversaries may craft prompts that induce the LLM to leak sensitive information. This can include private user data or proprietary information."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0057"
-      - external_id: AML.T0058
-        title: Publish Poisoned Models
-        description: "Adversaries may publish a poisoned model to a public location such as a model registry or code repository. The poisoned model may be a novel model or a poisoned variant of an existing open-source model."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0058"
-      - external_id: AML.T0059
-        title: Erode Dataset Integrity
-        description: "Adversaries may poison or manipulate portions of a dataset to reduce its usefulness, reduce trust, and cause users to waste resources correcting errors."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0059"
-      - external_id: AML.T0060
-        title: Publish Hallucinated Entities
-        description: "Adversaries may create an entity they control, such as a software package, website, or email address to a source hallucinated by an LLM. The hallucinations may take the form of package names commands, URLs, company names, or email addresses that point the victim to the entity controlled by the adversary."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0060"
-      - external_id: AML.T0061
-        title: LLM Prompt Self-Replication
-        description: "An adversary may use a carefully crafted LLM Prompt Injection designed to cause the LLM to replicate the prompt as part of its output. This allows the prompt to propagate to other LLMs and persist on the system."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0061"
-      - external_id: AML.T0062
-        title: Discover LLM Hallucinations
-        description: "Adversaries may prompt large language models and identify hallucinated entities. They may request software packages, commands, URLs, organization names, or e-mail addresses, and identify hallucinations with no connected real-world source."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0062"
-      - external_id: AML.T0063
-        title: Discover AI Model Outputs
-        description: "Adversaries may discover model outputs, such as class scores, whose presence is not required for the system to function and are not intended for use by the end user. Model outputs may be found in logs or may be included in API responses."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0063"
-      - external_id: AML.T0064
-        title: Gather RAG-Indexed Targets
-        description: "Adversaries may identify data sources used in retrieval augmented generation (RAG) systems for targeting purposes. By pinpointing these sources, attackers can focus on poisoning or otherwise manipulating the external data repositories the AI relies on."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0064"
-      - external_id: AML.T0065
-        title: LLM Prompt Crafting
-        description: "Adversaries may use their acquired knowledge of the target generative AI system to craft prompts that bypass its defenses and allow malicious instructions to be executed. The adversary may iterate on the prompt to ensure that it works as-intended consistently."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0065"
-      - external_id: AML.T0066
-        title: Retrieval Content Crafting
-        description: "Adversaries may write content designed to be retrieved by user queries and influence a user of the system in some way. This abuses the trust the user has in the system."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0066"
-      - external_id: AML.T0067
-        title: LLM Trusted Output Components Manipulation
-        description: "Adversaries may utilize prompts to a large language model (LLM) which manipulate various components of its response in order to make it appear trustworthy to the user. This helps the adversary continue to operate in the victim's environment and evade detection by the users it interacts with."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0067"
-      - external_id: AML.T0067.000
-        title: "LLM Trusted Output Components Manipulation: Citations"
-        description: "Adversaries may manipulate the citations provided in an AI system's response, in order to make it appear trustworthy. Variants include citing a providing the wrong citation, making up a new citation, or providing the right citation but for adversary-provided data."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0067.000"
-      - external_id: AML.T0068
-        title: LLM Prompt Obfuscation
-        description: "Adversaries may hide or otherwise obfuscate prompt injections or retrieval content to avoid detection from humans, large language model (LLM) guardrails, or other detection mechanisms. For text inputs, this may include modifying how the instructions are rendered such as small text, text colored the same as the background, or hidden HTML elements."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0068"
-      - external_id: AML.T0069
-        title: Discover LLM System Information
-        description: "The adversary is trying to discover something about the large language model's (LLM) system information. This may be found in a configuration file containing the system instructions or extracted via interactions with the LLM."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0069"
-      - external_id: AML.T0069.000
-        title: "Discover LLM System Information: Special Character Sets"
-        description: "Adversaries may discover delimiters and special characters sets used by the large language model. For example, delimiters used in retrieval augmented generation applications to differentiate between context and user prompts."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0069.000"
-      - external_id: AML.T0069.001
-        title: "Discover LLM System Information: System Instruction Keywords"
-        description: "Adversaries may discover keywords that have special meaning to the large language model (LLM), such as function names or object names. These can later be exploited to confuse or manipulate the LLM into misbehaving and to make calls to plugins the LLM has access to."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0069.001"
-      - external_id: AML.T0069.002
-        title: "Discover LLM System Information: System Prompt"
-        description: "Adversaries may discover a large language model's system instructions provided by the AI system builder to learn about the system's capabilities and circumvent its guardrails."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0069.002"
-      - external_id: AML.T0070
-        title: RAG Poisoning
-        description: "Adversaries may inject malicious content into data indexed by a retrieval augmented generation (RAG) system to contaminate a future thread through RAG-based search results. This may be accomplished by placing manipulated documents in a location the RAG indexes (see Gather RAG-Indexed Targets)."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0070"
-      - external_id: AML.T0071
-        title: False RAG Entry Injection
-        description: "Adversaries may introduce false entries into a victim's retrieval augmented generation (RAG) database. Content designed to be interpreted as a document by the large language model (LLM) used in the RAG system is included in a data source being ingested into the RAG database."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0071"
-      - external_id: AML.T0072
-        title: Reverse Shell
-        description: "Adversaries may utilize a reverse shell to communicate and control the victim system. Typically, a user uses a client to connect to a remote machine which is listening for connections."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0072"
-      - external_id: AML.T0073
-        title: Impersonation
-        description: "Adversaries may impersonate a trusted person or organization in order to persuade and trick a target into performing some action on their behalf. For example, adversaries may communicate with victims (via Phishing, or Spearphishing via Social Engineering LLM) while impersonating a known sender such as an executive, colleague, or third-party vendor."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0073"
-      - external_id: AML.T0074
-        title: Masquerading
-        description: "Adversaries may attempt to manipulate features of their artifacts to make them appear legitimate or benign to users and/or security tools. Masquerading occurs when the name or location of an object, legitimate or malicious, is manipulated or abused for the sake of evading defenses and observation."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0074"
-      - external_id: AML.T0075
-        title: Cloud Service Discovery
-        description: "Adversaries may attempt to enumerate the cloud services running on a system after gaining access. These methods can differ from platform-as-a-service (PaaS), to infrastructure-as-a-service (IaaS), software-as-a-service (SaaS), or AI-as-a-service (AIaaS)."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0075"
-      - external_id: AML.T0076
-        title: Corrupt AI Model
-        description: "An adversary may purposefully corrupt a malicious AI model file so that it cannot be successfully deserialized in order to evade detection by a model scanner. The corrupt model may still successfully execute malicious code before deserialization fails."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0076"
-      - external_id: AML.T0077
-        title: LLM Response Rendering
-        description: "An adversary may get a large language model (LLM) to respond with private information that is hidden from the user when the response is rendered by the user's client. The private information is then exfiltrated."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0077"
-      - external_id: AML.T0078
-        title: Drive-by Compromise
-        description: "Adversaries may gain access to an AI system through a user visiting a website over the normal course of browsing, or an AI agent retrieving information from the web on behalf of a user. Websites can contain an LLM Prompt Injection which, when executed, can change the behavior of the AI model."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0078"
-      - external_id: AML.T0079
-        title: Stage Capabilities
-        description: "Adversaries may upload, install, or otherwise set up capabilities that can be used during targeting. To support their operations, an adversary may need to take capabilities they developed (Develop Capabilities) or obtained (Obtain Capabilities) and stage them on infrastructure under their control."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0079"
-      - external_id: AML.T0080
-        title: AI Agent Context Poisoning
-        description: "Adversaries may attempt to manipulate the context used by an AI agent's large language model (LLM) to influence the responses it generates or actions it takes. This allows an adversary to persistently change the behavior of the target agent and further their goals."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0080"
-      - external_id: AML.T0080.000
-        title: "AI Agent Context Poisoning: Memory"
-        description: "Adversaries may manipulate the memory of a large language model (LLM) in order to persist changes to the LLM to future chat sessions. Memory is a common feature in LLMs that allows them to remember information across chat sessions by utilizing a user-specific database."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0080.000"
-      - external_id: AML.T0080.001
-        title: "AI Agent Context Poisoning: Thread"
-        description: "Adversaries may introduce malicious instructions into a chat thread of a large language model (LLM) to cause behavior changes which persist for the remainder of the thread. A chat thread may continue for an extended period over multiple sessions."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0080.001"
-      - external_id: AML.T0081
-        title: Modify AI Agent Configuration
-        description: "Adversaries may modify the configuration files for AI agents on a system. This allows malicious changes to persist beyond the life of a single agent and affects any agents that share the configuration."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0081"
-      - external_id: AML.T0082
-        title: RAG Credential Harvesting
-        description: "Adversaries may attempt to use their access to a large language model (LLM) on the victim's system to collect credentials. Credentials may be stored in internal documents which can inadvertently be ingested into a RAG database, where they can ultimately be retrieved by an AI agent."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0082"
-      - external_id: AML.T0083
-        title: Credentials from AI Agent Configuration
-        description: "Adversaries may access the credentials of other tools or services on a system from the configuration of an AI agent. AI Agents often utilize external tools or services to take actions, such as querying databases, invoking APIs, or interacting with cloud resources."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0083"
-      - external_id: AML.T0084
-        title: Discover AI Agent Configuration
-        description: "Adversaries may attempt to discover configuration information for AI agents present on the victim's system. Agent configurations can include tools or services they have access to."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0084"
-      - external_id: AML.T0084.000
-        title: "Discover AI Agent Configuration: Embedded Knowledge"
-        description: "Adversaries may attempt to discover the data sources a particular agent can access. The AI agent's configuration may reveal data sources or knowledge."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0084.000"
-      - external_id: AML.T0084.001
-        title: "Discover AI Agent Configuration: Tool Definitions"
-        description: "Adversaries may discover the tools the AI agent has access to. By identifying which tools are available, the adversary can understand what actions may be executed through the agent and what additional resources it can reach."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0084.001"
-      - external_id: AML.T0084.002
-        title: "Discover AI Agent Configuration: Activation Triggers"
-        description: "Adversaries may discover keywords or other triggers (such as incoming emails, documents being added, incoming message, or other workflows) that activate an agent and may cause it to run additional actions. Understanding these triggers can reveal how the AI agent is activated and controlled."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0084.002"
-      - external_id: AML.T0084.003
-        title: "Discover AI Agent Configuration: Call Chains"
-        description: "Adversaries may extract call chains from AI agent configurations, which can reveal potentially targets for remote code execution (RCE) or other vulnerabilities. Vulnerable call chains often connect user inputs or LLM outputs to an execution sink (e.g. exec, eval, os.popen)."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0084.003"
-      - external_id: AML.T0085
-        title: Data from AI Services
-        description: "Adversaries may use their access to a victim organization's AI-enabled services to collect proprietary or otherwise sensitive information. As organizations adopt generative AI in centralized services for accessing an organization's data, such as with chat agents which can access retrieval augmented generation (RAG) databases and other data sources via tools, they become increasingly valuable targets for adversaries."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0085"
-      - external_id: AML.T0085.000
-        title: "Data from AI Services: RAG Databases"
-        description: "Adversaries may prompt the AI service to retrieve data from a RAG database. This can include the majority of an organization's internal documents."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0085.000"
-      - external_id: AML.T0085.001
-        title: "Data from AI Services: AI Agent Tools"
-        description: "Adversaries may prompt the AI service to invoke various tools the agent has access to. Tools may retrieve data from different APIs or services in an organization."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0085.001"
-      - external_id: AML.T0086
-        title: Exfiltration via AI Agent Tool Invocation
-        description: "AI agent tools capable of performing write operations may be invoked to exfiltrate data to an adversary. Sensitive information can be encoded into the tool's input parameters and transmitted to an adversary-controlled location (such as an inbox, document, or server) as part of a seemingly legitimate action."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0086"
-      - external_id: AML.T0087
-        title: Gather Victim Identity Information
-        description: "Adversaries may gather information about the victim's identity that can be used during targeting. Information about identities may include a variety of details, including personal data (ex: employee names, email addresses, photos, etc.) as well as sensitive details such as credentials or multi-factor authentication (MFA) configurations."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0087"
-      - external_id: AML.T0088
-        title: Generate Deepfakes
-        description: "Adversaries may use generative artificial intelligence (GenAI) to create synthetic media (i.e. imagery, video, audio, and text) that appear authentic. These \"deepfakes\" may mimic a real person or depict fictional personas."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0088"
-      - external_id: AML.T0089
-        title: Process Discovery
-        description: "Adversaries may attempt to get information about processes running on a system. Once obtained, this information could be used to gain an understanding of common AI-related software/applications running on systems within the network."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0089"
-      - external_id: AML.T0090
-        title: OS Credential Dumping
-        description: "Adversaries may extract credentials from OS caches, application memory, or other sources on a compromised system. Credentials are often in the form of a hash or clear text, and can include usernames and passwords, application tokens, or other authentication keys."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0090"
-      - external_id: AML.T0091
-        title: Use Alternate Authentication Material
-        description: "Adversaries may use alternate authentication material, such as password hashes, Kerberos tickets, and application access tokens, in order to move laterally within an environment and bypass normal system access controls. AI services commonly use alternate authentication material as a primary means for users to make queries, making them vulnerable to this technique."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0091"
-      - external_id: AML.T0091.000
-        title: "Use Alternate Authentication Material: Application Access Token"
-        description: "Adversaries may use stolen application access tokens to bypass the typical authentication process and access restricted accounts, information, or services on remote systems. These tokens are typically stolen from users or services and used in lieu of login credentials."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0091.000"
-      - external_id: AML.T0092
-        title: Manipulate User LLM Chat History
-        description: "Adversaries may manipulate a user's large language model (LLM) chat history to cover the tracks of their malicious behavior. They may hide persistent changes they have made to the LLM's behavior, or obscure their attempts at discovering private information about the user."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0092"
-      - external_id: AML.T0093
-        title: Prompt Infiltration via Public-Facing Application
-        description: "An adversary may introduce malicious prompts into the victim's system via a public-facing application with the intention of it being ingested by an AI at some point in the future and ultimately having a downstream effect. This may occur when a data source is indexed by a retrieval augmented generation (RAG) system, when a rule triggers an action by an AI agent, or when a user utilizes a large language model (LLM) to interact with the malicious content."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0093"
-      - external_id: AML.T0094
-        title: Delay Execution of LLM Instructions
-        description: "Adversaries may include instructions to be followed by the AI system in response to a future event, such as a specific keyword or the next interaction, in order to evade detection or bypass controls placed on the AI system. For example, an adversary may include \"If the user submits a new request...\" followed by the malicious instructions as part of their prompt."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0094"
-      - external_id: AML.T0095
-        title: Search Open Websites/Domains
-        description: "Adversaries may search public websites and/or domains for information about victims that can be used during targeting. Information about victims may be available in various online sites, such as social media, new sites, or domains owned by the victim."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0095"
-      - external_id: AML.T0095.000
-        title: "Search Open Websites/Domains: Code Repositories"
-        description: "Adversaries may search public code repositories for information about a victim or victim system that can be used during targeting. Victims may store code or artifacts related to their AI systems in repositories on various third-party websites such as GitHub, GitLab, SourceForge, and BitBucket."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0095.000"
-      - external_id: AML.T0096
-        title: AI Service API
-        description: "Adversaries may communicate using the API of an AI service on the victim's system. The adversary's commands to the victim system, and often the results, are embedded in the normal traffic of the AI service."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0096"
-      - external_id: AML.T0097
-        title: Virtualization/Sandbox Evasion
-        description: "Adversaries may employ various means to detect and avoid virtualization and analysis environments. This may include changing behaviors based on the results of checks for the presence of artifacts indicative of a virtual machine environment (VME) or sandbox."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0097"
-      - external_id: AML.T0098
-        title: AI Agent Tool Credential Harvesting
-        description: "Adversaries may attempt to use their access to an AI agent on the victim's system to retrieve data from available agent tools to collect credentials. Agent tools may connect to a wide range of sources that may contain credentials including document stores (e.g. SharePoint, OneDrive or Google Drive), code repositories (e.g. GitHub or GitLab), or enterprise productivity tools (e.g. as email providers or Slack), and local notetaking tools (e.g. Obsidian or Apple Notes)."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0098"
-      - external_id: AML.T0099
-        title: AI Agent Tool Data Poisoning
-        description: "Adversaries may place malicious content on a victim's system where it can be retrieved by an AI Agent Tool. This may be accomplished by placing documents in a location that will be ingested by a service the AI agent has associated tools for."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0099"
-      - external_id: AML.T0100
-        title: AI Agent Clickbait
-        description: "Adversaries may craft deceptive web content designed to bait Computer-Using AI agents or AI web browsers into taking unintended actions, such as clicking buttons, copying code, or navigating to specific web pages. These attacks exploit the agent's interpretation of UI content, visual cues, or prompt-like language embedded in the site."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0100"
-      - external_id: AML.T0101
-        title: Data Destruction via AI Agent Tool Invocation
-        description: "Adversaries may invoke an AI agent's tool capable of performing mutative operations to perform Data Destruction. Adversaries may destroy data and files on specific systems or in large numbers on a network to interrupt availability to systems, services, and network resources."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0101"
-      - external_id: AML.T0102
-        title: Generate Malicious Commands
-        description: "Adversaries may use large language models (LLMs) to dynamically generate malicious commands from natural language. Dynamically generated commands may be harder detect as the attack signature is constantly changing."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0102"
-      - external_id: AML.T0103
-        title: Deploy AI Agent
-        description: "Adversaries may launch AI agents in the victim's environment to execute actions on their behalf. AI agents may have access to a wide range of tools and data sources, as well as permissions to access and interact with other services and systems in the victim's environment."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0103"
-      - external_id: AML.T0104
-        title: Publish Poisoned AI Agent Tool
-        description: "Adversaries may create and publish poisoned AI agent tools. Poisoned tools may contain an LLM Prompt Injection, which can lead to a variety of impacts."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0104"
-      - external_id: AML.T0105
-        title: Escape to Host
-        description: "Adversaries may break out of a container or virtualized environment to gain access to the underlying host. This can allow an adversary access to other containerized or virtualized resources from the host level or to the host itself."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0105"
-      - external_id: AML.T0106
-        title: Exploitation for Credential Access
-        description: "Adversaries may exploit software vulnerabilities in an attempt to collect credentials. Exploitation of a software vulnerability occurs when an adversary takes advantage of a programming error in a program, service, or within the operating system software or kernel itself to execute adversary-controlled code."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0106"
-      - external_id: AML.T0107
-        title: Exploitation for Defense Evasion
-        description: "Adversaries may exploit a system or application vulnerability to bypass security features. Exploitation of a vulnerability occurs when an adversary takes advantage of a programming error in a program, service, or within the operating system software or kernel itself to execute adversary-controlled code."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0107"
-      - external_id: AML.T0108
-        title: AI Agent
-        description: "Adversaries may abuse AI agents present on the victim's system for command and control. AI agents are often granted access to tools that can execute shell commands, reach out to the internet, and interact with other services in the victim's environment, making them capable C2 agents."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0108"
-      - external_id: AML.T0109
-        title: AI Supply Chain Rug Pull
-        description: "Adversaries may publish legitimate AI components or software, gain user adoption, then push an update with a malicious variant, leading to AI Supply Chain Compromise. More scrutiny is often placed on a supply chain dependency when it is first being considered for inclusion in an AI system."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0109"
-      - external_id: AML.T0110
-        title: AI Agent Tool Poisoning
-        description: "Adversaries may achieve persistence by poisoning tools used by AI agents including built-in tools or tools available to the agent via Model Context Protocol (MCP) connections. This involves compromising benign tools already integrated into the agent's environment."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0110"
-      - external_id: AML.T0111
-        title: AI Supply Chain Reputation Inflation
-        description: "AI Supply Chain Reputation Inflation is the process of building or leveraging genuinely credible-looking trust signals to increase the perceived legitimacy of AI supply chain components, with the goal of driving adoption of malicious or compromised assets. Adversaries use established developer accounts with a history of legitimate projects and contributions to publish AI models, datasets, packages, and MCP servers that appear trustworthy."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0111"
-      - external_id: AML.T0112
-        title: Machine Compromise
-        description: "Adversaries may compromise a machine by exploiting or manipulating AI-enabled components on the system. Compromising a victim system allows the adversary to execute arbitrary code, steal credentials, exfiltrate data, and continue to persist on the system."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0112"
-      - external_id: AML.T0112.000
-        title: "Machine Compromise: Local AI Agent"
-        description: "Adversaries may achieve full system compromise by abusing AI agents running locally on a host, such as computer-use agents or AI-driven browsers. These agents are designed to autonomously interact with the operating system, applications, and external services, often with broad permissions to execute commands, access files, manage credentials, and control user workflows."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0112.000"
-      - external_id: AML.T0112.001
-        title: "Machine Compromise: AI Artifacts"
-        description: "Adversaries may achieve full system compromise by introducing malicious AI artifacts, such as models or data, that contain embedded malware or other malicious commands. AI artifacts are often stored in model registries or data stores and may affect many systems that pull these resources."
-        reference_url: "https://atlas.mitre.org/techniques/AML.T0112.001"
+taxonomy:
+  slug: mitre-atlas
+  entries:
+  - external_id: AML.T0000
+    title: Search Open Technical Databases
+    description: "Adversaries may search for publicly available research and technical documentation to learn how and where AI is used within a victim organization. The adversary can use this information\
+      \ to identify targets for attack, or to tailor an existing attack to make it more effective."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0000"
+  - external_id: AML.T0000.000
+    title: "Search Open Technical Databases: Journals and Conference Proceedings"
+    description: "Many of the publications accepted at premier artificial intelligence conferences and journals come from commercial labs. Some journals and conferences are open access, others may require\
+      \ paying for access or a membership."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0000.000"
+    parent: AML.T0000
+  - external_id: AML.T0000.001
+    title: "Search Open Technical Databases: Pre-Print Repositories"
+    description: "Pre-Print repositories, such as arXiv, contain the latest academic research papers that haven't been peer reviewed. They may contain research notes, or technical reports that aren't typically\
+      \ published in journals or conference proceedings."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0000.001"
+    parent: AML.T0000
+  - external_id: AML.T0000.002
+    title: "Search Open Technical Databases: Technical Blogs"
+    description: "Research labs at academic institutions and company R&D divisions often have blogs that highlight their use of artificial intelligence and its application to the organization's unique problems.\
+      \ Individual researchers also frequently document their work in blogposts."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0000.002"
+    parent: AML.T0000
+  - external_id: AML.T0001
+    title: Search Open AI Vulnerability Analysis
+    description: "Much like the Search Open Technical Databases, there is often ample research available on the vulnerabilities of common AI models. Once a target has been identified, an adversary will\
+      \ likely try to identify any pre-existing work that has been done for this class of models."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0001"
+  - external_id: AML.T0002
+    title: Acquire Public AI Artifacts
+    description: "Adversaries may search public sources, including cloud storage, public-facing services, and software or data repositories, to identify AI artifacts. These AI artifacts may include the\
+      \ software stack used to train and deploy models, training and testing data, model configurations and parameters."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0002"
+  - external_id: AML.T0002.000
+    title: "Acquire Public AI Artifacts: Datasets"
+    description: "Adversaries may collect public datasets to use in their operations. Datasets used by the victim organization or datasets that are representative of the data used by the victim organization\
+      \ may be valuable to adversaries."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0002.000"
+    parent: AML.T0002
+  - external_id: AML.T0002.001
+    title: "Acquire Public AI Artifacts: Models"
+    description: "Adversaries may acquire public models to use in their operations. Adversaries may seek models used by the victim organization or models that are representative of those used by the victim\
+      \ organization."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0002.001"
+    parent: AML.T0002
+  - external_id: AML.T0002.002
+    title: "Acquire Public AI Artifacts: AI Agent Configuration"
+    description: "Adversaries may acquire publicly accessible AI agent configuration files to understand agent capabilities, gain unauthorized access to tools and data sources, or identify credentials for\
+      \ further attacks. Configuration files define what tools an agent can use, credentials for external services, system prompts, and behavioral settings, making valuable resources for adversaries targeting\
+      \ AI agent deployments."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0002.002"
+    parent: AML.T0002
+  - external_id: AML.T0003
+    title: Search Victim-Owned Websites
+    description: "Adversaries may search websites owned by the victim for information that can be used during targeting. Victim-owned websites may contain technical details about their AI-enabled products\
+      \ or services."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0003"
+  - external_id: AML.T0004
+    title: Search Application Repositories
+    description: "Adversaries may search open application repositories during targeting. Examples of these include Google Play, the iOS App store, the macOS App Store, and the Microsoft Store."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0004"
+  - external_id: AML.T0005
+    title: Create Proxy AI Model
+    description: "Adversaries may obtain models to serve as proxies for the target model in use at the victim organization. Proxy models are used to simulate complete access to the target model in a fully\
+      \ offline manner."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0005"
+  - external_id: AML.T0005.000
+    title: "Create Proxy AI Model: Train Proxy via Gathered AI Artifacts"
+    description: "Proxy models may be trained from AI artifacts (such as data, model architectures, and pre-trained models) that are representative of the target model gathered by the adversary. This can\
+      \ be used to develop attacks that require higher levels of access than the adversary has available or as a means to validate pre-existing attacks without interacting with the target model."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0005.000"
+    parent: AML.T0005
+  - external_id: AML.T0005.001
+    title: "Create Proxy AI Model: Train Proxy via Replication"
+    description: "Adversaries may replicate a private model. By repeatedly querying the victim's AI Model Inference API Access, the adversary can collect the target model's inferences into a dataset."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0005.001"
+    parent: AML.T0005
+  - external_id: AML.T0005.002
+    title: "Create Proxy AI Model: Use Pre-Trained Model"
+    description: "Adversaries may use an off-the-shelf pre-trained model as a proxy for the victim model to aid in staging the attack."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0005.002"
+    parent: AML.T0005
+  - external_id: AML.T0006
+    title: Active Scanning
+    description: "An adversary may probe or scan the victim system to gather information for targeting. This is distinct from other reconnaissance techniques that do not involve direct interaction with\
+      \ the victim system."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0006"
+  - external_id: AML.T0007
+    title: Discover AI Artifacts
+    description: "Adversaries may search private sources to identify AI learning artifacts that exist on the system and gather information about them. These artifacts can include the software stack used\
+      \ to train and deploy models, training and testing data management systems, container registries, software repositories, and model zoos."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0007"
+  - external_id: AML.T0008
+    title: Acquire Infrastructure
+    description: "Adversaries may buy, lease, or rent infrastructure for use throughout their operation. A wide variety of infrastructure exists for hosting and orchestrating adversary operations."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0008"
+  - external_id: AML.T0008.000
+    title: "Acquire Infrastructure: AI Development Workspaces"
+    description: "Developing and staging AI attacks often requires expensive compute resources. Adversaries may need access to one or many GPUs in order to develop an attack."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0008.000"
+    parent: AML.T0008
+  - external_id: AML.T0008.001
+    title: "Acquire Infrastructure: Consumer Hardware"
+    description: "Adversaries may acquire consumer hardware to conduct their attacks. Owning the hardware provides the adversary with complete control of the environment."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0008.001"
+    parent: AML.T0008
+  - external_id: AML.T0008.002
+    title: "Acquire Infrastructure: Domains"
+    description: "Adversaries may acquire domains that can be used during targeting. Domain names are the human readable names used to represent one or more IP addresses."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0008.002"
+    parent: AML.T0008
+  - external_id: AML.T0008.003
+    title: "Acquire Infrastructure: Physical Countermeasures"
+    description: "Adversaries may acquire or manufacture physical countermeasures to aid or support their attack. These components may be used to disrupt or degrade the model, such as adversarial patterns\
+      \ printed on stickers or T-shirts, disguises, or decoys."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0008.003"
+    parent: AML.T0008
+  - external_id: AML.T0008.004
+    title: "Acquire Infrastructure: Serverless"
+    description: "Adversaries may purchase and configure serverless cloud infrastructure, such as Cloudflare Workers, AWS Lambda functions, or Google Apps Scripts, that can be used during targeting. By\
+      \ utilizing serverless infrastructure, adversaries can make it more difficult to attribute infrastructure used during operations back to them."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0008.004"
+    parent: AML.T0008
+  - external_id: AML.T0008.005
+    title: "Acquire Infrastructure: AI Service Proxies"
+    description: "Adversaries may utilize commercial proxy services that resell access to AI services such as frontier model APIs. This infrastructure can be used to conduct large-scale campaigns to perform\
+      \ Exfiltration via AI Inference API via distillation."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0008.005"
+    parent: AML.T0008
+  - external_id: AML.T0010
+    title: AI Supply Chain Compromise
+    description: "Adversaries may gain initial access to a system by compromising the unique portions of the AI supply chain. This could include Hardware, Data and its annotations, parts of the AI AI Software\
+      \ stack, or the Model itself."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0010"
+  - external_id: AML.T0010.000
+    title: "AI Supply Chain Compromise: Hardware"
+    description: "Adversaries may target AI systems by disrupting or manipulating the hardware supply chain. AI models often run on specialized hardware such as GPUs, TPUs, or embedded devices, but may\
+      \ also be optimized to operate on CPUs."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0010.000"
+    parent: AML.T0010
+  - external_id: AML.T0010.001
+    title: "AI Supply Chain Compromise: AI Software"
+    description: "Adversaries may target software packages that are commonly used in AI-enabled systems or are part of the AI DevOps lifecycle. This can include deep learning frameworks used to build AI\
+      \ models (e.g. PyTorch, TensorFlow, Jax), generative AI integration frameworks (e.g. LangChain, LangFlow), inference engines, and AI DevOps tools."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0010.001"
+    parent: AML.T0010
+  - external_id: AML.T0010.002
+    title: "AI Supply Chain Compromise: Data"
+    description: "Data is a key vector of supply chain compromise for adversaries. Every AI project will require some form of data."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0010.002"
+    parent: AML.T0010
+  - external_id: AML.T0010.003
+    title: "AI Supply Chain Compromise: Model"
+    description: "AI-enabled systems often rely on open sourced models in various ways. Most commonly, the victim organization may be using these models for fine tuning."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0010.003"
+    parent: AML.T0010
+  - external_id: AML.T0010.004
+    title: "AI Supply Chain Compromise: Container Registry"
+    description: "An adversary may compromise a victim's container registry by pushing a manipulated container image and overwriting an existing container name and/or tag. Users of the container registry\
+      \ as well as automated CI/CD pipelines may pull the adversary's container image, compromising their AI Supply Chain."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0010.004"
+    parent: AML.T0010
+  - external_id: AML.T0010.005
+    title: "AI Supply Chain Compromise: AI Agent Tool"
+    description: "Adversaries may target AI agent tools as a means to compromise a victim's AI supply chain. Tools add capabilities to AI agents, allowing them to interact with other services, connect to\
+      \ data sources, access internet resources, run system tools, and execute code."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0010.005"
+    parent: AML.T0010
+  - external_id: AML.T0011
+    title: User Execution
+    description: "An adversary may rely upon specific actions by a user in order to gain execution. Users may inadvertently execute unsafe code introduced via AI Supply Chain Compromise."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0011"
+  - external_id: AML.T0011.000
+    title: "User Execution: Unsafe AI Artifacts"
+    description: "Adversaries may develop unsafe AI artifacts that when executed have a deleterious effect. The adversary can use this technique to establish persistent access to systems."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0011.000"
+    parent: AML.T0011
+  - external_id: AML.T0011.001
+    title: "User Execution: Malicious Package"
+    description: "Adversaries may develop malicious software packages that when imported by a user have a deleterious effect. Malicious packages may behave as expected to the user."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0011.001"
+    parent: AML.T0011
+  - external_id: AML.T0011.002
+    title: "User Execution: Poisoned AI Agent Tool"
+    description: "A victim may invoke a poisoned tool when interacting with their AI agent. A poisoned tool may execute an LLM Prompt Injection or perform AI Agent Tool Invocation."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0011.002"
+    parent: AML.T0011
+  - external_id: AML.T0011.003
+    title: "User Execution: Malicious Link"
+    description: "An adversary may rely upon a user clicking a malicious link in order to gain execution. Users may be subjected to social engineering to get them to click on a link that will lead to code\
+      \ execution."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0011.003"
+    parent: AML.T0011
+  - external_id: AML.T0012
+    title: Valid Accounts
+    description: "Adversaries may obtain and abuse credentials of existing accounts as a means of gaining Initial Access. Credentials may take the form of usernames and passwords of individual user accounts\
+      \ or API keys that provide access to various AI resources and services."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0012"
+  - external_id: AML.T0013
+    title: Discover AI Model Ontology
+    description: "Adversaries may discover the ontology of an AI model's output space, for example, the types of objects a model can detect. The adversary may discovery the ontology by repeated queries\
+      \ to the model, forcing it to enumerate its output space."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0013"
+  - external_id: AML.T0014
+    title: Discover AI Model Family
+    description: "Adversaries may discover the general family of model. General information about the model may be revealed in documentation, or the adversary may use carefully constructed examples and\
+      \ analyze the model's responses to categorize it."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0014"
+  - external_id: AML.T0015
+    title: Evade AI Model
+    description: "Adversaries can Craft Adversarial Data that prevents an AI model from correctly identifying the contents of the data or Generate Deepfakes that fools an AI model expecting authentic data.\
+      \ This technique can be used to evade a downstream task where AI is utilized."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0015"
+  - external_id: AML.T0016
+    title: Obtain Capabilities
+    description: "Adversaries may search for and obtain software capabilities for use in their operations. Capabilities may be specific to AI-based attacks Adversarial AI Attack Implementations or generic\
+      \ software tools repurposed for malicious intent (Software Tools)."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0016"
+  - external_id: AML.T0016.000
+    title: "Obtain Capabilities: Adversarial AI Attack Implementations"
+    description: "Adversaries may search for existing open source implementations of AI attacks. The research community often publishes their code for reproducibility and to further future research."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0016.000"
+    parent: AML.T0016
+  - external_id: AML.T0016.001
+    title: "Obtain Capabilities: Software Tools"
+    description: "Adversaries may search for and obtain software tools to support their operations. Software designed for legitimate use may be repurposed by an adversary for malicious intent."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0016.001"
+    parent: AML.T0016
+  - external_id: AML.T0016.002
+    title: "Obtain Capabilities: Generative AI"
+    description: "Adversaries may search for and obtain generative AI models or tools, such as large language models (LLMs), to assist them in various steps of their operation. Generative AI can be used\
+      \ in a variety of malicious ways, such as to generating malware, to Generate Deepfakes, to Generate Malicious Commands, for Retrieval Content Crafting, or to generate Phishing content."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0016.002"
+    parent: AML.T0016
+  - external_id: AML.T0016.003
+    title: "Obtain Capabilities: Exploits"
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0016.003"
+    parent: AML.T0016
+  - external_id: AML.T0016.004
+    title: "Obtain Capabilities: AI Agent Tools"
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0016.004"
+    parent: AML.T0016
+  - external_id: AML.T0017
+    title: Develop Capabilities
+    description: "Adversaries may develop their own capabilities to support operations. This process encompasses identifying requirements, building solutions, and deploying capabilities."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0017"
+  - external_id: AML.T0017.000
+    title: "Develop Capabilities: Adversarial AI Attacks"
+    description: "Adversaries may develop their own adversarial attacks. They may leverage existing libraries as a starting point (Adversarial AI Attack Implementations)."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0017.000"
+    parent: AML.T0017
+  - external_id: AML.T0017.001
+    title: "Develop Capabilities: Autonomous Exploit Development"
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0017.001"
+    parent: AML.T0017
+  - external_id: AML.T0017.002
+    title: "Develop Capabilities: AI Agent Tools"
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0017.002"
+    parent: AML.T0017
+  - external_id: AML.T0018
+    title: Manipulate AI Model
+    description: "Adversaries may directly manipulate an AI model to change its behavior or introduce malicious code. Manipulating a model gives the adversary a persistent change in the system."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0018"
+  - external_id: AML.T0018.000
+    title: "Manipulate AI Model: Poison AI Model"
+    description: "Adversaries may manipulate an AI model's weights to change it's behavior or performance, resulting in a poisoned model. Adversaries may poison a model by directly manipulating its weights,\
+      \ training the model on poisoned data, further fine-tuning the model, or otherwise interfering with its training process."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0018.000"
+    parent: AML.T0018
+  - external_id: AML.T0018.001
+    title: "Manipulate AI Model: Modify AI Model Architecture"
+    description: "Adversaries may directly modify an AI model's architecture to re-define it's behavior. This can include adding or removing layers as well as adding pre or post-processing operations."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0018.001"
+    parent: AML.T0018
+  - external_id: AML.T0018.002
+    title: "Manipulate AI Model: Embed Malware"
+    description: "Adversaries may embed malicious code into AI Model files. AI models may be packaged as a combination of instructions and weights."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0018.002"
+    parent: AML.T0018
+  - external_id: AML.T0018.003
+    title: "Manipulate AI Model: Modify Prompt Construction Logic"
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0018.003"
+    parent: AML.T0018
+  - external_id: AML.T0020
+    title: Training Data Poisoning
+    description: "Adversaries may attempt to poison datasets used by an AI model by modifying the underlying data or its labels. This allows the adversary to embed vulnerabilities in AI models trained on\
+      \ the data that may not be easily detectable."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0020"
+  - external_id: AML.T0021
+    title: Establish Accounts
+    description: "Adversaries may create accounts with various services for use in targeting, to gain access to resources needed in AI Attack Staging, or for victim impersonation."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0021"
+  - external_id: AML.T0024
+    title: Exfiltration via AI Inference API
+    description: "Adversaries may exfiltrate private information via AI Model Inference API Access. AI Models have been shown leak private information about their training data (e.g. Infer Training Data\
+      \ Membership, Invert AI Model)."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0024"
+  - external_id: AML.T0024.000
+    title: "Exfiltration via AI Inference API: Infer Training Data Membership"
+    description: "Adversaries may infer the membership of a data sample or global characteristics of the data in its training set, which raises privacy concerns. Some strategies make use of a shadow model\
+      \ that could be obtained via Train Proxy via Replication, others use statistics of model prediction scores."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0024.000"
+    parent: AML.T0024
+  - external_id: AML.T0024.001
+    title: "Exfiltration via AI Inference API: Invert AI Model"
+    description: "AI models' training data could be reconstructed by exploiting the confidence scores that are available via an inference API. By querying the inference API strategically, adversaries can\
+      \ back out potentially private information embedded within the training data."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0024.001"
+    parent: AML.T0024
+  - external_id: AML.T0024.002
+    title: "Exfiltration via AI Inference API: Extract AI Model"
+    description: "Adversaries may extract a functional copy of a private model. By repeatedly querying the victim's AI Model Inference API Access, the adversary can collect the target model's inferences\
+      \ into a dataset."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0024.002"
+    parent: AML.T0024
+  - external_id: AML.T0025
+    title: Exfiltration via Cyber Means
+    description: "Adversaries may exfiltrate AI artifacts or other information relevant to their goals via traditional cyber means. See the ATT&CK Exfiltration tactic for more information."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0025"
+  - external_id: AML.T0029
+    title: Denial of AI Service
+    description: "Adversaries may target AI-enabled systems with a flood of requests for the purpose of degrading or shutting down the service. Since many AI systems require significant amounts of specialized\
+      \ compute, they are often expensive bottlenecks that can become overloaded."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0029"
+  - external_id: AML.T0031
+    title: Erode AI Model Integrity
+    description: "Adversaries may degrade the target model's performance with adversarial data inputs to erode confidence in the system over time. This can lead to the victim organization wasting time and\
+      \ money both attempting to fix the system and performing the tasks it was meant to automate by hand."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0031"
+  - external_id: AML.T0034
+    title: Cost Harvesting
+    description: "Adversaries may deliberately drive a victim's AI services beyond normal operating capacity with the intent of increasing the cost of services. This may be achieved via high-volume, low-complexity\
+      \ queries (Excessive Queries) or low-volume, high-complexity queries (Resource-Intensive Queries)."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0034"
+  - external_id: AML.T0034.000
+    title: "Cost Harvesting: Excessive Queries"
+    description: "Adversaries may send an excessive number of otherwise normal or low-complexity queries to an AI system with the goal of overwhelming its capacity and increasing operating costs. The attacker\
+      \ can automate high-volume request generation, exploiting rate limits, autoscaling policies, and pay-per-use billing models to drive sustained resource consumption without relying on specially crafted,\
+      \ computationally expensive inputs."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0034.000"
+    parent: AML.T0034
+  - external_id: AML.T0034.001
+    title: "Cost Harvesting: Resource-Intensive Queries"
+    description: "Adversaries may craft inputs specifically designed to increase the compute resources required for processing. For generative AI models, adversaries may use long input sequences, requests\
+      \ for extremely long outputs, or prompts that require complex reasoning as strategies for increasing compute costs [[genai]]."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0034.001"
+    parent: AML.T0034
+  - external_id: AML.T0034.002
+    title: "Cost Harvesting: Agentic Resource Consumption"
+    description: "Adversaries may coerce an agentic AI system into performing computationally expensive tool calls that waste resources and consume API budgets. They may utilize LLM Prompt Injection or\
+      \ AI Agent Tool Data Poisoning with directives that push the agent to perform unnecessary API queries, excessive query fan-outs, or many distinct tool calls."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0034.002"
+    parent: AML.T0034
+  - external_id: AML.T0035
+    title: AI Artifact Collection
+    description: "Adversaries may collect AI artifacts for Exfiltration or for use in AI Attack Staging. AI artifacts include models and datasets as well as other telemetry data produced when interacting\
+      \ with a model."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0035"
+  - external_id: AML.T0036
+    title: Data from Information Repositories
+    description: "Adversaries may leverage information repositories to mine valuable information. Information repositories are tools that allow for storage of information, typically to facilitate collaboration\
+      \ or information sharing between users, and can store a wide variety of data that may aid adversaries in further objectives, or direct access to the target information."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0036"
+  - external_id: AML.T0037
+    title: Data from Local System
+    description: "Adversaries may search local system sources, such as file systems and configuration files or local databases, to find files of interest and sensitive data prior to Exfiltration. This can\
+      \ include basic fingerprinting information and sensitive data such as ssh keys."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0037"
+  - external_id: AML.T0040
+    title: AI Model Inference API Access
+    description: "Adversaries may gain access to a model via legitimate access to the inference API. Inference API access can be a source of information to the adversary (Discover AI Model Ontology, Discover\
+      \ AI Model Family), a means of staging the attack (Verify Attack, Craft Adversarial Data), or for introducing data to the target system for Impact (Evade AI Model, Erode AI Model Integrity)."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0040"
+  - external_id: AML.T0041
+    title: Physical Environment Access
+    description: "In addition to the attacks that take place purely in the digital domain, adversaries may also exploit the physical environment for their attacks. If the model is interacting with data\
+      \ collected from the real world in some way, the adversary can influence the model through access to wherever the data is being collected."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0041"
+  - external_id: AML.T0042
+    title: Verify Attack
+    description: "Adversaries can verify the efficacy of their attack via an inference API or access to an offline copy of the target model. This gives the adversary confidence that their approach works\
+      \ and allows them to carry out the attack at a later time of their choosing."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0042"
+  - external_id: AML.T0043
+    title: Craft Adversarial Data
+    description: "Adversarial data are inputs to an AI model that have been modified such that they cause the adversary's desired effect in the target model. Effects can range from misclassification, to\
+      \ missed detections, to maximizing energy consumption."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0043"
+  - external_id: AML.T0043.000
+    title: "Craft Adversarial Data: White-Box Optimization"
+    description: "In White-Box Optimization, the adversary has full access to the target model and optimizes the adversarial example directly. Adversarial examples trained in this manner are most effective\
+      \ against the target model."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0043.000"
+    parent: AML.T0043
+  - external_id: AML.T0043.001
+    title: "Craft Adversarial Data: Black-Box Optimization"
+    description: "In Black-Box attacks, the adversary has black-box (i.e. AI Model Inference API Access via API access) access to the target model. With black-box attacks, the adversary may be using an\
+      \ API that the victim is monitoring."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0043.001"
+    parent: AML.T0043
+  - external_id: AML.T0043.002
+    title: "Craft Adversarial Data: Black-Box Transfer"
+    description: "In Black-Box Transfer attacks, the adversary uses one or more proxy models (trained via Create Proxy AI Model or Train Proxy via Replication) they have full access to and are representative\
+      \ of the target model. The adversary uses White-Box Optimization on the proxy models to generate adversarial examples."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0043.002"
+    parent: AML.T0043
+  - external_id: AML.T0043.003
+    title: "Craft Adversarial Data: Manual Modification"
+    description: "Adversaries may manually modify the input data to craft adversarial data. They may use their knowledge of the target model to modify parts of the data they suspect helps the model in performing\
+      \ its task."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0043.003"
+    parent: AML.T0043
+  - external_id: AML.T0043.004
+    title: "Craft Adversarial Data: Insert Backdoor Trigger"
+    description: "The adversary may add a perceptual trigger into inference data. The trigger may be imperceptible or non-obvious to humans."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0043.004"
+    parent: AML.T0043
+  - external_id: AML.T0044
+    title: Full AI Model Access
+    description: "Adversaries may gain full \"white-box\" access to an AI model. This means the adversary has complete knowledge of the model architecture, its parameters, and class ontology."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0044"
+  - external_id: AML.T0046
+    title: Spamming AI System with Chaff Data
+    description: "Adversaries may spam the AI system with chaff data that causes increase in the number of detections. This can cause analysts at the victim organization to waste time reviewing and correcting\
+      \ incorrect inferences."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0046"
+  - external_id: AML.T0047
+    title: AI-Enabled Product or Service
+    description: "Adversaries may use a product or service that uses artificial intelligence under the hood to gain access to the underlying AI model. This type of indirect model access may reveal details\
+      \ of the AI model or its inferences in logs or metadata."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0047"
+  - external_id: AML.T0048
+    title: External Harms
+    description: "Adversaries may abuse their access to a victim system and use its resources or capabilities to further their goals by causing harms external to that system. These harms could affect the\
+      \ organization (e.g. Financial Harm, Reputational Harm), its users (e.g. User Harm), or the general public (e.g. Societal Harm)."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0048"
+  - external_id: AML.T0048.000
+    title: "External Harms: Financial Harm"
+    description: "Financial harm involves the loss of wealth, property, or other monetary assets due to theft, fraud or forgery, or pressure to provide financial resources to the adversary."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0048.000"
+    parent: AML.T0048
+  - external_id: AML.T0048.001
+    title: "External Harms: Reputational Harm"
+    description: "Reputational harm involves a degradation of public perception and trust in organizations. Examples of reputation-harming incidents include scandals or false impersonations."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0048.001"
+    parent: AML.T0048
+  - external_id: AML.T0048.002
+    title: "External Harms: Societal Harm"
+    description: "Societal harms might generate harmful outcomes that reach either the general public or specific vulnerable groups such as the exposure of children to vulgar content."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0048.002"
+    parent: AML.T0048
+  - external_id: AML.T0048.003
+    title: "External Harms: User Harm"
+    description: "User harms may encompass a variety of harm types including financial and reputational that are directed at or felt by individual victims of the attack rather than at the organization level."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0048.003"
+    parent: AML.T0048
+  - external_id: AML.T0048.004
+    title: "External Harms: AI Intellectual Property Theft"
+    description: "Adversaries may exfiltrate AI artifacts to steal intellectual property and cause economic harm to the victim organization. Proprietary training data is costly to collect and annotate and\
+      \ may be a target for Exfiltration and theft."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0048.004"
+    parent: AML.T0048
+  - external_id: AML.T0049
+    title: Exploit Public-Facing Application
+    description: "Adversaries may attempt to take advantage of a weakness in an Internet-facing computer or program using software, data, or commands in order to cause unintended or unanticipated behavior.\
+      \ The weakness in the system can be a bug, a glitch, or a design vulnerability."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0049"
+  - external_id: AML.T0050
+    title: Command and Scripting Interpreter
+    description: "Adversaries may abuse command and script interpreters to execute commands, scripts, or binaries. These interfaces and languages provide ways of interacting with computer systems and are\
+      \ a common feature across many different platforms."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0050"
+  - external_id: AML.T0051
+    title: LLM Prompt Injection
+    description: "An adversary may craft malicious prompts as inputs to an LLM that cause the LLM to act in unintended ways. These \"prompt injections\" are often designed to cause the model to ignore aspects\
+      \ of its original instructions and follow the adversary's instructions instead."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0051"
+  - external_id: AML.T0051.000
+    title: "LLM Prompt Injection: Direct"
+    description: "An adversary may inject prompts directly as a user of the LLM. This type of injection may be used by the adversary to gain a foothold in the system or to misuse the LLM itself, as for\
+      \ example to generate harmful content."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0051.000"
+    parent: AML.T0051
+  - external_id: AML.T0051.001
+    title: "LLM Prompt Injection: Indirect"
+    description: "An adversary may inject prompts indirectly via separate data channel ingested by the LLM such as include text or multimedia pulled from databases or websites. These malicious prompts may\
+      \ be hidden or obfuscated from the user."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0051.001"
+    parent: AML.T0051
+  - external_id: AML.T0051.002
+    title: "LLM Prompt Injection: Triggered"
+    description: "An adversary may trigger a prompt injection via a user action or event that occurs within the victim's environment. Triggered prompt injections often target AI agents, which can be activated\
+      \ by means the adversary identifies during Discovery (See Activation Triggers)."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0051.002"
+    parent: AML.T0051
+  - external_id: AML.T0052
+    title: Phishing
+    description: "Adversaries may send phishing messages to gain access to victim systems. All forms of phishing are electronically delivered social engineering."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0052"
+  - external_id: AML.T0052.000
+    title: "Phishing: Spearphishing via Social Engineering LLM"
+    description: "Adversaries may turn LLMs into targeted social engineers. LLMs are capable of interacting with users via text conversations."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0052.000"
+    parent: AML.T0052
+  - external_id: AML.T0052.001
+    title: "Phishing: Deepfake-Assisted Phishing"
+    description: "Adversaries may use deepfakes (AI-generated synthetic images, audio, or video) in phishing campaigns to impersonate trusted individuals, executives, or organizations. These attacks exploit\
+      \ human trust by presenting fraudulent voice or video communications as legitimate, enabling adversaries to manipulate targets into disclosing credentials, transferring funds, or granting access to\
+      \ systems."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0052.001"
+    parent: AML.T0052
+  - external_id: AML.T0053
+    title: AI Agent Tool Invocation
+    description: "Adversaries may use their access to an AI agent to invoke tools the agent has access to. LLMs are often connected to other services or resources via tools to increase their capabilities."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0053"
+  - external_id: AML.T0054
+    title: LLM Jailbreak
+    description: "Adversaries may induce a large language model (LLM) to ignore, circumvent, or override its safety/alignment behaviors and/or guardrails to elicit outputs the model is intended to withhold.\
+      \ Once jailbroken, the LLM may be used in unintended ways by the adversary."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0054"
+  - external_id: AML.T0055
+    title: Unsecured Credentials
+    description: "Adversaries may search compromised systems to find and obtain insecurely stored credentials. These credentials can be stored and/or misplaced in many locations on a system, including plaintext\
+      \ files (e.g. bash history), environment variables, operating system, or application-specific repositories (e.g. Credentials in Registry), or other specialized files/artifacts (e.g. private keys)."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0055"
+  - external_id: AML.T0056
+    title: Extract LLM System Prompt
+    description: "Adversaries may attempt to extract a large language model's (LLM) system prompt. This can be done via prompt injection to induce the model to reveal its own system prompt or may be extracted\
+      \ from a configuration file."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0056"
+  - external_id: AML.T0057
+    title: LLM Data Leakage
+    description: "Adversaries may craft prompts that induce the LLM to leak sensitive information. This can include private user data or proprietary information."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0057"
+  - external_id: AML.T0059
+    title: Erode Dataset Integrity
+    description: "Adversaries may poison or manipulate portions of a dataset to reduce its usefulness, reduce trust, and cause users to waste resources correcting errors."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0059"
+  - external_id: AML.T0060
+    title: Publish Hallucinated Entities
+    description: "Adversaries may create an entity they control, such as a software package, website, or email address to a source hallucinated by an LLM. The hallucinations may take the form of package\
+      \ names commands, URLs, company names, or email addresses that point the victim to the entity controlled by the adversary."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0060"
+  - external_id: AML.T0061
+    title: LLM Prompt Self-Replication
+    description: "An adversary may use a carefully crafted LLM Prompt Injection designed to cause the LLM to replicate the prompt as part of its output. This allows the prompt to propagate to other LLMs\
+      \ and persist on the system."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0061"
+  - external_id: AML.T0062
+    title: Discover LLM Hallucinations
+    description: "Adversaries may prompt large language models and identify hallucinated entities. They may request software packages, commands, URLs, organization names, or e-mail addresses, and identify\
+      \ hallucinations with no connected real-world source."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0062"
+  - external_id: AML.T0063
+    title: Discover AI Model Outputs
+    description: "Adversaries may discover model outputs, such as class scores, whose presence is not required for the system to function and are not intended for use by the end user. Model outputs may\
+      \ be found in logs or may be included in API responses."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0063"
+  - external_id: AML.T0064
+    title: Gather RAG-Indexed Targets
+    description: "Adversaries may identify data sources used in retrieval augmented generation (RAG) systems for targeting purposes. By pinpointing these sources, attackers can focus on poisoning or otherwise\
+      \ manipulating the external data repositories the AI relies on."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0064"
+  - external_id: AML.T0065
+    title: LLM Prompt Crafting
+    description: "Adversaries may use their acquired knowledge of the target generative AI system to craft prompts that bypass its defenses and allow malicious instructions to be executed. The adversary\
+      \ may iterate on the prompt to ensure that it works as-intended consistently."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0065"
+  - external_id: AML.T0066
+    title: Retrieval Content Crafting
+    description: "Adversaries may write content designed to be retrieved by user queries and influence a user of the system in some way. This abuses the trust the user has in the system."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0066"
+  - external_id: AML.T0067
+    title: LLM Trusted Output Components Manipulation
+    description: "Adversaries may utilize prompts to a large language model (LLM) which manipulate various components of its response in order to make it appear trustworthy to the user. This helps the adversary\
+      \ continue to operate in the victim's environment and evade detection by the users it interacts with."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0067"
+  - external_id: AML.T0067.000
+    title: "LLM Trusted Output Components Manipulation: Citations"
+    description: "Adversaries may manipulate the citations provided in an AI system's response, in order to make it appear trustworthy. Variants include citing a providing the wrong citation, making up\
+      \ a new citation, or providing the right citation but for adversary-provided data."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0067.000"
+    parent: AML.T0067
+  - external_id: AML.T0068
+    title: LLM Prompt Obfuscation
+    description: "Adversaries may hide or otherwise obfuscate prompt injections or retrieval content to avoid detection from humans, large language model (LLM) guardrails, or other detection mechanisms.\
+      \ For text inputs, this may include modifying how the instructions are rendered such as small text, text colored the same as the background, or hidden HTML elements."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0068"
+  - external_id: AML.T0069
+    title: Discover LLM System Information
+    description: "The adversary is trying to discover something about the large language model's (LLM) system information. This may be found in a configuration file containing the system instructions or\
+      \ extracted via interactions with the LLM."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0069"
+  - external_id: AML.T0069.000
+    title: "Discover LLM System Information: Special Character Sets"
+    description: "Adversaries may discover delimiters and special characters sets used by the large language model. For example, delimiters used in retrieval augmented generation applications to differentiate\
+      \ between context and user prompts."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0069.000"
+    parent: AML.T0069
+  - external_id: AML.T0069.001
+    title: "Discover LLM System Information: System Instruction Keywords"
+    description: "Adversaries may discover keywords that have special meaning to the large language model (LLM), such as function names or object names. These can later be exploited to confuse or manipulate\
+      \ the LLM into misbehaving and to make calls to plugins the LLM has access to."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0069.001"
+    parent: AML.T0069
+  - external_id: AML.T0069.002
+    title: "Discover LLM System Information: System Prompt"
+    description: "Adversaries may discover a large language model's system instructions provided by the AI system builder to learn about the system's capabilities and circumvent its guardrails."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0069.002"
+    parent: AML.T0069
+  - external_id: AML.T0070
+    title: RAG Poisoning
+    description: "Adversaries may inject malicious content into data indexed by a retrieval augmented generation (RAG) system to contaminate a future thread through RAG-based search results. This may be\
+      \ accomplished by placing manipulated documents in a location the RAG indexes (see Gather RAG-Indexed Targets)."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0070"
+  - external_id: AML.T0071
+    title: False RAG Entry Injection
+    description: "Adversaries may introduce false entries into a victim's retrieval augmented generation (RAG) database. Content designed to be interpreted as a document by the large language model (LLM)\
+      \ used in the RAG system is included in a data source being ingested into the RAG database."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0071"
+  - external_id: AML.T0072
+    title: Cyber Communication Channel
+    description: "Adversaries may utilize a reverse shell to communicate and control the victim system. Typically, a user uses a client to connect to a remote machine which is listening for connections."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0072"
+  - external_id: AML.T0073
+    title: Impersonation
+    description: "Adversaries may impersonate a trusted person or organization in order to persuade and trick a target into performing some action on their behalf. For example, adversaries may communicate\
+      \ with victims (via Phishing, or Spearphishing via Social Engineering LLM) while impersonating a known sender such as an executive, colleague, or third-party vendor."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0073"
+  - external_id: AML.T0074
+    title: Masquerading
+    description: "Adversaries may attempt to manipulate features of their artifacts to make them appear legitimate or benign to users and/or security tools. Masquerading occurs when the name or location\
+      \ of an object, legitimate or malicious, is manipulated or abused for the sake of evading defenses and observation."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0074"
+  - external_id: AML.T0075
+    title: Enterprise Resource Discovery
+    description: "Adversaries may attempt to enumerate the cloud services running on a system after gaining access. These methods can differ from platform-as-a-service (PaaS), to infrastructure-as-a-service\
+      \ (IaaS), software-as-a-service (SaaS), or AI-as-a-service (AIaaS)."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0075"
+  - external_id: AML.T0076
+    title: Corrupt AI Model
+    description: "An adversary may purposefully corrupt a malicious AI model file so that it cannot be successfully deserialized in order to evade detection by a model scanner. The corrupt model may still\
+      \ successfully execute malicious code before deserialization fails."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0076"
+  - external_id: AML.T0077
+    title: LLM Response Rendering
+    description: "An adversary may get a large language model (LLM) to respond with private information that is hidden from the user when the response is rendered by the user's client. The private information\
+      \ is then exfiltrated."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0077"
+  - external_id: AML.T0078
+    title: Drive-by Compromise
+    description: "Adversaries may gain access to an AI system through a user visiting a website over the normal course of browsing, or an AI agent retrieving information from the web on behalf of a user.\
+      \ Websites can contain an LLM Prompt Injection which, when executed, can change the behavior of the AI model."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0078"
+  - external_id: AML.T0079
+    title: Stage Capabilities
+    description: "Adversaries may upload, install, or otherwise set up capabilities that can be used during targeting. To support their operations, an adversary may need to take capabilities they developed\
+      \ (Develop Capabilities) or obtained (Obtain Capabilities) and stage them on infrastructure under their control."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0079"
+  - external_id: AML.T0080
+    title: AI Agent Context Poisoning
+    description: "Adversaries may attempt to manipulate the context used by an AI agent's large language model (LLM) to influence the responses it generates or actions it takes. This allows an adversary\
+      \ to persistently change the behavior of the target agent and further their goals."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0080"
+  - external_id: AML.T0080.000
+    title: "AI Agent Context Poisoning: Memory"
+    description: "Adversaries may manipulate the memory of a large language model (LLM) in order to persist changes to the LLM to future chat sessions. Memory is a common feature in LLMs that allows them\
+      \ to remember information across chat sessions by utilizing a user-specific database."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0080.000"
+    parent: AML.T0080
+  - external_id: AML.T0080.001
+    title: "AI Agent Context Poisoning: Thread"
+    description: "Adversaries may introduce malicious instructions into a chat thread of a large language model (LLM) to cause behavior changes which persist for the remainder of the thread. A chat thread\
+      \ may continue for an extended period over multiple sessions."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0080.001"
+    parent: AML.T0080
+  - external_id: AML.T0081
+    title: Modify AI Agent Configuration
+    description: "Adversaries may modify the configuration files for AI agents on a system. This allows malicious changes to persist beyond the life of a single agent and affects any agents that share the\
+      \ configuration."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0081"
+  - external_id: AML.T0082
+    title: RAG Credential Harvesting
+    description: "Adversaries may attempt to use their access to a large language model (LLM) on the victim's system to collect credentials. Credentials may be stored in internal documents which can inadvertently\
+      \ be ingested into a RAG database, where they can ultimately be retrieved by an AI agent."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0082"
+  - external_id: AML.T0083
+    title: Credentials from AI Agent Configuration
+    description: "Adversaries may access the credentials of other tools or services on a system from the configuration of an AI agent. AI Agents often utilize external tools or services to take actions,\
+      \ such as querying databases, invoking APIs, or interacting with cloud resources."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0083"
+  - external_id: AML.T0084
+    title: Discover AI Agent Configuration
+    description: "Adversaries may attempt to discover configuration information for AI agents present on the victim's system. Agent configurations can include tools or services they have access to."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0084"
+  - external_id: AML.T0084.000
+    title: "Discover AI Agent Configuration: Embedded Knowledge"
+    description: "Adversaries may attempt to discover the data sources a particular agent can access. The AI agent's configuration may reveal data sources or knowledge."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0084.000"
+    parent: AML.T0084
+  - external_id: AML.T0084.001
+    title: "Discover AI Agent Configuration: Tool Definitions"
+    description: "Adversaries may discover the tools the AI agent has access to. By identifying which tools are available, the adversary can understand what actions may be executed through the agent and\
+      \ what additional resources it can reach."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0084.001"
+    parent: AML.T0084
+  - external_id: AML.T0084.002
+    title: "Discover AI Agent Configuration: Activation Triggers"
+    description: "Adversaries may discover keywords or other triggers (such as incoming emails, documents being added, incoming message, or other workflows) that activate an agent and may cause it to run\
+      \ additional actions. Understanding these triggers can reveal how the AI agent is activated and controlled."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0084.002"
+    parent: AML.T0084
+  - external_id: AML.T0084.003
+    title: "Discover AI Agent Configuration: Call Chains"
+    description: "Adversaries may extract call chains from AI agent configurations, which can reveal potentially targets for remote code execution (RCE) or other vulnerabilities. Vulnerable call chains\
+      \ often connect user inputs or LLM outputs to an execution sink (e.g. exec, eval, os.popen)."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0084.003"
+    parent: AML.T0084
+  - external_id: AML.T0085
+    title: Data from AI Services
+    description: "Adversaries may use their access to a victim organization's AI-enabled services to collect proprietary or otherwise sensitive information. As organizations adopt generative AI in centralized\
+      \ services for accessing an organization's data, such as with chat agents which can access retrieval augmented generation (RAG) databases and other data sources via tools, they become increasingly\
+      \ valuable targets for adversaries."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0085"
+  - external_id: AML.T0085.000
+    title: "Data from AI Services: RAG Databases"
+    description: "Adversaries may prompt the AI service to retrieve data from a RAG database. This can include the majority of an organization's internal documents."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0085.000"
+    parent: AML.T0085
+  - external_id: AML.T0085.001
+    title: "Data from AI Services: AI Agent Tools"
+    description: "Adversaries may prompt the AI service to invoke various tools the agent has access to. Tools may retrieve data from different APIs or services in an organization."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0085.001"
+    parent: AML.T0085
+  - external_id: AML.T0086
+    title: Exfiltration via AI Agent Tool Invocation
+    description: "AI agent tools capable of performing write operations may be invoked to exfiltrate data to an adversary. Sensitive information can be encoded into the tool's input parameters and transmitted\
+      \ to an adversary-controlled location (such as an inbox, document, or server) as part of a seemingly legitimate action."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0086"
+  - external_id: AML.T0087
+    title: Gather Victim Identity Information
+    description: "Adversaries may gather information about the victim's identity that can be used during targeting. Information about identities may include a variety of details, including personal data\
+      \ (ex: employee names, email addresses, photos, etc.) as well as sensitive details such as credentials or multi-factor authentication (MFA) configurations."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0087"
+  - external_id: AML.T0088
+    title: Generate Deepfakes
+    description: "Adversaries may use generative artificial intelligence (GenAI) to create synthetic media (i.e. imagery, video, audio, and text) that appear authentic. These \"deepfakes\" may mimic a real\
+      \ person or depict fictional personas."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0088"
+  - external_id: AML.T0089
+    title: Enterprise Environment Discovery
+    description: "Adversaries may attempt to get information about processes running on a system. Once obtained, this information could be used to gain an understanding of common AI-related software/applications\
+      \ running on systems within the network."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0089"
+  - external_id: AML.T0090
+    title: OS Credential Dumping
+    description: "Adversaries may extract credentials from OS caches, application memory, or other sources on a compromised system. Credentials are often in the form of a hash or clear text, and can include\
+      \ usernames and passwords, application tokens, or other authentication keys."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0090"
+  - external_id: AML.T0091
+    title: Use Alternate Authentication Material
+    description: "Adversaries may use alternate authentication material, such as password hashes, Kerberos tickets, and application access tokens, in order to move laterally within an environment and bypass\
+      \ normal system access controls. AI services commonly use alternate authentication material as a primary means for users to make queries, making them vulnerable to this technique."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0091"
+  - external_id: AML.T0091.000
+    title: "Use Alternate Authentication Material: Application Access Token"
+    description: "Adversaries may use stolen application access tokens to bypass the typical authentication process and access restricted accounts, information, or services on remote systems. These tokens\
+      \ are typically stolen from users or services and used in lieu of login credentials."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0091.000"
+    parent: AML.T0091
+  - external_id: AML.T0091.001
+    title: "Use Alternate Authentication Material: Web Session Cookie"
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0091.001"
+    parent: AML.T0091
+  - external_id: AML.T0092
+    title: Manipulate User LLM Chat History
+    description: "Adversaries may manipulate a user's large language model (LLM) chat history to cover the tracks of their malicious behavior. They may hide persistent changes they have made to the LLM's\
+      \ behavior, or obscure their attempts at discovering private information about the user."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0092"
+  - external_id: AML.T0093
+    title: Prompt Infiltration via Public-Facing Application
+    description: "An adversary may introduce malicious prompts into the victim's system via a public-facing application with the intention of it being ingested by an AI at some point in the future and ultimately\
+      \ having a downstream effect. This may occur when a data source is indexed by a retrieval augmented generation (RAG) system, when a rule triggers an action by an AI agent, or when a user utilizes\
+      \ a large language model (LLM) to interact with the malicious content."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0093"
+  - external_id: AML.T0094
+    title: Delay Execution of LLM Instructions
+    description: "Adversaries may include instructions to be followed by the AI system in response to a future event, such as a specific keyword or the next interaction, in order to evade detection or bypass\
+      \ controls placed on the AI system. For example, an adversary may include \"If the user submits a new request...\" followed by the malicious instructions as part of their prompt."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0094"
+  - external_id: AML.T0095
+    title: Search Open Websites/Domains
+    description: "Adversaries may search public websites and/or domains for information about victims that can be used during targeting. Information about victims may be available in various online sites,\
+      \ such as social media, new sites, or domains owned by the victim."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0095"
+  - external_id: AML.T0095.000
+    title: "Search Open Websites/Domains: Code Repositories"
+    description: "Adversaries may search public code repositories for information about a victim or victim system that can be used during targeting. Victims may store code or artifacts related to their\
+      \ AI systems in repositories on various third-party websites such as GitHub, GitLab, SourceForge, and BitBucket."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0095.000"
+    parent: AML.T0095
+  - external_id: AML.T0096
+    title: AI Service API
+    description: "Adversaries may communicate using the API of an AI service on the victim's system. The adversary's commands to the victim system, and often the results, are embedded in the normal traffic\
+      \ of the AI service."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0096"
+  - external_id: AML.T0097
+    title: Virtualization/Sandbox Evasion
+    description: "Adversaries may employ various means to detect and avoid virtualization and analysis environments. This may include changing behaviors based on the results of checks for the presence of\
+      \ artifacts indicative of a virtual machine environment (VME) or sandbox."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0097"
+  - external_id: AML.T0098
+    title: AI Agent Tool Credential Harvesting
+    description: "Adversaries may attempt to use their access to an AI agent on the victim's system to retrieve data from available agent tools to collect credentials. Agent tools may connect to a wide\
+      \ range of sources that may contain credentials including document stores (e.g. SharePoint, OneDrive or Google Drive), code repositories (e.g. GitHub or GitLab), or enterprise productivity tools (e.g.\
+      \ as email providers or Slack), and local notetaking tools (e.g. Obsidian or Apple Notes)."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0098"
+  - external_id: AML.T0099
+    title: AI Agent Tool Data Poisoning
+    description: "Adversaries may place malicious content on a victim's system where it can be retrieved by an AI Agent Tool. This may be accomplished by placing documents in a location that will be ingested\
+      \ by a service the AI agent has associated tools for."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0099"
+  - external_id: AML.T0100
+    title: AI Agent Clickbait
+    description: "Adversaries may craft deceptive web content designed to bait Computer-Using AI agents or AI web browsers into taking unintended actions, such as clicking buttons, copying code, or navigating\
+      \ to specific web pages. These attacks exploit the agent's interpretation of UI content, visual cues, or prompt-like language embedded in the site."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0100"
+  - external_id: AML.T0101
+    title: Data Destruction via AI Agent Tool Invocation
+    description: "Adversaries may invoke an AI agent's tool capable of performing mutative operations to perform Data Destruction. Adversaries may destroy data and files on specific systems or in large\
+      \ numbers on a network to interrupt availability to systems, services, and network resources."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0101"
+  - external_id: AML.T0102
+    title: Generate Malicious Commands
+    description: "Adversaries may use large language models (LLMs) to dynamically generate malicious commands from natural language. Dynamically generated commands may be harder detect as the attack signature\
+      \ is constantly changing."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0102"
+  - external_id: AML.T0103
+    title: Deploy AI Agent
+    description: "Adversaries may launch AI agents in the victim's environment to execute actions on their behalf. AI agents may have access to a wide range of tools and data sources, as well as permissions\
+      \ to access and interact with other services and systems in the victim's environment."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0103"
+  - external_id: AML.T0105
+    title: Escape to Host
+    description: "Adversaries may break out of a container or virtualized environment to gain access to the underlying host. This can allow an adversary access to other containerized or virtualized resources\
+      \ from the host level or to the host itself."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0105"
+  - external_id: AML.T0106
+    title: Exploitation for Credential Access
+    description: "Adversaries may exploit software vulnerabilities in an attempt to collect credentials. Exploitation of a software vulnerability occurs when an adversary takes advantage of a programming\
+      \ error in a program, service, or within the operating system software or kernel itself to execute adversary-controlled code."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0106"
+  - external_id: AML.T0107
+    title: Exploitation for Defense Evasion
+    description: "Adversaries may exploit a system or application vulnerability to bypass security features. Exploitation of a vulnerability occurs when an adversary takes advantage of a programming error\
+      \ in a program, service, or within the operating system software or kernel itself to execute adversary-controlled code."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0107"
+  - external_id: AML.T0108
+    title: AI Agent
+    description: "Adversaries may abuse AI agents present on the victim's system for command and control. AI agents are often granted access to tools that can execute shell commands, reach out to the internet,\
+      \ and interact with other services in the victim's environment, making them capable C2 agents."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0108"
+  - external_id: AML.T0109
+    title: AI Supply Chain Rug Pull
+    description: "Adversaries may publish legitimate AI components or software, gain user adoption, then push an update with a malicious variant, leading to AI Supply Chain Compromise. More scrutiny is\
+      \ often placed on a supply chain dependency when it is first being considered for inclusion in an AI system."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0109"
+  - external_id: AML.T0110
+    title: AI Agent Tool Poisoning
+    description: "Adversaries may achieve persistence by poisoning tools used by AI agents including built-in tools or tools available to the agent via Model Context Protocol (MCP) connections. This involves\
+      \ compromising benign tools already integrated into the agent's environment."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0110"
+  - external_id: AML.T0110.000
+    title: "AI Agent Tool Poisoning: Definition and Instructions"
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0110.000"
+    parent: AML.T0110
+  - external_id: AML.T0110.001
+    title: "AI Agent Tool Poisoning: Implementation"
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0110.001"
+    parent: AML.T0110
+  - external_id: AML.T0110.002
+    title: "AI Agent Tool Poisoning: Runtime Response"
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0110.002"
+    parent: AML.T0110
+  - external_id: AML.T0111
+    title: AI Supply Chain Reputation Inflation
+    description: "AI Supply Chain Reputation Inflation is the process of building or leveraging genuinely credible-looking trust signals to increase the perceived legitimacy of AI supply chain components,\
+      \ with the goal of driving adoption of malicious or compromised assets. Adversaries use established developer accounts with a history of legitimate projects and contributions to publish AI models,\
+      \ datasets, packages, and MCP servers that appear trustworthy."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0111"
+  - external_id: AML.T0112
+    title: Machine Compromise
+    description: "Adversaries may compromise a machine by exploiting or manipulating AI-enabled components on the system. Compromising a victim system allows the adversary to execute arbitrary code, steal\
+      \ credentials, exfiltrate data, and continue to persist on the system."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0112"
+  - external_id: AML.T0112.000
+    title: "Machine Compromise: Local AI Agent"
+    description: "Adversaries may achieve full system compromise by abusing AI agents running locally on a host, such as computer-use agents or AI-driven browsers. These agents are designed to autonomously\
+      \ interact with the operating system, applications, and external services, often with broad permissions to execute commands, access files, manage credentials, and control user workflows."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0112.000"
+    parent: AML.T0112
+  - external_id: AML.T0112.001
+    title: "Machine Compromise: AI Artifacts"
+    description: "Adversaries may achieve full system compromise by introducing malicious AI artifacts, such as models or data, that contain embedded malware or other malicious commands. AI artifacts are\
+      \ often stored in model registries or data stores and may affect many systems that pull these resources."
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0112.001"
+    parent: AML.T0112
+  - external_id: AML.T0113
+    title: Steal Web Session Cookie
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0113"
+  - external_id: AML.T0114
+    title: AI Service Web Interface
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0114"
+  - external_id: AML.T0115
+    title: Publish Poisoned AI Artifacts
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0115"
+  - external_id: AML.T0115.000
+    title: "Publish Poisoned AI Artifacts: Datasets"
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0115.000"
+    parent: AML.T0115
+  - external_id: AML.T0115.001
+    title: "Publish Poisoned AI Artifacts: Models"
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0115.001"
+    parent: AML.T0115
+  - external_id: AML.T0115.002
+    title: "Publish Poisoned AI Artifacts: AI Agent Tools"
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0115.002"
+    parent: AML.T0115
+  - external_id: AML.T0116
+    title: Autonomous Reconnaissance
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0116"
+  - external_id: AML.T0117
+    title: Autonomous Attack-Path Adaptation
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0117"
+  - external_id: AML.T0118
+    title: Autonomous AI Agent Communication
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0118"
+  - external_id: AML.T0118.000
+    title: "Autonomous AI Agent Communication: Communication via Shared Artifacts"
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0118.000"
+    parent: AML.T0118
+  - external_id: AML.T0118.001
+    title: "Autonomous AI Agent Communication: Direct Agent Communication"
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0118.001"
+    parent: AML.T0118
+  - external_id: AML.T0119
+    title: Exploit Automated Artifact Processing Pipeline
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0119"
+  - external_id: AML.T0120
+    title: AI Artifact Repository
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0120"
+  - external_id: AML.T0121
+    title: AI Agent Environment Reconstruction
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0121"
+  - external_id: AML.T0122
+    title: Exploitation of Remote Services
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0122"
+  - external_id: AML.T0123
+    title: Obfuscated Files or Information
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0123"
+  - external_id: AML.T0124
+    title: Autonomous Attack Orchestration
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0124"
+  - external_id: AML.T0125
+    title: Create Account
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0125"
+  - external_id: AML.T0126
+    title: Automated Collection
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0126"
+  - external_id: AML.T0127
+    title: Data Staged
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0127"
+  - external_id: AML.T0128
+    title: Compromise Infrastructure
+    reference_url: "https://atlas.mitre.org/techniques/AML.T0128"

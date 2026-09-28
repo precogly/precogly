@@ -4,150 +4,144 @@ mappings:
   # ============================================================================
   # A01:2021 - Broken Access Control
   # ============================================================================
-  - countermeasure: agent-least-privilege
+  - countermeasure: aidefend-ai-security/aid-h-017-002
     requirements: ['A01:2021']
-    sufficiency: partial
-  - countermeasure: tool-least-privilege
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-004-001
     requirements: ['A01:2021']
-    sufficiency: partial
-  - countermeasure: vecdb-access-control
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-020-003
     requirements: ['A01:2021']
-    sufficiency: partial
-  - countermeasure: docstore-access-control
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-034-003
     requirements: ['A01:2021']
-    sufficiency: partial
-  - countermeasure: registry-access-control
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-i-004-002
     requirements: ['A01:2021']
-    sufficiency: partial
-  - countermeasure: mcp-scope-enforcement
-    requirements: ['A01:2021']
-    sufficiency: partial
-  - countermeasure: vecdb-tenant-isolation
-    requirements: ['A01:2021']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # A02:2021 - Cryptographic Failures
   # ============================================================================
-  - countermeasure: embed-transport-encryption
+  - countermeasure: aidefend-ai-security/aid-h-005-005
     requirements: ['A02:2021']
-    sufficiency: partial
-  - countermeasure: mcp-secret-management
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-028-002
     requirements: ['A02:2021']
-    sufficiency: partial
-  - countermeasure: registry-integrity-verification
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-m-002-002
     requirements: ['A02:2021']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # A03:2021 - Injection
   # ============================================================================
-  - countermeasure: llm-input-guardrail
+  - countermeasure: aidefend-ai-security/aid-h-002-002
     requirements: ['A03:2021']
-    sufficiency: partial
-  - countermeasure: llm-output-validation
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-006-002
     requirements: ['A03:2021']
-    sufficiency: partial
-  - countermeasure: tool-parameter-validation
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-018-001
     requirements: ['A03:2021']
-    sufficiency: partial
-  - countermeasure: mcp-tool-schema-validation
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-024-002
     requirements: ['A03:2021']
-    sufficiency: partial
-  - countermeasure: vecdb-input-validation
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-020-001
     requirements: ['A03:2021']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # A04:2021 - Insecure Design
   # ============================================================================
-  - countermeasure: guardrail-layered-defense
+  - countermeasure: aidefend-ai-security/aid-d-001-001
     requirements: ['A04:2021']
-    sufficiency: partial
-  - countermeasure: agent-hitl
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-m-006-001
     requirements: ['A04:2021']
-    sufficiency: partial
-  - countermeasure: agent-circuit-breaker
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-017-001
     requirements: ['A04:2021']
-    sufficiency: partial
-  - countermeasure: agent-goal-validation
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-d-010
     requirements: ['A04:2021']
-    sufficiency: partial
-  - countermeasure: eval-adversarial-testing
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-001
     requirements: ['A04:2021']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # A05:2021 - Security Misconfiguration
   # ============================================================================
-  - countermeasure: mcp-server-inventory
+  - countermeasure: aidefend-ai-security/aid-h-034-001
     requirements: ['A05:2021']
-    sufficiency: partial
-  - countermeasure: guardrail-policy-review
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-m-005-002
     requirements: ['A05:2021']
-    sufficiency: partial
-  - countermeasure: gateway-model-routing-control
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-033-005
     requirements: ['A05:2021']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # A06:2021 - Vulnerable and Outdated Components
   # ============================================================================
-  - countermeasure: mcp-dependency-verification
+  - countermeasure: aidefend-ai-security/aid-h-024-001
     requirements: ['A06:2021']
-    sufficiency: partial
-  - countermeasure: embed-integrity-verification
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-020-001
     requirements: ['A06:2021']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # A07:2021 - Identification and Authentication Failures
   # ============================================================================
-  - countermeasure: gateway-auth
+  - countermeasure: aidefend-ai-security/aid-h-004-002
     requirements: ['A07:2021']
-    sufficiency: partial
-  - countermeasure: mcp-auth-enforcement
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-028-001
     requirements: ['A07:2021']
-    sufficiency: partial
-  - countermeasure: agent-inter-agent-auth
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-004-003
     requirements: ['A07:2021']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # A08:2021 - Software and Data Integrity Failures
   # ============================================================================
-  - countermeasure: training-data-validation
-    requirements: ['A08:2021']
-    sufficiency: partial
-  - countermeasure: registry-integrity-verification
+  - countermeasure: aidefend-ai-security/aid-h-002-001
     requirements: ['A08:2021']
     sufficiency: full
-  - countermeasure: eval-pipeline-integrity
+  - countermeasure: aidefend-ai-security/aid-m-002-002
     requirements: ['A08:2021']
-    sufficiency: partial
-  - countermeasure: training-data-provenance
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-007-004
     requirements: ['A08:2021']
-    sufficiency: partial
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-003-003
+    requirements: ['A08:2021']
+    sufficiency: full
 
   # ============================================================================
   # A09:2021 - Security Logging and Monitoring Failures
   # ============================================================================
-  - countermeasure: gateway-comprehensive-logging
+  - countermeasure: aidefend-ai-security/aid-d-005-001
     requirements: ['A09:2021']
-    sufficiency: partial
-  - countermeasure: mcp-audit-logging
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-d-005-004
     requirements: ['A09:2021']
-    sufficiency: partial
-  - countermeasure: agent-behavior-monitoring
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-d-011-001
     requirements: ['A09:2021']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # A10:2021 - Server-Side Request Forgery (SSRF)
   # ============================================================================
-  - countermeasure: tool-sandboxing
+  - countermeasure: aidefend-ai-security/aid-i-001-003
     requirements: ['A10:2021']
-    sufficiency: partial
-  - countermeasure: tool-allowlist
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-018-002
     requirements: ['A10:2021']
-    sufficiency: partial
+    sufficiency: full

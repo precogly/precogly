@@ -1,0 +1,19 @@
+framework: owasp-aisvs-1-0-l3
+mappings:
+- countermeasure: cognito-mfa
+  requirements:
+  - 5.1.1
+  sufficiency: partial
+- countermeasure: cognito-advanced-security
+  requirements:
+  - 5.1.1
+  - 5.1.2
+  sufficiency: partial
+- countermeasure: bedrock-kb-data-source-validation
+  requirements:
+  - 5.1.1
+  sufficiency: partial
+- countermeasure: bedrock-kb-sensitive-data-exclusion
+  requirements:
+  - 5.1.1
+  sufficiency: partial
