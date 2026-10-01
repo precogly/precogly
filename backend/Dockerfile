@@ -4,7 +4,7 @@
 # `context: .` and `dockerfile: backend/Dockerfile` for that reason.
 
 # ---- Base ----
-FROM python:3.12-slim AS base
+FROM python:3.14-slim AS base
 
 # uv defaults the venv to $PROJECT/.venv, which docker-compose.yml's
 # ./backend:/app/backend mount would shadow. uv's Docker guide masks it with an
