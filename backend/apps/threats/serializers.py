@@ -505,6 +505,7 @@ class InstanceCountermeasureSerializer(serializers.ModelSerializer):
     countermeasure_name_display = serializers.SerializerMethodField()
     control_functions_display = serializers.SerializerMethodField()
     control_nature_display = serializers.SerializerMethodField()
+    days_overdue = serializers.ReadOnlyField()
     verified_by_email = serializers.EmailField(
         source="verified_by.email", read_only=True
     )
@@ -551,6 +552,8 @@ class InstanceCountermeasureSerializer(serializers.ModelSerializer):
             "priority",
             "due_date",
             "external_ticket_url",
+            "days_overdue",
+            "source",
             "verified_by",
             "verified_by_email",
             "evidence_url",
@@ -574,6 +577,7 @@ class InstanceCountermeasureSerializer(serializers.ModelSerializer):
             "countermeasure_name_display",
             "control_functions_display",
             "control_nature_display",
+            "days_overdue",
             "verified_by_email",
             "assigned_owner_email",
             "threat_links",
