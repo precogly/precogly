@@ -54,6 +54,17 @@ class LibraryPack(TimestampedModel):
     # Metadata
     author = models.CharField(max_length=255, help_text="Author or organization name")
 
+    # Presentation: optional pack-level icon, loaded from an SVG file
+    # referenced by `pack.yaml`'s `icon:` key (path relative to the pack
+    # directory). Rendered by the frontend as a base64 data URI
+    # (see `SvgIcon`) — never injected as raw markup — so it carries the
+    # same XSS-safety guarantee as `ComponentLibrary.icon_svg`.
+    icon_svg = models.TextField(
+        blank=True,
+        default="",
+        help_text="Inline SVG markup for the pack's icon, loaded from pack.yaml's icon: path.",
+    )
+
     # Targeting
     tags = ArrayField(
         models.CharField(max_length=50),
