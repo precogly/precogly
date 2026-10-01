@@ -1,0 +1,6 @@
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+<ellipse cx="24" cy="10" rx="16" ry="5" stroke="#0078D4" stroke-width="2.5" fill="none"/>
+<path d="M8 10v28c0 2.76 7.16 5 16 5s16-2.24 16-5V10" stroke="#0078D4" stroke-width="2.5" fill="none"/>
+<path d="M8 24c0 2.76 7.16 5 16 5s16-2.24 16-5" stroke="#0078D4" stroke-width="2"/>
+<text x="17" y="16" font-size="7" font-family="monospace" font-weight="bold" fill="#0078D4">PG</text>
+</svg>

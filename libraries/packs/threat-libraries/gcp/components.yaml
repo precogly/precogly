@@ -2,6 +2,7 @@
 components:
   # DATABASES
   - slug: cloudsql-postgresql
+    icon: icons/cloudsql-postgresql.svg
     name: "GCP Cloud SQL (PostgreSQL)"
     category: datastore
     component_type: database
@@ -9,6 +10,7 @@ components:
     description: "Managed PostgreSQL database service"
 
   - slug: cloudsql-mysql
+    icon: icons/cloudsql-mysql.svg
     name: "GCP Cloud SQL (MySQL)"
     category: datastore
     component_type: database
@@ -16,6 +18,7 @@ components:
     description: "Managed MySQL database service"
 
   - slug: firestore
+    icon: icons/firestore.svg
     name: "GCP Firestore"
     category: datastore
     component_type: database
@@ -23,6 +26,7 @@ components:
     description: "Serverless NoSQL document database"
 
   - slug: bigtable
+    icon: icons/bigtable.svg
     name: "GCP Bigtable"
     category: datastore
     component_type: database
@@ -30,6 +34,7 @@ components:
     description: "Wide-column NoSQL database"
 
   - slug: bigquery
+    icon: icons/bigquery.svg
     name: "GCP BigQuery"
     category: datastore
     component_type: database
@@ -37,6 +42,7 @@ components:
     description: "Serverless data warehouse"
 
   - slug: spanner
+    icon: icons/spanner.svg
     name: "GCP Cloud Spanner"
     category: datastore
     component_type: database
@@ -44,6 +50,7 @@ components:
     description: "Globally distributed relational database"
 
   - slug: datastore
+    icon: icons/datastore.svg
     name: "GCP Datastore"
     category: datastore
     component_type: database
@@ -52,6 +59,7 @@ components:
 
   # STORAGE
   - slug: cloud-storage
+    icon: icons/cloud-storage.svg
     name: "GCP Cloud Storage"
     category: datastore
     component_type: storage
@@ -59,6 +67,7 @@ components:
     description: "Object storage service"
 
   - slug: filestore
+    icon: icons/filestore.svg
     name: "GCP Filestore"
     category: datastore
     component_type: storage
@@ -66,6 +75,7 @@ components:
     description: "Managed NFS file storage"
 
   - slug: persistent-disk
+    icon: icons/persistent-disk.svg
     name: "GCP Persistent Disk"
     category: datastore
     component_type: storage
@@ -74,6 +84,7 @@ components:
 
   # CACHE
   - slug: memorystore-redis
+    icon: icons/memorystore-redis.svg
     name: "GCP Memorystore (Redis)"
     category: datastore
     component_type: cache
@@ -81,6 +92,7 @@ components:
     description: "Managed Redis in-memory cache"
 
   - slug: memorystore-memcached
+    icon: icons/memorystore-memcached.svg
     name: "GCP Memorystore (Memcached)"
     category: datastore
     component_type: cache
@@ -89,6 +101,7 @@ components:
 
   # COMPUTE
   - slug: cloud-functions
+    icon: icons/cloud-functions.svg
     name: "GCP Cloud Functions"
     category: process
     component_type: compute
@@ -96,6 +109,7 @@ components:
     description: "Serverless function execution"
 
   - slug: cloud-run
+    icon: icons/cloud-run.svg
     name: "GCP Cloud Run"
     category: process
     component_type: compute
@@ -103,6 +117,7 @@ components:
     description: "Serverless container platform"
 
   - slug: gke
+    icon: icons/gke.svg
     name: "GCP GKE"
     category: process
     component_type: compute
@@ -110,6 +125,7 @@ components:
     description: "Google Kubernetes Engine - managed Kubernetes"
 
   - slug: compute-engine
+    icon: icons/compute-engine.svg
     name: "GCP Compute Engine"
     category: process
     component_type: compute
@@ -117,6 +133,7 @@ components:
     description: "Virtual machine instances"
 
   - slug: app-engine
+    icon: icons/app-engine.svg
     name: "GCP App Engine"
     category: process
     component_type: compute
@@ -124,6 +141,7 @@ components:
     description: "PaaS for web applications"
 
   - slug: cloud-build
+    icon: icons/cloud-build.svg
     name: "GCP Cloud Build"
     category: process
     component_type: compute
@@ -132,6 +150,7 @@ components:
 
   # MESSAGING
   - slug: pubsub
+    icon: icons/pubsub.svg
     name: "GCP Pub/Sub"
     category: process
     component_type: messaging
@@ -139,6 +158,7 @@ components:
     description: "Messaging and event ingestion"
 
   - slug: cloud-tasks
+    icon: icons/cloud-tasks.svg
     name: "GCP Cloud Tasks"
     category: process
     component_type: messaging
@@ -146,6 +166,7 @@ components:
     description: "Asynchronous task execution"
 
   - slug: dataflow
+    icon: icons/dataflow.svg
     name: "GCP Dataflow"
     category: process
     component_type: messaging
@@ -154,6 +175,7 @@ components:
 
   # NETWORKING
   - slug: vpc
+    icon: icons/vpc.svg
     name: "GCP VPC"
     category: process
     component_type: networking
@@ -161,6 +183,7 @@ components:
     description: "Virtual Private Cloud network"
 
   - slug: subnet
+    icon: icons/subnet.svg
     name: "GCP Subnet"
     category: process
     component_type: networking
@@ -168,6 +191,7 @@ components:
     description: "Regional subnet within VPC"
 
   - slug: private-service-connect
+    icon: icons/private-service-connect.svg
     name: "GCP Private Service Connect"
     category: process
     component_type: networking
@@ -175,6 +199,7 @@ components:
     description: "Private connectivity to Google services"
 
   - slug: network-connectivity
+    icon: icons/network-connectivity.svg
     name: "GCP Network Connectivity Center"
     category: process
     component_type: networking
@@ -182,6 +207,7 @@ components:
     description: "Network hub for hybrid connectivity"
 
   - slug: cloud-load-balancing
+    icon: icons/cloud-load-balancing.svg
     name: "GCP Cloud Load Balancing"
     category: process
     component_type: networking
@@ -189,6 +215,7 @@ components:
     description: "Global and regional load balancing"
 
   - slug: cloud-cdn
+    icon: icons/cloud-cdn.svg
     name: "GCP Cloud CDN"
     category: process
     component_type: networking
@@ -196,6 +223,7 @@ components:
     description: "Content Delivery Network"
 
   - slug: cloud-dns
+    icon: icons/cloud-dns.svg
     name: "GCP Cloud DNS"
     category: process
     component_type: networking
@@ -203,6 +231,7 @@ components:
     description: "Managed DNS service"
 
   - slug: cloud-nat
+    icon: icons/cloud-nat.svg
     name: "GCP Cloud NAT"
     category: process
     component_type: networking
@@ -211,6 +240,7 @@ components:
 
   # SECURITY
   - slug: cloud-armor
+    icon: icons/cloud-armor.svg
     name: "GCP Cloud Armor"
     category: process
     component_type: security
@@ -218,6 +248,7 @@ components:
     description: "DDoS protection and WAF"
 
   - slug: cloud-firewall
+    icon: icons/cloud-firewall.svg
     name: "GCP Cloud Firewall"
     category: process
     component_type: security
@@ -225,6 +256,7 @@ components:
     description: "Network firewall rules"
 
   - slug: security-command-center
+    icon: icons/security-command-center.svg
     name: "GCP Security Command Center"
     category: process
     component_type: security
@@ -232,6 +264,7 @@ components:
     description: "Security and risk management"
 
   - slug: cloud-kms
+    icon: icons/cloud-kms.svg
     name: "GCP Cloud KMS"
     category: process
     component_type: security
@@ -239,6 +272,7 @@ components:
     description: "Key Management Service"
 
   - slug: secret-manager
+    icon: icons/secret-manager.svg
     name: "GCP Secret Manager"
     category: process
     component_type: security
@@ -246,6 +280,7 @@ components:
     description: "Secrets storage and management"
 
   - slug: cloud-hsm
+    icon: icons/cloud-hsm.svg
     name: "GCP Cloud HSM"
     category: process
     component_type: security
@@ -253,6 +288,7 @@ components:
     description: "Hardware Security Module"
 
   - slug: cloud-vpn
+    icon: icons/cloud-vpn.svg
     name: "GCP Cloud VPN"
     category: process
     component_type: security
@@ -260,6 +296,7 @@ components:
     description: "Site-to-site VPN connectivity"
 
   - slug: iap
+    icon: icons/iap.svg
     name: "GCP Identity-Aware Proxy"
     category: process
     component_type: security
@@ -268,6 +305,7 @@ components:
 
   # AUTH / IDENTITY
   - slug: identity-platform
+    icon: icons/identity-platform.svg
     name: "GCP Identity Platform"
     category: process
     component_type: auth
@@ -275,6 +313,7 @@ components:
     description: "Customer identity management"
 
   - slug: iam
+    icon: icons/iam.svg
     name: "GCP IAM"
     category: process
     component_type: auth
@@ -282,6 +321,7 @@ components:
     description: "Identity and Access Management"
 
   - slug: workload-identity
+    icon: icons/workload-identity.svg
     name: "GCP Workload Identity"
     category: process
     component_type: auth
@@ -290,6 +330,7 @@ components:
 
   # MONITORING
   - slug: cloud-monitoring
+    icon: icons/cloud-monitoring.svg
     name: "GCP Cloud Monitoring"
     category: process
     component_type: monitoring
@@ -297,6 +338,7 @@ components:
     description: "Infrastructure and application monitoring"
 
   - slug: cloud-logging
+    icon: icons/cloud-logging.svg
     name: "GCP Cloud Logging"
     category: process
     component_type: monitoring
@@ -304,6 +346,7 @@ components:
     description: "Log management and analysis"
 
   - slug: cloud-trace
+    icon: icons/cloud-trace.svg
     name: "GCP Cloud Trace"
     category: process
     component_type: monitoring
@@ -311,6 +354,7 @@ components:
     description: "Distributed tracing"
 
   - slug: cloud-profiler
+    icon: icons/cloud-profiler.svg
     name: "GCP Cloud Profiler"
     category: process
     component_type: monitoring
@@ -319,6 +363,7 @@ components:
 
   # API MANAGEMENT
   - slug: api-gateway
+    icon: icons/api-gateway.svg
     name: "GCP API Gateway"
     category: process
     component_type: networking
@@ -326,6 +371,7 @@ components:
     description: "Serverless API gateway"
 
   - slug: apigee
+    icon: icons/apigee.svg
     name: "GCP Apigee"
     category: process
     component_type: networking
