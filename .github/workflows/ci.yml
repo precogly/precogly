@@ -62,6 +62,7 @@ jobs:
           node-version: '22'
       - run: cd frontend && npm ci
       - run: cd frontend && npx tsc --noEmit
+      - run: cd frontend && npx vitest run
 
   # Django's deployment checklist, run against the production settings module.
   deploy-check:
