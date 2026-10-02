@@ -97,7 +97,12 @@ class ThreatLibraryViewSet(viewsets.ModelViewSet):
         filters.OrderingFilter,
     ]
     filterset_fields = []
-    search_fields = ["name", "description"]
+    search_fields = [
+        "name",
+        "description",
+        "taxonomy_entries__taxonomy_entry__external_id",
+        "taxonomy_entries__taxonomy_entry__title",
+    ]
     ordering_fields = ["name", "created_at"]
     ordering = ["name"]
 
