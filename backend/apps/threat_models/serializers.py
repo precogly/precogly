@@ -134,6 +134,7 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
     connected_packs = serializers.SerializerMethodField()
     referenced_model_ids = serializers.SerializerMethodField()
     reference_images = ThreatModelReferenceImageSerializer(many=True, read_only=True)
+    can_write = serializers.SerializerMethodField()
 
     class Meta:
         model = ThreatModel
@@ -162,6 +163,7 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
             "connected_packs",
             "referenced_model_ids",
             "reference_images",
+            "can_write",
             "risk_scoring_method",
             "created_at",
             "updated_at",
@@ -175,7 +177,17 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
             "organization_name",
             "owning_team_name",
             "business_unit_name",
+            "can_write",
         ]
+
+    def get_can_write(self, obj):
+        """Return the backend's object-level write decision for this request."""
+        from apps.core.permissions import CanWrite
+
+        request = self.context.get("request")
+        if request is None:
+            return False
+        return CanWrite.user_can_write(request.user, obj)
 
     def validate_owning_team(self, value):
         """Validate owning_team belongs to the same organization as the threat model."""

@@ -89,12 +89,18 @@ class CanWrite(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             return True
 
+        return self.user_can_write(request.user, obj)
+
+    @classmethod
+    def user_can_write(cls, user, obj):
+        """Return whether a user may mutate an object, independent of HTTP method."""
+
         organization = _get_organization(obj)
         if organization is None:
             return True
 
         # Check org-level role
-        org_membership = request.user.organization_memberships.filter(
+        org_membership = user.organization_memberships.filter(
             organization=organization
         ).first()
         if org_membership is None:
@@ -105,13 +111,14 @@ class CanWrite(permissions.BasePermission):
             return True
 
         # Regular members: check team role for the object's owning team
-        owning_team = self._get_owning_team(obj)
+        owning_team = cls._get_owning_team(obj)
         if owning_team is None:
             return False
 
         from apps.organizations.models import TeamMembership
+
         team_membership = TeamMembership.objects.filter(
-            user=request.user, team=owning_team
+            user=user, team=owning_team
         ).first()
         if team_membership is None:
             return False
@@ -136,7 +143,11 @@ class CanWrite(permissions.BasePermission):
             component = obj.component
             if component and hasattr(component, "orgsystem") and component.orgsystem:
                 orgsystem = component.orgsystem
-        elif hasattr(obj, "threat_model_id") and obj.threat_model_id and hasattr(obj, "countermeasure_library"):
+        elif (
+            hasattr(obj, "threat_model_id")
+            and obj.threat_model_id
+            and hasattr(obj, "countermeasure_library")
+        ):
             # Countermeasure models have a direct threat_model FK
             threat_model = obj.threat_model
             if threat_model and hasattr(threat_model, "owning_team"):
@@ -144,12 +155,15 @@ class CanWrite(permissions.BasePermission):
 
         if orgsystem:
             # Primary path: orgsystem -> ThreatModelOrgsystem association
-            association = orgsystem.threat_model_associations.select_related("threat_model").first()
+            association = orgsystem.threat_model_associations.select_related(
+                "threat_model"
+            ).first()
             if association:
                 threat_model = association.threat_model
             else:
                 # Fallback: find threat model via the organization
                 from apps.threat_models.models import ThreatModel
+
                 organization = orgsystem.organization
                 if organization:
                     threat_model = ThreatModel.objects.filter(

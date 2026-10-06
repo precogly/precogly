@@ -31,6 +31,7 @@ export interface ThreatModel {
   organizationName?: string
   owningTeam?: number | null
   owningTeamName?: string | null
+  canWrite?: boolean
   businessUnitName?: string | null
   systemIds?: string[]
   packIds?: number[]
