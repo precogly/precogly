@@ -1,0 +1,39 @@
+taxonomy: owasp-llm-top-10-2026
+
+mappings:
+  - threat: llm-prompt-injection
+    entries: ["LLM01:2026"]
+  - threat: llm-sensitive-info-disclosure
+    entries: ["LLM02:2026"]
+  - threat: llm-excessive-agency
+    entries: ["LLM03:2026"]
+  - threat: llm-training-data-extraction
+    entries: ["LLM02:2026"]
+  - threat: training-supply-chain
+    entries: ["LLM04:2026"]
+  - threat: training-data-poisoning
+    entries: ["LLM05:2026"]
+  - threat: llm-unbounded-consumption
+    entries: ["LLM06:2026"]
+  - threat: llm-misinformation
+    entries: ["LLM07:2026"]
+  - threat: llm-system-prompt-leakage
+    entries: ["LLM08:2026"]
+  - threat: vecdb-poisoned-embeddings
+    entries: ["LLM09:2026"]
+  - threat: vecdb-embedding-inversion
+    entries: ["LLM09:2026"]
+  - threat: vecdb-cross-tenant-leakage
+    entries: ["LLM09:2026"]
+  - threat: llm-insecure-output-handling
+    entries: ["LLM10:2026"]
+  - threat: guardrail-bypass
+    entries: ["LLM01:2026"]
+  - threat: guardrail-output-failure
+    entries: ["LLM10:2026"]
+  - threat: docstore-knowledge-poisoning
+    entries: ["LLM05:2026"]
+  - threat: mcp-supply-chain
+    entries: ["LLM04:2026"]
+  - threat: training-data-leakage
+    entries: ["LLM02:2026"]

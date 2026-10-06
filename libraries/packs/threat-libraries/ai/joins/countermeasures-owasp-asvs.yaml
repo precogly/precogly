@@ -4,150 +4,143 @@ mappings:
   # ============================================================================
   # V2: Authentication
   # ============================================================================
-  - countermeasure: gateway-auth
+  - countermeasure: aidefend-ai-security/aid-h-004-002
     requirements: ['V2.1.1', 'V2.6.1']
-    sufficiency: partial
-  - countermeasure: mcp-auth-enforcement
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-028-001
     requirements: ['V2.1.1', 'V2.6.1']
-    sufficiency: partial
-  - countermeasure: agent-inter-agent-auth
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-004-003
     requirements: ['V2.6.1']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # V4: Access Control
   # ============================================================================
-  - countermeasure: agent-least-privilege
+  # Least-Privilege Tool Architecture
+  - countermeasure: aidefend-ai-security/aid-h-017-002
     requirements: ['V4.1.1', 'V4.1.3', 'V4.2.1']
-    sufficiency: partial
-  - countermeasure: tool-least-privilege
-    requirements: ['V4.1.1', 'V4.1.3']
-    sufficiency: partial
-  - countermeasure: vecdb-access-control
+    sufficiency: full
+  # User & Privileged Access Management
+  - countermeasure: aidefend-ai-security/aid-h-004-001
+    requirements: ['V4.1.1', 'V4.1.3', 'V4.2.1']
+    sufficiency: full
+  # Permission-Aware Retrieval
+  - countermeasure: aidefend-ai-security/aid-h-020-003
     requirements: ['V4.1.1', 'V4.2.1']
-    sufficiency: partial
-  - countermeasure: docstore-access-control
-    requirements: ['V4.1.1', 'V4.2.1']
-    sufficiency: partial
-  - countermeasure: registry-access-control
-    requirements: ['V4.1.1', 'V4.1.3']
-    sufficiency: partial
-  - countermeasure: training-access-control
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-007-001
     requirements: ['V4.1.1']
-    sufficiency: partial
-  - countermeasure: mcp-scope-enforcement
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-034-003
     requirements: ['V4.1.3', 'V4.2.1']
-    sufficiency: partial
-  - countermeasure: vecdb-tenant-isolation
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-i-004-002
     requirements: ['V4.3.1']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # V5: Validation, Sanitization and Encoding
   # ============================================================================
-  - countermeasure: llm-input-guardrail
+  - countermeasure: aidefend-ai-security/aid-h-002-002
     requirements: ['V5.1.3', 'V5.1.4', 'V5.2.1', 'V5.5.3']
-    sufficiency: partial
-  - countermeasure: llm-output-validation
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-006-002
     requirements: ['V5.2.1', 'V5.2.5', 'V5.3.1']
-    sufficiency: partial
-  - countermeasure: tool-parameter-validation
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-018-001
     requirements: ['V5.1.3', 'V5.1.4']
-    sufficiency: partial
-  - countermeasure: vecdb-input-validation
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-020-001
     requirements: ['V5.1.3']
-    sufficiency: partial
-  - countermeasure: mcp-tool-schema-validation
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-024-002
     requirements: ['V5.1.3', 'V5.5.3']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # V6: Stored Cryptography
   # ============================================================================
-  - countermeasure: embed-transport-encryption
+  - countermeasure: aidefend-ai-security/aid-h-005-005
     requirements: ['V6.1.1', 'V6.2.1']
-    sufficiency: partial
-  - countermeasure: mcp-secret-management
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-028-002
     requirements: ['V6.4.1']
-    sufficiency: partial
-  - countermeasure: registry-integrity-verification
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-m-002-002
     requirements: ['V6.2.1']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # V7: Error Handling and Logging
   # ============================================================================
-  - countermeasure: gateway-comprehensive-logging
+  - countermeasure: aidefend-ai-security/aid-d-005-001
     requirements: ['V7.1.1', 'V7.1.3', 'V7.2.1']
-    sufficiency: partial
-  - countermeasure: mcp-audit-logging
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-d-005-004
     requirements: ['V7.1.1', 'V7.1.3']
-    sufficiency: partial
-  - countermeasure: agent-behavior-monitoring
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-d-011-001
     requirements: ['V7.1.1', 'V7.2.1']
-    sufficiency: partial
-  - countermeasure: training-data-provenance
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-003-003
     requirements: ['V7.1.3']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # V8: Data Protection
   # ============================================================================
-  - countermeasure: training-pii-scrubbing
+  - countermeasure: aidefend-ai-security/aid-h-005-003
     requirements: ['V8.3.1', 'V8.3.4']
-    sufficiency: partial
-  - countermeasure: docstore-sensitive-data-redaction
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-d-003-002
     requirements: ['V8.3.1', 'V8.3.4']
-    sufficiency: partial
-  - countermeasure: llm-differential-privacy
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-005-001
     requirements: ['V8.3.1']
-    sufficiency: partial
-  - countermeasure: mcp-context-isolation
+    sufficiency: full
+  # Runtime Context Isolation & Hygiene
+  - countermeasure: aidefend-ai-security/aid-i-004-001
     requirements: ['V8.3.4']
-    sufficiency: partial
-  - countermeasure: agent-memory-isolation
-    requirements: ['V8.3.4']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # V10: Malicious Code
   # ============================================================================
-  - countermeasure: mcp-dependency-verification
+  - countermeasure: aidefend-ai-security/aid-h-024-001
     requirements: ['V10.3.1', 'V10.3.2']
-    sufficiency: partial
-  - countermeasure: training-data-validation
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-h-002-001
     requirements: ['V10.3.1']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # V11: Business Logic
   # ============================================================================
-  - countermeasure: agent-circuit-breaker
+  - countermeasure: aidefend-ai-security/aid-h-017-001
     requirements: ['V11.1.4']
-    sufficiency: partial
-  - countermeasure: agent-hitl
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-m-006-001
     requirements: ['V11.1.1']
-    sufficiency: partial
-  - countermeasure: agent-goal-validation
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-d-010
     requirements: ['V11.1.1']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # V13: API and Web Service
   # ============================================================================
-  - countermeasure: llm-rate-limiting
+  # Identity, Session & API Rate-Limit Throttling
+  - countermeasure: aidefend-ai-security/aid-i-003-002
     requirements: ['V13.1.5']
-    sufficiency: partial
-  - countermeasure: gateway-rate-limiting
-    requirements: ['V13.1.5']
-    sufficiency: partial
+    sufficiency: full
 
   # ============================================================================
   # V14: Configuration
   # ============================================================================
-  - countermeasure: mcp-server-inventory
+  - countermeasure: aidefend-ai-security/aid-h-034-001
     requirements: ['V14.1.1']
-    sufficiency: partial
-  - countermeasure: guardrail-policy-review
+    sufficiency: full
+  - countermeasure: aidefend-ai-security/aid-m-005-002
     requirements: ['V14.1.1']
-    sufficiency: partial
+    sufficiency: full

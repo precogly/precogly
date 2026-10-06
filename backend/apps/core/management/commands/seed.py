@@ -56,6 +56,8 @@ TAXONOMY_PACKS = [
     "taxonomies/mitre-attack",
     "taxonomies/mitre-atlas",
     "taxonomies/owasp-llm-top-10",
+    "taxonomies/owasp-llm-top-10-2026",
+    "taxonomies/owasp-ml-top-10-2023",
     "taxonomies/owasp-agentic-top-10",
     "taxonomies/owasp-mcp-top-10",
 ]
@@ -70,7 +72,8 @@ STANDARD_PACKS = [
     "standards/pci-dss",
 ]
 
-FULL_PACKS = [
+THREAT_LIBRARY_PACKS = [
+    "threat-libraries/aidefend-ai-security",
     "threat-libraries/ai",
     "threat-libraries/aws",
 ]
@@ -322,7 +325,7 @@ class Command(BaseCommand):
                 "Set LIBRARIES_PATH to the directory holding packs/."
             )
 
-        all_packs = TAXONOMY_PACKS + STANDARD_PACKS + FULL_PACKS
+        all_packs = TAXONOMY_PACKS + STANDARD_PACKS + THREAT_LIBRARY_PACKS
         for pack_slug in all_packs:
             pack_path = libraries_path / pack_slug
             if not pack_path.exists():
@@ -331,17 +334,15 @@ class Command(BaseCommand):
 
             # Validate before importing
             validation_result = validate_pack(pack_path)
-            if not validation_result.success or validation_result.warnings:
+            if not validation_result.success:
                 for error in validation_result.errors:
                     self.stdout.write(self.style.ERROR(f"  Error: {error.message}"))
-                for warning in validation_result.warnings:
-                    self.stdout.write(
-                        self.style.WARNING(f"  Warning: {warning.message}")
-                    )
                 self.stdout.write(
                     self.style.WARNING(f"Skipped: {pack_slug} — validation failed")
                 )
                 continue
+            for warning in validation_result.warnings:
+                self.stdout.write(self.style.WARNING(f"  Warning: {warning.message}"))
 
             result = import_pack_from_path(
                 pack_path=pack_path,

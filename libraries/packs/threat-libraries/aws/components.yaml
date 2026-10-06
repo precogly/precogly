@@ -182,7 +182,7 @@ components:
 
   # Database
   - id: rds
-    name: Amazon RDS / Aurora
+    name: Amazon RDS
     category: datastore
     type: Relational Database
     provider: aws
@@ -291,7 +291,7 @@ components:
 
   # Integration and Events
   - id: sns
-    name: SNS
+    name: Amazon SNS
     category: process
     type: Notification Service
     provider: aws
@@ -301,7 +301,7 @@ components:
       application-to-application and application-to-person communication.
 
   - id: eventbridge
-    name: EventBridge
+    name: Amazon EventBridge
     category: process
     type: Event Bus
     provider: aws
@@ -311,7 +311,7 @@ components:
       AWS services, SaaS applications, and custom applications.
 
   - id: step-functions
-    name: Step Functions
+    name: AWS Step Functions
     category: process
     type: Workflow Orchestration
     provider: aws
@@ -362,7 +362,7 @@ components:
       Supports stack sets for multi-account deployment and drift detection.
 
   - id: codepipeline
-    name: AWS CodePipeline / CodeBuild
+    name: AWS CodePipeline
     category: process
     type: CI/CD Pipeline
     provider: aws
@@ -414,7 +414,7 @@ components:
 
   # Data and Analytics
   - id: elasticache
-    name: ElastiCache
+    name: Amazon ElastiCache
     category: datastore
     type: In-Memory Cache
     provider: aws
@@ -424,7 +424,7 @@ components:
       and real-time analytics.
 
   - id: redshift
-    name: Redshift
+    name: Amazon Redshift
     category: datastore
     type: Data Warehouse
     provider: aws
@@ -434,7 +434,7 @@ components:
       massively parallel processing.
 
   - id: security-hub
-    name: Security Hub
+    name: AWS Security Hub
     category: process
     type: Security Aggregator
     provider: aws
@@ -445,7 +445,7 @@ components:
 
   # AI Expansion
   - id: sagemaker
-    name: SageMaker
+    name: Amazon SageMaker
     category: process
     type: ML Platform
     provider: aws
@@ -455,7 +455,7 @@ components:
       with notebook instances and endpoints.
 
   - id: bedrock-agents
-    name: Bedrock Agents
+    name: Amazon Bedrock Agents
     category: process
     type: AI Agent Platform
     provider: aws
@@ -465,7 +465,7 @@ components:
       to complete tasks.
 
   - id: bedrock-knowledge-bases
-    name: Bedrock Knowledge Bases
+    name: Amazon Bedrock Knowledge Bases
     category: datastore
     type: RAG Storage
     provider: aws

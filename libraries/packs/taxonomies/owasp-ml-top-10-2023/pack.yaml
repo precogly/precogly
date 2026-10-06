@@ -1,0 +1,15 @@
+pack:
+  schema_version: 1
+  slug: owasp-ml-top-10-2023
+  name: OWASP Machine Learning Top 10 2023
+  description: >-
+    OWASP ML Top 10 2023 taxonomy.
+    Source: OWASP Foundation.
+    https://owasp.org/www-project-machine-learning-security-top-10/
+  version: 1.0.0
+  pack_type: taxonomy
+  author: Precogly
+  tags:
+  - owasp
+  - ai-security
+  - top-10

@@ -281,9 +281,14 @@ def sync_dfd_nodes_to_components(dfd, threat_model, old_canvas_data=None):
             if not component_library:
                 component_ref = node_data.get("component_ref")
                 if component_ref:
-                    component_library = ComponentLibrary.objects.filter(
-                        slug=component_ref
-                    ).first()
+                    if "/" in component_ref:
+                        component_library = ComponentLibrary.objects.filter(
+                            qualified_slug=component_ref
+                        ).first()
+                    else:
+                        component_library = ComponentLibrary.objects.filter(
+                            slug=component_ref
+                        ).first()
 
             # 3. Try technology field (legacy/manual assignment)
             if not component_library:

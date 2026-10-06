@@ -1,0 +1,15 @@
+pack:
+  schema_version: 1
+  slug: owasp-llm-top-10-2026
+  name: OWASP Top 10 for LLM Applications 2026
+  description: >-
+    OWASP LLM Top 10 2026 taxonomy.
+    Source: OWASP Foundation / OWASP GenAI Security Project.
+    https://genai.owasp.org/resource/owasp-genai-llm-top-10-2026/
+  version: 1.0.0
+  pack_type: taxonomy
+  author: Precogly
+  tags:
+  - owasp
+  - ai-security
+  - top-10

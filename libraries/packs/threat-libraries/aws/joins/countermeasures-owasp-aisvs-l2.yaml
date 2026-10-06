@@ -1,0 +1,60 @@
+framework: owasp-aisvs-1-0-l2
+mappings:
+- countermeasure: bedrock-input-validation
+  requirements:
+  - 2.1.6
+  sufficiency: full
+- countermeasure: bedrock-guardrails
+  requirements:
+  - 7.2.1
+  sufficiency: full
+- countermeasure: bedrock-output-filtering
+  requirements:
+  - 5.2.4
+  sufficiency: full
+- countermeasure: bedrock-data-masking
+  requirements:
+  - 8.2.2
+  - 5.2.3
+  sufficiency: full
+- countermeasure: bedrock-model-invocation-logging
+  requirements:
+  - 12.1.3
+  sufficiency: full
+- countermeasure: bedrock-vpc-endpoint
+  requirements:
+  - 3.3.1
+  sufficiency: partial
+- countermeasure: bedrock-token-budget
+  requirements:
+  - 9.2.2
+  sufficiency: full
+- countermeasure: rag-access-control
+  requirements:
+  - 5.2.1
+  - 5.2.2
+  sufficiency: full
+- countermeasure: rag-data-sanitization
+  requirements:
+  - 1.2.3
+  sufficiency: partial
+- countermeasure: opensearch-encryption
+  requirements:
+  - 8.1.2
+  sufficiency: full
+- countermeasure: opensearch-access-policy
+  requirements:
+  - 5.2.1
+  sufficiency: full
+- countermeasure: bedrock-agent-guardrails
+  requirements:
+  - 3.5.1
+  sufficiency: partial
+- countermeasure: bedrock-kb-scoped-sync
+  requirements:
+  - 5.2.1
+  sufficiency: partial
+- countermeasure: bedrock-kb-access-control
+  requirements:
+  - 5.2.1
+  sufficiency: partial
