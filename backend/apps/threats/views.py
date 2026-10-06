@@ -4,6 +4,7 @@ Views for threats app.
 
 import contextlib
 
+from django.db import transaction
 from django.db.models import Prefetch, Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
@@ -84,6 +85,52 @@ def _check_platform_status_permission(user, current_status=None, new_status=None
         raise PermissionDenied(
             "Only Security Team members can assign or remove platform status."
         )
+
+
+def _component_threat_model(threat):
+    """Resolve a component threat's threat model in the current schema."""
+    component = threat.component
+    if component.threat_model_id:
+        return component.threat_model
+    if component.orgsystem_id:
+        association = component.orgsystem.threat_model_associations.select_related(
+            "threat_model"
+        ).first()
+        if association:
+            return association.threat_model
+    return None
+
+
+def _flow_threat_model(threat):
+    """Resolve a flow threat's threat model in the current schema."""
+    if not threat.data_flow_id:
+        return None
+    for component in (
+        threat.data_flow.source_component,
+        threat.data_flow.dest_component,
+    ):
+        if component.threat_model_id:
+            return component.threat_model
+        if component.orgsystem_id:
+            association = component.orgsystem.threat_model_associations.select_related(
+                "threat_model"
+            ).first()
+            if association:
+                return association.threat_model
+    return None
+
+
+def _get_threat_in_model(threat_id, threat_type, threat_model):
+    """Return a threat only when it belongs to the supplied threat model."""
+    if threat_type in ("flow", "dataflow"):
+        threat = DataFlowInstanceThreat.objects.filter(id=threat_id).first()
+        resolver = _flow_threat_model
+    else:
+        threat = ComponentInstanceThreat.objects.filter(id=threat_id).first()
+        resolver = _component_threat_model
+    if threat is None or resolver(threat) != threat_model:
+        return None
+    return threat
 
 
 class ThreatLibraryViewSet(viewsets.ModelViewSet):
@@ -316,13 +363,20 @@ class ComponentInstanceThreatViewSet(viewsets.ModelViewSet):
             - status: optional, defaults to 'gap' (only used with countermeasure_library_id)
         """
         instance_threat = self.get_object()
+        threat_model = _component_threat_model(instance_threat)
+        if threat_model is None:
+            return Response(
+                {"error": "Threat model not found"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Option 1: Link an existing countermeasure instance
         existing_countermeasure_id = request.data.get("existing_countermeasure_id")
         if existing_countermeasure_id:
             try:
                 existing_cm = InstanceCountermeasure.objects.get(
-                    id=existing_countermeasure_id
+                    id=existing_countermeasure_id,
+                    threat_model=threat_model,
                 )
             except InstanceCountermeasure.DoesNotExist:
                 return Response(
@@ -369,32 +423,30 @@ class ComponentInstanceThreatViewSet(viewsets.ModelViewSet):
 
         # Block non-Security Team users from explicitly setting platform status.
         requested_status = request.data.get("status")
+        effective_status = requested_status or countermeasure.default_status
+        if effective_status not in InstanceCountermeasure.Status.values:
+            return Response(
+                {"error": "Invalid countermeasure status"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if requested_status == "platform":
             _check_platform_status_permission(request.user, new_status="platform")
 
-        # Derive threat_model from the threat's component
-        threat_model = instance_threat.component.threat_model or (
-            instance_threat.component.orgsystem.threat_models.first()
-            if instance_threat.component.orgsystem
-            else None
-        )
+        with transaction.atomic():
+            instance_cm = InstanceCountermeasure.objects.create(
+                threat_model=threat_model,
+                countermeasure_library=countermeasure,
+                countermeasure_name=countermeasure.name,
+                countermeasure_description=countermeasure.description,
+                control_functions=countermeasure.control_functions,
+                control_nature=countermeasure.control_nature,
+                status=effective_status,
+            )
 
-        effective_status = requested_status or countermeasure.default_status
-        instance_cm = InstanceCountermeasure.objects.create(
-            threat_model=threat_model,
-            countermeasure_library=countermeasure,
-            countermeasure_name=countermeasure.name,
-            countermeasure_description=countermeasure.description,
-            control_functions=countermeasure.control_functions,
-            control_nature=countermeasure.control_nature,
-            status=effective_status,
-        )
-
-        # Create junction link
-        CountermeasureThreatLink.objects.create(
-            countermeasure=instance_cm,
-            component_threat=instance_threat,
-        )
+            CountermeasureThreatLink.objects.create(
+                countermeasure=instance_cm,
+                component_threat=instance_threat,
+            )
 
         # Recalculate threat status
         recalculate_threat_status(instance_threat)
@@ -593,13 +645,20 @@ class DataFlowInstanceThreatViewSet(viewsets.ModelViewSet):
     def apply_countermeasure(self, request, pk=None):
         """Apply a countermeasure to this flow threat instance."""
         flow_threat = self.get_object()
+        threat_model = _flow_threat_model(flow_threat)
+        if threat_model is None:
+            return Response(
+                {"error": "Threat model not found"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         # Option 1: Link an existing countermeasure instance
         existing_countermeasure_id = request.data.get("existing_countermeasure_id")
         if existing_countermeasure_id:
             try:
                 existing_cm = InstanceCountermeasure.objects.get(
-                    id=existing_countermeasure_id
+                    id=existing_countermeasure_id,
+                    threat_model=threat_model,
                 )
             except InstanceCountermeasure.DoesNotExist:
                 return Response(
@@ -645,32 +704,30 @@ class DataFlowInstanceThreatViewSet(viewsets.ModelViewSet):
             )
 
         requested_status = request.data.get("status")
+        effective_status = requested_status or countermeasure.default_status
+        if effective_status not in InstanceCountermeasure.Status.values:
+            return Response(
+                {"error": "Invalid countermeasure status"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         if requested_status == "platform":
             _check_platform_status_permission(request.user, new_status="platform")
 
-        # Derive threat_model from the flow's source component
-        source_component = (
-            flow_threat.data_flow.source_component if flow_threat.data_flow else None
-        )
-        threat_model = None
-        if source_component:
-            threat_model = getattr(source_component, "threat_model", None)
+        with transaction.atomic():
+            instance_cm = InstanceCountermeasure.objects.create(
+                threat_model=threat_model,
+                countermeasure_library=countermeasure,
+                countermeasure_name=countermeasure.name,
+                countermeasure_description=countermeasure.description,
+                control_functions=countermeasure.control_functions,
+                control_nature=countermeasure.control_nature,
+                status=effective_status,
+            )
 
-        effective_status = requested_status or countermeasure.default_status
-        instance_cm = InstanceCountermeasure.objects.create(
-            threat_model=threat_model,
-            countermeasure_library=countermeasure,
-            countermeasure_name=countermeasure.name,
-            countermeasure_description=countermeasure.description,
-            control_functions=countermeasure.control_functions,
-            control_nature=countermeasure.control_nature,
-            status=effective_status,
-        )
-
-        CountermeasureThreatLink.objects.create(
-            countermeasure=instance_cm,
-            flow_threat=flow_threat,
-        )
+            CountermeasureThreatLink.objects.create(
+                countermeasure=instance_cm,
+                flow_threat=flow_threat,
+            )
 
         recalculate_threat_status(flow_threat)
 
@@ -779,22 +836,18 @@ class InstanceCountermeasureViewSet(viewsets.ModelViewSet):
                 {"error": "threat_id is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
+        threat = _get_threat_in_model(
+            threat_id, threat_type, countermeasure.threat_model
+        )
+        if threat is None:
+            return Response(
+                {"error": "Threat not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
         link_kwargs = {"countermeasure": countermeasure}
         if threat_type in ("flow", "dataflow"):
-            try:
-                threat = DataFlowInstanceThreat.objects.get(id=threat_id)
-            except DataFlowInstanceThreat.DoesNotExist:
-                return Response(
-                    {"error": "Threat not found"}, status=status.HTTP_404_NOT_FOUND
-                )
             link_kwargs["flow_threat"] = threat
         else:
-            try:
-                threat = ComponentInstanceThreat.objects.get(id=threat_id)
-            except ComponentInstanceThreat.DoesNotExist:
-                return Response(
-                    {"error": "Threat not found"}, status=status.HTTP_404_NOT_FOUND
-                )
             link_kwargs["component_threat"] = threat
 
         link, created = CountermeasureThreatLink.objects.get_or_create(**link_kwargs)
@@ -818,6 +871,14 @@ class InstanceCountermeasureViewSet(viewsets.ModelViewSet):
                 {"error": "threat_id is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
+        threat = _get_threat_in_model(
+            threat_id, threat_type, countermeasure.threat_model
+        )
+        if threat is None:
+            return Response(
+                {"error": "Link not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
         if threat_type in ("flow", "dataflow"):
             deleted_count, _ = CountermeasureThreatLink.objects.filter(
                 countermeasure=countermeasure,
@@ -834,21 +895,11 @@ class InstanceCountermeasureViewSet(viewsets.ModelViewSet):
                 {"error": "Link not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        # Recalculate the threat we just unlinked from
-        try:
-            if threat_type in ("flow", "dataflow"):
-                threat = DataFlowInstanceThreat.objects.get(id=threat_id)
-                recalculate_threat_status(threat)
-                recalculate_risks_for_threat(threat, threat_type="flow")
-            else:
-                threat = ComponentInstanceThreat.objects.get(id=threat_id)
-                recalculate_threat_status(threat)
-                recalculate_risks_for_threat(threat, threat_type="component")
-        except (
-            ComponentInstanceThreat.DoesNotExist,
-            DataFlowInstanceThreat.DoesNotExist,
-        ):
-            pass
+        recalculate_threat_status(threat)
+        recalculate_risks_for_threat(
+            threat,
+            threat_type="flow" if threat_type in ("flow", "dataflow") else "component",
+        )
 
         # If no more links remain, cascade-delete the countermeasure
         remaining_links = countermeasure.threat_links.count()
@@ -872,6 +923,23 @@ class InstanceCountermeasureViewSet(viewsets.ModelViewSet):
         if not ordered_ids or not isinstance(ordered_ids, list):
             return Response(
                 {"error": "ordered_ids list is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        accessible_countermeasures = self.get_queryset().filter(id__in=ordered_ids)
+        threat_model_ids = set(
+            accessible_countermeasures.values_list("threat_model_id", flat=True)
+        )
+        if len(threat_model_ids) != 1 or accessible_countermeasures.count() != len(
+            ordered_ids
+        ):
+            return Response(
+                {"error": "Some IDs not found or not accessible"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        threat_model = ThreatModel.objects.get(id=threat_model_ids.pop())
+        if _get_threat_in_model(threat_id, threat_type, threat_model) is None:
+            return Response(
+                {"error": "Some IDs not found or not accessible"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         if threat_type in ("flow", "dataflow"):
