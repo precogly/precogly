@@ -4,10 +4,10 @@ Serializers for packs app.
 
 from rest_framework import serializers
 
+from apps.compliance.models import StandardFramework
+from apps.diagrams.models import DFDTemplatesLibrary
 from apps.systems.models import ComponentLibrary
 from apps.threats.models import CountermeasureLibrary, ExternalTaxonomy, ThreatLibrary
-from apps.diagrams.models import DFDTemplatesLibrary
-from apps.compliance.models import StandardFramework
 
 from .models import LibraryPack, LibraryPackDependency
 
@@ -59,6 +59,7 @@ class LibraryPackListSerializer(serializers.ModelSerializer):
             "version",
             "pack_type",
             "author",
+            "icon_svg",
             "tags",
             "is_imported",
         ]
@@ -84,6 +85,7 @@ class LibraryPackDetailSerializer(serializers.ModelSerializer):
             "version",
             "pack_type",
             "author",
+            "icon_svg",
             "tags",
             "dependencies",
             "content_summary",
@@ -98,7 +100,9 @@ class LibraryPackDetailSerializer(serializers.ModelSerializer):
         return {
             "components": ComponentLibrary.objects.filter(source_pack=obj).count(),
             "threats": ThreatLibrary.objects.filter(source_pack=obj).count(),
-            "countermeasures": CountermeasureLibrary.objects.filter(source_pack=obj).count(),
+            "countermeasures": CountermeasureLibrary.objects.filter(
+                source_pack=obj
+            ).count(),
             "templates": DFDTemplatesLibrary.objects.filter(source_pack=obj).count(),
             "taxonomies": ExternalTaxonomy.objects.filter(source_pack=obj).count(),
         }
