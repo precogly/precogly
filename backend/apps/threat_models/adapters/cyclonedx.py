@@ -1,5 +1,6 @@
 """CycloneDX 2.0 TM-BOM format adapter — import and export."""
 
+import copy
 import logging
 from collections import defaultdict
 from uuid import uuid4
@@ -21,7 +22,6 @@ from .cyclonedx_enum_maps import (
     CONTROL_STATUS_TO_CDX,
     LEVEL_TO_CDX,
     RESPONSE_TO_CDX,
-    SEVERITY_TO_CDX_RISK_LEVEL,
 )
 
 logger = logging.getLogger(__name__)
@@ -267,6 +267,36 @@ class CycloneDxAdapter(BaseAdapter):
                 metadata["authors"] = [author]
         return metadata
 
+    def _requirement_snapshot_from_requirement(self, requirement):
+        """Return the CDX requirement fields shared by real and snapshot mappings."""
+        return {
+            "identifier": requirement.section_code,
+            "title": requirement.name or requirement.section_code,
+            "description": requirement.description,
+            "source": {"name": requirement.framework.name},
+        }
+
+    def _requirement_snapshot_from_mapping(self, mapping):
+        """Return CDX requirement fields from an unresolved instance mapping."""
+        return {
+            "identifier": mapping.section_code,
+            "title": mapping.section_code,
+            "description": mapping.requirement_description or "",
+            "source": {"name": mapping.framework_name},
+        }
+
+    def _requirement_snapshot_from_definition(self, requirement_data):
+        """Normalize a CDX requirement definition for deferred control resolution."""
+        return {
+            "section_code": requirement_data.get("identifier", ""),
+            "framework_name": (requirement_data.get("source") or {}).get("name", ""),
+            "description": requirement_data.get("description", ""),
+        }
+
+    def _build_requirement_definition(self, bom_ref, snapshot):
+        """Build a CDX requirement entry from normalized snapshot fields."""
+        return {"bom-ref": bom_ref, **snapshot}
+
     def _build_definitions(self, threat_model, resolver, prefetch):
         definitions = {}
 
@@ -297,8 +327,11 @@ class CycloneDxAdapter(BaseAdapter):
 
         # Requirements: collect all unique requirements from countermeasure
         # compliance mappings (library + instance) and register them so
-        # _build_controls can reference them in satisfies.
+        # _build_controls can reference them in satisfies. Instance mappings
+        # whose FK is unresolved still carry section_code/framework_name
+        # snapshots, so emit those too (GSA-TTS/TTSE-petrified-forest-sspp#31).
         requirements_by_id = {}
+        snapshot_requirements = {}
         for cm in prefetch["countermeasures"]:
             if cm.countermeasure_library:
                 for mapping in cm.countermeasure_library.standard_mappings.all():
@@ -307,20 +340,25 @@ class CycloneDxAdapter(BaseAdapter):
             for mapping in cm.instance_standard_mappings.all():
                 if mapping.requirement and mapping.requirement.framework:
                     requirements_by_id[mapping.requirement_id] = mapping.requirement
+                elif mapping.section_code and mapping.framework_name:
+                    key = (mapping.framework_name, mapping.section_code)
+                    snapshot_requirements[key] = mapping
 
-        if requirements_by_id:
+        if requirements_by_id or snapshot_requirements:
             cdx_requirements = []
             for req in requirements_by_id.values():
                 cdx_requirements.append(
-                    {
-                        "bom-ref": resolver.register("requirement", req),
-                        "identifier": req.section_code,
-                        "title": req.name or req.section_code,
-                        "description": req.description,
-                        "source": {
-                            "name": req.framework.name,
-                        },
-                    }
+                    self._build_requirement_definition(
+                        resolver.register("requirement", req),
+                        self._requirement_snapshot_from_requirement(req),
+                    )
+                )
+            for mapping in snapshot_requirements.values():
+                cdx_requirements.append(
+                    self._build_requirement_definition(
+                        resolver.register("requirement", mapping),
+                        self._requirement_snapshot_from_mapping(mapping),
+                    )
                 )
             definitions["requirements"] = cdx_requirements
 
@@ -658,67 +696,35 @@ class CycloneDxAdapter(BaseAdapter):
 
             abstract_threats.append(abstract_threat)
 
-            # Scenarios
+            # Scenarios. One Precogly instance represents a unique
+            # (target, threat_library) pair, while source CycloneDX may carry
+            # multiple scenario records for that pair. Re-emit each preserved
+            # scenario snapshot so source cardinality and refs survive.
             for inst_type, inst in instances:
-                scenario = {
-                    "bom-ref": resolver.register("scenario", inst),
-                    "threat": abstract_ref,
-                }
-
                 if inst_type == "component":
                     asset_ref = resolver.get_ref("asset", inst.component)
                 else:
                     asset_ref = resolver.get_ref("flow", inst.data_flow)
-                if asset_ref:
-                    scenario["affectedAssets"] = [asset_ref]
-
-                if inst.inherent_severity:
-                    scenario["riskScore"] = {
-                        "level": SEVERITY_TO_CDX_RISK_LEVEL.get(
-                            inst.inherent_severity, inst.inherent_severity
-                        ),
-                    }
-
-                # Actor
-                persona_links = list(inst.persona_links.all())
-                if persona_links:
-                    persona_ref = resolver.get_ref("persona", persona_links[0].persona)
-                    if persona_ref:
-                        scenario["actor"] = persona_ref
-
-                # Intent and access level
-                if inst.intent:
-                    scenario["intent"] = inst.intent
-                if inst.access_level:
-                    scenario["accessLevel"] = inst.access_level
-
-                # Triage status
-                scenario_props = []
-                if inst.triage_status != "open":
-                    scenario_props.append(
-                        {
-                            "name": "precogly:threat-status",
-                            "value": inst.triage_status,
-                        }
-                    )
-                if inst.decision_rationale:
-                    scenario_props.append(
-                        {
-                            "name": "precogly:decision-rationale",
-                            "value": inst.decision_rationale,
-                        }
-                    )
-                if scenario_props:
-                    scenario["properties"] = scenario_props
-
-                # Re-emit Tier 3 scenario data
                 cdx_meta = inst.format_metadata.get("cyclonedx", {})
-                scenario_meta = cdx_meta.get("scenario", {})
-                for key in ("motivation", "attackVector", "exploitability"):
-                    if scenario_meta.get(key):
-                        scenario[key] = scenario_meta[key]
-
-                scenarios.append(scenario)
+                snapshots = cdx_meta.get("scenarios") or []
+                if not snapshots:
+                    snapshots = [
+                        {
+                            "bom-ref": cdx_meta.get("scenario_bom_ref"),
+                            **(cdx_meta.get("scenario") or {}),
+                        }
+                    ]
+                for index, snapshot in enumerate(snapshots):
+                    scenario = copy.deepcopy(snapshot)
+                    scenario["bom-ref"] = scenario.get("bom-ref") or (
+                        resolver.register("scenario", inst)
+                        if index == 0
+                        else f"{resolver.get_ref('scenario', inst)}-{index + 1}"
+                    )
+                    scenario["threat"] = abstract_ref
+                    if asset_ref:
+                        scenario["affectedAssets"] = [asset_ref]
+                    scenarios.append(scenario)
 
         result = {}
         if abstract_threats:
@@ -982,6 +988,10 @@ class CycloneDxAdapter(BaseAdapter):
                     req_ref = resolver.get_ref("requirement", mapping.requirement)
                     if req_ref:
                         satisfies_by_req[mapping.requirement_id] = req_ref
+                elif mapping.section_code and mapping.framework_name:
+                    req_ref = resolver.get_ref("requirement", mapping)
+                    if req_ref:
+                        satisfies_by_req[mapping.id] = req_ref
             if satisfies_by_req:
                 control["satisfies"] = list(satisfies_by_req.values())
 
@@ -1089,13 +1099,22 @@ class CycloneDxAdapter(BaseAdapter):
             self._import_use_case(uc_data, threat_model, resolver)
             summary["use_cases"] += 1
 
+        # 9.5 Requirements from definitions (so control satisfies[] can resolve)
+        for req_data in definitions.get("requirements", []):
+            self._import_requirement(req_data, resolver)
+
         # 10. Controls -> InstanceCountermeasure
+        control_objs = []
         for control_data in json_data.get("controls", []):
             control_name = control_data.get(
                 "name", control_data.get("bom-ref", "unknown")
             )
             try:
-                self._import_control(control_data, threat_model, resolver, warnings)
+                cm = self._import_control(
+                    control_data, threat_model, resolver, warnings
+                )
+                if cm is not None:
+                    control_objs.append(cm)
             except TmBomImportError:
                 raise
             except Exception as e:
@@ -1103,6 +1122,10 @@ class CycloneDxAdapter(BaseAdapter):
                     f"Failed to import control '{control_name}': {e}"
                 ) from e
             summary["controls"] += 1
+
+        # 10.5 Resolve control satisfies[] -> InstanceCountermeasureStandard
+        for cm in control_objs:
+            self._resolve_control_satisfies(cm, resolver, warnings)
 
         # 11. Threats -> ThreatLibrary
         threats_block = json_data.get("threats", {})
@@ -1381,6 +1404,10 @@ class CycloneDxAdapter(BaseAdapter):
 
         protocols = flow_data.get("protocols", [])
 
+        crosses_trust_zone = getattr(source, "trust_zone_id", None) != getattr(
+            dest, "trust_zone_id", None
+        )
+
         flow = DataFlow.objects.create(
             source_component=source,
             dest_component=dest,
@@ -1389,6 +1416,7 @@ class CycloneDxAdapter(BaseAdapter):
             protocol=protocols[0] if protocols else "",
             encrypted=flow_data.get("encrypted", False),
             authenticated=flow_data.get("authenticated", False),
+            crosses_trust_zone=crosses_trust_zone,
             format_metadata={"cyclonedx": {"bom_ref": bom_ref}},
         )
         resolver.register("flow", bom_ref, flow)
@@ -1421,6 +1449,94 @@ class CycloneDxAdapter(BaseAdapter):
         )
         resolver.register("usecase", bom_ref, use_case)
         return use_case
+
+    def _import_requirement(self, req_data, resolver):
+        """Register a CDX requirement bom-ref -> (framework_name, section_code).
+
+        The referenced StandardRequirement may not be installed locally, so we
+        register the raw identifiers here and resolve the FK lazily in
+        _resolve_control_satisfies (GSA-TTS/TTSE-petrified-forest-sspp#31 item 1).
+        """
+        bom_ref = req_data.get("bom-ref", "")
+        if not bom_ref:
+            return
+        resolver.register(
+            "requirement",
+            bom_ref,
+            self._requirement_snapshot_from_definition(req_data),
+        )
+
+    def _resolve_control_satisfies(self, cm, resolver, warnings):
+        """Create InstanceCountermeasureStandard rows from a control's satisfies[].
+
+        Resolves the StandardRequirement FK when its framework is installed;
+        otherwise stores section_code/framework_name snapshots so the mapping
+        still displays (GSA-TTS/TTSE-petrified-forest-sspp#31 item 1).
+        """
+        from apps.compliance.models import StandardRequirement
+        from apps.threats.models import InstanceCountermeasureStandard
+
+        satisfies = getattr(cm, "_deferred_satisfies", None)
+        if not satisfies:
+            return
+
+        for req_ref in satisfies:
+            # CycloneDX TM-BOM sources use both forms in the wild:
+            #   "satisfies": ["requirement-bom-ref"]
+            # and the compact snapshot form emitted by vault/tooling:
+            #   "satisfies": [{"reference": "AC-2", "framework": "nist-..."}]
+            # Resolve string refs through the requirement registry; consume
+            # object snapshots directly so dicts never reach the hash lookup.
+            if isinstance(req_ref, dict):
+                reference = req_ref.get("reference") or req_ref.get("control-id") or ""
+                framework = (
+                    req_ref.get("framework") or req_ref.get("framework_name") or ""
+                )
+                req_info = {
+                    "section_code": reference,
+                    "framework_name": framework,
+                    "description": req_ref.get("description", ""),
+                }
+            else:
+                req_info = resolver.resolve("requirement", req_ref)
+            if not isinstance(req_info, dict):
+                msg = (
+                    f"Control '{cm.countermeasure_name}': satisfies reference "
+                    f"'{req_ref}' does not match any requirement definition; skipped."
+                )
+                logger.warning(msg)
+                warnings.append(msg)
+                continue
+
+            section_code = req_info.get("section_code", "")
+            framework_name = req_info.get("framework_name", "")
+            requirement = None
+            if section_code and framework_name:
+                requirement = StandardRequirement.objects.filter(
+                    framework__name=framework_name,
+                    section_code=section_code,
+                ).first()
+
+            if requirement:
+                InstanceCountermeasureStandard.objects.get_or_create(
+                    countermeasure=cm,
+                    requirement=requirement,
+                    defaults={
+                        "section_code": section_code,
+                        "framework_name": framework_name,
+                        "requirement_description": req_info.get("description", ""),
+                    },
+                )
+            else:
+                InstanceCountermeasureStandard.objects.get_or_create(
+                    countermeasure=cm,
+                    requirement=None,
+                    section_code=section_code,
+                    framework_name=framework_name,
+                    defaults={
+                        "requirement_description": req_info.get("description", ""),
+                    },
+                )
 
     def _import_control(self, control_data, threat_model, resolver, warnings):
         from apps.threats.models import InstanceCountermeasure
@@ -1465,6 +1581,60 @@ class CycloneDxAdapter(BaseAdapter):
         if cdx_status in ("proposed", "approved"):
             cdx_meta["original_status"] = cdx_status
 
+        # Extract vault:* properties for inheritance metadata
+        props = {
+            p["name"]: p["value"]
+            for p in control_data.get("properties", [])
+            if isinstance(p, dict) and "name" in p and "value" in p
+        }
+        nist_id = props.get("nist:control-id") or props.get("crm:control-id", "")
+        origination = props.get("vault:origination", "")
+        provider_system = props.get("vault:providing-system", "")
+        if nist_id:
+            cdx_meta["nist_control_id"] = nist_id
+        is_inherited = origination in ("inherited", "shared")
+
+        # poam:* properties annotate an existing control as a POA&M item
+        # rather than creating a separate entity (GSA-TTS/TTSE-petrified-forest-sspp#81).
+        #
+        # Per maintainer review on #559: poam:id has no first-class column —
+        # it round-trips fine through format_metadata.cyclonedx.poam, which
+        # is written below. poam:scheduled-completion maps onto the existing
+        # due_date field (same concept as OSCAL's scheduled-completion-date,
+        # just FedRAMP/general vocabulary) rather than a parallel column, so
+        # the overdue computation stays correct for every countermeasure, not
+        # only ones imported from a poam:*-tagged control.
+        poam_props = {
+            k[len("poam:") :]: v for k, v in props.items() if k.startswith("poam:")
+        }
+        due_date = None
+        if poam_props.get("scheduled-completion"):
+            from datetime import date
+
+            try:
+                due_date = date.fromisoformat(poam_props["scheduled-completion"])
+            except ValueError:
+                msg = (
+                    f"Control '{name}': invalid poam:scheduled-completion date "
+                    f"'{poam_props['scheduled-completion']}', ignored."
+                )
+                logger.warning(msg)
+                warnings.append(msg)
+        if poam_props:
+            cdx_meta["poam"] = poam_props
+
+        # externalReferences: an entry typed "evidence" populates evidence_url
+        # (GSA-TTS/TTSE-petrified-forest-sspp#31 item 3).
+        evidence_url = ""
+        for ref in control_data.get("externalReferences", []):
+            if (
+                isinstance(ref, dict)
+                and ref.get("type") == "evidence"
+                and ref.get("url")
+            ):
+                evidence_url = ref["url"]
+                break
+
         cm = InstanceCountermeasure.objects.create(
             threat_model=threat_model,
             countermeasure_name=name,
@@ -1473,13 +1643,21 @@ class CycloneDxAdapter(BaseAdapter):
             control_nature=control_nature,
             status=status,
             effectiveness=effectiveness,
+            is_inherited=is_inherited,
+            inherited_from_component_name=provider_system or "",
+            evidence_url=evidence_url,
+            due_date=due_date,
+            source=(
+                InstanceCountermeasure.Source.VAULT_IMPORT
+                if is_inherited or poam_props
+                else InstanceCountermeasure.Source.MANUAL
+            ),
             format_metadata={"cyclonedx": cdx_meta},
         )
         resolver.register("control", bom_ref, cm)
 
-        # Deferred: appliesTo and satisfies resolved after all objects created
-        if control_data.get("appliesTo"):
-            cm._deferred_applies_to = control_data["appliesTo"]
+        # Deferred: satisfies resolved by _resolve_control_satisfies after all
+        # requirements are imported. appliesTo import is not currently implemented.
         if control_data.get("satisfies"):
             cm._deferred_satisfies = control_data["satisfies"]
 
@@ -1696,17 +1874,32 @@ class CycloneDxAdapter(BaseAdapter):
                 instance_kwargs["decision_rationale"] = decision_rationale
 
             if isinstance(target, OrgsystemComponent):
-                instance = ComponentInstanceThreat.objects.create(
+                instance, _ = ComponentInstanceThreat.objects.get_or_create(
                     component=target,
-                    **instance_kwargs,
+                    threat_library=threat_lib,
+                    defaults=instance_kwargs,
                 )
                 resolver.register("scenario", bom_ref, instance)
             elif isinstance(target, DataFlow):
-                instance = DataFlowInstanceThreat.objects.create(
+                instance, _ = DataFlowInstanceThreat.objects.get_or_create(
                     data_flow=target,
-                    **instance_kwargs,
+                    threat_library=threat_lib,
+                    defaults=instance_kwargs,
                 )
                 resolver.register("scenario", bom_ref, instance)
+            else:
+                continue
+
+            snapshot = copy.deepcopy(scenario_data)
+            metadata = dict(instance.format_metadata or {})
+            cyclonedx = dict(metadata.get("cyclonedx") or {})
+            snapshots = list(cyclonedx.get("scenarios") or [])
+            if not any(item.get("bom-ref") == bom_ref for item in snapshots):
+                snapshots.append(snapshot)
+            cyclonedx["scenarios"] = snapshots
+            metadata["cyclonedx"] = cyclonedx
+            instance.format_metadata = metadata
+            instance.save(update_fields=["format_metadata", "updated_at"])
 
     def _import_risk(self, risk_data, threat_model, resolver):
         from apps.threats.models import (

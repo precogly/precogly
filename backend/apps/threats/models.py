@@ -637,6 +637,39 @@ class InstanceCountermeasure(TimestampedModel):
     )
     format_metadata = models.JSONField(default=dict, blank=True)
 
+    class Source(models.TextChoices):
+        MANUAL = "manual", "Manual"
+        VAULT_IMPORT = "vault_import", "Vault Import"
+        PENTEST = "pentest", "Pentest"
+
+    source = models.CharField(
+        max_length=20,
+        choices=Source.choices,
+        default=Source.MANUAL,
+        help_text="Where this countermeasure instance originated",
+    )
+
+    @property
+    def days_overdue(self) -> int | None:
+        """Days past due_date for an unresolved countermeasure, else None.
+
+        Reuses the existing ``due_date`` field rather than introducing a
+        parallel ``scheduled_completion`` column: a POA&M "scheduled
+        completion date" and the pre-existing "target completion date" are
+        the same concept under different vocabulary (FedRAMP vs. generic),
+        and this keeps the overdue computation applicable to every
+        countermeasure, not only CycloneDX-imported ones.
+        """
+        if self.due_date and self.status not in (
+            self.Status.IMPLEMENTED,
+            self.Status.VERIFIED,
+        ):
+            from datetime import date
+
+            delta = (date.today() - self.due_date).days
+            return delta if delta > 0 else None
+        return None
+
     # Zone inheritance tracking
     is_inherited = models.BooleanField(default=False)
     inherited_from_component_name = models.CharField(max_length=255, blank=True)
