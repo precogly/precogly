@@ -21,6 +21,8 @@ STATUS_EFFECTIVENESS_FALLBACK = {
     "decommissioned": 0.0,
 }
 
+NON_CREDIT_STATUSES = {"gap", "waived", "decommissioned"}
+
 
 def get_countermeasures_for_threat(threat):
     """Return countermeasures linked to a threat via the junction table."""
@@ -101,7 +103,8 @@ def compute_residual_score(risk):
     Deduplicates shared countermeasures — each countermeasure instance is counted
     only once even if it mitigates multiple threats within the same risk.
 
-    Effectiveness comes from:
+    Gap, waived, and decommissioned countermeasures always receive zero credit.
+    For other statuses, effectiveness comes from:
       1. User-entered value on the countermeasure (if set)
       2. Status-derived fallback from STATUS_EFFECTIVENESS_FALLBACK
     """
@@ -117,7 +120,9 @@ def compute_residual_score(risk):
                 continue
             seen_countermeasure_ids.add(countermeasure.id)
 
-            if countermeasure.effectiveness is not None:
+            if countermeasure.status in NON_CREDIT_STATUSES:
+                all_effectiveness.append(0.0)
+            elif countermeasure.effectiveness is not None:
                 all_effectiveness.append(countermeasure.effectiveness)
             else:
                 all_effectiveness.append(

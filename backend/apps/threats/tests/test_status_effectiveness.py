@@ -10,9 +10,12 @@ from apps.threats.models import (
     ComponentInstanceThreat,
     CountermeasureThreatLink,
     InstanceCountermeasure,
+    Risk,
+    RiskThreat,
 )
 from apps.threats.services import (
     STATUS_EFFECTIVENESS_FALLBACK,
+    compute_residual_score,
     recalculate_threat_status,
 )
 
@@ -31,9 +34,7 @@ class StatusEffectivenessTestCase(TestCase):
         OrganizationMember.objects.create(
             organization=cls.org, user=cls.user, role="security_team"
         )
-        cls.tm = ThreatModel.objects.create(
-            name="Test TM", organization=cls.org
-        )
+        cls.tm = ThreatModel.objects.create(name="Test TM", organization=cls.org)
         cls.component = OrgsystemComponent.objects.create(
             threat_model=cls.tm, name="Test Component"
         )
@@ -63,8 +64,9 @@ class EffectivenessFallbackCoverageTests(StatusEffectivenessTestCase):
             if s.value not in STATUS_EFFECTIVENESS_FALLBACK
         ]
         self.assertEqual(
-            missing, [],
-            f"Statuses missing from STATUS_EFFECTIVENESS_FALLBACK: {missing}"
+            missing,
+            [],
+            f"Statuses missing from STATUS_EFFECTIVENESS_FALLBACK: {missing}",
         )
 
     def test_in_progress_has_nonzero_effectiveness(self):
@@ -103,6 +105,11 @@ class ThreatStatusDerivationTests(StatusEffectivenessTestCase):
         status = recalculate_threat_status(self.threat)
         self.assertEqual(status, "addressable")
 
+    def test_waived_countermeasure_gives_addressable(self):
+        self._add_countermeasure("waived")
+        status = recalculate_threat_status(self.threat)
+        self.assertEqual(status, "addressable")
+
     def test_gap_countermeasure_gives_exposed(self):
         self._add_countermeasure("gap")
         status = recalculate_threat_status(self.threat)
@@ -125,3 +132,31 @@ class ThreatStatusDerivationTests(StatusEffectivenessTestCase):
         self._add_countermeasure("implemented")
         status = recalculate_threat_status(self.threat)
         self.assertEqual(status, "addressable")
+
+
+class ResidualRiskEffectivenessTests(StatusEffectivenessTestCase):
+    """Unavailable controls must not retain stale residual-risk credit."""
+
+    def setUp(self):
+        self.risk = Risk.objects.create(
+            threat_model=self.tm,
+            name="Lifecycle effectiveness risk",
+            inherent_score=100,
+            inherent_level="critical",
+        )
+        RiskThreat.objects.create(risk=self.risk, component_threat=self.threat)
+
+    def test_non_credit_statuses_ignore_explicit_effectiveness(self):
+        countermeasure = self._add_countermeasure(
+            "implemented",
+            effectiveness=0.9,
+        )
+
+        self.assertEqual(compute_residual_score(self.risk), 10)
+
+        for status in ("gap", "waived", "decommissioned"):
+            with self.subTest(status=status):
+                countermeasure.status = status
+                countermeasure.save(update_fields=["status"])
+
+                self.assertEqual(compute_residual_score(self.risk), 100)
