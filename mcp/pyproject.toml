@@ -13,7 +13,7 @@ authors = [
 ]
 dependencies = [
     "httpx2>=2.9.1",
-    "mcp[cli]==2.1.*",
+    "mcp[cli]==2.3.*",
     "pydantic>=2.13.4",
 ]
 
