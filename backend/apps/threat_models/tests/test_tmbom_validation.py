@@ -15,9 +15,11 @@ from apps.threat_models.tmbom.schema import (
     SCHEMA_PATH,
     load_schema,
 )
+from apps.threat_models.tmbom.spec_values import REF_KEYS
 from apps.threat_models.tmbom.testing import assert_valid_tmbom
 from apps.threat_models.tmbom.validation import (
     check_ref_integrity,
+    ref_keys_in_schema,
     validate_document,
 )
 
@@ -80,6 +82,37 @@ class RefIntegrityTests(SimpleTestCase):
         }
         self.assertEqual(check_ref_integrity(document), [])
 
+    def test_ref_keys_match_the_pinned_schema(self):
+        """R18: every ref field the schema defines is checked, none by hand."""
+        self.assertEqual(set(REF_KEYS), set(ref_keys_in_schema()))
+        self.assertEqual(len(REF_KEYS), len(set(REF_KEYS)))
+
+    def test_dangling_attack_tree_and_abuse_case_refs_are_found(self):
+        document = {
+            **MINIMAL_VALID_DOCUMENT,
+            "threats": {
+                "attackTrees": [{"bom-ref": "tree-1", "root": "node-gone"}],
+                "abuseCases": [
+                    {"bom-ref": "abuse-1", "abuser": "actor-gone", "children": []}
+                ],
+            },
+        }
+        messages = [str(finding) for finding in check_ref_integrity(document)]
+        self.assertEqual(
+            messages,
+            [
+                "threats/attackTrees/0/root: reference 'node-gone' resolves to nothing",
+                "threats/abuseCases/0/abuser: reference 'actor-gone' resolves to nothing",
+            ],
+        )
+
+    def test_urls_are_not_read_as_refs(self):
+        document = {
+            **MINIMAL_VALID_DOCUMENT,
+            "externalReferences": [{"type": "website", "url": "https://example.com"}],
+        }
+        self.assertEqual(check_ref_integrity(document), [])
+
 
 class PropertyRegistryTests(SimpleTestCase):
     def test_every_entry_is_prefixed_and_unique_per_owner(self):
@@ -97,3 +130,54 @@ class PropertyRegistryTests(SimpleTestCase):
                 value_type=PropertyValueType.STRING,
                 description="",
             )
+
+
+class StaleRefRepairTests(SimpleTestCase):
+    """R19: kept content loses only stale refs, and the warnings say where."""
+
+    def repair(self, value, key):
+        from apps.threat_models.tmbom.passthrough import _kept, _repair
+
+        warnings = []
+        repaired = _repair(value, {"gone"}, "threats section", warnings, key)
+        return (repaired if _kept(value, repaired) else None), warnings
+
+    def test_a_name_equal_to_a_stale_ref_stays(self):
+        repaired, warnings = self.repair(
+            [{"bom-ref": "tree-1", "name": "gone", "root": "gone"}], "attackTrees"
+        )
+        self.assertEqual(repaired, [{"bom-ref": "tree-1", "name": "gone"}])
+        self.assertEqual(
+            warnings,
+            [
+                "threats section, attackTrees 'gone': dropped root 'gone'; "
+                "it no longer resolves."
+            ],
+        )
+
+    def test_an_entry_that_loses_a_required_ref_is_left_out(self):
+        repaired, warnings = self.repair(
+            [
+                {"bom-ref": "rel-1", "ref": "gone", "type": "depends-on"},
+                {"bom-ref": "rel-2", "ref": "kept", "type": "depends-on"},
+            ],
+            "relationships",
+        )
+        self.assertEqual(
+            repaired, [{"bom-ref": "rel-2", "ref": "kept", "type": "depends-on"}]
+        )
+        self.assertIn(
+            "threats section, relationships 'rel-1': left out of the file; "
+            "its ref no longer resolves.",
+            warnings,
+        )
+
+    def test_a_list_that_loses_every_ref_goes(self):
+        repaired, warnings = self.repair(["gone"], "relatedRisks")
+        self.assertIsNone(repaired)
+        self.assertEqual(
+            warnings,
+            [
+                "threats section: removed 'gone' from relatedRisks; it no longer resolves."
+            ],
+        )

@@ -2,7 +2,8 @@
 
 A system asset carrying a ``threat-model`` external reference stands for
 another model. Its BOM-Link's serial number is resolved among the models
-the importing user can see (their organization), by the model's own
+the importing user can see (``ThreatModel.objects.visible_to``, inside the
+importing organization), by the model's own
 serial number first, then by a kept original (H13, I4); a match becomes a
 ``ThreatModelRelationship`` with the type from ``precogly:relationship``
 (default related_to), and the asset is not kept as a component. No match
@@ -18,7 +19,13 @@ from apps.threat_models.relationships import RelationshipError, add_relationship
 
 from ..properties import PropertyOwner, read_properties
 
-BOM_LINK = re.compile(r"^urn:cdx:([0-9a-f-]{36})/([1-9][0-9]*)")
+# A BOM-Link names a document by its serial number, a UUID (R21: anything
+# else is not a BOM-Link and is warned about, never looked up).
+BOM_LINK = re.compile(
+    r"^urn:cdx:([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"
+    r"/([1-9][0-9]*)",
+    re.IGNORECASE,
+)
 RELATION_TYPES = {choice for choice, _ in ThreatModelRelationship.RelationType.choices}
 SPEC_TO_CRITICALITY = {
     "minimal": "low",
@@ -29,15 +36,14 @@ SPEC_TO_CRITICALITY = {
 }
 
 
-def _models_with_serial(serial: str, organization):
-    own = list(
-        ThreatModel.objects.filter(organization=organization, serial_number=serial)
-    )
+def _models_with_serial(serial: str, organization, user):
+    """Models ``user`` can read in ``organization`` that carry ``serial`` (R20)."""
+    visible = ThreatModel.objects.visible_to(user).filter(organization=organization)
+    own = list(visible.filter(serial_number=serial))
     if own:
         return own
     return list(
-        ThreatModel.objects.filter(
-            organization=organization,
+        visible.filter(
             format_metadata__cyclonedx__imported_serial_number__in=[
                 f"urn:uuid:{serial}",
                 serial,
@@ -71,10 +77,11 @@ def import_relationships(document: dict, threat_model, context) -> None:
                     "BOM-Link; the asset stays a component."
                 )
                 continue
-            found = _models_with_serial(match.group(1), threat_model.organization)
+            serial = match.group(1).lower()
+            found = _models_with_serial(serial, threat_model.organization, context.user)
             if not found:
                 context.warn(
-                    f"Asset '{label}': no model here has serial number {match.group(1)}; "
+                    f"Asset '{label}': no model here has serial number {serial}; "
                     "the asset stays a component."
                 )
                 continue
@@ -82,7 +89,7 @@ def import_relationships(document: dict, threat_model, context) -> None:
                 names = ", ".join(sorted(m.name for m in found))
                 context.warn(
                     f"Asset '{label}': {len(found)} models carry serial number "
-                    f"{match.group(1)} ({names}); none was linked."
+                    f"{serial} ({names}); none was linked."
                 )
                 continue
             target = found[0]

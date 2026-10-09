@@ -12,6 +12,10 @@ Rules:
   fields are left out. Comments and ordering are left out too: whatever is
   in the snapshot counts; whatever is left out does not.
 - ``format_metadata`` counts in full (N3, S1): nothing writes it after import.
+- A rating is snapshotted inline under the threat or risk that holds it, by
+  content. Rating rows are replaced, not edited, every time a rating is set or
+  a residual is recalculated, so their ids would mark an unchanged model as
+  changed (R9).
 - No scheme number (S3). If a release changes the snapshot, models approved
   before it read as changed once, and the release notes say why.
 
@@ -402,15 +406,6 @@ def _rows(label, **filters):
     return _model(label).objects.filter(**filters)
 
 
-def _ratings(threat_model):
-    from apps.threats.models import Rating
-
-    ids = set(threat_model.threats.values_list("rating_id", flat=True))
-    for field in ("inherent_id", "residual_id", "target_id"):
-        ids.update(i for i in threat_model.risks.values_list(field, flat=True) if i)
-    return Rating.objects.filter(pk__in=ids)
-
-
 # How each table's rows are found from the model.
 ROW_SOURCES = {
     "threat_models.ThreatModel": lambda tm: [tm],
@@ -447,7 +442,6 @@ ROW_SOURCES = {
     "threats.InstanceThreatTarget": lambda tm: _rows(
         "threats.InstanceThreatTarget", threat__threat_model=tm
     ),
-    "threats.Rating": _ratings,
     "threats.InstanceCountermeasure": lambda tm: tm.countermeasures.all(),
     "threats.InstanceCountermeasureTarget": lambda tm: _rows(
         "threats.InstanceCountermeasureTarget", countermeasure__threat_model=tm
@@ -485,9 +479,22 @@ ROW_SOURCES = {
 }
 
 
+# Tables whose rows are snapshotted inside the row that points at them, by
+# content, rather than as a table of their own keyed by id.
+INLINE_TABLES = {"threats.Rating"}
+
+
+def _inline(row):
+    label = row._meta.label
+    return {name: _value(row, name) for name in SNAPSHOT_FIELDS[label][0]}
+
+
 def _value(row, field_name):
     field = row._meta.get_field(field_name)
     if isinstance(field, (ForeignKey, OneToOneField)):
+        if field.related_model._meta.label in INLINE_TABLES:
+            related = getattr(row, field_name)
+            return _inline(related) if related is not None else None
         return getattr(row, field.attname)
     if isinstance(field, ManyToManyField):
         return sorted(getattr(row, field_name).values_list("pk", flat=True))
@@ -501,6 +508,8 @@ def model_snapshot(threat_model) -> dict:
     """The defined snapshot: ``{table: [{field: value}, ...]}`` in a stable order."""
     snapshot = {}
     for label, (fields, _left_out) in SNAPSHOT_FIELDS.items():
+        if label in INLINE_TABLES:
+            continue
         rows = ROW_SOURCES[label](threat_model)
         if hasattr(rows, "order_by"):
             rows = rows.order_by("pk")

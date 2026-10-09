@@ -85,6 +85,7 @@ import {
   SESSION_EDITOR_KEYS,
   THREAT_CATEGORIES,
   ZONE_TYPES,
+  REF_KEYS,
 } from './cyclonedx-spec.generated'
 import {
   jsonPropertyItems,
@@ -155,15 +156,8 @@ const SESSION_SPEC_TO_CANVAS: Record<string, string> = Object.fromEntries(
   Object.entries(SESSION_CANVAS_TO_SPEC).map(([canvasKey, specKey]) => [specKey, canvasKey])
 )
 
-/** Keys whose values are refs into the same document (the backend's `REF_KEYS`). */
-const REF_KEYS = new Set([
-  'source', 'destination', 'zone', 'parent', 'threats', 'affectedAssets', 'actor', 'threatProfile',
-  'appliesTo', 'implementedBy', 'satisfies', 'mitigations', 'relatedThreats',
-  'relatedBusinessObjectives', 'controls', 'boundary', 'threatsAtBoundary', 'controlsAtBoundary',
-  'zones', 'relatedAssets', 'dataSets', 'dataStore', 'excludedComponents', 'ref', 'dependsOn',
-  'contains', 'aggregates', 'associates', 'composes', 'generalizes', 'realizes', 'serves', 'owner',
-  'reviewer', 'approver', 'party', 'affects', 'addresses', 'targets',
-])
+/** Keys whose values are refs into the same document (the backend's `REF_KEYS`, generated). */
+const REF_KEY_SET = new Set<string>(REF_KEYS)
 
 const BLUEPRINT_KNOWN_KEYS = new Set([
   'bom-ref', 'name', 'description', 'modelTypes', 'scope', 'assets', 'dataStores', 'dataSets',
@@ -957,7 +951,7 @@ function repairStaleRefs(document: CycloneDxDocument, warnings: string[]): void 
     }
     if (!isObject(node)) return
     for (const [key, value] of Object.entries(node)) {
-      if (REF_KEYS.has(key)) {
+      if (REF_KEY_SET.has(key)) {
         if (Array.isArray(value)) {
           const kept = value.filter((item) => !(typeof item === 'string') || resolves(item))
           if (kept.length !== value.length) {

@@ -24,11 +24,11 @@ from apps.systems.models import (
 )
 from apps.threats.models import Risk
 from apps.threats.services import (
-    countermeasures_losing_scope,
     ensure_generated_threats,
     recalculate_residual,
     remove_threats_that_stopped_applying,
     risk_ids_citing_targets,
+    scope_loss_warnings,
 )
 
 from .canvas import normalize_canvas
@@ -123,16 +123,12 @@ def _cleanup_orphaned_records(old_canvas_data, new_canvas_data, blueprint):
     # Controls scoped only to rows about to go keep their status and links
     # but read as "applies to the whole system" afterwards; the editor is
     # told (plan section 4.3).
-    warnings = [
-        f"{countermeasure.display_number} no longer has a scope and now applies "
-        "to the whole system"
-        for countermeasure in countermeasures_losing_scope(
-            component_ids=orphaned_component_ids,
-            flow_ids=orphaned_flow_ids,
-            zone_ids=orphaned_zone_ids,
-            boundary_ids=orphaned_boundary_ids,
-        )
-    ]
+    warnings = scope_loss_warnings(
+        component_ids=orphaned_component_ids,
+        flow_ids=orphaned_flow_ids,
+        zone_ids=orphaned_zone_ids,
+        boundary_ids=orphaned_boundary_ids,
+    )
     deleted_counts = {"warnings": warnings}
 
     # 1. Boundaries (FK zone_a/zone_b -> CASCADE, delete before zones)
@@ -212,46 +208,52 @@ def _library_copy_fields(component_library):
     }
 
 
-def _kind_from_node(node_data, component, component_library, previous_library):
-    """The component's kind after a save (M16).
+def _kind_from_node(node_data, component_library):
+    """The component's kind after a save (M16, N1).
 
-    A kind the canvas names wins. Otherwise a library change copies the new
-    library's kind, except when the user set the kind by hand (it differs from
-    the old library's); then it stays.
+    The canvas holds the user's choice: a ``kind`` on the node wins. No
+    ``kind`` means the panel's "Default", which is the library's kind (none
+    without a library), so clearing the choice clears it in the row (R14) and
+    a technology change copies the new library's kind (R15). Generated
+    canvases write ``kind`` only when it differs from the library's
+    (``tmbom/dfd_layout.py``).
     """
     named = node_data.get("kind")
     if named in ASSET_TYPES:
         return named
-    if component is None:
-        return component_library.kind if component_library else ""
-    old_library_kind = previous_library.kind if previous_library else ""
-    user_set = bool(component.kind) and component.kind != old_library_kind
-    if user_set:
-        return component.kind
-    if component_library is not None and component_library.kind:
-        return component_library.kind
-    return component.kind
+    return component_library.kind if component_library else ""
 
 
 def crosses_a_boundary(flow, boundaries, zone_parents) -> bool:
-    """True when a boundary's two zones hold the flow's ends on opposite sides
-    (each end inside one zone's subtree) (H19)."""
+    """True when the flow's ends sit on opposite sides of a boundary (H19).
 
-    def ancestors(zone_id):
-        seen = []
-        while zone_id is not None and zone_id not in seen:
-            seen.append(zone_id)
+    Each end's side of a boundary between zones A and B is whichever of the
+    two is nearest among the zones that enclose it. The flow crosses when one
+    end is on A's side and the other on B's. With B nested in A, a flow with
+    both ends inside B stays on B's side and does not cross; a flow from B to
+    a component placed directly in A does (R16).
+    """
+
+    def enclosing(zone_id):
+        chain = []
+        while zone_id is not None and zone_id not in chain:
+            chain.append(zone_id)
             zone_id = zone_parents.get(zone_id)
-        return set(seen)
+        return chain
 
-    source_zones = ancestors(flow.source_component.zone_id)
-    dest_zones = ancestors(flow.dest_component.zone_id)
-    if not source_zones or not dest_zones:
+    def side(chain, zone_a_id, zone_b_id):
+        return next(
+            (zone_id for zone_id in chain if zone_id in (zone_a_id, zone_b_id)), None
+        )
+
+    source_chain = enclosing(flow.source_component.zone_id)
+    dest_chain = enclosing(flow.dest_component.zone_id)
+    if not source_chain or not dest_chain:
         return False
     for zone_a_id, zone_b_id in boundaries:
-        if (zone_a_id in source_zones and zone_b_id in dest_zones) or (
-            zone_b_id in source_zones and zone_a_id in dest_zones
-        ):
+        source_side = side(source_chain, zone_a_id, zone_b_id)
+        dest_side = side(dest_chain, zone_a_id, zone_b_id)
+        if source_side and dest_side and source_side != dest_side:
             return True
     return False
 
@@ -408,9 +410,7 @@ def sync_dfd_nodes_to_components(dfd, blueprint, old_canvas_data=None):
 
             if component is None:
                 copied = _library_copy_fields(component_library)
-                copied["kind"] = _kind_from_node(
-                    node_data, None, component_library, None
-                )
+                copied["kind"] = _kind_from_node(node_data, component_library)
                 component = OrgsystemComponent.objects.create(
                     name=label,
                     blueprint=blueprint,
@@ -424,10 +424,7 @@ def sync_dfd_nodes_to_components(dfd, blueprint, old_canvas_data=None):
                 components_to_generate.append((component, False))
             else:
                 library_changed = component.component_library_id != new_library_id
-                previous_library = component.component_library
-                kind = _kind_from_node(
-                    node_data, component, component_library, previous_library
-                )
+                kind = _kind_from_node(node_data, component_library)
                 component.name = label
                 component.component_library = component_library
                 component.category = category

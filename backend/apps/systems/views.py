@@ -17,6 +17,7 @@ from rest_framework.response import Response
 
 from apps.core.permissions import CanWrite, WritableParentsMixin
 from apps.threats.models import InstanceThreat
+from apps.threats.services import scope_loss_warnings
 
 from .models import (
     Boundary,
@@ -77,6 +78,42 @@ class BlueprintScopedMixin(WritableParentsMixin):
         return queryset
 
 
+class ScopeLossWarningMixin:
+    """A delete that takes away a control's last target says so (section 4.3).
+
+    `scope_loss_ids(instance)` returns the row ids the delete removes, as
+    keyword arguments for `scope_loss_warnings`. The response is 204 as usual,
+    or 200 with `{"warnings": [...]}` when a control now applies to the whole
+    system.
+    """
+
+    def scope_loss_ids(self, instance):
+        raise NotImplementedError
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        with transaction.atomic():
+            warnings = scope_loss_warnings(**self.scope_loss_ids(instance))
+            self.perform_destroy(instance)
+        if warnings:
+            return Response({"warnings": warnings}, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+def zone_subtree_ids(zone):
+    """The zone and every zone nested under it (children cascade with it)."""
+    ids = {zone.id}
+    frontier = [zone.id]
+    while frontier:
+        frontier = list(
+            Zone.objects.filter(parent_id__in=frontier)
+            .exclude(id__in=ids)
+            .values_list("id", flat=True)
+        )
+        ids.update(frontier)
+    return ids
+
+
 class OrgsystemViewSet(viewsets.ModelViewSet):
     """ViewSet for Orgsystem CRUD operations."""
 
@@ -133,7 +170,7 @@ class OrgsystemViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
 
-class ZoneViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
+class ZoneViewSet(ScopeLossWarningMixin, BlueprintScopedMixin, viewsets.ModelViewSet):
     """ViewSet for Zone CRUD operations."""
 
     serializer_class = ZoneSerializer
@@ -145,8 +182,13 @@ class ZoneViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
     def get_queryset(self):
         return self.scope_queryset(Zone.objects.all()).select_related("blueprint")
 
+    def scope_loss_ids(self, instance):
+        return {"zone_ids": zone_subtree_ids(instance)}
 
-class BoundaryViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
+
+class BoundaryViewSet(
+    ScopeLossWarningMixin, BlueprintScopedMixin, viewsets.ModelViewSet
+):
     """ViewSet for Boundary CRUD operations."""
 
     serializer_class = BoundarySerializer
@@ -159,6 +201,9 @@ class BoundaryViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
         return self.scope_queryset(Boundary.objects.all()).select_related(
             "zone_a", "zone_b"
         )
+
+    def scope_loss_ids(self, instance):
+        return {"boundary_ids": [instance.id]}
 
 
 class ComponentLibraryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -196,7 +241,9 @@ class ComponentLibraryViewSet(viewsets.ReadOnlyModelViewSet):
         return qs
 
 
-class OrgsystemComponentViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
+class OrgsystemComponentViewSet(
+    ScopeLossWarningMixin, BlueprintScopedMixin, viewsets.ModelViewSet
+):
     """ViewSet for OrgsystemComponent CRUD operations."""
 
     serializer_class = OrgsystemComponentSerializer
@@ -209,6 +256,10 @@ class OrgsystemComponentViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
         return self.scope_queryset(OrgsystemComponent.objects.all()).select_related(
             "component_library", "zone", "blueprint"
         )
+
+    def scope_loss_ids(self, instance):
+        # Flows to and from the component cascade; the helper covers them.
+        return {"component_ids": [instance.id]}
 
     @action(detail=True, methods=["post"])
     def generate_threats(self, request, pk=None):
@@ -260,7 +311,7 @@ class DataAssetViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
         return self.scope_queryset(DataAsset.objects.all())
 
 
-class FlowViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
+class FlowViewSet(ScopeLossWarningMixin, BlueprintScopedMixin, viewsets.ModelViewSet):
     """ViewSet for Flow CRUD operations."""
 
     serializer_class = FlowSerializer
@@ -272,6 +323,9 @@ class FlowViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
         return self.scope_queryset(Flow.objects.all()).select_related(
             "source_component", "dest_component"
         )
+
+    def scope_loss_ids(self, instance):
+        return {"flow_ids": [instance.id]}
 
 
 class IntegrationSourceViewSet(viewsets.ModelViewSet):

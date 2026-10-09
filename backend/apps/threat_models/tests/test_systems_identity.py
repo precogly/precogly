@@ -354,3 +354,63 @@ class IdentityExportTests(Fixture):
         self.assertEqual(imported.outgoing_relationships.count(), 0)
         self.assertIn("serial number", "\n".join(summary["warnings"]))
         self.assertEqual(imported.format_metadata["cyclonedx"]["imported_version"], 3)
+
+    def _linking_document(self, url):
+        return {
+            "specFormat": "CycloneDX",
+            "specVersion": "2.0",
+            "blueprints": [
+                {
+                    "name": "Other",
+                    "modelTypes": ["data-flow"],
+                    "assets": [
+                        {
+                            "bom-ref": "sys-x",
+                            "name": "Elsewhere",
+                            "type": "system",
+                            "externalReferences": [
+                                {"type": "threat-model", "url": url}
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+
+    def test_a_malformed_bom_link_warns_and_the_import_goes_through(self):
+        """R21: 36 characters that are not a UUID are not looked up."""
+        imported, summary = TmBomAdapter().import_data(
+            self._linking_document("urn:cdx:" + "-" * 36 + "/1"),
+            self.organization,
+            self.security,
+        )
+        self.assertTrue(imported.components.filter(name="Elsewhere").exists())
+        self.assertIn("is not a BOM-Link", "\n".join(summary["warnings"]))
+
+    def test_a_bom_link_does_not_reach_a_model_the_importer_cannot_see(self):
+        """R20: matching goes through visible_to, not the whole organization."""
+        other_team = Team.objects.create(organization=self.organization, name="Vault")
+        hidden = ThreatModel.objects.create(
+            name="Hidden", organization=self.organization, owning_team=other_team
+        )
+        imported, summary = TmBomAdapter().import_data(
+            self._linking_document(f"urn:cdx:{hidden.serial_number}/1"),
+            self.organization,
+            self.member,
+        )
+        self.assertEqual(imported.outgoing_relationships.count(), 0)
+        self.assertIn("no model here has serial number", "\n".join(summary["warnings"]))
+
+        as_security, _summary = TmBomAdapter().import_data(
+            self._linking_document(f"urn:cdx:{hidden.serial_number}/1"),
+            self.organization,
+            self.security,
+        )
+        self.assertEqual(
+            list(
+                as_security.outgoing_relationships.values_list(
+                    "target_threat_model", flat=True
+                )
+            ),
+            [hidden.id],
+        )

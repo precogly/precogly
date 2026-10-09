@@ -305,3 +305,58 @@ class CountermeasureApiTests(ScopeFixture):
             f"/api/countermeasures/{control.id}/", {"status": "platform"}, format="json"
         )
         self.assertEqual(allowed.status_code, 200, allowed.content)
+
+
+class ScopeLossWarningTests(ScopeFixture):
+    """R12: every delete that takes a control's last target warns about it."""
+
+    def scoped_control(self, *targets):
+        control = create_instance_countermeasure(
+            self.threat_model, countermeasure_name="Scoped"
+        )
+        set_countermeasure_targets(control, list(targets))
+        return control
+
+    def assert_warned(self, response, control):
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(
+            response.json()["warnings"],
+            [
+                f"{control.display_number} no longer has a scope and now applies "
+                "to the whole system"
+            ],
+        )
+        self.assertTrue(InstanceCountermeasure.objects.filter(pk=control.pk).exists())
+
+    def test_zone_delete_warns(self):
+        control = self.scoped_control(self.zone)
+        response = self.client_for(self.security).delete(f"/api/zones/{self.zone.id}/")
+        self.assert_warned(response, control)
+
+    def test_component_delete_warns_for_a_control_on_its_flow(self):
+        control = self.scoped_control(self.flow)
+        response = self.client_for(self.security).delete(
+            f"/api/components/{self.waf.id}/"
+        )
+        self.assert_warned(response, control)
+
+    def test_flow_delete_warns(self):
+        control = self.scoped_control(self.flow)
+        response = self.client_for(self.security).delete(f"/api/flows/{self.flow.id}/")
+        self.assert_warned(response, control)
+
+    def test_blueprint_delete_warns(self):
+        from apps.threat_models.models import Blueprint
+
+        second = Blueprint.objects.create(threat_model=self.threat_model, name="Second")
+        only_there = OrgsystemComponent.objects.create(blueprint=second, name="Only")
+        control = self.scoped_control(only_there)
+        response = self.client_for(self.security).delete(
+            f"/api/threat-models/{self.threat_model.id}/blueprints/{second.id}/"
+        )
+        self.assert_warned(response, control)
+
+    def test_a_delete_that_leaves_a_target_is_quiet(self):
+        self.scoped_control(self.zone, self.api)
+        response = self.client_for(self.security).delete(f"/api/zones/{self.zone.id}/")
+        self.assertEqual(response.status_code, 204, response.content)

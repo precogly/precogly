@@ -31,6 +31,11 @@ LIKELIHOOD_BY_SCORE = {score: name for name, score in LIKELIHOOD_VALUES.items()}
 IMPACT_BY_SCORE = {score: name for name, score in IMPACT_VALUES.items()}
 
 
+def _on_scale(score) -> bool:
+    """True for a whole number from 1 to 5, the matrix's own scores."""
+    return score is not None and float(score).is_integer() and 1 <= score <= 5
+
+
 def band(product: float) -> str:
     if product <= 2:
         return "info"
@@ -92,7 +97,12 @@ class QualitativeMatrixEngine(BaseScoringEngine):
         )
 
     def rate_residual(self, inherent, effectiveness: float):
-        if inherent.likelihood_score is None or inherent.impact_score is None:
+        # An imported rating keeps whatever scores the file had (#31 comment
+        # 2.7). Off the 1 to 5 scale there is no matrix cell to reduce from,
+        # so the residual is a copy, as with no contributing controls (R13).
+        if not (
+            _on_scale(inherent.likelihood_score) and _on_scale(inherent.impact_score)
+        ):
             return copy_rating(inherent)
         reduced = max(1, round(inherent.likelihood_score * (1 - effectiveness)))
         residual = self._build(

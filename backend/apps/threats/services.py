@@ -252,6 +252,20 @@ def countermeasures_losing_scope(
     )
 
 
+def scope_loss_warnings(**row_ids) -> list[str]:
+    """One warning per control that ``countermeasures_losing_scope`` returns.
+
+    Every path that deletes zones, boundaries, components or flows (DFD sync,
+    the row endpoints, a blueprint delete) returns these, so removing a
+    control's last target is never silent (section 4.3, R12).
+    """
+    return [
+        f"{countermeasure.display_number} no longer has a scope and now applies "
+        "to the whole system"
+        for countermeasure in countermeasures_losing_scope(**row_ids)
+    ]
+
+
 def user_is_security_team(user, organization_id) -> bool:
     if user is None or not getattr(user, "is_authenticated", False):
         return False

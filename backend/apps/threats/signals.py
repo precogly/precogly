@@ -6,6 +6,8 @@ path deletes the row (the API, DFD sync, a blueprint delete, a cascade):
 - A countermeasure that library generation created and nobody edited is
   removed when its last threat link goes (section 4.3, H1). Anything a user
   touched, or that has no link because it applies to the whole system, stays.
+  It does nothing when the delete started from the countermeasure, its model
+  or its organization, where the countermeasure is already going (R10).
 - A threat whose last target goes, and that is not a whole-system threat, is
   deleted (section 4.1, H9). The check runs after each target row, so it gives
   the same answer for one deleted node, several in one save, or a whole
@@ -25,10 +27,15 @@ def _origin_model(origin):
 
 
 @receiver(post_delete, sender="threats.CountermeasureThreatLink")
-def cleanup_orphaned_countermeasure(sender, instance, **kwargs):
+def cleanup_orphaned_countermeasure(sender, instance, origin=None, **kwargs):
     """Delete an untouched generated countermeasure that lost its last link."""
+    from apps.organizations.models import Organization
+    from apps.threat_models.models import ThreatModel
     from apps.threats.models import InstanceCountermeasure
     from apps.threats.services import delete_if_orphaned
+
+    if _origin_model(origin) in (InstanceCountermeasure, ThreatModel, Organization):
+        return
 
     try:
         countermeasure = InstanceCountermeasure.objects.get(

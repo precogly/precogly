@@ -12,6 +12,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import Ajv2020, { type ValidateFunction } from 'ajv/dist/2020'
 import addFormats from 'ajv-formats'
+import { REF_KEYS } from '../lib/cyclonedx-spec.generated'
 
 export const REPO_ROOT = resolve(__dirname, '..', '..', '..', '..', '..')
 export const SCHEMA_PATH = resolve(REPO_ROOT, 'backend', 'apps', 'threat_models', 'tmbom', 'schema', 'cyclonedx-2.0-bundled.schema.json')
@@ -57,15 +58,8 @@ export function schemaErrors(document: unknown): string[] {
   return (validate.errors ?? []).map((error) => `${error.instancePath || '<document>'}: ${error.message ?? ''} ${JSON.stringify(error.params)}`)
 }
 
-// The backend's REF_KEYS (tmbom/validation.py).
-const REF_KEYS = new Set([
-  'source', 'destination', 'zone', 'parent', 'threats', 'affectedAssets', 'actor', 'threatProfile',
-  'appliesTo', 'implementedBy', 'satisfies', 'mitigations', 'relatedThreats',
-  'relatedBusinessObjectives', 'controls', 'boundary', 'threatsAtBoundary', 'controlsAtBoundary',
-  'zones', 'relatedAssets', 'dataSets', 'dataStore', 'excludedComponents', 'ref', 'dependsOn',
-  'contains', 'aggregates', 'associates', 'composes', 'generalizes', 'realizes', 'serves', 'owner',
-  'reviewer', 'approver', 'party', 'affects', 'addresses', 'targets',
-])
+// The backend's REF_KEYS (tmbom/spec_values.py), through the generated spec file.
+const REF_KEY_SET = new Set<string>(REF_KEYS)
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -107,7 +101,7 @@ export function refIntegrityErrors(document: unknown): string[] {
     if (!isObject(node)) return
     for (const [key, value] of Object.entries(node)) {
       const child = path ? `${path}/${key}` : key
-      if (REF_KEYS.has(key) && (typeof value === 'string' || Array.isArray(value))) check(value, child)
+      if (REF_KEY_SET.has(key) && (typeof value === 'string' || Array.isArray(value))) check(value, child)
       walk(value, child)
     }
   }

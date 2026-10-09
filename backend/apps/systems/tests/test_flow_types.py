@@ -1,7 +1,7 @@
 """Flow types, component kinds, applicability and boundary crossing (step 7, section 4.6)."""
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -21,6 +21,37 @@ from apps.threats.models import ComponentLibraryThreat, InstanceThreat, ThreatLi
 from apps.threats.services import create_risk, ensure_generated_threats
 
 User = get_user_model()
+
+
+class CrossingRuleTests(SimpleTestCase):
+    """R16: nested zones (P holds C, C holds G; S is P's sibling)."""
+
+    ZONE_PARENTS = {"P": None, "C": "P", "G": "C", "S": None}
+
+    def crosses(self, source_zone, dest_zone, boundaries):
+        from types import SimpleNamespace
+
+        from apps.diagrams.services import crosses_a_boundary
+
+        flow = SimpleNamespace(
+            source_component=SimpleNamespace(zone_id=source_zone),
+            dest_component=SimpleNamespace(zone_id=dest_zone),
+        )
+        return crosses_a_boundary(flow, boundaries, self.ZONE_PARENTS)
+
+    def test_both_ends_inside_the_child_do_not_cross(self):
+        self.assertFalse(self.crosses("C", "C", [("P", "C")]))
+        self.assertFalse(self.crosses("G", "C", [("P", "C")]))
+        self.assertFalse(self.crosses("C", "G", [("C", "P")]))
+
+    def test_child_to_parent_crosses_in_either_direction(self):
+        self.assertTrue(self.crosses("C", "P", [("P", "C")]))
+        self.assertTrue(self.crosses("P", "G", [("C", "P")]))
+
+    def test_siblings_cross_and_outside_ends_do_not(self):
+        self.assertTrue(self.crosses("C", "S", [("P", "S")]))
+        self.assertFalse(self.crosses("C", None, [("P", "S")]))
+        self.assertFalse(self.crosses("C", "S", [("C", "G")]))
 
 
 class ApplicabilityTests(TestCase):
@@ -270,6 +301,68 @@ class SyncTests(Fixture):
         self.assertTrue(dfd2.blueprint.flows.get().crosses_boundary)
         self.assertEqual(Boundary.objects.filter(blueprint=dfd2.blueprint).count(), 1)
         Zone.objects.filter(blueprint=dfd2.blueprint).exists()
+
+    def test_choosing_default_clears_a_chosen_kind(self):
+        """R14: no ``kind`` on the node means the library's kind, not "keep"."""
+        dfd = DFD.objects.create(
+            blueprint=self.blueprint,
+            name="D",
+            is_primary=True,
+            canvas_data=self._canvas(),
+        )
+        sync_dfd_nodes_to_components(dfd, self.blueprint)
+        plc = self.blueprint.components.get(name="PLC")
+        self.assertEqual(plc.kind, "system")
+
+        old = dfd.canvas_data
+        canvas = self._canvas()
+        for node, name in ((canvas["nodes"][2], "Sensor"), (canvas["nodes"][3], "PLC")):
+            node["data"]["component_id"] = self.blueprint.components.get(name=name).id
+        del canvas["nodes"][3]["data"]["kind"]
+        dfd.canvas_data = canvas
+        sync_dfd_nodes_to_components(dfd, self.blueprint, old_canvas_data=old)
+        plc.refresh_from_db()
+        self.assertEqual(plc.kind, "device")
+
+    def test_a_generated_canvas_lets_a_technology_change_copy_the_kind(self):
+        """R15: generated nodes carry ``kind`` only when it is the user's own."""
+        from apps.threat_models.tmbom.dfd_layout import build_canvas
+
+        gateway = ComponentLibrary.objects.create(
+            name="Gateway", category=ComponentLibrary.Category.PROCESS, kind="gateway"
+        )
+        library_kind = OrgsystemComponent.objects.create(
+            blueprint=self.blueprint,
+            name="Field sensor",
+            component_library=self.sensor,
+            category="process",
+            kind="device",
+        )
+        own_kind = OrgsystemComponent.objects.create(
+            blueprint=self.blueprint,
+            name="Edge box",
+            component_library=self.sensor,
+            category="process",
+            kind="system",
+        )
+        canvas = build_canvas(self.blueprint)
+        node_data = {
+            node["data"]["component_id"]: node["data"]
+            for node in canvas["nodes"]
+            if node["data"].get("component_id")
+        }
+        self.assertNotIn("kind", node_data[library_kind.id])
+        self.assertEqual(node_data[own_kind.id]["kind"], "system")
+
+        node_data[library_kind.id]["component_library_id"] = gateway.id
+        dfd = DFD.objects.create(
+            blueprint=self.blueprint, name="D", is_primary=True, canvas_data=canvas
+        )
+        sync_dfd_nodes_to_components(dfd, self.blueprint)
+        library_kind.refresh_from_db()
+        own_kind.refresh_from_db()
+        self.assertEqual(library_kind.kind, "gateway")
+        self.assertEqual(own_kind.kind, "system")
 
 
 class ApiTests(Fixture):

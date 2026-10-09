@@ -117,6 +117,33 @@ class DigestTests(TestCase):
         )
         self.assertEqual(model_digest(self.threat_model), before)
 
+    def test_replacing_a_rating_with_the_same_content_keeps_the_approval(self):
+        """Rating rows are replaced on every rating and recalculation (R9)."""
+        from apps.threats.services import (
+            apply_rating,
+            create_risk,
+            rate_inputs,
+            recalculate_residual,
+        )
+
+        apply_rating(
+            self.threat, "rating", rate_inputs(self.threat_model, {"level": "low"})
+        )
+        risk = create_risk(self.threat_model, name="R", level="medium")
+        approve(self.threat_model, self.security)
+
+        recalculate_residual(risk)
+        self.assertEqual(review_state(self.threat_model)["approval_state"], "approved")
+
+        apply_rating(
+            self.threat, "rating", rate_inputs(self.threat_model, {"level": "high"})
+        )
+        self.assertEqual(review_state(self.threat_model)["approval_state"], "changed")
+        apply_rating(
+            self.threat, "rating", rate_inputs(self.threat_model, {"level": "low"})
+        )
+        self.assertEqual(review_state(self.threat_model)["approval_state"], "approved")
+
     def test_a_stale_whole_row_save_does_not_bring_an_approval_back(self):
         stale = ThreatModel.objects.get(pk=self.threat_model.pk)
         approve(self.threat_model, self.security)

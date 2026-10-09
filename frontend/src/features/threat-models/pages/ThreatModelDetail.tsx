@@ -289,6 +289,19 @@ export function ThreatModelDetail() {
   }
 
   // Inline name editing handlers
+  const handleExportCycloneDx = useCallback(async (threatModelId: string) => {
+    try {
+      const warnings = await exportCycloneDx(threatModelId)
+      if (warnings.length > 0) {
+        toast.warning('The export left some references out', {
+          description: warnings.join('\n'),
+        })
+      }
+    } catch {
+      toast.error('Could not export the threat model')
+    }
+  }, [])
+
   const handleStartEditingName = useCallback(() => {
     if (threatModel) {
       setNameValue(threatModel.name)
@@ -474,7 +487,7 @@ export function ThreatModelDetail() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem
-                  onClick={() => id && exportCycloneDx(id)}
+                  onClick={() => id && handleExportCycloneDx(id)}
                   className="text-xs"
                 >
                   CycloneDX 2.0 BOM

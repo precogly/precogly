@@ -614,16 +614,23 @@ class ThreatModelViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"], url_path="export/cyclonedx")
     def export_cyclonedx(self, request, pk=None):
-        """Export a threat model as CycloneDX 2.0 TM-BOM JSON."""
+        """Export a threat model as CycloneDX 2.0 TM-BOM JSON.
+
+        What the export had to leave out (stale refs in kept content, K2) is
+        listed in the ``X-Export-Warnings`` header as a JSON array, so the
+        download stays the document itself (R17).
+        """
+        import json
+        import re
+
         from .tmbom import TmBomAdapter
 
         threat_model = self.get_object()
-        adapter = TmBomAdapter()
-        export_data = adapter.export_data(threat_model)
-
-        import re
+        warnings = []
+        export_data = TmBomAdapter().export_data(threat_model, warnings)
 
         response = JsonResponse(export_data, json_dumps_params={"indent": 2})
+        response["X-Export-Warnings"] = json.dumps(warnings, ensure_ascii=True)
         safe_name = re.sub(r"[^a-z0-9\-]", "-", threat_model.name.lower())
         safe_name = re.sub(r"-{2,}", "-", safe_name).strip("-")
         filename = f"{safe_name}-cyclonedx-tm-bom.cdx.json"
@@ -859,6 +866,23 @@ class BlueprintViewSet(viewsets.ModelViewSet):
             )
         with transaction.atomic():
             instance.delete()
+
+    def destroy(self, request, *args, **kwargs):
+        """Delete, and warn about controls whose whole scope was in the blueprint."""
+        from apps.threats.services import scope_loss_warnings
+
+        instance = self.get_object()
+        with transaction.atomic():
+            warnings = scope_loss_warnings(
+                component_ids=instance.components.values_list("id", flat=True),
+                flow_ids=instance.flows.values_list("id", flat=True),
+                zone_ids=instance.zones.values_list("id", flat=True),
+                boundary_ids=instance.boundaries.values_list("id", flat=True),
+            )
+            self.perform_destroy(instance)
+        if warnings:
+            return Response({"warnings": warnings}, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["get"])
     def delete_preview(self, request, threat_model_pk=None, pk=None):

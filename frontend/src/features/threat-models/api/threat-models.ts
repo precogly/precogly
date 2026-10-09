@@ -676,7 +676,11 @@ export function useImportCycloneDx() {
   })
 }
 
-export async function exportCycloneDx(threatModelId: string): Promise<void> {
+/**
+ * Download the model as a CycloneDX TM-BOM. Returns what the export had to
+ * leave out (stale refs in kept content), from the `X-Export-Warnings` header.
+ */
+export async function exportCycloneDx(threatModelId: string): Promise<string[]> {
   const token = getAccessToken()
   const response = await fetch(`/api/threat-models/${threatModelId}/export/cyclonedx/`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -699,6 +703,19 @@ export async function exportCycloneDx(threatModelId: string): Promise<void> {
   anchor.click()
   document.body.removeChild(anchor)
   URL.revokeObjectURL(url)
+
+  return parseExportWarnings(response.headers.get('X-Export-Warnings'))
+}
+
+/** The export warnings header as a list; anything unreadable counts as none. */
+export function parseExportWarnings(header: string | null): string[] {
+  if (!header) return []
+  try {
+    const parsed: unknown = JSON.parse(header)
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : []
+  } catch {
+    return []
+  }
 }
 
 /** The BOM-Link of a model: `urn:cdx:<serial number>/<version>` (plan J9). */

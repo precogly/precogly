@@ -4,6 +4,7 @@ Serializers for threats app.
 
 import re
 
+from django.db import transaction
 from rest_framework import serializers
 
 from apps.core.scope import refuse_users_outside
@@ -657,6 +658,11 @@ class InstanceThreatSerializer(serializers.ModelSerializer):
             elif self.instance is None:
                 attrs["targets"] = []
             target_rows = attrs.get("targets")
+            if target_rows is None and self.instance is not None:
+                # Only the flag was sent: check it against the stored targets.
+                target_rows = list(self.instance.targets.all())
+                if whole_system:
+                    target_rows = []
             if target_rows is not None:
                 if target_rows and whole_system:
                     raise serializers.ValidationError(
@@ -691,6 +697,7 @@ class InstanceThreatSerializer(serializers.ModelSerializer):
             )
         return attrs
 
+    @transaction.atomic
     def create(self, validated_data):
         from .services import create_instance_threat
 
@@ -717,6 +724,7 @@ class InstanceThreatSerializer(serializers.ModelSerializer):
             set_threat_business_objectives(threat, objectives)
         return threat
 
+    @transaction.atomic
     def update(self, instance, validated_data):
         from .services import (
             apply_rating,
@@ -1002,6 +1010,7 @@ class InstanceCountermeasureSerializer(serializers.ModelSerializer):
             ]
         return attrs
 
+    @transaction.atomic
     def create(self, validated_data):
         from .services import create_instance_countermeasure, link_countermeasure
 
@@ -1016,6 +1025,7 @@ class InstanceCountermeasureSerializer(serializers.ModelSerializer):
             link_countermeasure(instance, InstanceThreat.objects.get(id=threat_id))
         return instance
 
+    @transaction.atomic
     def update(self, instance, validated_data):
         from .services import set_countermeasure_providers, set_countermeasure_targets
 

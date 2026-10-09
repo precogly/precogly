@@ -123,6 +123,30 @@ class EngineTests(TestCase):
             "group",
         )
 
+    def test_matrix_residual_copies_an_off_scale_imported_rating(self):
+        """R13: an imported matrix rating may hold any number; no KeyError."""
+        engine = QualitativeMatrixEngine()
+        for likelihood, impact in ((4.5, 3.0), (4.0, 8.0), (0.0, 2.0)):
+            with self.subTest(likelihood=likelihood, impact=impact):
+                inherent = Rating(
+                    methodology="qualitative-matrix",
+                    level="high",
+                    score=likelihood * impact,
+                    likelihood_score=likelihood,
+                    impact_score=impact,
+                )
+                residual = engine.rate_residual(inherent, 0.5)
+                self.assertEqual(residual.likelihood_score, likelihood)
+                self.assertEqual(residual.impact_score, impact)
+                self.assertEqual(residual.level, "high")
+
+    def test_matrix_residual_still_reduces_an_on_scale_rating(self):
+        engine = QualitativeMatrixEngine()
+        inherent = engine.rate({"likelihood": "certain", "impact": "major"})
+        residual = engine.rate_residual(inherent, 0.5)
+        self.assertEqual(residual.likelihood_score, 2.0)
+        self.assertEqual(residual.impact_score, 4.0)
+
 
 class RiskRatingTests(TestCase):
     @classmethod

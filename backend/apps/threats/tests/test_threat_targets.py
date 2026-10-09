@@ -191,6 +191,41 @@ class TargetServiceTests(TargetFixture):
         )
         self.assertTrue(InstanceCountermeasure.objects.filter(pk=edited.pk).exists())
 
+    def test_a_model_delete_deletes_each_threat_and_control_once(self):
+        """Section 15, I6 and R10: no row is deleted twice during the cascade."""
+        from collections import Counter
+
+        from django.db.models.signals import post_delete
+
+        threat = create_instance_threat(
+            self.threat_model,
+            targets=[self.api, self.database, self.flow],
+            threat_name="Multi",
+        )
+        for name in ("Gen 1", "Gen 2"):
+            control = InstanceCountermeasure.objects.create(
+                threat_model=self.threat_model,
+                countermeasure_name=name,
+                auto_generated=True,
+            )
+            control.threat_links.create(threat=threat)
+
+        deleted = Counter()
+
+        def count(sender, instance, **kwargs):
+            if sender in (InstanceThreat, InstanceCountermeasure):
+                deleted[(sender.__name__, instance.pk)] += 1
+
+        post_delete.connect(count)
+        self.addCleanup(post_delete.disconnect, count)
+        self.threat_model.delete()
+
+        self.assertEqual(
+            sum(1 for key in deleted if key[0] == "InstanceCountermeasure"), 2
+        )
+        self.assertEqual(deleted[("InstanceThreat", threat.pk)], 1)
+        self.assertEqual(set(deleted.values()), {1})
+
 
 class GenerationTests(TargetFixture):
     @classmethod
@@ -451,6 +486,26 @@ class ThreatApiTests(TargetFixture):
         )
         self.assertEqual(response.status_code, 200, response.content)
         self.assertFalse(response.data["auto_generated"])
+
+    def test_clearing_whole_system_without_targets_is_a_400(self):
+        """R11: the flag alone is checked against the stored targets."""
+        threat = create_instance_threat(
+            self.threat_model, whole_system=True, threat_name="Everywhere"
+        )
+        response = self.client.patch(
+            f"/api/threats/{threat.id}/", {"whole_system": False}, format="json"
+        )
+        self.assertEqual(response.status_code, 400, response.content)
+        threat.refresh_from_db()
+        self.assertTrue(threat.whole_system)
+
+    def test_a_target_error_from_a_service_is_a_400(self):
+        from apps.core.exceptions import exception_handler
+        from apps.threats.services import TargetError
+
+        response = exception_handler(TargetError("no targets"), {})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.data, {"detail": "no targets"})
 
 
 class NumberingConcurrencyTests(TransactionTestCase):

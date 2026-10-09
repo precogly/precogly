@@ -23,6 +23,8 @@ optional field dropped, with a warning naming the object.
 import copy
 
 from .properties import PROPERTY_PREFIX
+from .spec_values import REF_KEYS
+from .validation import required_ref_keys
 
 DOCUMENT_KNOWN = {
     "$schema",
@@ -297,32 +299,68 @@ def collect_refs(node, found=None) -> set:
     return found
 
 
+# Returned by ``_repair`` for an entry that lost a required ref: the caller
+# leaves the entry out.
+_LEFT_OUT = object()
+
+
+def _describe(entry: dict, key: str) -> str:
+    """How a warning names an entry: its key, then its name or bom-ref."""
+    name = entry.get("name") or entry.get("bom-ref")
+    return f"{key} '{name}'" if name else f"an entry in {key}"
+
+
 def _repair(value, stale: set, label: str, warnings: list, key: str = ""):
-    """Remove stale refs from kept content: list entries go, optional fields go."""
-    if isinstance(value, str):
-        return value
+    """Remove stale refs from kept content (K2, R19).
+
+    Only values under ref keys (``spec_values.REF_KEYS``) count as refs, so a
+    name or description that happens to equal a stale ref stays. A stale
+    entry in a ref list goes; a stale optional ref field goes. An entry that
+    loses a ref the schema requires somewhere (``required_ref_keys``) is left
+    out whole, since it would not validate without it. Warnings name the
+    entry, not only the section.
+    """
     if isinstance(value, list):
         result = []
         for item in value:
-            if isinstance(item, str) and item in stale:
-                warnings.append(
-                    f"{label}: removed '{item}' from {key or 'a list'}; it no longer resolves."
-                )
+            if isinstance(item, str):
+                if key in REF_KEYS and item in stale:
+                    warnings.append(
+                        f"{label}: removed '{item}' from {key}; it no longer resolves."
+                    )
+                    continue
+                result.append(item)
                 continue
-            result.append(_repair(item, stale, label, warnings, key))
+            repaired = _repair(item, stale, label, warnings, key)
+            if repaired is not _LEFT_OUT:
+                result.append(repaired)
         return result
     if isinstance(value, dict):
+        where = f"{label}, {_describe(value, key)}" if key else label
         result = {}
+        lost_required = []
         for inner_key, item in value.items():
-            if isinstance(item, str) and item in stale and inner_key != "bom-ref":
+            if inner_key in REF_KEYS and isinstance(item, str) and item in stale:
                 warnings.append(
-                    f"{label}: dropped {inner_key} '{item}'; it no longer resolves."
+                    f"{where}: dropped {inner_key} '{item}'; it no longer resolves."
                 )
+                if inner_key in required_ref_keys():
+                    lost_required.append(inner_key)
                 continue
-            repaired = _repair(item, stale, label, warnings, inner_key)
+            repaired = _repair(item, stale, where, warnings, inner_key)
+            if repaired is _LEFT_OUT:
+                continue
             if _emptied(item, repaired):
+                if inner_key in required_ref_keys():
+                    lost_required.append(inner_key)
                 continue
             result[inner_key] = repaired
+        if lost_required:
+            warnings.append(
+                f"{where}: left out of the file; its {', '.join(lost_required)} "
+                "no longer resolves."
+            )
+            return _LEFT_OUT
         return result
     return value
 
@@ -330,6 +368,11 @@ def _repair(value, stale: set, label: str, warnings: list, key: str = ""):
 def _emptied(original, repaired) -> bool:
     """True when a repair removed every entry of a list: the key goes with it."""
     return isinstance(original, list) and bool(original) and repaired == []
+
+
+def _kept(original, repaired) -> bool:
+    """True when a repaired top-level value still belongs in the export."""
+    return repaired is not _LEFT_OUT and not _emptied(original, repaired)
 
 
 def restore(entry: dict, row, *, stale: set, warnings: list, label: str) -> None:
@@ -341,7 +384,7 @@ def restore(entry: dict, row, *, stale: set, warnings: list, label: str) -> None
             if key in entry:
                 continue
             repaired = _repair(copy.deepcopy(value), stale, label, warnings, key)
-            if not _emptied(value, repaired):
+            if _kept(value, repaired):
                 entry[key] = repaired
     foreign = cyclonedx.get("foreign_properties")
     if isinstance(foreign, list) and foreign:
@@ -368,7 +411,7 @@ def restore_document_level(
             if key in document:
                 continue
             repaired = _repair(copy.deepcopy(value), stale, "document", warnings, key)
-            if not _emptied(value, repaired):
+            if _kept(value, repaired):
                 document[key] = repaired
         for section in ("threats", "risks", "definitions", "metadata"):
             extra = kept.get(section)
@@ -381,7 +424,7 @@ def restore_document_level(
                 repaired = _repair(
                     copy.deepcopy(value), stale, f"{section} section", warnings, key
                 )
-                if not _emptied(value, repaired):
+                if _kept(value, repaired):
                     target[key] = repaired
     foreign = cyclonedx.get("foreign_properties")
     if isinstance(foreign, list) and foreign:

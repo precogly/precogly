@@ -29,8 +29,15 @@ def _component_node(component, parent_id=None) -> dict:
         "label": component.name,
         "component_id": component.id,
         "description": component.description,
-        "kind": component.kind,
     }
+    # A kind on the node is the user's choice; the library's own kind is the
+    # panel's "Default" and stays off the node, so a later technology change
+    # still copies the new library's kind (R15).
+    library_kind = (
+        component.component_library.kind if component.component_library else ""
+    )
+    if component.kind and component.kind != library_kind:
+        data["kind"] = component.kind
     if component.component_library_id:
         data["component_library_id"] = component.component_library_id
     node_type = (

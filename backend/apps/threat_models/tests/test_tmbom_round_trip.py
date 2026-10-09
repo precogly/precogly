@@ -208,6 +208,29 @@ class PassthroughTests(_ReferenceModelTests):
             any("relatedRisks" in warning for warning in warnings), warnings
         )
 
+    def test_the_export_endpoint_lists_what_it_left_out(self):
+        """R17: the download names the stale refs it removed."""
+        import json
+
+        from rest_framework.test import APIClient
+
+        document = self._decorated_document()
+        imported = self.import_copy(document)
+        Risk.objects.filter(threat_model=imported).delete()
+        client = APIClient()
+        client.force_authenticate(self.user)
+        response = client.get(f"/api/threat-models/{imported.id}/export/cyclonedx/")
+        self.assertEqual(response.status_code, 200)
+        warnings = json.loads(response["X-Export-Warnings"])
+        self.assertTrue(
+            any("relatedRisks" in warning for warning in warnings), warnings
+        )
+
+        clean = client.get(
+            f"/api/threat-models/{self.threat_model.id}/export/cyclonedx/"
+        )
+        self.assertEqual(json.loads(clean["X-Export-Warnings"]), [])
+
 
 class DfdGenerationTests(_ReferenceModelTests):
     """A document without a visualization gets a canvas that syncs to no change (9.11)."""

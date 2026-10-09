@@ -16,6 +16,10 @@ from functools import cache
 from jsonschema import Draft202012Validator
 
 from .schema import load_schema
+from .spec_values import REF_KEYS
+
+# A value may also be a BOM-Link into another document, which is not checked.
+_REF_KEYS = frozenset(REF_KEYS)
 
 
 @dataclass(frozen=True)
@@ -54,51 +58,99 @@ def validate_document(document: dict) -> list[SchemaError]:
     ]
 
 
-# Keys whose values are refs to elements of the same document (refLinkType).
-# A value may also be a BOM-Link into another document, which is not checked.
-REF_KEYS = frozenset(
-    {
-        "source",
-        "destination",
-        "zone",
-        "parent",
-        "threats",
-        "affectedAssets",
-        "actor",
-        "threatProfile",
-        "appliesTo",
-        "implementedBy",
-        "satisfies",
-        "mitigations",
-        "relatedThreats",
-        "relatedBusinessObjectives",
-        "controls",
-        "boundary",
-        "threatsAtBoundary",
-        "controlsAtBoundary",
-        "zones",
-        "relatedAssets",
-        "dataSets",
-        "dataStore",
-        "excludedComponents",
-        "ref",
-        "dependsOn",
-        "contains",
-        "aggregates",
-        "associates",
-        "composes",
-        "generalizes",
-        "realizes",
-        "serves",
-        "owner",
-        "reviewer",
-        "approver",
-        "party",
-        "affects",
-        "addresses",
-        "targets",
-    }
-)
+# Schema definitions whose value is a ref to an element (H18).
+_REF_DEFINITIONS = ("/refLinkType", "/refType", "/bomLinkElementType")
+
+# Keys that hold a ref in some places and a plain string (a URL, a name) in
+# others. Checking them by name would report ordinary strings as dangling, so
+# they are left out, except the two the check has always covered: ours are
+# refs wherever we write them.
+_PLAIN_STRING_KEYS_CHECKED = frozenset({"source", "owner"})
+
+
+def _value_kinds(schema: dict, node, depth: int = 0):
+    """Yield ``"ref"``, ``"string"`` or ``"other"`` for each form a value can take."""
+    if not isinstance(node, dict) or depth > 12:
+        yield "other"
+        return
+    reference = node.get("$ref")
+    if reference:
+        if reference.endswith(_REF_DEFINITIONS):
+            yield "ref"
+        elif reference.startswith("#/"):
+            target = schema
+            for part in reference[2:].split("/"):
+                target = target[part]
+            yield from _value_kinds(schema, target, depth + 1)
+        else:
+            yield "other"
+        return
+    branches = node.get("anyOf") or node.get("oneOf")
+    if branches:
+        for branch in branches:
+            yield from _value_kinds(schema, branch, depth + 1)
+        return
+    if node.get("type") == "array":
+        yield from _value_kinds(schema, node.get("items", {}), depth + 1)
+        return
+    yield "string" if node.get("type") == "string" else "other"
+
+
+@cache
+def required_ref_keys() -> frozenset:
+    """Ref keys some schema object requires (a flow's ``source``, a relationship's
+    ``ref``, a boundary's ``zones``). Kept content that loses one of these is
+    left out whole on export rather than written without it (R19)."""
+    schema = load_schema()
+    found: set = set()
+
+    def walk(node):
+        if isinstance(node, dict):
+            if isinstance(node.get("properties"), dict):
+                found.update(
+                    name for name in node.get("required", ()) if name in _REF_KEYS
+                )
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value)
+
+    walk(schema)
+    return frozenset(found)
+
+
+def ref_keys_in_schema() -> frozenset:
+    """Every property name the pinned schema types as a ref, or a list of refs.
+
+    ``spec_values.REF_KEYS`` is the list the check uses; a test compares it
+    with this, so a re-pin that adds ref fields fails until they are listed.
+    """
+    schema = load_schema()
+    kinds: dict[str, set] = {}
+
+    def walk(node):
+        if isinstance(node, dict):
+            properties = node.get("properties")
+            if isinstance(properties, dict):
+                for name, definition in properties.items():
+                    kinds.setdefault(name, set()).update(
+                        _value_kinds(schema, definition)
+                    )
+            for value in node.values():
+                walk(value)
+        elif isinstance(node, list):
+            for value in node:
+                walk(value)
+
+    walk(schema)
+    return frozenset(
+        name
+        for name, found in kinds.items()
+        if "ref" in found
+        and name != "bom-ref"
+        and ("string" not in found or name in _PLAIN_STRING_KEYS_CHECKED)
+    )
 
 
 def check_ref_integrity(document: dict) -> list[SchemaError]:
@@ -148,7 +200,7 @@ def _dangling_refs(document: dict, refs: set) -> list[SchemaError]:
         if isinstance(node, dict):
             for key, value in node.items():
                 child = f"{path}/{key}" if path else key
-                if key in REF_KEYS and isinstance(value, (str, list)):
+                if key in _REF_KEYS and isinstance(value, (str, list)):
                     check(value, child)
                 walk(value, child)
         elif isinstance(node, list):
