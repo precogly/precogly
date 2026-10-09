@@ -5,14 +5,22 @@ Serializers for threat_models app.
 from rest_framework import serializers
 
 from .models import (
+    MODEL_TYPES,
+    Assumption,
+    AssumptionComponent,
+    Blueprint,
+    BusinessObjective,
     OutOfScopeItem,
     ThreatModel,
     ThreatModelFramework,
     ThreatModelLibraryPack,
-    ThreatModelOrgsystem,
     ThreatModelReferenceImage,
     ThreatModelRelationship,
+    ThreatModelReview,
+    ThreatModelState,
+    UseCase,
 )
+from .relationships import relationships_of
 
 
 class ThreatModelReferenceImageSerializer(serializers.ModelSerializer):
@@ -51,6 +59,43 @@ class ThreatModelReferenceImageUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = ThreatModelReferenceImage
         fields = ["image", "filename", "description"]
+
+
+class BlueprintSerializer(serializers.ModelSerializer):
+    """One structural model of a threat model."""
+
+    class Meta:
+        model = Blueprint
+        fields = [
+            "id",
+            "threat_model",
+            "name",
+            "description",
+            "model_types",
+            "scope_description",
+            "display_order",
+            "format_metadata",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "threat_model",
+            "format_metadata",
+            "created_at",
+            "updated_at",
+        ]
+
+    def validate_model_types(self, value):
+        if not isinstance(value, list) or not value:
+            raise serializers.ValidationError("At least one model type is required.")
+        unknown = [entry for entry in value if entry not in MODEL_TYPES]
+        if unknown:
+            raise serializers.ValidationError(
+                f"Unknown model type(s): {', '.join(map(str, unknown))}. "
+                f"Choose from: {', '.join(MODEL_TYPES)}."
+            )
+        return value
 
 
 class ThreatModelFieldsMixin:
@@ -115,6 +160,187 @@ class ThreatModelFieldsMixin:
         ]
 
 
+def validate_methodologies(value):
+    """Spec methodology values or non-empty custom names, deduplicated."""
+    if not isinstance(value, list):
+        raise serializers.ValidationError("methodologies must be a list.")
+    cleaned = []
+    for item in value:
+        name = item.get("name") if isinstance(item, dict) else item
+        if not isinstance(name, str) or not name.strip():
+            raise serializers.ValidationError(
+                "Each methodology must be a non-empty name."
+            )
+        name = name.strip()
+        if name not in cleaned:
+            cleaned.append(name)
+    return cleaned
+
+
+class AssumptionSerializer(serializers.ModelSerializer):
+    """An assumption of a blueprint; ``component_ids`` must be of the same blueprint."""
+
+    owner_email = serializers.EmailField(
+        source="owner.email", read_only=True, default=None
+    )
+    component_ids = serializers.ListField(
+        child=serializers.IntegerField(), required=False
+    )
+
+    class Meta:
+        model = Assumption
+        fields = [
+            "id",
+            "blueprint",
+            "description",
+            "topic",
+            "validity",
+            "impact",
+            "owner",
+            "owner_email",
+            "owner_name",
+            "validation_method",
+            "validation_date",
+            "component_ids",
+            "display_order",
+            "format_metadata",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "owner_email",
+            "format_metadata",
+            "created_at",
+            "updated_at",
+        ]
+        extra_kwargs = {"blueprint": {"required": False}}
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        links = list(instance.component_links.all())
+        data["component_ids"] = [link.component_id for link in links]
+        data["components"] = [
+            {"id": link.component_id, "name": link.component.name} for link in links
+        ]
+        return data
+
+    def validate(self, attrs):
+        from apps.systems.models import OrgsystemComponent
+
+        threat_model = self.context.get("threat_model")
+        blueprint = attrs.get("blueprint") or getattr(self.instance, "blueprint", None)
+        if blueprint is None and threat_model is not None:
+            blueprint = threat_model.default_blueprint
+            attrs["blueprint"] = blueprint
+        if blueprint is None:
+            raise serializers.ValidationError({"blueprint": "This field is required."})
+        if threat_model is not None and blueprint.threat_model_id != threat_model.id:
+            raise serializers.ValidationError(
+                {"blueprint": "The blueprint is not part of this threat model."}
+            )
+        if "component_ids" in attrs:
+            wanted = list(dict.fromkeys(attrs["component_ids"]))
+            found = {
+                c.id: c
+                for c in OrgsystemComponent.objects.filter(
+                    id__in=wanted, blueprint=blueprint
+                )
+            }
+            missing = [i for i in wanted if i not in found]
+            if missing:
+                raise serializers.ValidationError(
+                    {
+                        "component_ids": f"component(s) {missing} are not part of "
+                        "this blueprint."
+                    }
+                )
+            attrs["component_ids"] = [found[i] for i in wanted]
+        return attrs
+
+    def _sync_components(self, instance, components):
+        wanted = {c.id for c in components}
+        existing = {link.component_id: link for link in instance.component_links.all()}
+        for position, component in enumerate(components):
+            link = existing.get(component.id)
+            if link is None:
+                AssumptionComponent.objects.create(
+                    assumption=instance, component=component, display_order=position
+                )
+            elif link.display_order != position:
+                link.display_order = position
+                link.save(update_fields=["display_order"])
+        for component_id, link in existing.items():
+            if component_id not in wanted:
+                link.delete()
+
+    def create(self, validated_data):
+        components = validated_data.pop("component_ids", [])
+        instance = super().create(validated_data)
+        self._sync_components(instance, components)
+        return instance
+
+    def update(self, instance, validated_data):
+        components = validated_data.pop("component_ids", None)
+        instance = super().update(instance, validated_data)
+        if components is not None:
+            self._sync_components(instance, components)
+            instance.refresh_from_db()
+        return instance
+
+
+class UseCaseSerializer(serializers.ModelSerializer):
+    """Read-only: use cases are import and export only (plan J14)."""
+
+    class Meta:
+        model = UseCase
+        fields = ["id", "name", "description", "flow_data", "created_at", "updated_at"]
+        read_only_fields = fields
+
+
+class BusinessObjectiveSerializer(serializers.ModelSerializer):
+    owner_email = serializers.EmailField(
+        source="owner.email", read_only=True, default=None
+    )
+    threat_count = serializers.SerializerMethodField()
+    risk_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = BusinessObjective
+        fields = [
+            "id",
+            "threat_model",
+            "name",
+            "description",
+            "criticality",
+            "owner",
+            "owner_email",
+            "owner_name",
+            "display_order",
+            "threat_count",
+            "risk_count",
+            "format_metadata",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "threat_model",
+            "owner_email",
+            "threat_count",
+            "risk_count",
+            "format_metadata",
+            "created_at",
+            "updated_at",
+        ]
+
+    def get_threat_count(self, obj):
+        return obj.threat_links.count()
+
+    def get_risk_count(self, obj):
+        return obj.risk_links.count()
+
+
 class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer):
     """Serializer for ThreatModel model."""
 
@@ -129,11 +355,21 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
     dfds = serializers.SerializerMethodField()
     owner = serializers.SerializerMethodField()
     frameworks = serializers.SerializerMethodField()
-    system_ids = serializers.SerializerMethodField()
+    primary_system_name = serializers.CharField(
+        source="primary_system.name", read_only=True, default=None
+    )
+    version = serializers.SerializerMethodField()
     pack_ids = serializers.SerializerMethodField()
     connected_packs = serializers.SerializerMethodField()
     referenced_model_ids = serializers.SerializerMethodField()
+    related_models = serializers.SerializerMethodField()
     reference_images = ThreatModelReferenceImageSerializer(many=True, read_only=True)
+    blueprints = BlueprintSerializer(many=True, read_only=True)
+    approved_at = serializers.SerializerMethodField()
+
+    def get_approved_at(self, obj):
+        review = ThreatModelReview.objects.filter(threat_model=obj).first()
+        return review.approved_at if review is not None else None
 
     class Meta:
         model = ThreatModel
@@ -151,23 +387,35 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
             "created_by_email",
             "owner",
             "workspace_data",
-            "assumptions",
+            "methodologies",
+            "lifecycle_phase",
+            "valid_from",
+            "valid_until",
+            "review_frequency",
+            "approved_at",
             "format_metadata",
-            "scope_locked",
-            "scope_locked_at",
+            "blueprints",
             "dfds",
             "frameworks",
-            "system_ids",
+            "primary_system",
+            "primary_system_name",
+            "serial_number",
+            "version",
             "pack_ids",
             "connected_packs",
             "referenced_model_ids",
+            "related_models",
             "reference_images",
             "risk_scoring_method",
             "created_at",
             "updated_at",
         ]
         read_only_fields = [
+            "format_metadata",
             "id",
+            "serial_number",
+            "version",
+            "primary_system_name",
             "created_at",
             "updated_at",
             "created_by_email",
@@ -176,6 +424,10 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
             "owning_team_name",
             "business_unit_name",
         ]
+
+    def validate(self, attrs):
+        validate_scoring_method_change(self.instance, attrs.get("risk_scoring_method"))
+        return attrs
 
     def validate_owning_team(self, value):
         """Validate owning_team belongs to the same organization as the threat model."""
@@ -189,27 +441,8 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
             )
         return value
 
-    def validate_assumptions(self, value):
-        """Validate assumptions list structure."""
-        if not isinstance(value, list):
-            raise serializers.ValidationError("Assumptions must be a list.")
-        valid_validity = {"unconfirmed", "confirmed", "rejected"}
-        for idx, entry in enumerate(value):
-            if not isinstance(entry, dict):
-                raise serializers.ValidationError(
-                    f"Assumption [{idx}] must be an object."
-                )
-            if not entry.get("description", "").strip():
-                raise serializers.ValidationError(
-                    f"Assumption [{idx}] must have a non-empty description."
-                )
-            if entry.get("validity", "unconfirmed") not in valid_validity:
-                raise serializers.ValidationError(
-                    f"Assumption [{idx}] validity must be one of: {', '.join(valid_validity)}."
-                )
-            if "topics" not in entry:
-                entry["topics"] = []
-        return value
+    def validate_methodologies(self, value):
+        return validate_methodologies(value)
 
     def get_dfds(self, obj):
         """Get associated DFDs with canvas_data for threat analysis."""
@@ -217,10 +450,27 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
 
         return DFDSerializer(obj.dfds.all(), many=True).data
 
-    def get_system_ids(self, obj):
-        """Get associated system IDs."""
-        associations = obj.orgsystem_associations.all()
-        return [str(assoc.orgsystem_id) for assoc in associations]
+    def get_version(self, obj):
+        state = ThreatModelState.objects.filter(threat_model=obj).first()
+        return state.version if state is not None else 1
+
+    def validate_primary_system(self, value):
+        """The primary system must belong to the model's organization (M13)."""
+        if value is None:
+            return value
+        organization_id = (
+            self.instance.organization_id
+            if self.instance is not None
+            else getattr(self.initial_data.get("organization"), "pk", None)
+        )
+        if organization_id is None and self.instance is None:
+            raw = self.initial_data.get("organization")
+            organization_id = int(raw) if raw not in (None, "") else None
+        if organization_id is not None and value.organization_id != organization_id:
+            raise serializers.ValidationError(
+                "The primary system must belong to the threat model's organization."
+            )
+        return value
 
     def get_pack_ids(self, obj):
         """Get associated library pack IDs."""
@@ -242,11 +492,20 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
         ]
 
     def get_referenced_model_ids(self, obj):
-        """Get referenced threat model IDs."""
-        associations = obj.outgoing_relationships.filter(
-            relation_type=ThreatModelRelationship.RelationType.RELATED_TO
-        ).all()
-        return [str(assoc.target_threat_model_id) for assoc in associations]
+        """The ids of the models this one points at, whatever the relation type,
+        each once. ``related_models`` carries the type and direction."""
+        seen = []
+        for relationship in obj.outgoing_relationships.order_by("id"):
+            target_id = str(relationship.target_threat_model_id)
+            if target_id not in seen:
+                seen.append(target_id)
+        return seen
+
+    def get_related_models(self, obj):
+        """Every relationship the model takes part in (plan J15): ``model``
+        is the other end, ``direction`` is ``outgoing`` when this model is the
+        source and ``incoming`` when it is the target."""
+        return relationships_of(obj)
 
     @staticmethod
     def _safe_percentage(numerator, denominator):
@@ -256,75 +515,34 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
         return round((numerator / denominator) * 100)
 
     def _extract_scope_ids(self, instance):
-        """Extract component_ids, dataflow_ids, and canvas metadata from DFD data."""
-        from apps.systems.models import OrgsystemComponent
+        """The model's scope, read from the rows' blueprint keys (F30).
 
-        dfds = instance.dfds.filter(is_primary=True)
-        component_ids = set()
-        dataflow_ids = set()
-        has_process_or_datastore = False
-        has_trust_zone = False
-        has_edges = False
-        trust_zone_count = 0
-
-        for dfd in dfds:
-            canvas_data = dfd.canvas_data or {}
-            for node in canvas_data.get("nodes", []):
-                node_type = node.get("type", "")
-                if node_type in ("process", "datastore"):
-                    has_process_or_datastore = True
-                if node_type == "trustZone":
-                    has_trust_zone = True
-                    trust_zone_count += 1
-                component_id = node.get("data", {}).get("component_id")
-                if component_id:
-                    component_ids.add(component_id)
-
-            edges = canvas_data.get("edges", [])
-            if edges:
-                has_edges = True
-            for edge in edges:
-                dataflow_id = edge.get("data", {}).get("dataflow_id")
-                if dataflow_id:
-                    dataflow_ids.add(dataflow_id)
-
-        # Include analysis-only components
-        analysis_component_ids = (
-            OrgsystemComponent.objects.filter(threat_model=instance)
-            .exclude(id__in=component_ids)
-            .values_list("id", flat=True)
+        Every blueprint counts. Nothing here reads canvas JSON any more, so the
+        completion status agrees with the analysis screen and the report.
+        """
+        components = list(instance.components.values_list("id", "category"))
+        component_ids = [component_id for component_id, _ in components]
+        has_process_or_datastore = any(
+            category in ("process", "datastore", None, "") for _, category in components
         )
-        component_ids.update(analysis_component_ids)
-
-        # Include trust zones from components in scope (DB-level, DFD-independent)
-        db_zone_ids = (
-            OrgsystemComponent.objects.filter(
-                threat_model=instance,
-                trust_zone__isnull=False,
-            )
-            .values_list("trust_zone_id", flat=True)
-            .distinct()
-        )
-        db_zone_count = len(db_zone_ids)
-        trust_zone_count = max(trust_zone_count, db_zone_count)
-        has_trust_zone = has_trust_zone or db_zone_count > 0
+        dataflow_ids = list(instance.flows.values_list("id", flat=True))
+        zone_count = instance.zones.count()
 
         return {
-            "component_ids": list(component_ids),
-            "dataflow_ids": list(dataflow_ids),
+            "component_ids": component_ids,
+            "dataflow_ids": dataflow_ids,
             "has_process_or_datastore": has_process_or_datastore,
-            "has_trust_zone": has_trust_zone,
-            "has_edges": has_edges,
-            "trust_zone_count": trust_zone_count,
+            "has_zone": zone_count > 0,
+            "has_edges": bool(dataflow_ids),
+            "zone_count": zone_count,
         }
 
     def _compute_completion_status(self, instance):
         """Compute enhanced completion status with system definition, coverage, and quality signals."""
         from apps.threats.models import (
             ACTIVE_TRIAGE_STATUSES,
-            ComponentInstanceThreat,
-            DataFlowInstanceThreat,
             InstanceCountermeasure,
+            InstanceThreat,
         )
 
         scope = self._extract_scope_ids(instance)
@@ -334,13 +552,13 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
         # --- System Definition ---
         asset_count = instance.data_assets.count()
         component_count = len(component_ids)
-        trust_zone_count = scope["trust_zone_count"]
+        trust_zone_count = scope["zone_count"]
         dataflow_count = len(dataflow_ids)
 
         system_definition = [
             {
                 "id": "assets_defined",
-                "label": "Primary assets defined",
+                "label": "Data assets defined",
                 "checked": asset_count > 0,
                 "count": asset_count,
                 "count_label": f"{asset_count} Asset{'s' if asset_count != 1 else ''}",
@@ -354,86 +572,39 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
             },
             {
                 "id": "trust_boundaries_identified",
-                "label": "Trust boundaries identified",
-                "checked": scope["has_trust_zone"],
+                "label": "Zones and boundaries identified",
+                "checked": scope["has_zone"],
                 "count": trust_zone_count,
-                "count_label": f"{trust_zone_count} Boundar{'ies' if trust_zone_count != 1 else 'y'}",
+                "count_label": f"{trust_zone_count} Zone{'s' if trust_zone_count != 1 else ''}",
             },
             {
                 "id": "data_flows_defined",
-                "label": "Data flows defined",
+                "label": "Flows defined",
                 "checked": scope["has_edges"],
                 "count": dataflow_count,
                 "count_label": f"{dataflow_count} Flow{'s' if dataflow_count != 1 else ''}",
             },
         ]
 
-        # --- Coverage ---
-        # Components with >= 1 active threat
-        components_with_threats = (
-            ComponentInstanceThreat.objects.filter(
-                component_id__in=component_ids, triage_status__in=ACTIVE_TRIAGE_STATUSES
-            )
-            .values("component_id")
+        # --- Coverage --- every scenario counts once (plan section 5.3)
+        active_threats = InstanceThreat.objects.filter(
+            threat_model=instance, triage_status__in=ACTIVE_TRIAGE_STATUSES
+        )
+        targets_with_threats = (
+            active_threats.filter(targets__component_id__in=component_ids)
+            .values("targets__component_id")
             .distinct()
             .count()
-            if component_ids
-            else 0
-        )
-
-        # Flows with >= 1 active threat
-        flows_with_threats = (
-            DataFlowInstanceThreat.objects.filter(
-                data_flow_id__in=dataflow_ids, triage_status__in=ACTIVE_TRIAGE_STATUSES
-            )
-            .values("data_flow_id")
+            + active_threats.filter(targets__flow_id__in=dataflow_ids)
+            .values("targets__flow_id")
             .distinct()
             .count()
-            if dataflow_ids
-            else 0
         )
-
-        # Total active threats (for countermeasure coverage)
-        component_threat_count = (
-            ComponentInstanceThreat.objects.filter(
-                component_id__in=component_ids, triage_status__in=ACTIVE_TRIAGE_STATUSES
-            ).count()
-            if component_ids
-            else 0
+        total_targets = component_count + dataflow_count
+        total_threats = active_threats.count()
+        threats_with_cm = (
+            active_threats.filter(countermeasure_links__isnull=False).distinct().count()
         )
-        flow_threat_count = (
-            DataFlowInstanceThreat.objects.filter(
-                data_flow_id__in=dataflow_ids, triage_status__in=ACTIVE_TRIAGE_STATUSES
-            ).count()
-            if dataflow_ids
-            else 0
-        )
-        total_threats = component_threat_count + flow_threat_count
-
-        # Threats with >= 1 countermeasure (via junction table)
-        component_threats_with_cm = (
-            ComponentInstanceThreat.objects.filter(
-                component_id__in=component_ids,
-                triage_status__in=ACTIVE_TRIAGE_STATUSES,
-                countermeasure_links__isnull=False,
-            )
-            .distinct()
-            .count()
-            if component_ids
-            else 0
-        )
-        flow_threats_with_cm = (
-            DataFlowInstanceThreat.objects.filter(
-                data_flow_id__in=dataflow_ids,
-                triage_status__in=ACTIVE_TRIAGE_STATUSES,
-                countermeasure_links__isnull=False,
-            )
-            .distinct()
-            .count()
-            if dataflow_ids
-            else 0
-        )
-        threats_with_cm = component_threats_with_cm + flow_threats_with_cm
 
         # Countermeasures with owners (using threat_model FK on unified model)
         total_countermeasures = InstanceCountermeasure.objects.filter(
@@ -447,20 +618,13 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
 
         coverage = [
             {
-                "id": "threats_linked_components",
-                "label": "Threats linked to components",
-                "numerator": components_with_threats,
-                "denominator": component_count,
+                "id": "threats_linked_targets",
+                "label": "Threats linked to components and flows",
+                "numerator": targets_with_threats,
+                "denominator": total_targets,
                 "percentage": self._safe_percentage(
-                    components_with_threats, component_count
+                    targets_with_threats, total_targets
                 ),
-            },
-            {
-                "id": "threats_linked_flows",
-                "label": "Threats linked to flows",
-                "numerator": flows_with_threats,
-                "denominator": dataflow_count,
-                "percentage": self._safe_percentage(flows_with_threats, dataflow_count),
             },
             {
                 "id": "countermeasures_assigned",
@@ -485,10 +649,22 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
             instance, component_ids, dataflow_ids
         )
 
+        assumption_rows = Assumption.objects.filter(blueprint__threat_model=instance)
+        assumptions = {
+            "total": assumption_rows.count(),
+            "unverified": assumption_rows.filter(
+                validity__in=[
+                    Assumption.Validity.UNVERIFIED,
+                    Assumption.Validity.UNKNOWN,
+                ]
+            ).count(),
+        }
+
         return {
             "system_definition": system_definition,
             "coverage": coverage,
             "quality_signals": quality_signals,
+            "assumptions": assumptions,
         }
 
     def _compute_quality_signals(self, instance, component_ids, dataflow_ids):
@@ -496,11 +672,10 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
         from apps.systems.models import OrgsystemComponent
         from apps.threats.models import (
             ACTIVE_TRIAGE_STATUSES,
-            ComponentInstanceThreat,
             ComponentLibraryThreat,
             CountermeasureLibrary,
             CountermeasureThreatLink,
-            DataFlowInstanceThreat,
+            InstanceThreat,
         )
 
         # Only compute when the threat model has connected packs
@@ -551,7 +726,6 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
                 "component_library_id", "threat_library_id"
             )
         )
-        # For flows, include pairs with applies_to in ("flow", "both")
         valid_flow_threat_pairs = set(
             ComponentLibraryThreat.objects.filter(
                 applies_to__in=["flow", "both"]
@@ -559,120 +733,62 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
         )
 
         flagged_threats = []
-
-        # Check component threats
-        component_threats = ComponentInstanceThreat.objects.filter(
-            component_id__in=component_ids, triage_status__in=ACTIVE_TRIAGE_STATUSES
-        ).select_related("component__component_library", "threat_library")
-
-        for ct in component_threats:
-            comp_lib_id = (
-                ct.component.component_library_id
-                if ct.component.component_library_id
-                else None
+        threats = (
+            InstanceThreat.objects.filter(
+                threat_model=instance, triage_status__in=ACTIVE_TRIAGE_STATUSES
             )
-            threat_lib_id = ct.threat_library_id
-            if comp_lib_id and threat_lib_id:
-                if (comp_lib_id, threat_lib_id) not in valid_component_threat_pairs:
-                    flagged_threats.append(
-                        {
-                            "id": ct.id,
-                            "name": ct.threat_name
-                            or (
-                                ct.threat_library.name
-                                if ct.threat_library
-                                else "Unknown"
-                            ),
-                            "detail": f"Component: {ct.component.name}",
-                        }
-                    )
-            elif not threat_lib_id:
-                # Custom threat (no library link) — flag it
-                flagged_threats.append(
-                    {
-                        "id": ct.id,
-                        "name": ct.threat_name or "Custom threat",
-                        "detail": f"Component: {ct.component.name}",
-                    }
-                )
-
-        # Check flow threats — a flow threat is valid if EITHER endpoint's
-        # component library has the mapping (since flows connect two components)
-        flow_threats = DataFlowInstanceThreat.objects.filter(
-            data_flow_id__in=dataflow_ids, triage_status__in=ACTIVE_TRIAGE_STATUSES
-        ).select_related(
-            "data_flow__source_component__component_library",
-            "data_flow__dest_component__component_library",
-            "threat_library",
+            .select_related("threat_library")
+            .prefetch_related(
+                "targets__component__component_library",
+                "targets__flow__source_component__component_library",
+                "targets__flow__dest_component__component_library",
+            )
         )
-
-        for ft in flow_threats:
-            threat_lib_id = ft.threat_library_id
-            source_lib_id = (
-                ft.data_flow.source_component.component_library_id
-                if ft.data_flow.source_component
-                and ft.data_flow.source_component.component_library_id
-                else None
+        for threat in threats:
+            name = threat.threat_name or (
+                threat.threat_library.name if threat.threat_library else "Unknown"
             )
-            dest_lib_id = (
-                ft.data_flow.dest_component.component_library_id
-                if ft.data_flow.dest_component
-                and ft.data_flow.dest_component.component_library_id
-                else None
-            )
-
-            # Build a readable flow description
-            flow_desc = ft.data_flow.label
-            if not flow_desc:
-                src_name = (
-                    ft.data_flow.source_component.name
-                    if ft.data_flow.source_component
-                    else "?"
-                )
-                dst_name = (
-                    ft.data_flow.dest_component.name
-                    if ft.data_flow.dest_component
-                    else "?"
-                )
-                flow_desc = f"{src_name} \u2192 {dst_name}"
-
-            if threat_lib_id:
-                # Valid if either source or dest component has this threat mapping
-                source_valid = (
-                    source_lib_id
-                    and (source_lib_id, threat_lib_id) in valid_flow_threat_pairs
-                )
-                dest_valid = (
-                    dest_lib_id
-                    and (dest_lib_id, threat_lib_id) in valid_flow_threat_pairs
-                )
-                # Only flag if at least one endpoint has a library (otherwise it's a custom component issue)
-                if (
-                    not source_valid
-                    and not dest_valid
-                    and (source_lib_id or dest_lib_id)
-                ):
-                    flagged_threats.append(
-                        {
-                            "id": ft.id,
-                            "name": ft.threat_name
-                            or (
-                                ft.threat_library.name
-                                if ft.threat_library
-                                else "Unknown"
-                            ),
-                            "detail": f"Flow: {flow_desc}",
-                        }
-                    )
-            else:
-                # Custom threat (no library link)
+            threat_lib_id = threat.threat_library_id
+            if not threat_lib_id:
                 flagged_threats.append(
                     {
-                        "id": ft.id,
-                        "name": ft.threat_name or "Custom threat",
-                        "detail": f"Flow: {flow_desc}",
+                        "id": threat.id,
+                        "name": threat.threat_name or "Custom threat",
+                        "detail": threat.display_number,
                     }
                 )
+                continue
+            for target_row in threat.targets.all():
+                kind = target_row.target_kind
+                if kind == "component":
+                    component = target_row.component
+                    comp_lib_id = component.component_library_id
+                    if (
+                        comp_lib_id
+                        and (comp_lib_id, threat_lib_id)
+                        not in valid_component_threat_pairs
+                    ):
+                        flagged_threats.append(
+                            {
+                                "id": threat.id,
+                                "name": name,
+                                "detail": f"Component: {component.name}",
+                            }
+                        )
+                elif kind == "flow":
+                    flow = target_row.flow
+                    ends = [
+                        end.component_library_id
+                        for end in (flow.source_component, flow.dest_component)
+                        if end is not None and end.component_library_id
+                    ]
+                    if ends and not any(
+                        (lib_id, threat_lib_id) in valid_flow_threat_pairs
+                        for lib_id in ends
+                    ):
+                        flagged_threats.append(
+                            {"id": threat.id, "name": name, "detail": f"Flow: {flow}"}
+                        )
 
         signals.append(
             {
@@ -696,57 +812,22 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
         )
 
         flagged_countermeasures = []
-
-        # Component countermeasures (via unified junction table)
-        component_cm_links = CountermeasureThreatLink.objects.filter(
-            component_threat__component_id__in=component_ids
+        links = CountermeasureThreatLink.objects.filter(
+            threat__threat_model=instance
         ).select_related(
-            "component_threat__threat_library",
-            "countermeasure__countermeasure_library",
+            "threat__threat_library", "countermeasure__countermeasure_library"
         )
-
-        for link in component_cm_links:
-            threat_lib_id = link.component_threat.threat_library_id
+        for link in links:
+            threat_lib_id = link.threat.threat_library_id
             cm_lib_id = link.countermeasure.countermeasure_library_id
             if (
                 threat_lib_id
                 and cm_lib_id
                 and (threat_lib_id, cm_lib_id) not in valid_cm_pairs
             ):
-                threat_name = link.component_threat.threat_name or (
-                    link.component_threat.threat_library.name
-                    if link.component_threat.threat_library
-                    else "Unknown"
-                )
-                flagged_countermeasures.append(
-                    {
-                        "id": link.countermeasure.id,
-                        "name": link.countermeasure.countermeasure_library.name
-                        if link.countermeasure.countermeasure_library
-                        else "Unknown",
-                        "detail": f"Threat: {threat_name}",
-                    }
-                )
-
-        # Flow countermeasures (via unified junction table)
-        flow_cm_links = CountermeasureThreatLink.objects.filter(
-            flow_threat__data_flow_id__in=dataflow_ids
-        ).select_related(
-            "flow_threat__threat_library",
-            "countermeasure__countermeasure_library",
-        )
-
-        for link in flow_cm_links:
-            threat_lib_id = link.flow_threat.threat_library_id
-            cm_lib_id = link.countermeasure.countermeasure_library_id
-            if (
-                threat_lib_id
-                and cm_lib_id
-                and (threat_lib_id, cm_lib_id) not in valid_cm_pairs
-            ):
-                threat_name = link.flow_threat.threat_name or (
-                    link.flow_threat.threat_library.name
-                    if link.flow_threat.threat_library
+                threat_name = link.threat.threat_name or (
+                    link.threat.threat_library.name
+                    if link.threat.threat_library
                     else "Unknown"
                 )
                 flagged_countermeasures.append(
@@ -821,6 +902,25 @@ class ThreatModelListSerializer(ThreatModelFieldsMixin, serializers.ModelSeriali
     business_unit_name = serializers.SerializerMethodField()
     frameworks = serializers.SerializerMethodField()
 
+    approved_at = serializers.SerializerMethodField()
+
+    def get_approved_at(self, obj):
+        review = ThreatModelReview.objects.filter(threat_model=obj).first()
+        return review.approved_at if review is not None else None
+
+    primary_system_name = serializers.CharField(
+        source="primary_system.name", read_only=True, default=None
+    )
+    version = serializers.SerializerMethodField()
+    blueprint_count = serializers.SerializerMethodField()
+
+    def get_version(self, obj):
+        state = ThreatModelState.objects.filter(threat_model=obj).first()
+        return state.version if state is not None else 1
+
+    def get_blueprint_count(self, obj):
+        return obj.blueprints.count()
+
     class Meta:
         model = ThreatModel
         fields = [
@@ -833,22 +933,40 @@ class ThreatModelListSerializer(ThreatModelFieldsMixin, serializers.ModelSeriali
             "owning_team_name",
             "business_unit_name",
             "frameworks",
+            "methodologies",
+            "lifecycle_phase",
+            "approved_at",
+            "primary_system_name",
+            "serial_number",
+            "version",
+            "blueprint_count",
             "risk_scoring_method",
             "created_at",
             "updated_at",
         ]
 
 
+def validate_scoring_method_change(instance, new_method):
+    """A model's methodology is fixed once it has risks (#31 comment, 2.1)."""
+    if (
+        instance is None
+        or new_method is None
+        or new_method == instance.risk_scoring_method
+    ):
+        return
+    if instance.risks.exists():
+        raise serializers.ValidationError(
+            {
+                "risk_scoring_method": "Delete or re-rate existing risks before "
+                "changing the methodology."
+            }
+        )
+
+
 class ThreatModelCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating ThreatModel."""
 
     framework_ids = serializers.ListField(
-        child=serializers.IntegerField(),
-        write_only=True,
-        required=False,
-        default=list,
-    )
-    system_ids = serializers.ListField(
         child=serializers.IntegerField(),
         write_only=True,
         required=False,
@@ -871,8 +989,10 @@ class ThreatModelCreateSerializer(serializers.ModelSerializer):
             "owning_team",
             "criticality",
             "framework_ids",
-            "system_ids",
+            "primary_system",
             "referenced_model_ids",
+            "methodologies",
+            "risk_scoring_method",
         ]
         read_only_fields = ["id"]
         extra_kwargs = {
@@ -881,10 +1001,12 @@ class ThreatModelCreateSerializer(serializers.ModelSerializer):
             "criticality": {"required": False},
         }
 
+    def validate_methodologies(self, value):
+        return validate_methodologies(value)
+
     def create(self, validated_data):
         """Create threat model with all relationships."""
         framework_ids = validated_data.pop("framework_ids", [])
-        system_ids = validated_data.pop("system_ids", [])
         referenced_model_ids = validated_data.pop("referenced_model_ids", [])
 
         # Set created_by from request user
@@ -916,6 +1038,17 @@ class ThreatModelCreateSerializer(serializers.ModelSerializer):
             if user_team_memberships.count() == 1:
                 validated_data["owning_team"] = user_team_memberships.first().team
 
+        primary_system = validated_data.get("primary_system")
+        if (
+            primary_system is not None
+            and primary_system.organization_id != validated_data["organization"].id
+        ):
+            raise serializers.ValidationError(
+                {
+                    "primary_system": "The primary system must belong to the organization."
+                }
+            )
+
         # Validate owning_team belongs to the same organization
         owning_team = validated_data.get("owning_team")
         if (
@@ -943,13 +1076,6 @@ class ThreatModelCreateSerializer(serializers.ModelSerializer):
                 framework_id=framework_id,
             )
 
-        # Create system associations
-        for system_id in system_ids:
-            ThreatModelOrgsystem.objects.create(
-                threat_model=threat_model,
-                orgsystem_id=system_id,
-            )
-
         # Create threat model references
         for ref_model_id in referenced_model_ids:
             ThreatModelRelationship.objects.create(
@@ -974,16 +1100,26 @@ class ThreatModelCreateSerializer(serializers.ModelSerializer):
 
 
 class OutOfScopeItemSerializer(serializers.ModelSerializer):
-    """Serializer for OutOfScopeItem model."""
+    """Serializer for OutOfScopeItem model.
+
+    `blueprint` is optional on create; the view defaults it to the threat
+    model's default blueprint and refuses one from another model.
+    """
+
+    threat_model = serializers.IntegerField(
+        source="blueprint.threat_model_id", read_only=True
+    )
 
     class Meta:
         model = OutOfScopeItem
         fields = [
             "id",
             "threat_model",
+            "blueprint",
             "name",
             "reason",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["id", "threat_model", "created_at", "updated_at"]
+        extra_kwargs = {"blueprint": {"required": False}}

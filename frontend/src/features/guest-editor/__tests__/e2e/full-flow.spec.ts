@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
+import { readFileSync } from 'fs'
 
 const GUEST_URL = '/guest'
 
@@ -56,7 +57,7 @@ test.describe('full threat modeling workflow', () => {
     await page.keyboard.press('Escape')
     await expect(page.locator('text=System Context')).not.toBeVisible({ timeout: 2000 })
 
-    // ---- Build DFD: place nodes, drag apart so they don't stack ----
+    // ---- Build DFD: place nodes, drag apart so they do not stack ----
     await placeAndRenameNode(page, 'Human Actor', 'Mobile User')
     await dragNode(page, 'Mobile User', -300, 0)
 
@@ -72,39 +73,50 @@ test.describe('full threat modeling workflow', () => {
 
     await page.locator('text=API Server').first().click()
 
-    // Add a threat
-    await page.getByRole('button', { name: 'Add', exact: true }).click()
+    // Add a threat on the API server (preselected), also on the database
+    await page.getByTestId('guest-add-threat').click()
     await page.locator('#threat-name').fill('SQL Injection')
     await page.locator('#threat-description').fill('Attacker injects malicious SQL')
-    await page.locator('#threat-severity').click()
+    await page.locator('[role="dialog"]').getByLabel('Account DB').check()
+    await page.locator('#threat-level').click()
     await page.getByRole('option', { name: 'High' }).click()
     await page.locator('#threat-category').click()
     await page.getByRole('option', { name: 'Tampering' }).click()
     await page.getByRole('button', { name: 'Add Threat' }).click()
 
-    await expect(page.locator('text=SQL Injection')).toBeVisible()
+    const threatRow = page.getByTestId('guest-threat-row').filter({ hasText: 'SQL Injection' })
+    await expect(threatRow).toBeVisible()
+    await expect(threatRow).toContainText('T1')
+    await expect(threatRow).toContainText('On: API Server, Account DB')
 
-    // Select the threat to reveal countermeasures column
-    await page.locator('text=SQL Injection').click()
+    // The same threat shows under the database too
+    await page.locator('text=Account DB').first().click()
+    await expect(page.getByTestId('guest-threat-row').filter({ hasText: 'SQL Injection' })).toBeVisible()
+    await page.locator('text=API Server').first().click()
 
-    // Add countermeasure
-    await page.getByRole('button', { name: 'Add', exact: true }).last().click()
+    // Select the threat to reveal the countermeasures column
+    await threatRow.click()
+
+    // Add a countermeasure (the selected threat is preselected under Mitigates)
+    await page.getByTestId('guest-add-countermeasure').click()
     await page.locator('#countermeasure-name').fill('Input Validation')
     await page.locator('#countermeasure-description').fill('Validate all user inputs')
-    await page.locator('[role="dialog"]').getByRole('button', { name: 'Add' }).click()
+    await page.locator('[role="dialog"]').getByRole('button', { name: 'Add', exact: true }).click()
 
-    await expect(page.locator('text=Input Validation')).toBeVisible()
+    const countermeasureRow = page.getByTestId('guest-countermeasure-row').filter({ hasText: 'Input Validation' })
+    await expect(countermeasureRow).toBeVisible()
+    await expect(countermeasureRow).toContainText('C1')
+    await expect(countermeasureRow).toContainText('Applies to: whole system')
 
-    // Edit threat: triage as Mitigate
-    const threatRow = page.locator('div[role="button"]:has-text("SQL Injection")')
+    // Edit the threat: triage as Mitigate
     await threatRow.hover()
-    await threatRow.locator('button').first().click()
+    await threatRow.getByRole('button', { name: 'Edit T1' }).click()
     await page.locator('#threat-status').click()
     await page.getByRole('option', { name: 'Mitigate' }).click()
     await page.locator('#threat-rationale').fill('Requires input validation countermeasures')
     await page.locator('[role="dialog"]').getByRole('button', { name: 'Save' }).click()
 
-    await expect(page.locator('text=Mitigate').first()).toBeVisible()
+    await expect(threatRow).toContainText('mitigate')
 
     // ---- Save ----
     await page.getByRole('button', { name: 'Save' }).first().click()
@@ -116,6 +128,13 @@ test.describe('full threat modeling workflow', () => {
     const download = await downloadPromise
     const savedFilePath = await download.path()
 
+    // The file carries the numbers and the counters (M12)
+    const saved = JSON.parse(readFileSync(savedFilePath!, 'utf8'))
+    expect(saved.threats.scenarios[0].properties).toContainEqual({ name: 'precogly:number', value: '1' })
+    expect(saved.threats.scenarios[0].affectedAssets).toHaveLength(2)
+    expect(saved.properties).toContainEqual({ name: 'precogly:next-threat-number', value: '2' })
+    expect(saved.controls[0].properties).toContainEqual({ name: 'precogly:mitigates', value: JSON.stringify([saved.threats.scenarios[0]['bom-ref']]) })
+
     // ---- Reimport into a fresh guest editor ----
     await page.goto(GUEST_URL)
     await expect(page.locator('text=Components')).toBeVisible({ timeout: 10_000 })
@@ -125,10 +144,11 @@ test.describe('full threat modeling workflow', () => {
     const fileChooser = await fileChooserPromise
     await fileChooser.setFiles(savedFilePath!)
 
-    // ---- Verify roundtrip ----
+    // ---- Verify the round trip ----
     await expect(page.locator('text=Mobile User').first()).toBeVisible({ timeout: 5_000 })
     await expect(page.locator('text=API Server').first()).toBeVisible({ timeout: 5_000 })
     await expect(page.locator('text=Account DB').first()).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByTestId('guest-file-notices')).toHaveCount(0)
 
     // System context survived
     await page.getByRole('button', { name: 'Add / Edit Context' }).click()
@@ -137,15 +157,18 @@ test.describe('full threat modeling workflow', () => {
     await expect(page.locator('#system-description')).toHaveValue('Mobile banking application')
     await page.keyboard.press('Escape')
 
-    // Threats survived
+    // Threats survived with their number and targets
     await page.getByRole('button', { name: 'Analyze Threats' }).click()
     await page.waitForURL('**/guest/threats')
     await page.locator('text=API Server').first().click()
-    await expect(page.locator('text=SQL Injection')).toBeVisible({ timeout: 5_000 })
-    await expect(page.locator('text=Mitigate').first()).toBeVisible()
+    const reopenedRow = page.getByTestId('guest-threat-row').filter({ hasText: 'SQL Injection' })
+    await expect(reopenedRow).toBeVisible({ timeout: 5_000 })
+    await expect(reopenedRow).toContainText('T1')
+    await expect(reopenedRow).toContainText('mitigate')
+    await expect(reopenedRow).toContainText('On: API Server, Account DB')
 
     // Countermeasure survived
-    await page.locator('text=SQL Injection').click()
-    await expect(page.locator('text=Input Validation')).toBeVisible({ timeout: 5_000 })
+    await reopenedRow.click()
+    await expect(page.getByTestId('guest-countermeasure-row').filter({ hasText: 'Input Validation' })).toBeVisible({ timeout: 5_000 })
   })
 })

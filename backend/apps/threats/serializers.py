@@ -2,34 +2,34 @@
 Serializers for threats app.
 """
 
-from django.db import transaction
+import re
+
 from rest_framework import serializers
 
 from .models import (
-    ComponentInstanceThreat,
     ComponentLibraryThreat,
     CountermeasureComment,
     CountermeasureLibrary,
     CountermeasureThreatLink,
-    DataFlowInstanceThreat,
     ExternalTaxonomy,
     InstanceCountermeasure,
     InstanceCountermeasureStandard,
+    InstanceThreat,
+    InstanceThreatTarget,
     InstanceThreatTaxonomyEntry,
     PentestFinding,
     Risk,
+    RiskResponse,
     RiskThreat,
     TaxonomyEntry,
     ThreatLibrary,
     ThreatPersona,
     ThreatSource,
     VerificationTest,
-    build_taxonomy_snapshot,
 )
-from .scoring.registry import get_scoring_methods
 from .services import (
-    calculate_inherent_score,
-    recalculate_risk,
+    derive_risk_status,
+    recalculate_residual,
 )
 
 
@@ -259,7 +259,7 @@ class ComponentLibraryThreatSerializer(serializers.ModelSerializer):
             "component_name",
             "threat_library",
             "threat_name",
-            "default_severity",
+            "default_level",
             "applies_to",
             "created_at",
             "updated_at",
@@ -273,15 +273,272 @@ class ComponentLibraryThreatSerializer(serializers.ModelSerializer):
         ]
 
 
-class ComponentInstanceThreatSerializer(serializers.ModelSerializer):
-    """Serializer for ComponentInstanceThreat."""
+def rating_to_dict(rating) -> dict | None:
+    """The read shape of a rating (#31 comment, 2.5)."""
+    if rating is None:
+        return None
+    likelihood = None
+    if rating.likelihood_level:
+        likelihood = {
+            "level": rating.likelihood_level,
+            "score": rating.likelihood_score,
+            "factors": rating.likelihood_factors or [],
+            "extra": rating.likelihood_extra or {},
+        }
+    impact = None
+    if rating.impact_level:
+        impact = {
+            "level": rating.impact_level,
+            "score": rating.impact_score,
+            "factors": rating.impact_factors or [],
+            "extra": rating.impact_extra or {},
+        }
+    return {
+        "id": rating.id,
+        "methodology": rating.methodology,
+        "level": rating.level,
+        "score": rating.score,
+        "likelihood": likelihood,
+        "impact": impact,
+        "rationale": rating.rationale,
+    }
 
-    # Read fields - prefer model's own fields, fallback to threat_library
+
+class RatingField(serializers.Field):
+    """Read-only nested rating."""
+
+    def __init__(self, **kwargs):
+        kwargs["read_only"] = True
+        super().__init__(**kwargs)
+
+    def to_representation(self, rating):
+        return rating_to_dict(rating)
+
+
+RISK_DOMAINS = (
+    "security",
+    "privacy",
+    "operational",
+    "financial",
+    "compliance",
+    "strategic",
+    "reputational",
+    "safety",
+    "environmental",
+    "supply-chain",
+    "technical",
+    "project",
+    "ethical",
+    "societal",
+    "human-rights",
+    "health",
+    "legal",
+)
+
+IMPACT_CATEGORIES = (
+    "confidentiality",
+    "integrity",
+    "availability",
+    "financial",
+    "reputation",
+    "regulatory",
+    "safety",
+    "privacy",
+    "operational",
+    "strategic",
+    "bias",
+    "discrimination",
+    "fairness",
+    "human-rights",
+    "environmental",
+    "societal",
+    "psychological",
+    "physical",
+    "health",
+)
+
+
+def validate_impact_extra(inputs: dict) -> dict:
+    """The form's impact section: categories and quantification (section 4.2).
+
+    Returns the ``impact_extra`` dict to store; raises on bad values since no
+    engine writes these.
+    """
+    extra = {}
+    categories = inputs.get("impact_categories")
+    if categories is not None:
+        if not isinstance(categories, list) or any(
+            c not in IMPACT_CATEGORIES for c in categories
+        ):
+            raise serializers.ValidationError(
+                {
+                    "rating_inputs": "impact_categories must be a list of impact category values."
+                }
+            )
+        if categories:
+            extra["categories"] = list(dict.fromkeys(categories))
+    quantification = inputs.get("impact_quantification")
+    if quantification is not None:
+        if not isinstance(quantification, dict):
+            raise serializers.ValidationError(
+                {"rating_inputs": "impact_quantification must be an object."}
+            )
+        cleaned = {}
+        loss = quantification.get("financial_loss", quantification.get("financialLoss"))
+        if loss is not None:
+            if not isinstance(loss, (int, float)) or isinstance(loss, bool) or loss < 0:
+                raise serializers.ValidationError(
+                    {"rating_inputs": "financial_loss must be a non-negative number."}
+                )
+            cleaned["financialLoss"] = loss
+        currency = quantification.get("currency")
+        if currency is not None:
+            if not isinstance(currency, str) or not re.fullmatch(r"[A-Z]{3}", currency):
+                raise serializers.ValidationError(
+                    {"rating_inputs": "currency must be an ISO 4217 code such as USD."}
+                )
+            cleaned["currency"] = currency
+        loss_range = quantification.get(
+            "financial_loss_range", quantification.get("financialLossRange")
+        )
+        if loss_range is not None:
+            if not isinstance(loss_range, dict):
+                raise serializers.ValidationError(
+                    {"rating_inputs": "financial_loss_range must be an object."}
+                )
+            cleaned_range = {}
+            for ours, theirs in (
+                ("minimum", "minimum"),
+                ("most_likely", "mostLikely"),
+                ("maximum", "maximum"),
+            ):
+                value = loss_range.get(ours, loss_range.get(theirs))
+                if value is None:
+                    continue
+                if not isinstance(value, (int, float)) or isinstance(value, bool):
+                    raise serializers.ValidationError(
+                        {
+                            "rating_inputs": f"financial_loss_range.{ours} must be a number."
+                        }
+                    )
+                cleaned_range[theirs] = value
+            if cleaned_range:
+                cleaned["financialLossRange"] = cleaned_range
+        if cleaned:
+            extra["quantification"] = cleaned
+    return extra
+
+
+def rating_from_inputs(threat_model, inputs, *, for_threat: bool):
+    """Validate and rate ``rating_inputs``, with the impact section applied."""
+    from .services import rate_inputs
+
+    if not isinstance(inputs, dict):
+        raise serializers.ValidationError({"rating_inputs": "Must be an object."})
+    engine_inputs = {
+        key: value
+        for key, value in inputs.items()
+        if key not in ("impact_categories", "impact_quantification")
+    }
+    rating = rate_inputs(threat_model, engine_inputs, for_threat=for_threat)
+    extra = validate_impact_extra(inputs)
+    if extra:
+        rating.impact_extra = {**(rating.impact_extra or {}), **extra}
+    return rating
+
+
+class BusinessObjectiveIdsField(serializers.ListField):
+    """Ids of a model's business objectives; resolved against the owner's model."""
+
+    child = serializers.IntegerField()
+
+
+def resolve_business_objectives(threat_model, ids):
+    from apps.threat_models.models import BusinessObjective
+
+    wanted = list(dict.fromkeys(ids))
+    found = {
+        objective.id: objective
+        for objective in BusinessObjective.objects.filter(
+            id__in=wanted, threat_model=threat_model
+        )
+    }
+    missing = [i for i in wanted if i not in found]
+    if missing:
+        raise serializers.ValidationError(
+            {
+                "business_objective_ids": f"business objective(s) {missing} are not "
+                "part of this threat model."
+            }
+        )
+    return [found[i] for i in wanted]
+
+
+def objective_names(links):
+    return [
+        {"id": link.business_objective_id, "name": link.business_objective.name}
+        for link in links
+    ]
+
+
+class ThreatTargetsField(serializers.Field):
+    """The ``targets`` list of a scenario.
+
+    Reads as ``[{type, id, name, blueprint_id}]``; writes take ``[{type, id}]``
+    and are resolved against the scenario's threat model in ``validate``.
+    """
+
+    default_error_messages = {
+        "not_a_list": "targets must be a list of {type, id} objects.",
+        "bad_entry": "Each target needs a type (component, flow, zone, boundary) and an id.",
+    }
+
+    def to_representation(self, threat):
+        from apps.threat_models.analysis_service import serialize_targets
+
+        return serialize_targets(threat)
+
+    def to_internal_value(self, data):
+        if not isinstance(data, list):
+            self.fail("not_a_list")
+        entries = []
+        for item in data:
+            if not isinstance(item, dict):
+                self.fail("bad_entry")
+            kind = item.get("type")
+            target_id = item.get("id")
+            if kind not in InstanceThreatTarget.TARGET_KINDS or target_id is None:
+                self.fail("bad_entry")
+            entries.append({"type": kind, "id": target_id})
+        return entries
+
+    def get_attribute(self, instance):
+        return instance
+
+
+class InstanceThreatSerializer(serializers.ModelSerializer):
+    """One scenario: its targets, number, triage and actor.
+
+    Writes take ``targets`` as ``[{type, id}]`` plus ``whole_system``. A
+    scenario either has targets or is whole-system, never both and never
+    neither; the actor is a persona of the model or free text, never both.
+    """
+
     threat_name_display = serializers.SerializerMethodField()
     taxonomy_entries = serializers.SerializerMethodField()
-    component_name = serializers.CharField(source="component.name", read_only=True)
-    threat_personas = serializers.SerializerMethodField()
     threat_sources = serializers.SerializerMethodField()
+    display_number = serializers.CharField(read_only=True)
+    targets = ThreatTargetsField(required=False)
+    rating = RatingField()
+    rating_inputs = serializers.JSONField(write_only=True, required=False)
+    business_objective_ids = BusinessObjectiveIdsField(required=False)
+    business_objectives = serializers.SerializerMethodField()
+    actor_persona_name = serializers.CharField(
+        source="actor_persona.name", read_only=True, default=None
+    )
+
+    def get_business_objectives(self, obj):
+        return objective_names(obj.business_objective_links.all())
 
     # Write fields - accept threat_name/threat_description for custom threats
     threat_name = serializers.CharField(
@@ -292,40 +549,53 @@ class ComponentInstanceThreatSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = ComponentInstanceThreat
+        model = InstanceThreat
         fields = [
             "id",
-            "component",
-            "component_name",
+            "threat_model",
+            "number",
+            "display_number",
+            "whole_system",
+            "targets",
+            "auto_generated",
             "threat_library",
             "threat_name",
             "threat_description",
             "threat_name_display",
             "taxonomy_entries",
-            "inherent_severity",
-            "residual_severity",
+            "rating",
+            "rating_inputs",
+            "business_objective_ids",
+            "business_objectives",
             "status",
-            "severity_scoring_metadata",
             "triage_status",
             "decision_rationale",
             "format_metadata",
             "display_order",
             "impact_description",
+            "actor_persona",
+            "actor_persona_name",
             "threat_actor_text",
-            "threat_personas",
+            "intent",
+            "access_level",
             "threat_sources",
             "created_at",
             "updated_at",
         ]
         read_only_fields = [
+            "format_metadata",
             "id",
+            "number",
+            "display_number",
+            "auto_generated",
+            "rating",
+            "business_objectives",
             "created_at",
             "updated_at",
             "threat_name_display",
             "taxonomy_entries",
-            "component_name",
-            "threat_personas",
             "threat_sources",
+            "actor_persona_name",
         ]
 
     def get_threat_name_display(self, obj):
@@ -340,171 +610,213 @@ class ComponentInstanceThreatSerializer(serializers.ModelSerializer):
         """Merge library + instance taxonomy entries, fall back to snapshot."""
         return _merge_taxonomy_entries(obj)
 
-    def get_threat_personas(self, obj):
-        return [
-            {"id": link.persona.id, "name": link.persona.name}
-            for link in obj.persona_links.select_related("persona").all()
-        ]
-
     def get_threat_sources(self, obj):
         return [
             {"id": link.source.id, "name": link.source.name, "slug": link.source.slug}
             for link in obj.source_links.select_related("source").all()
         ]
 
-    def create(self, validated_data):
-        threat_library = validated_data.get("threat_library")
-        if threat_library and "taxonomy_snapshot" not in validated_data:
-            validated_data["taxonomy_snapshot"] = build_taxonomy_snapshot(
-                threat_library
+    def validate(self, attrs):
+        from .services import resolve_target
+
+        threat_model = attrs.get("threat_model") or getattr(
+            self.instance, "threat_model", None
+        )
+        if threat_model is None:
+            raise serializers.ValidationError(
+                {"threat_model": "This field is required."}
             )
-        return super().create(validated_data)
+        if (
+            self.instance is not None
+            and attrs.get("threat_model", threat_model) != threat_model
+        ):
+            raise serializers.ValidationError(
+                {"threat_model": "A scenario cannot move to another threat model."}
+            )
 
+        if "targets" in attrs or "whole_system" in attrs or self.instance is None:
+            whole_system = attrs.get(
+                "whole_system", getattr(self.instance, "whole_system", False)
+            )
+            if "targets" in attrs:
+                rows = []
+                for entry in attrs["targets"]:
+                    row = resolve_target(entry["type"], entry["id"], threat_model)
+                    if row is None:
+                        raise serializers.ValidationError(
+                            {
+                                "targets": f"{entry['type']} {entry['id']} is not part "
+                                "of this threat model."
+                            }
+                        )
+                    rows.append(row)
+                attrs["targets"] = rows
+            elif self.instance is None:
+                attrs["targets"] = []
+            target_rows = attrs.get("targets")
+            if target_rows is not None:
+                if target_rows and whole_system:
+                    raise serializers.ValidationError(
+                        {"targets": "A whole-system scenario has no targets."}
+                    )
+                if not target_rows and not whole_system:
+                    raise serializers.ValidationError(
+                        {
+                            "targets": "Give at least one target, or set whole_system "
+                            "to make this a whole-system scenario."
+                        }
+                    )
 
-class DataFlowInstanceThreatSerializer(serializers.ModelSerializer):
-    """Serializer for DataFlowInstanceThreat."""
+        if "business_objective_ids" in attrs:
+            attrs["business_objective_ids"] = resolve_business_objectives(
+                threat_model, attrs["business_objective_ids"]
+            )
 
-    # Read fields - prefer model's own fields, fallback to threat_library
-    threat_name_display = serializers.SerializerMethodField()
-    taxonomy_entries = serializers.SerializerMethodField()
-    flow_label = serializers.CharField(source="data_flow.label", read_only=True)
-    threat_personas = serializers.SerializerMethodField()
-    threat_sources = serializers.SerializerMethodField()
-
-    # Write fields - accept threat_name/threat_description for custom threats
-    threat_name = serializers.CharField(
-        required=False, allow_blank=True, write_only=True
-    )
-    threat_description = serializers.CharField(
-        required=False, allow_blank=True, write_only=True
-    )
-
-    class Meta:
-        model = DataFlowInstanceThreat
-        fields = [
-            "id",
-            "data_flow",
-            "flow_label",
-            "threat_library",
-            "threat_name",
-            "threat_description",
-            "threat_name_display",
-            "taxonomy_entries",
-            "inherent_severity",
-            "residual_severity",
-            "status",
-            "severity_scoring_metadata",
-            "triage_status",
-            "decision_rationale",
-            "format_metadata",
-            "display_order",
-            "impact_description",
-            "threat_actor_text",
-            "threat_personas",
-            "threat_sources",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = [
-            "id",
-            "created_at",
-            "updated_at",
-            "threat_name_display",
-            "taxonomy_entries",
-            "flow_label",
-            "threat_personas",
-            "threat_sources",
-        ]
-
-    def get_threat_name_display(self, obj):
-        """Return threat name from model field or threat_library."""
-        if obj.threat_name:
-            return obj.threat_name
-        if obj.threat_library:
-            return obj.threat_library.name
-        return None
-
-    def get_taxonomy_entries(self, obj):
-        """Merge library + instance taxonomy entries, fall back to snapshot."""
-        return _merge_taxonomy_entries(obj)
-
-    def get_threat_personas(self, obj):
-        return [
-            {"id": link.persona.id, "name": link.persona.name}
-            for link in obj.persona_links.select_related("persona").all()
-        ]
-
-    def get_threat_sources(self, obj):
-        return [
-            {"id": link.source.id, "name": link.source.name, "slug": link.source.slug}
-            for link in obj.source_links.select_related("source").all()
-        ]
+        persona = attrs.get(
+            "actor_persona", getattr(self.instance, "actor_persona", None)
+        )
+        actor_text = attrs.get(
+            "threat_actor_text", getattr(self.instance, "threat_actor_text", "")
+        )
+        if persona is not None and actor_text:
+            raise serializers.ValidationError(
+                {"threat_actor_text": "Choose a persona or type an actor, not both."}
+            )
+        if persona is not None and persona.threat_model_id != threat_model.id:
+            raise serializers.ValidationError(
+                {"actor_persona": "The persona must belong to this threat model."}
+            )
+        return attrs
 
     def create(self, validated_data):
-        threat_library = validated_data.get("threat_library")
-        if threat_library and "taxonomy_snapshot" not in validated_data:
-            validated_data["taxonomy_snapshot"] = build_taxonomy_snapshot(
-                threat_library
+        from .services import create_instance_threat
+
+        targets = validated_data.pop("targets", [])
+        whole_system = validated_data.pop("whole_system", False)
+        threat_model = validated_data.pop("threat_model")
+        rating_inputs = validated_data.pop("rating_inputs", None)
+        objectives = validated_data.pop("business_objective_ids", [])
+        rating = (
+            rating_from_inputs(threat_model, rating_inputs, for_threat=True)
+            if rating_inputs
+            else None
+        )
+        threat = create_instance_threat(
+            threat_model,
+            targets=targets,
+            whole_system=whole_system,
+            rating=rating,
+            **validated_data,
+        )
+        if objectives:
+            from .services import set_threat_business_objectives
+
+            set_threat_business_objectives(threat, objectives)
+        return threat
+
+    def update(self, instance, validated_data):
+        from .services import (
+            apply_rating,
+            note_user_edit,
+            recalculate_risks_for_threat,
+            set_targets,
+            set_threat_business_objectives,
+        )
+
+        targets = validated_data.pop("targets", None)
+        whole_system = validated_data.pop("whole_system", None)
+        rating_inputs = validated_data.pop("rating_inputs", None)
+        objectives = validated_data.pop("business_objective_ids", None)
+        validated_data.pop("threat_model", None)
+        instance = super().update(instance, validated_data)
+        if objectives is not None:
+            set_threat_business_objectives(instance, objectives)
+        if rating_inputs:
+            apply_rating(
+                instance,
+                "rating",
+                rating_from_inputs(
+                    instance.threat_model, rating_inputs, for_threat=True
+                ),
             )
-        return super().create(validated_data)
+            recalculate_risks_for_threat(instance)
+        if targets is not None or whole_system is not None:
+            if whole_system is None:
+                whole_system = False if targets else instance.whole_system
+            if targets is None:
+                targets = (
+                    []
+                    if whole_system
+                    else [row.target for row in instance.targets.all()]
+                )
+            set_targets(instance, targets, whole_system=whole_system)
+            # The viewset prefetched the old target rows; read the new ones.
+            instance.refresh_from_db()
+        note_user_edit(instance)
+        return instance
 
 
 class CountermeasureThreatLinkSerializer(serializers.ModelSerializer):
-    """Read-only serializer for linked threats on a countermeasure."""
+    """Read-only serializer for linked scenarios on a countermeasure."""
 
-    threat_id = serializers.SerializerMethodField()
+    threat_id = serializers.IntegerField(read_only=True)
+    display_number = serializers.CharField(
+        source="threat.display_number", read_only=True
+    )
     threat_name = serializers.SerializerMethodField()
-    component_name = serializers.SerializerMethodField()
-    flow_label = serializers.SerializerMethodField()
+    targets = serializers.SerializerMethodField()
 
     class Meta:
         model = CountermeasureThreatLink
         fields = [
             "id",
             "threat_id",
+            "display_number",
             "threat_name",
-            "component_name",
-            "flow_label",
+            "targets",
             "display_order",
         ]
         read_only_fields = fields
 
-    def get_threat_id(self, obj):
-        threat = obj.component_threat or obj.flow_threat
-        return threat.id if threat else None
-
     def get_threat_name(self, obj):
-        threat = obj.component_threat or obj.flow_threat
-        if not threat:
-            return None
+        threat = obj.threat
         return threat.threat_name or (
             threat.threat_library.name if threat.threat_library else None
         )
 
-    def get_component_name(self, obj):
-        if obj.component_threat:
-            return (
-                obj.component_threat.component.name
-                if obj.component_threat.component
-                else None
-            )
-        return None
+    def get_targets(self, obj):
+        from apps.threat_models.analysis_service import serialize_targets
 
-    def get_flow_label(self, obj):
-        if obj.flow_threat:
-            return (
-                obj.flow_threat.data_flow.label if obj.flow_threat.data_flow else None
-            )
-        return None
+        return serialize_targets(obj.threat)
+
+
+class CountermeasureTargetsField(ThreatTargetsField):
+    """``targets`` of a control: where it applies. Empty means the whole system."""
+
+    def to_representation(self, countermeasure):
+        from apps.threat_models.analysis_service import serialize_targets
+
+        return serialize_targets(countermeasure)
 
 
 class InstanceCountermeasureSerializer(serializers.ModelSerializer):
-    """Serializer for InstanceCountermeasure."""
+    """Serializer for InstanceCountermeasure.
+
+    ``targets`` (``[{type, id}]`` on write) say where the control applies and
+    never change a threat's status; ``implemented_by`` lists the components
+    that implement it; ``implemented_by_party`` names a provider as text.
+    """
 
     # Read fields - prefer model's own fields, fallback to countermeasure_library
     countermeasure_name_display = serializers.SerializerMethodField()
     control_functions_display = serializers.SerializerMethodField()
     control_nature_display = serializers.SerializerMethodField()
+    display_number = serializers.CharField(read_only=True)
+    days_overdue = serializers.ReadOnlyField()
+    targets = CountermeasureTargetsField(required=False)
+    implemented_by = serializers.ListField(
+        child=serializers.IntegerField(), required=False
+    )
     verified_by_email = serializers.EmailField(
         source="verified_by.email", read_only=True
     )
@@ -527,11 +839,6 @@ class InstanceCountermeasureSerializer(serializers.ModelSerializer):
         required=False, allow_blank=True, write_only=True
     )
     threat_id = serializers.IntegerField(write_only=True, required=False)
-    threat_type = serializers.ChoiceField(
-        choices=["component", "flow", "dataflow"],
-        write_only=True,
-        required=False,
-    )
 
     class Meta:
         model = InstanceCountermeasure
@@ -560,14 +867,19 @@ class InstanceCountermeasureSerializer(serializers.ModelSerializer):
             "format_metadata",
             "threat_links",
             "threat_id",
-            "threat_type",
-            "is_inherited",
-            "inherited_from_component_name",
-            "inherited_from_zone_name",
+            "auto_generated",
+            "number",
+            "display_number",
+            "days_overdue",
+            "targets",
+            "implemented_by",
+            "implemented_by_party",
+            "source",
             "created_at",
             "updated_at",
         ]
         read_only_fields = [
+            "format_metadata",
             "id",
             "created_at",
             "updated_at",
@@ -577,6 +889,10 @@ class InstanceCountermeasureSerializer(serializers.ModelSerializer):
             "verified_by_email",
             "assigned_owner_email",
             "threat_links",
+            "auto_generated",
+            "number",
+            "display_number",
+            "days_overdue",
         ]
 
     def get_countermeasure_name_display(self, obj):
@@ -603,17 +919,106 @@ class InstanceCountermeasureSerializer(serializers.ModelSerializer):
             return obj.countermeasure_library.control_nature
         return ""
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["implemented_by"] = [
+            link.component_id for link in instance.provider_links.all()
+        ]
+        return data
+
+    def validate(self, attrs):
+        from apps.systems.models import OrgsystemComponent
+
+        from .services import resolve_target
+
+        threat_id = attrs.get("threat_id")
+        threat_model = attrs.get("threat_model") or getattr(
+            self.instance, "threat_model", None
+        )
+        if threat_model is None:
+            raise serializers.ValidationError(
+                {"threat_model": "This field is required."}
+            )
+        if (
+            self.instance is not None
+            and attrs.get("threat_model", threat_model) != threat_model
+        ):
+            raise serializers.ValidationError(
+                {
+                    "threat_model": "A countermeasure cannot move to another threat model."
+                }
+            )
+        if (
+            threat_id is not None
+            and not InstanceThreat.objects.filter(
+                id=threat_id, threat_model=threat_model
+            ).exists()
+        ):
+            raise serializers.ValidationError(
+                {"threat_id": "The threat is not part of this threat model."}
+            )
+        if "targets" in attrs:
+            rows = []
+            for entry in attrs["targets"]:
+                row = resolve_target(entry["type"], entry["id"], threat_model)
+                if row is None:
+                    raise serializers.ValidationError(
+                        {
+                            "targets": f"{entry['type']} {entry['id']} is not part "
+                            "of this threat model."
+                        }
+                    )
+                rows.append(row)
+            attrs["targets"] = rows
+        if "implemented_by" in attrs:
+            wanted = list(dict.fromkeys(attrs["implemented_by"]))
+            components = {
+                component.id: component
+                for component in OrgsystemComponent.objects.filter(
+                    id__in=wanted, blueprint__threat_model=threat_model
+                )
+            }
+            missing = [
+                component_id
+                for component_id in wanted
+                if component_id not in components
+            ]
+            if missing:
+                raise serializers.ValidationError(
+                    {
+                        "implemented_by": f"component(s) {missing} are not part of "
+                        "this threat model."
+                    }
+                )
+            attrs["implemented_by"] = [
+                components[component_id] for component_id in wanted
+            ]
+        return attrs
+
     def create(self, validated_data):
+        from .services import create_instance_countermeasure, link_countermeasure
+
         threat_id = validated_data.pop("threat_id", None)
-        threat_type = validated_data.pop("threat_type", "component")
-        instance = super().create(validated_data)
+        threat_model = validated_data.pop("threat_model")
+        instance = create_instance_countermeasure(threat_model, **validated_data)
         if threat_id:
-            link_kwargs = {"countermeasure": instance}
-            if threat_type in ("flow", "dataflow"):
-                link_kwargs["flow_threat_id"] = threat_id
-            else:
-                link_kwargs["component_threat_id"] = threat_id
-            CountermeasureThreatLink.objects.get_or_create(**link_kwargs)
+            link_countermeasure(instance, InstanceThreat.objects.get(id=threat_id))
+        return instance
+
+    def update(self, instance, validated_data):
+        from .services import set_countermeasure_providers, set_countermeasure_targets
+
+        targets = validated_data.pop("targets", None)
+        implemented_by = validated_data.pop("implemented_by", None)
+        validated_data.pop("threat_id", None)
+        validated_data.pop("threat_model", None)
+        instance = super().update(instance, validated_data)
+        if targets is not None:
+            set_countermeasure_targets(instance, targets)
+        if implemented_by is not None:
+            set_countermeasure_providers(instance, implemented_by)
+        if targets is not None or implemented_by is not None:
+            instance.refresh_from_db()
         return instance
 
 
@@ -721,7 +1126,7 @@ class InstanceCountermeasureStandardSerializer(serializers.ModelSerializer):
 
 
 class InstanceThreatTaxonomyEntrySerializer(serializers.ModelSerializer):
-    """Serializer for instance-level taxonomy entries on threat instances."""
+    """Serializer for instance-level taxonomy entries on threat scenarios."""
 
     taxonomy_slug = serializers.CharField(
         source="taxonomy_entry.taxonomy.slug", read_only=True
@@ -742,8 +1147,7 @@ class InstanceThreatTaxonomyEntrySerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "taxonomy_entry",
-            "component_threat",
-            "flow_threat",
+            "threat",
             "taxonomy_slug",
             "taxonomy_name",
             "external_id",
@@ -763,24 +1167,19 @@ class InstanceThreatTaxonomyEntrySerializer(serializers.ModelSerializer):
             "reference_url",
         ]
 
-    def validate(self, data):
-        component_threat = data.get("component_threat")
-        flow_threat = data.get("flow_threat")
-        if bool(component_threat) == bool(flow_threat):
-            raise serializers.ValidationError(
-                "Exactly one of component_threat or flow_threat must be provided."
-            )
-        return data
-
     def create(self, validated_data):
         from django.db import IntegrityError
 
+        from .services import note_user_edit
+
         try:
-            return super().create(validated_data)
+            entry = super().create(validated_data)
         except IntegrityError as err:
             raise serializers.ValidationError(
                 "This taxonomy entry is already linked to this threat."
             ) from err
+        note_user_edit(entry.threat)
+        return entry
 
 
 class CountermeasureCommentSerializer(serializers.ModelSerializer):
@@ -814,12 +1213,19 @@ class RiskListSerializer(serializers.ModelSerializer):
 
     scoring_method = serializers.SerializerMethodField()
     threat_count = serializers.SerializerMethodField()
+    inherent = RatingField()
+    residual = RatingField()
+    target = RatingField()
+    exposure = serializers.SerializerMethodField()
     owner_email = serializers.EmailField(
         source="owner.email", read_only=True, default=None
     )
     assigned_to_email = serializers.EmailField(
         source="assigned_to.email", read_only=True, default=None
     )
+
+    def get_exposure(self, obj):
+        return derive_risk_status(obj)
 
     class Meta:
         model = Risk
@@ -828,11 +1234,11 @@ class RiskListSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "scoring_method",
-            "inherent_score",
-            "inherent_level",
-            "residual_score",
-            "residual_level",
-            "response",
+            "inherent",
+            "residual",
+            "target",
+            "status",
+            "exposure",
             "threat_count",
             "owner",
             "owner_email",
@@ -846,13 +1252,32 @@ class RiskListSerializer(serializers.ModelSerializer):
         return obj.threat_model.risk_scoring_method
 
     def get_threat_count(self, obj):
+        annotated = getattr(obj, "threat_count", None)
+        if annotated is not None:
+            return annotated
         return obj.risk_threats.count()
 
 
 class RiskDetailSerializer(serializers.ModelSerializer):
-    """Full serializer for risk detail/create/update."""
+    """Full serializer for risk detail/create/update.
+
+    Writes take ``rating_inputs`` (a level alone, or the model's method's
+    inputs) for the inherent rating; residual is always computed.
+    """
 
     scoring_method = serializers.SerializerMethodField()
+    inherent = RatingField()
+    residual = RatingField()
+    target = RatingField()
+    rating_inputs = serializers.JSONField(write_only=True, required=False)
+    exposure = serializers.SerializerMethodField()
+    responses = serializers.SerializerMethodField()
+    business_objective_ids = BusinessObjectiveIdsField(required=False)
+    business_objectives = serializers.SerializerMethodField()
+
+    def get_business_objectives(self, obj):
+        return objective_names(obj.business_objective_links.all())
+
     owner_email = serializers.EmailField(
         source="owner.email", read_only=True, default=None
     )
@@ -861,11 +1286,14 @@ class RiskDetailSerializer(serializers.ModelSerializer):
     )
     threats = serializers.SerializerMethodField()
 
-    # Write-only fields for inline threat linking
-    component_threat_ids = serializers.ListField(
-        child=serializers.IntegerField(), write_only=True, required=False, default=[]
-    )
-    flow_threat_ids = serializers.ListField(
+    def get_exposure(self, obj):
+        return derive_risk_status(obj)
+
+    def get_responses(self, obj):
+        return RiskResponseSerializer(obj.responses.all(), many=True).data
+
+    # Write-only field for inline threat linking
+    threat_ids = serializers.ListField(
         child=serializers.IntegerField(), write_only=True, required=False, default=[]
     )
 
@@ -876,215 +1304,272 @@ class RiskDetailSerializer(serializers.ModelSerializer):
             "name",
             "description",
             "scoring_method",
-            "scoring_metadata",
-            "inherent_score",
-            "inherent_level",
-            "residual_score",
-            "residual_level",
-            "response",
+            "inherent",
+            "residual",
+            "target",
+            "rating_inputs",
+            "status",
+            "statement",
+            "exposure",
+            "domains",
+            "business_objective_ids",
+            "business_objectives",
+            "responses",
             "threats",
             "owner",
             "owner_email",
             "assigned_to",
             "assigned_to_email",
             "format_metadata",
-            "component_threat_ids",
-            "flow_threat_ids",
+            "threat_ids",
             "created_at",
             "updated_at",
         ]
         read_only_fields = [
+            "format_metadata",
             "id",
-            "inherent_score",
-            "inherent_level",
-            "residual_score",
-            "residual_level",
+            "inherent",
+            "residual",
+            "target",
+            "exposure",
+            "responses",
+            "business_objectives",
             "created_at",
             "updated_at",
         ]
 
-    def _get_scoring_method(self):
-        """Get scoring method from threat model context."""
+    def validate_domains(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError("domains must be a list.")
+        cleaned = []
+        for item in value:
+            name = item.get("type") if isinstance(item, dict) else item
+            if name not in RISK_DOMAINS:
+                raise serializers.ValidationError(
+                    f"'{name}' is not a risk domain. Use one of: "
+                    + ", ".join(RISK_DOMAINS)
+                )
+            if name not in cleaned:
+                cleaned.append(name)
+        return cleaned
+
+    def _threat_model(self):
         threat_model = self.context.get("threat_model")
-        if threat_model:
-            return threat_model.risk_scoring_method
-        return "tm_library"
+        if threat_model is None and self.instance is not None:
+            threat_model = self.instance.threat_model
+        return threat_model
 
     def get_scoring_method(self, obj):
         return obj.threat_model.risk_scoring_method
 
     def get_threats(self, obj):
-        """Return linked threats with basic info."""
+        """Return linked scenarios with basic info."""
+        from apps.threat_models.analysis_service import serialize_targets
+
         result = []
-        for risk_threat in obj.risk_threats.select_related(
-            "component_threat", "flow_threat"
-        ).all():
-            threat = risk_threat.component_threat or risk_threat.flow_threat
-            if threat:
-                result.append(
-                    {
-                        "risk_threat_id": risk_threat.id,
-                        "threat_id": threat.id,
-                        "threat_type": "component"
-                        if risk_threat.component_threat
-                        else "flow",
-                        "threat_name": threat.threat_name,
-                        "status": threat.status,
-                        "triage_status": threat.triage_status,
-                    }
-                )
+        for risk_threat in (
+            obj.risk_threats.select_related(
+                "threat", "threat__threat_library", "threat__rating"
+            )
+            .prefetch_related("threat__targets")
+            .all()
+        ):
+            threat = risk_threat.threat
+            result.append(
+                {
+                    "risk_threat_id": risk_threat.id,
+                    "threat_id": threat.id,
+                    "display_number": threat.display_number,
+                    "threat_name": threat.threat_name
+                    or (threat.threat_library.name if threat.threat_library else None),
+                    "status": threat.status,
+                    "triage_status": threat.triage_status,
+                    "whole_system": threat.whole_system,
+                    "rating": rating_to_dict(threat.rating),
+                    "targets": serialize_targets(threat),
+                }
+            )
         return result
 
-    def validate_scoring_metadata(self, value):
-        """Validate scoring_metadata against the ThreatModel's scoring method."""
-        method_key = self._get_scoring_method()
-        methods = get_scoring_methods()
-        method_config = methods.get(method_key)
-        if method_config and method_config["engine"]:
-            engine = method_config["engine"]()
-            engine.validate_inputs(value)
-        return value
-
     def validate(self, attrs):
-        """Cross-field validation: verify threat IDs belong to the same threat_model."""
-        threat_model = self.context.get("threat_model")
-        component_threat_ids = attrs.get("component_threat_ids", [])
-        flow_threat_ids = attrs.get("flow_threat_ids", [])
-
-        if threat_model and component_threat_ids:
-            valid_count = ComponentInstanceThreat.objects.filter(
-                id__in=component_threat_ids,
+        """Every threat id belongs to the same model; rating inputs rate now."""
+        threat_model = self._threat_model()
+        threat_ids = attrs.get("threat_ids", [])
+        if threat_model and threat_ids:
+            valid_count = InstanceThreat.objects.filter(
+                id__in=threat_ids, threat_model=threat_model
             ).count()
-            if valid_count != len(component_threat_ids):
+            if valid_count != len(set(threat_ids)):
                 raise serializers.ValidationError(
                     {
-                        "component_threat_ids": "One or more component threats were not found."
+                        "threat_ids": "One or more threats are not part of this threat model."
                     }
                 )
-
-        if threat_model and flow_threat_ids:
-            valid_count = DataFlowInstanceThreat.objects.filter(
-                id__in=flow_threat_ids,
-            ).count()
-            if valid_count != len(flow_threat_ids):
-                raise serializers.ValidationError(
-                    {"flow_threat_ids": "One or more flow threats were not found."}
-                )
-
+        if "business_objective_ids" in attrs:
+            attrs["business_objective_ids"] = resolve_business_objectives(
+                threat_model, attrs["business_objective_ids"]
+            )
+        if "rating_inputs" in attrs:
+            if threat_model is None:
+                raise serializers.ValidationError({"rating_inputs": "No threat model."})
+            attrs["_rating"] = rating_from_inputs(
+                threat_model, attrs.pop("rating_inputs"), for_threat=False
+            )
+        elif self.instance is None:
+            raise serializers.ValidationError(
+                {
+                    "rating_inputs": "Give a level, or the method's inputs, to rate the risk."
+                }
+            )
         return attrs
 
     def create(self, validated_data):
-        component_threat_ids = validated_data.pop("component_threat_ids", [])
-        flow_threat_ids = validated_data.pop("flow_threat_ids", [])
+        from .services import create_risk, set_risk_business_objectives
 
-        scoring_method = self._get_scoring_method()
-        scoring_metadata = validated_data.get("scoring_metadata", {})
-
-        # Compute inherent score via engine
-        score, level = calculate_inherent_score(scoring_method, scoring_metadata)
-        if score is not None:
-            validated_data["inherent_score"] = score
-            validated_data["inherent_level"] = level
-        elif "inherent_score" not in validated_data:
-            raise serializers.ValidationError(
-                {
-                    "inherent_score": "inherent_score is required for custom/unsupported scoring methods."
-                }
-            )
-        else:
-            from .scoring.registry import score_to_level
-
-            validated_data["inherent_level"] = score_to_level(
-                validated_data["inherent_score"]
-            )
-
-        with transaction.atomic():
-            risk = Risk.objects.create(**validated_data)
-
-            # Create RiskThreat junction rows
-            risk_threat_rows = []
-            for threat_id in component_threat_ids:
-                risk_threat_rows.append(
-                    RiskThreat(risk=risk, component_threat_id=threat_id)
-                )
-            for threat_id in flow_threat_ids:
-                risk_threat_rows.append(RiskThreat(risk=risk, flow_threat_id=threat_id))
-            if risk_threat_rows:
-                RiskThreat.objects.bulk_create(risk_threat_rows)
-
-            # Compute residual score
-            recalculate_risk(risk)
-            risk.refresh_from_db()
-
+        threat_ids = validated_data.pop("threat_ids", [])
+        rating = validated_data.pop("_rating")
+        objectives = validated_data.pop("business_objective_ids", [])
+        threat_model = validated_data.pop("threat_model", None) or self._threat_model()
+        risk = create_risk(
+            threat_model, rating=rating, threat_ids=threat_ids, **validated_data
+        )
+        if objectives:
+            set_risk_business_objectives(risk, objectives)
         return risk
 
     def update(self, instance, validated_data):
-        validated_data.pop("component_threat_ids", None)
-        validated_data.pop("flow_threat_ids", None)
+        from .services import apply_rating, set_risk_business_objectives
 
-        scoring_method = instance.threat_model.risk_scoring_method
-        scoring_metadata = validated_data.get(
-            "scoring_metadata", instance.scoring_metadata
-        )
-
-        # Recompute inherent score if scoring metadata changed
-        if "scoring_metadata" in validated_data:
-            score, level = calculate_inherent_score(scoring_method, scoring_metadata)
-            if score is not None:
-                validated_data["inherent_score"] = score
-                validated_data["inherent_level"] = level
-
+        validated_data.pop("threat_ids", None)
+        rating = validated_data.pop("_rating", None)
+        objectives = validated_data.pop("business_objective_ids", None)
         instance = super().update(instance, validated_data)
-        recalculate_risk(instance)
+        if objectives is not None:
+            set_risk_business_objectives(instance, objectives)
+        if rating is not None:
+            apply_rating(instance, "inherent", rating)
+        recalculate_residual(instance)
         instance.refresh_from_db()
         return instance
 
 
-class RiskThreatSerializer(serializers.ModelSerializer):
-    """Lightweight serializer for RiskThreat entries."""
+class RiskResponseSerializer(serializers.ModelSerializer):
+    """A risk's response: strategy, status, cost, priority, owner, target date
+    and the controls it relies on (``countermeasure_ids``, same model only)."""
 
-    threat_id = serializers.SerializerMethodField()
-    threat_type = serializers.SerializerMethodField()
+    owner_email = serializers.EmailField(
+        source="owner.email", read_only=True, default=None
+    )
+    countermeasure_ids = serializers.ListField(
+        child=serializers.IntegerField(), required=False
+    )
+    countermeasures = serializers.SerializerMethodField()
+
+    class Meta:
+        model = RiskResponse
+        fields = [
+            "id",
+            "risk",
+            "strategy",
+            "description",
+            "status",
+            "effectiveness",
+            "cost",
+            "priority",
+            "owner",
+            "owner_email",
+            "target_date",
+            "countermeasure_ids",
+            "countermeasures",
+            "format_metadata",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "risk",
+            "owner_email",
+            "countermeasures",
+            "format_metadata",
+            "created_at",
+            "updated_at",
+        ]
+
+    def get_countermeasures(self, obj):
+        return [
+            {
+                "id": link.countermeasure_id,
+                "display_number": link.countermeasure.display_number,
+                "countermeasure_name": link.countermeasure.countermeasure_name,
+                "status": link.countermeasure.status,
+            }
+            for link in obj.countermeasure_links.all()
+        ]
+
+    def validate_countermeasure_ids(self, value):
+        risk = self.context.get("risk") or getattr(self.instance, "risk", None)
+        if risk is None:
+            raise serializers.ValidationError("No risk.")
+        wanted = list(dict.fromkeys(value))
+        found = {
+            countermeasure.id: countermeasure
+            for countermeasure in InstanceCountermeasure.objects.filter(
+                id__in=wanted, threat_model=risk.threat_model
+            )
+        }
+        missing = [i for i in wanted if i not in found]
+        if missing:
+            raise serializers.ValidationError(
+                f"countermeasure(s) {missing} are not part of this threat model."
+            )
+        return [found[i] for i in wanted]
+
+    def create(self, validated_data):
+        from .services import create_risk_response
+
+        countermeasures = validated_data.pop("countermeasure_ids", [])
+        risk = validated_data.pop("risk", None) or self.context.get("risk")
+        return create_risk_response(
+            risk, countermeasures=countermeasures, **validated_data
+        )
+
+    def update(self, instance, validated_data):
+        from .services import set_response_countermeasures
+
+        countermeasures = validated_data.pop("countermeasure_ids", None)
+        validated_data.pop("risk", None)
+        instance = super().update(instance, validated_data)
+        if countermeasures is not None:
+            set_response_countermeasures(instance, countermeasures)
+            instance.refresh_from_db()
+        return instance
+
+
+class RiskThreatSerializer(serializers.ModelSerializer):
+    """Serializer for RiskThreat junction rows."""
+
     threat_name = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()
-    triage_status = serializers.SerializerMethodField()
+    display_number = serializers.CharField(
+        source="threat.display_number", read_only=True
+    )
 
     class Meta:
         model = RiskThreat
-        fields = [
-            "id",
-            "threat_id",
-            "threat_type",
-            "threat_name",
-            "status",
-            "triage_status",
-        ]
-
-    def _get_threat(self, obj):
-        return obj.component_threat or obj.flow_threat
-
-    def get_threat_id(self, obj):
-        threat = self._get_threat(obj)
-        return threat.id if threat else None
-
-    def get_threat_type(self, obj):
-        return "component" if obj.component_threat else "flow"
+        fields = ["id", "risk", "threat", "display_number", "threat_name", "created_at"]
+        read_only_fields = ["id", "display_number", "threat_name", "created_at"]
 
     def get_threat_name(self, obj):
-        threat = self._get_threat(obj)
-        return threat.threat_name if threat else None
-
-    def get_status(self, obj):
-        threat = self._get_threat(obj)
-        return threat.status if threat else None
-
-    def get_triage_status(self, obj):
-        threat = self._get_threat(obj)
-        return threat.triage_status if threat else None
+        threat = obj.threat
+        return threat.threat_name or (
+            threat.threat_library.name if threat.threat_library else None
+        )
 
 
 class ThreatPersonaSerializer(serializers.ModelSerializer):
-    """Serializer for ThreatPersona CRUD."""
+    """Serializer for ThreatPersona CRUD. The threat model comes from the URL;
+    ``threat_count`` is the number of threats citing the persona (plan J10)."""
+
+    threat_count = serializers.SerializerMethodField()
 
     class Meta:
         model = ThreatPersona
@@ -1101,10 +1586,24 @@ class ThreatPersonaSerializer(serializers.ModelSerializer):
             "resources",
             "objectives",
             "format_metadata",
+            "threat_count",
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at"]
+        read_only_fields = [
+            "format_metadata",
+            "id",
+            "threat_model",
+            "threat_count",
+            "created_at",
+            "updated_at",
+        ]
+
+    def get_threat_count(self, obj):
+        annotated = getattr(obj, "threat_count", None)
+        if annotated is not None:
+            return annotated
+        return obj.threats.count()
 
 
 class ThreatSourceSerializer(serializers.ModelSerializer):

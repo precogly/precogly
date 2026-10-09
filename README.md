@@ -41,7 +41,7 @@ Precogly bridges this gap and democratizes threat modeling for every org in the 
 
 - Import and export TM-BOM style JSON files - improves interoperability with other threat modeling platforms
 - A threat modeling workspace allows for team collaboration
-- An advanced DFD editor (allows for nested components, trust zones with trust boundaries and much more)
+- An advanced DFD editor (allows for nested components, typed zones, boundaries and flows, and much more)
 - Community library packs with links to taxonomies like MITRE ATT&CK, CAPEC, LINDDUN, STRIDE etc. - allows your team to quickly create high quality threat models
 
 ### Who is Precogly for?

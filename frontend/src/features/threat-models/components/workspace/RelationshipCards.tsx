@@ -1,14 +1,16 @@
-import { Server, FileText, Users, Package } from 'lucide-react'
+import { FileText, Users, Package } from 'lucide-react'
 
+/**
+ * The quick links beside the completion card. The primary system is chosen
+ * in the Details card (plan J1), so there is no systems dialog here.
+ */
 interface RelationshipCardsProps {
-  onManageSystems: () => void
   onManageThreatModels: () => void
   onManagePacks: () => void
   onManagePeople: () => void
 }
 
 export function RelationshipCards({
-  onManageSystems,
   onManageThreatModels,
   onManagePacks,
   onManagePeople,
@@ -16,18 +18,11 @@ export function RelationshipCards({
   return (
     <div className="grid grid-cols-2 gap-3">
       <button
-        onClick={onManageSystems}
-        className="flex items-center gap-3 rounded-lg border px-4 py-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-      >
-        <Server className="h-4 w-4 shrink-0" />
-        Manage Connected Systems
-      </button>
-      <button
         onClick={onManageThreatModels}
         className="flex items-center gap-3 rounded-lg border px-4 py-3 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
       >
         <FileText className="h-4 w-4 shrink-0" />
-        Manage Threat Models
+        Related Models
       </button>
       <button
         onClick={onManagePacks}

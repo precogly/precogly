@@ -10,8 +10,6 @@ from apps.ai.providers.base import AIProviderError
 from apps.ai.resolver import resolve_provider
 from apps.ai.utils import extract_json_object
 
-logger = logging.getLogger(__name__)
-
 from .prompts import (
     DEFAULT_NODE_SIZES,
     GENERATE_SYSTEM_PROMPT,
@@ -19,6 +17,8 @@ from .prompts import (
     NODE_TYPE_TO_CATEGORY,
     VALID_NODE_TYPES,
 )
+
+logger = logging.getLogger(__name__)
 
 # Node types that act as containers (can have children).
 _CONTAINER_TYPES = frozenset({"trustZone", "systemScope"})
@@ -52,9 +52,7 @@ def generate_dfd_from_analysis(
 
     Returns ``{"nodes": [...], "edges": [...]}``.
     """
-    provider = resolve_provider(
-        organization, feature="generate_dfd", user=user
-    )
+    provider = resolve_provider(organization, feature="generate_dfd", user=user)
 
     library_lines = _build_component_library_prompt(threat_model)
 
@@ -116,9 +114,11 @@ def _build_component_library_prompt(threat_model) -> str:
         threat_model=threat_model
     ).values_list("library_pack_id", flat=True)
 
-    entries = ComponentLibrary.objects.filter(
-        source_pack_id__in=connected_pack_ids
-    ).select_related("source_pack").order_by("name")[:MAX_COMPONENT_LIBRARY_ENTRIES]
+    entries = (
+        ComponentLibrary.objects.filter(source_pack_id__in=connected_pack_ids)
+        .select_related("source_pack")
+        .order_by("name")[:MAX_COMPONENT_LIBRARY_ENTRIES]
+    )
 
     lines = []
     for entry in entries:
@@ -138,9 +138,9 @@ def _validate_and_resolve(
 
     # Build a lookup of available component library entries.
     connected_pack_ids = list(
-        ThreatModelLibraryPack.objects.filter(
-            threat_model=threat_model
-        ).values_list("library_pack_id", flat=True)
+        ThreatModelLibraryPack.objects.filter(threat_model=threat_model).values_list(
+            "library_pack_id", flat=True
+        )
     )
 
     library_by_qualified_slug: dict[str, ComponentLibrary] = {}
@@ -191,10 +191,9 @@ def _validate_and_resolve(
         data = node["data"]
         component_ref = data.get("component_ref")
         if component_ref and node_type in NODE_TYPE_TO_CATEGORY:
-            resolved = (
-                library_by_qualified_slug.get(component_ref)
-                or library_by_slug.get(component_ref)
-            )
+            resolved = library_by_qualified_slug.get(
+                component_ref
+            ) or library_by_slug.get(component_ref)
             if resolved:
                 data["component_library_id"] = resolved.id
                 data["component_library_name"] = resolved.name
@@ -263,15 +262,15 @@ def _fix_layout(
 
     # Find the system scope and trust zone nodes.
     system_scope_id = _find_system_scope(nodes)
-    trust_zone_ids = {n["id"] for n in nodes if n["type"] == "trustZone"}
+    zone_ids = {n["id"] for n in nodes if n["type"] == "trustZone"}
 
     # Step 1: Orphan recovery — assign parentId to nodes that should be inside
     # a container but aren't.
-    _recover_orphans(nodes, by_id, analysis, system_scope_id, trust_zone_ids)
+    _recover_orphans(nodes, by_id, analysis, system_scope_id, zone_ids)
 
     # Step 2: Re-layout children inside each container (bottom-up: trust zones
     # first, then system scope).
-    for zone_id in trust_zone_ids:
+    for zone_id in zone_ids:
         _layout_children(nodes, by_id, zone_id)
 
     if system_scope_id:
@@ -300,7 +299,7 @@ def _recover_orphans(
     by_id: dict[str, dict],
     analysis: dict,
     system_scope_id: str | None,
-    trust_zone_ids: set[str],
+    zone_ids: set[str],
 ) -> None:
     """Assign parentId to leaf nodes that lost their container reference.
 
@@ -317,7 +316,7 @@ def _recover_orphans(
 
     # Build zone label → zone id lookup.
     zone_label_to_id: dict[str, str] = {}
-    for zone_id in trust_zone_ids:
+    for zone_id in zone_ids:
         zone_node = by_id.get(zone_id)
         if zone_node:
             label = zone_node.get("data", {}).get("label", "").lower()
@@ -355,15 +354,15 @@ def _recover_orphans(
 
         if matched_zone_id:
             node["parentId"] = matched_zone_id
-        elif trust_zone_ids:
+        elif zone_ids:
             # Fall back to the first trust zone.
-            node["parentId"] = next(iter(trust_zone_ids))
+            node["parentId"] = next(iter(zone_ids))
         elif system_scope_id:
             node["parentId"] = system_scope_id
 
     # Ensure trust zones are parented to the system scope.
     if system_scope_id:
-        for zone_id in trust_zone_ids:
+        for zone_id in zone_ids:
             zone_node = by_id.get(zone_id)
             if zone_node:
                 zone_node["parentId"] = system_scope_id
@@ -399,10 +398,17 @@ def _layout_children(
     child_sizes = []
     for child in children:
         style = child.get("style", {})
-        child_sizes.append({
-            "w": style.get("width", DEFAULT_NODE_SIZES.get(child["type"], {}).get("width", 150)),
-            "h": style.get("height", DEFAULT_NODE_SIZES.get(child["type"], {}).get("height", 70)),
-        })
+        child_sizes.append(
+            {
+                "w": style.get(
+                    "width", DEFAULT_NODE_SIZES.get(child["type"], {}).get("width", 150)
+                ),
+                "h": style.get(
+                    "height",
+                    DEFAULT_NODE_SIZES.get(child["type"], {}).get("height", 70),
+                ),
+            }
+        )
 
     # Determine grid columns based on number of children.
     num_children = len(children)
@@ -411,7 +417,7 @@ def _layout_children(
     elif num_children <= 8:
         cols = 3
     else:
-        cols = int(math.ceil(math.sqrt(num_children)))
+        cols = math.ceil(math.sqrt(num_children))
 
     # Place children in grid rows, each row packed by actual child widths.
     cursor_x = _CONTAINER_PADDING
@@ -419,7 +425,7 @@ def _layout_children(
     row_max_height = 0
     max_row_right = 0
 
-    for i, (child, size) in enumerate(zip(children, child_sizes)):
+    for i, (child, size) in enumerate(zip(children, child_sizes, strict=True)):
         col_index = i % cols
         if col_index == 0 and i > 0:
             # New row.
@@ -479,9 +485,7 @@ def _place_actors_outside(
         actor_y += size["height"] + _ACTOR_GAP
 
 
-def _get_absolute_position(
-    node: dict, by_id: dict[str, dict]
-) -> tuple[float, float]:
+def _get_absolute_position(node: dict, by_id: dict[str, dict]) -> tuple[float, float]:
     """Compute a node's absolute position by walking the parent chain."""
     abs_x = node.get("position", {}).get("x", 0)
     abs_y = node.get("position", {}).get("y", 0)
@@ -500,9 +504,7 @@ def _get_absolute_position(
     return abs_x, abs_y
 
 
-def _get_node_center(
-    node: dict, by_id: dict[str, dict]
-) -> tuple[float, float]:
+def _get_node_center(node: dict, by_id: dict[str, dict]) -> tuple[float, float]:
     """Compute the absolute center point of a node."""
     abs_x, abs_y = _get_absolute_position(node, by_id)
     style = node.get("style", {})

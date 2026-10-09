@@ -10,8 +10,12 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox'
+import { DEFAULT_METHODOLOGIES, METHODOLOGIES } from '@/types/domain'
 import { useCreateThreatModel } from '@/features/threat-models/api/threat-models'
 import { useWorkspace } from '@/contexts/WorkspaceContext'
+
+const METHODOLOGY_OPTIONS = METHODOLOGIES.map((option) => ({ value: option.value, label: option.label }))
 
 interface CreateThreatModelDialogProps {
   open: boolean
@@ -20,6 +24,7 @@ interface CreateThreatModelDialogProps {
 
 export function CreateThreatModelDialog({ open, onOpenChange }: CreateThreatModelDialogProps) {
   const [name, setName] = useState('')
+  const [methodologies, setMethodologies] = useState<string[]>(DEFAULT_METHODOLOGIES)
   const navigate = useNavigate()
   const { currentTeam } = useWorkspace()
   const createMutation = useCreateThreatModel()
@@ -32,10 +37,12 @@ export function CreateThreatModelDialog({ open, onOpenChange }: CreateThreatMode
       {
         name: name.trim(),
         owningTeam: currentTeam?.id,
+        methodologies: methodologies.length > 0 ? methodologies : DEFAULT_METHODOLOGIES,
       },
       {
         onSuccess: (threatModel) => {
           setName('')
+          setMethodologies(DEFAULT_METHODOLOGIES)
           onOpenChange(false)
           navigate(`/threat-models/${threatModel.id}`)
         },
@@ -46,6 +53,7 @@ export function CreateThreatModelDialog({ open, onOpenChange }: CreateThreatMode
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
       setName('')
+      setMethodologies(DEFAULT_METHODOLOGIES)
     }
     onOpenChange(isOpen)
   }
@@ -69,6 +77,18 @@ export function CreateThreatModelDialog({ open, onOpenChange }: CreateThreatMode
               onChange={(e) => setName(e.target.value)}
               autoFocus
             />
+          </div>
+          <div className="space-y-2">
+            <Label>Methodologies</Label>
+            <MultiSelectCombobox
+              options={METHODOLOGY_OPTIONS}
+              selected={methodologies}
+              onChange={setMethodologies}
+              placeholder="Choose methodologies"
+              searchPlaceholder="Search or type a custom name"
+              allowCustom
+            />
+            <p className="text-xs text-muted-foreground">STRIDE is the default. Custom names are allowed.</p>
           </div>
           <div className="flex justify-end gap-2">
             <Button

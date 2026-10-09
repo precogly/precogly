@@ -1,248 +1,245 @@
-import { useMemo, useCallback } from 'react'
-import { ExternalLink } from 'lucide-react'
+/**
+ * The table view (plan 11.3): one row per scenario, number first, a Targets
+ * column (sorted by the first target), the level, and user sorting on
+ * number, targets, status and level. The search box matches the name and
+ * `T7`.
+ */
+
+import { useMemo, useState } from 'react'
+import { ArrowDown, ArrowUp, ArrowUpDown, ExternalLink, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Input } from '@/components/ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import type { CanvasData } from '../../types'
-import type { ComponentThreat, CountermeasureStatus } from '../../types/threat-analysis'
-import { deriveThreatStatus, THREAT_STATUS_CONFIG } from '../../types/threat-analysis'
+import { cn } from '@/lib/utils'
+import { RatingBadge } from '@/features/threat-models/components/rating'
+import { RATING_LEVEL_RANK } from '@/types/risk'
 import { isActiveThreat } from '@/types/triage'
-import type { TaxonomyEntry } from '@/types/domain'
 import { TaxonomyBadges } from '@/components/shared/TaxonomyBadges'
-import { getAncestryPath, buildNodesMap } from './hierarchy-utils'
-import { useTechnologies } from '../../api/component-library'
+import type { AnalysisThreat, ThreatStatus } from '../../types/threat-analysis'
+import { deriveThreatStatus, THREAT_STATUS_CONFIG, threatLevel } from '../../types/threat-analysis'
+import { NumberBadge } from './NumberBadge'
+import { TARGET_TYPE_LABELS } from './analysis-selection'
+import { parseThreatSearch, threatMatchesSearch } from './threat-search'
+
+type SortKey = 'number' | 'targets' | 'status' | 'level'
+type SortDirection = 'asc' | 'desc'
 
 interface TableViewProps {
-  canvasData: CanvasData
-  componentThreats: ComponentThreat[]
-  onCountermeasureStatusChange: (
-    componentThreatId: string,
-    countermeasureId: string,
-    status: CountermeasureStatus
-  ) => void
-  onSelectThreat: (componentId: string, threatId: string) => void
+  threats: AnalysisThreat[]
+  onSelectThreat: (threat: AnalysisThreat) => void
 }
 
-interface FlattenedThreat {
-  componentThreatId: string
-  componentId: string
-  componentLabel: string
-  componentType: string
-  technology?: string
-  parentPath?: string
-  threatId: string
-  threatName: string
-  taxonomyEntries: TaxonomyEntry[]
-  status: 'exposed' | 'addressable' | 'mitigated'
-  countermeasuresTotal: number
-  countermeasuresResolved: number
+interface ThreatRow {
+  threat: AnalysisThreat
+  targetNames: string[]
+  targetsLabel: string
+  firstTargetName: string
+  status: ThreatStatus
+  countermeasureNumbers: string[]
   gaps: number
 }
 
-export function TableView({
-  canvasData,
-  componentThreats,
-  onCountermeasureStatusChange: _onCountermeasureStatusChange,
-  onSelectThreat,
-}: TableViewProps) {
-  // Mark as used - inline editing will be added later
-  void _onCountermeasureStatusChange
-  // Resolve technology slugs to display names
-  const { technologies } = useTechnologies()
-  const resolveTechName = useCallback(
-    (value: string | undefined) => {
-      if (!value) return ''
-      const match = technologies.find(
-        (t) => t.id === value || t.name.toLowerCase() === value.toLowerCase()
-      )
-      return match?.name ?? value
-    },
-    [technologies]
+const STATUS_ORDER: Record<ThreatStatus, number> = { exposed: 0, addressable: 1, mitigated: 2 }
+
+function SortableHead({
+  label,
+  column,
+  sortKey,
+  sortDirection,
+  onToggle,
+  className,
+}: {
+  label: string
+  column: SortKey
+  sortKey: SortKey
+  sortDirection: SortDirection
+  onToggle: (column: SortKey) => void
+  className?: string
+}) {
+  const active = sortKey === column
+  const Icon = !active ? ArrowUpDown : sortDirection === 'asc' ? ArrowUp : ArrowDown
+  return (
+    <TableHead className={className}>
+      <button
+        type="button"
+        className={cn('inline-flex items-center gap-1 hover:text-foreground', active && 'text-foreground')}
+        onClick={() => onToggle(column)}
+        aria-sort={active ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+      >
+        {label}
+        <Icon className="h-3 w-3" />
+      </button>
+    </TableHead>
   )
+}
 
-  // Build nodes map once for hierarchy lookups
-  const nodesMap = useMemo(
-    () => buildNodesMap(canvasData.nodes),
-    [canvasData.nodes]
-  )
+export function TableView({ threats, onSelectThreat }: TableViewProps) {
+  const [sortKey, setSortKey] = useState<SortKey>('number')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const [searchText, setSearchText] = useState('')
 
-  // Flatten all threats into table rows
-  const flattenedThreats = useMemo((): FlattenedThreat[] => {
-    const rows: FlattenedThreat[] = []
-
-    componentThreats
-      .filter((ct) => isActiveThreat(ct.triageStatus))
-      .forEach((ct) => {
-        if (!ct.threatName) return
-
-        const isDataflow = ct.threatType === 'dataflow'
-        let componentLabel: string
-        let componentType: string
-        let technologyName = ''
-        let parentPath: string | undefined
-
-        if (isDataflow) {
-          const edge = canvasData.edges.find((e) => e.id === ct.componentId)
-          componentLabel = ct.dataflowLabel || ct.componentName || (edge?.data as { label?: string })?.label || 'Data Flow'
-          componentType = 'dataFlow'
-        } else {
-          const node = canvasData.nodes.find((n) => n.id === ct.componentId)
-          if (!node) return
-
-          componentLabel = String(node.data.label)
-          componentType = node.type as string
-          technologyName = resolveTechName((node.data as { technology?: string }).technology)
-
-          if (node.type === 'process') {
-            const ancestry = getAncestryPath(node.id, nodesMap)
-            if (ancestry.length > 1) {
-              parentPath = ancestry
-                .slice(0, -1)
-                .map((a) => {
-                  const aLabel = String(a.data.label)
-                  const aTech = resolveTechName((a.data as { technology?: string }).technology)
-                  return aLabel.toLowerCase().includes('new ') ? (aTech || aLabel) : aLabel
-                })
-                .join(' > ')
-            }
-          }
+  const rows = useMemo((): ThreatRow[] => {
+    return threats
+      .filter((threat) => isActiveThreat(threat.triageStatus))
+      .map((threat) => {
+        const targetNames = threat.targets.map((target) => target.name || `${TARGET_TYPE_LABELS[target.type]} ${target.id}`)
+        return {
+          threat,
+          targetNames,
+          targetsLabel: threat.wholeSystem || targetNames.length === 0 ? 'Whole system' : targetNames.join(', '),
+          firstTargetName: threat.wholeSystem ? '' : (targetNames[0] ?? ''),
+          status: deriveThreatStatus(threat.countermeasures),
+          countermeasureNumbers: threat.countermeasures
+            .map((countermeasure) => countermeasure.displayNumber)
+            .filter((number): number is string => Boolean(number)),
+          gaps: threat.countermeasures.filter((countermeasure) => countermeasure.status === 'gap').length,
         }
-
-        const status = deriveThreatStatus(ct.countermeasures)
-        const resolved = ct.countermeasures.filter(
-          (cm) => cm.status !== 'gap'
-        ).length
-        const gaps = ct.countermeasures.filter((cm) => cm.status === 'gap').length
-
-        rows.push({
-          componentThreatId: ct.id,
-          componentId: ct.componentId,
-          componentLabel,
-          componentType,
-          technology: technologyName,
-          parentPath,
-          threatId: ct.threatId,
-          threatName: ct.threatName,
-          taxonomyEntries: ct.taxonomyEntries || [],
-          status,
-          countermeasuresTotal: ct.countermeasures.length,
-          countermeasuresResolved: resolved,
-          gaps,
-        })
       })
+  }, [threats])
 
-    // Sort by status (exposed first, then addressable, then mitigated)
-    const statusOrder = { exposed: 0, addressable: 1, mitigated: 2 }
-    rows.sort((a, b) => statusOrder[a.status] - statusOrder[b.status])
+  const search = useMemo(() => parseThreatSearch(searchText), [searchText])
 
-    return rows
-  }, [componentThreats, canvasData.nodes, nodesMap, resolveTechName])
+  const visibleRows = useMemo(() => {
+    const filtered = rows.filter((row) =>
+      threatMatchesSearch({ number: row.threat.number, threatName: row.threat.threatName, targetNames: row.targetNames }, search)
+    )
+    const direction = sortDirection === 'asc' ? 1 : -1
+    const compare = (left: ThreatRow, right: ThreatRow): number => {
+      switch (sortKey) {
+        case 'targets':
+          return left.firstTargetName.localeCompare(right.firstTargetName) || left.threat.number - right.threat.number
+        case 'status':
+          return STATUS_ORDER[left.status] - STATUS_ORDER[right.status] || left.threat.number - right.threat.number
+        case 'level':
+          return (
+            RATING_LEVEL_RANK[threatLevel(left.threat)] - RATING_LEVEL_RANK[threatLevel(right.threat)] ||
+            left.threat.number - right.threat.number
+          )
+        default:
+          return left.threat.number - right.threat.number
+      }
+    }
+    return [...filtered].sort((left, right) => compare(left, right) * direction)
+  }, [rows, search, sortKey, sortDirection])
 
-  // Summary stats
-  const stats = useMemo(() => {
-    const exposed = flattenedThreats.filter((t) => t.status === 'exposed').length
-    const addressable = flattenedThreats.filter((t) => t.status === 'addressable').length
-    const mitigated = flattenedThreats.filter((t) => t.status === 'mitigated').length
-    return { total: flattenedThreats.length, exposed, addressable, mitigated }
-  }, [flattenedThreats])
+  const stats = useMemo(
+    () => ({
+      total: rows.length,
+      exposed: rows.filter((row) => row.status === 'exposed').length,
+      addressable: rows.filter((row) => row.status === 'addressable').length,
+      mitigated: rows.filter((row) => row.status === 'mitigated').length,
+    }),
+    [rows]
+  )
+
+  const toggleSort = (key: SortKey) => {
+    if (key === sortKey) {
+      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDirection('asc')
+    }
+  }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Summary bar */}
-      <div className="px-4 py-3 border-b flex items-center gap-6">
+    <div className="flex h-full flex-col">
+      <div className="flex items-center gap-6 border-b px-4 py-3">
         <div className="text-sm">
-          <span className="font-medium">{stats.total}</span>{' '}
-          <span className="text-muted-foreground">total threats</span>
+          <span className="font-medium">{stats.total}</span> <span className="text-muted-foreground">threats</span>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-red-500" />
+            <span className="h-2 w-2 rounded-full bg-red-500" />
             <span className="text-sm">
-              <span className="font-medium">{stats.exposed}</span>{' '}
-              <span className="text-muted-foreground">exposed</span>
+              <span className="font-medium">{stats.exposed}</span> <span className="text-muted-foreground">exposed</span>
             </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-yellow-500" />
+            <span className="h-2 w-2 rounded-full bg-yellow-500" />
             <span className="text-sm">
-              <span className="font-medium">{stats.addressable}</span>{' '}
-              <span className="text-muted-foreground">in progress</span>
+              <span className="font-medium">{stats.addressable}</span> <span className="text-muted-foreground">in progress</span>
             </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-green-500" />
+            <span className="h-2 w-2 rounded-full bg-green-500" />
             <span className="text-sm">
-              <span className="font-medium">{stats.mitigated}</span>{' '}
-              <span className="text-muted-foreground">mitigated</span>
+              <span className="font-medium">{stats.mitigated}</span> <span className="text-muted-foreground">mitigated</span>
             </span>
           </div>
         </div>
+        <div className="relative ml-auto w-64">
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
+            placeholder="Search, e.g. T7 or a name"
+            className="h-8 pl-8 text-sm"
+            aria-label="Search threats"
+          />
+        </div>
       </div>
 
-      {/* Table */}
       <ScrollArea className="flex-1">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[50px]">Status</TableHead>
-              <TableHead>Component</TableHead>
-              <TableHead>Technology</TableHead>
+              <SortableHead label="#" column="number" className="w-[70px]" sortKey={sortKey} sortDirection={sortDirection} onToggle={toggleSort} />
+              <SortableHead label="Status" column="status" className="w-[110px]" sortKey={sortKey} sortDirection={sortDirection} onToggle={toggleSort} />
+              <SortableHead label="Targets" column="targets" sortKey={sortKey} sortDirection={sortDirection} onToggle={toggleSort} />
               <TableHead>Threat</TableHead>
+              <SortableHead label="Level" column="level" className="w-[110px]" sortKey={sortKey} sortDirection={sortDirection} onToggle={toggleSort} />
               <TableHead>Classifications</TableHead>
-              <TableHead className="text-center">Countermeasures</TableHead>
+              <TableHead>Countermeasures</TableHead>
               <TableHead className="text-center">Gaps</TableHead>
-              <TableHead className="w-[80px]"></TableHead>
+              <TableHead className="w-[60px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {flattenedThreats.map((row) => {
+            {visibleRows.map((row) => {
               const statusConfig = THREAT_STATUS_CONFIG[row.status]
-
               return (
-                <TableRow key={row.componentThreatId}>
+                <TableRow key={row.threat.id} data-threat-number={row.threat.displayNumber}>
                   <TableCell>
-                    <span
-                      className="inline-block w-2 h-2 rounded-full"
-                      style={{ backgroundColor: statusConfig.color }}
-                      title={statusConfig.label}
-                    />
+                    <NumberBadge number={row.threat.displayNumber} />
                   </TableCell>
                   <TableCell>
-                    {row.parentPath && (
-                      <div className="text-[10px] text-muted-foreground leading-tight">
-                        {row.parentPath}
-                      </div>
-                    )}
-                    <div className="font-medium">{row.componentLabel}</div>
-                    <div className="text-xs text-muted-foreground capitalize">
-                      {row.componentType === 'dataFlow' ? 'Data Flow' : row.componentType}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {row.technology ? (
-                      <span className="text-sm">{row.technology}</span>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-medium">{row.threatName}</span>
-                  </TableCell>
-                  <TableCell>
-                    <TaxonomyBadges entries={row.taxonomyEntries} maxVisible={3} />
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <span className="text-sm">
-                      {row.countermeasuresResolved}/{row.countermeasuresTotal}
+                    <span className="inline-flex items-center gap-1.5 text-xs">
+                      <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: statusConfig.color }} />
+                      <span className="capitalize">{statusConfig.label}</span>
                     </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className={cn('text-sm', row.threat.wholeSystem && 'italic text-muted-foreground')}>{row.targetsLabel}</span>
+                    {row.threat.targets.length > 1 && (
+                      <Badge variant="outline" className="ml-1.5 px-1 py-0 text-[10px] font-normal">
+                        shared
+                      </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <span className="font-medium">{row.threat.threatName}</span>
+                    {row.threat.libraryMismatch && (
+                      <div className="text-[11px] text-amber-700">The library no longer lists this threat here.</div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <RatingBadge rating={row.threat.rating} size="sm" />
+                  </TableCell>
+                  <TableCell>
+                    <TaxonomyBadges entries={row.threat.taxonomyEntries ?? []} maxVisible={3} />
+                  </TableCell>
+                  <TableCell>
+                    {row.countermeasureNumbers.length > 0 ? (
+                      <span className="inline-flex flex-wrap gap-1">
+                        {row.countermeasureNumbers.map((number) => (
+                          <NumberBadge key={number} number={number} />
+                        ))}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">none</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-center">
                     {row.gaps > 0 ? (
@@ -258,8 +255,9 @@ export function TableView({
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => onSelectThreat(row.componentId, row.componentThreatId)}
+                      onClick={() => onSelectThreat(row.threat)}
                       title="View details"
+                      aria-label={`Open ${row.threat.displayNumber}`}
                     >
                       <ExternalLink className="h-4 w-4" />
                     </Button>
@@ -268,10 +266,12 @@ export function TableView({
               )
             })}
 
-            {flattenedThreats.length === 0 && (
+            {visibleRows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                  No threats found. Add technology to your components to see suggested threats.
+                <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
+                  {rows.length === 0
+                    ? 'No threats yet. Add components with a technology, or add threats by hand.'
+                    : 'No threat matches the search.'}
                 </TableCell>
               </TableRow>
             )}

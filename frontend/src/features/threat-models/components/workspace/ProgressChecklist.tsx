@@ -198,7 +198,7 @@ function QualitySignalRow({ signal }: { signal: QualitySignal }) {
           {signal.flaggedItems.slice(0, 5).map((flaggedItem) => (
             <li key={flaggedItem.id} className="text-xs text-muted-foreground">
               <span className="font-medium">{flaggedItem.name}</span>
-              {flaggedItem.detail && <span> — {flaggedItem.detail}</span>}
+              {flaggedItem.detail && <span>: {flaggedItem.detail}</span>}
             </li>
           ))}
           {signal.flaggedItems.length > 5 && (

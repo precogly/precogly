@@ -1,6 +1,7 @@
 import { useCallback, useState, useEffect, useRef } from 'react'
 import type { XYPosition } from '@xyflow/react'
 import type { DiagramNode, DiagramEdge, TrustBoundaryEdge } from '../types'
+import { DEFAULT_BOUNDARY_TYPE } from '@/types/domain'
 
 /**
  * Manages trust boundary creation interaction mode.
@@ -34,7 +35,7 @@ export function useBoundaryMode({
     }
   }, [boundaryMode])
 
-  // Enable boundary mode only when there are at least 2 trust zones
+  // Enable boundary mode only when there are at least 2 zones
   const enableBoundaryMode = useCallback(
     (enabled: boolean) => {
       if (enabled) {
@@ -70,7 +71,7 @@ export function useBoundaryMode({
       // Use refs to avoid stale closure issues with React Flow event ordering
       if (!boundaryModeRef.current) return { consumed: false }
 
-      // Only trust zone nodes are valid targets in boundary mode
+      // Only zone nodes are valid targets in boundary mode
       if (node.type !== 'trustZone') return { consumed: true }
 
       const currentBoundarySourceId = boundarySourceIdRef.current
@@ -101,14 +102,19 @@ export function useBoundaryMode({
         return { consumed: true, selectedEdge: existingBoundary as DiagramEdge }
       }
 
-      // Second click: create trust boundary edge
+      // Second click: create the boundary edge
       const newBoundaryEdge: TrustBoundaryEdge = {
         id: `boundary-${Date.now()}`,
         source: currentBoundarySourceId,
         target: node.id,
         type: 'trustBoundary',
+        // A new boundary is a trust boundary with nothing recorded yet; the
+        // crossing requirement booleans stay absent, which sync reads as false.
         data: {
           label: '',
+          boundaryType: DEFAULT_BOUNDARY_TYPE,
+          authenticationMethods: [],
+          accessControlMethods: [],
         },
       }
 

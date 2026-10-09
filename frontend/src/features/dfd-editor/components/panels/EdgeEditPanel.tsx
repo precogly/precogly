@@ -18,11 +18,11 @@ import {
 import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox'
 import { useDataAssets } from '@/features/threat-models/api/data-assets'
 import {
-  useDataFlowAssets,
-  useCreateDataFlowAsset,
-  useUpdateDataFlowAsset,
-  useDeleteDataFlowAsset,
-} from '@/features/threat-models/api/data-flow-assets'
+  useFlowAssets,
+  useCreateFlowAsset,
+  useUpdateFlowAsset,
+  useDeleteFlowAsset,
+} from '@/features/threat-models/api/flow-assets'
 import type {
   DataFlowEdge,
   Protocol,
@@ -30,8 +30,21 @@ import type {
   TrustZoneNodeData,
 } from '../../types'
 import { PROTOCOLS, getZoneColorConfig } from '../../types'
-import { DATA_SENSITIVITY_TAG_CONFIG } from '@/types/domain'
+import {
+  AUTHENTICATION_TYPES,
+  DATA_SENSITIVITY_TAG_CONFIG,
+  FLOW_TYPES,
+  NO_AUTHENTICATION,
+  UNSPECIFIED_AUTHENTICATION,
+  isDataLikeFlowType,
+  type AuthenticationType,
+  type FlowType,
+} from '@/types/domain'
+import { getAuthentication, getFlowType } from '../../lib/canvas-defaults'
+import { normalizeAuthenticationSelection } from '../../lib/authentication-selection'
+import { getTrustLevel } from '../../lib/zone-trust-level'
 import { useGuestEditor } from '@/features/guest-editor/context/GuestEditorContext'
+import { AdvancedSection } from './AdvancedSection'
 
 const PROTECTION_METHODS = [
   { value: 'none', label: 'None' },
@@ -42,35 +55,34 @@ const PROTECTION_METHODS = [
 ] as const
 
 /**
- * Data Assets section for data flow edges
+ * Data assets carried by the flow. Shown for every flow type (plan F15); the
+ * links need the flow's backend row, so an unsaved flow shows a hint instead.
  */
-function DataFlowDataAssetsSection({
-  dataFlowId,
+function FlowDataAssetsSection({
+  flowId,
   threatModelId,
 }: {
-  dataFlowId: number | undefined
+  flowId: number | undefined
   threatModelId: string | undefined
 }) {
   const [linkingAsset, setLinkingAsset] = useState(false)
   const [selectedAssetId, setSelectedAssetId] = useState<string>('')
 
-  const { data: flowDataAssets = [] } = useDataFlowAssets(dataFlowId)
+  const { data: flowDataAssets = [] } = useFlowAssets(flowId)
   const { data: allDataAssets = [] } = useDataAssets(threatModelId)
-  const createMutation = useCreateDataFlowAsset()
-  const updateMutation = useUpdateDataFlowAsset()
-  const deleteMutation = useDeleteDataFlowAsset()
-
-  if (!dataFlowId) return null
+  const createMutation = useCreateFlowAsset()
+  const updateMutation = useUpdateFlowAsset()
+  const deleteMutation = useDeleteFlowAsset()
 
   // Filter out already-linked data assets
-  const linkedAssetIds = new Set(flowDataAssets.map((fda) => fda.dataAsset))
+  const linkedAssetIds = new Set(flowDataAssets.map((flowAsset) => flowAsset.dataAsset))
   const availableAssets = allDataAssets.filter((asset) => !linkedAssetIds.has(asset.id))
 
   const handleLinkAsset = () => {
-    if (!selectedAssetId) return
+    if (!selectedAssetId || !flowId) return
     createMutation.mutate(
       {
-        dataFlow: dataFlowId,
+        flow: flowId,
         dataAsset: parseInt(selectedAssetId, 10),
         protectionMethod: 'none',
       },
@@ -86,7 +98,7 @@ function DataFlowDataAssetsSection({
   return (
     <>
       <Separator />
-      <div className="space-y-2">
+      <div className="space-y-2" data-testid="flow-data-assets">
         <Label className="flex items-center gap-1.5">
           <Database className="h-3.5 w-3.5 text-purple-600" />
           Data Assets
@@ -97,23 +109,29 @@ function DataFlowDataAssetsSection({
           )}
         </Label>
 
+        {!flowId && (
+          <p className="text-xs text-muted-foreground">
+            Save the diagram to link data assets to this flow.
+          </p>
+        )}
+
         {/* Linked assets list */}
         {flowDataAssets.length > 0 && (
           <div className="space-y-1.5">
-            {flowDataAssets.map((fda) => (
+            {flowDataAssets.map((flowAsset) => (
               <div
-                key={fda.id}
+                key={flowAsset.id}
                 className="flex items-center gap-2 p-2 rounded-md bg-muted/50 text-sm"
               >
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm truncate">{fda.dataAssetName}</div>
+                  <div className="font-medium text-sm truncate">{flowAsset.dataAssetName}</div>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <Select
-                      value={fda.protectionMethod}
+                      value={flowAsset.protectionMethod}
                       onValueChange={(value) =>
                         updateMutation.mutate({
-                          id: fda.id,
-                          data: { protectionMethod: value as typeof fda.protectionMethod },
+                          id: flowAsset.id,
+                          data: { protectionMethod: value as typeof flowAsset.protectionMethod },
                         })
                       }
                     >
@@ -131,7 +149,7 @@ function DataFlowDataAssetsSection({
                   </div>
                 </div>
                 <div className="flex items-center gap-1 flex-shrink-0">
-                  {fda.protectionMethod === 'encrypted' ? (
+                  {flowAsset.protectionMethod === 'encrypted' ? (
                     <Lock className="h-3 w-3 text-green-600" />
                   ) : (
                     <LockOpen className="h-3 w-3 text-muted-foreground" />
@@ -140,7 +158,7 @@ function DataFlowDataAssetsSection({
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                    onClick={() => deleteMutation.mutate(fda.id)}
+                    onClick={() => deleteMutation.mutate(flowAsset.id)}
                   >
                     <X className="h-3 w-3" />
                   </Button>
@@ -151,7 +169,7 @@ function DataFlowDataAssetsSection({
         )}
 
         {/* Link Asset UI */}
-        {linkingAsset ? (
+        {flowId && (linkingAsset ? (
           <div className="space-y-2">
             <Select value={selectedAssetId} onValueChange={setSelectedAssetId}>
               <SelectTrigger className="h-8 text-sm">
@@ -203,7 +221,7 @@ function DataFlowDataAssetsSection({
             <Link className="h-3 w-3" />
             Link Asset
           </Button>
-        )}
+        ))}
       </div>
     </>
   )
@@ -216,6 +234,18 @@ interface EdgeEditPanelProps {
   renderExtra?: React.ReactNode
 }
 
+/**
+ * The side panel for a flow edge (plan 11.2, 4.6).
+ *
+ * Core: flow type (first), label, description, protocol and encryption for
+ * data-like types only, authentication (the spec list with "Method not
+ * specified" and "None" as quick choices), data classification, sensitive
+ * data, data assets (every type), the zone whose boundary it crosses.
+ * Advanced: port (data-like types only).
+ *
+ * Canvas keys written: `flowType`, `protocol`, `encrypted`, `port`,
+ * `authentication`, `dataClassification`, `hasSensitiveData`, `crossesZone*`.
+ */
 export const EdgeEditPanel = memo(function EdgeEditPanel({
   edge,
   onClose,
@@ -229,7 +259,11 @@ export const EdgeEditPanel = memo(function EdgeEditPanel({
   const sourceNode = nodes.find((n) => n.id === edge.source)
   const targetNode = nodes.find((n) => n.id === edge.target)
 
-  const dataflowId = edge.data?.dataflowId as number | undefined
+  const flowId = edge.data?.dataflowId as number | undefined
+  const flowType = getFlowType(edge.data)
+  const flowTypeLabel = FLOW_TYPES.find((entry) => entry.value === flowType)?.label ?? 'Flow'
+  const dataLike = isDataLikeFlowType(flowType)
+  const authentication = getAuthentication(edge.data)
 
   const dataClassificationOptions = useMemo(
     () =>
@@ -241,12 +275,34 @@ export const EdgeEditPanel = memo(function EdgeEditPanel({
     []
   )
 
+  const authenticationOptions = useMemo(
+    () => AUTHENTICATION_TYPES.map((entry) => ({ value: entry.value, label: entry.label })),
+    []
+  )
+
   const updateEdgeData = (updates: Partial<DataFlowEdge['data']>) => {
     setEdges((edges) =>
       edges.map((e) =>
         e.id === edge.id ? { ...e, data: { ...e.data, ...updates } } : e
       )
     )
+  }
+
+  const handleFlowTypeChange = (value: string) => {
+    const nextType = value as FlowType
+    // Protocol, port and encryption mean nothing on a signal or energy flow;
+    // the backend drops them too, so clear them when leaving a data-like type.
+    if (!isDataLikeFlowType(nextType)) {
+      updateEdgeData({ flowType: nextType, protocol: undefined, port: undefined, encrypted: false })
+    } else {
+      updateEdgeData({ flowType: nextType })
+    }
+  }
+
+  const handleAuthenticationChange = (selected: string[]) => {
+    updateEdgeData({
+      authentication: normalizeAuthenticationSelection(authentication, selected) as AuthenticationType[],
+    })
   }
 
   const handleDelete = () => {
@@ -270,12 +326,15 @@ export const EdgeEditPanel = memo(function EdgeEditPanel({
   }
 
   return (
-    <div className="w-80 bg-background border-l h-full flex flex-col">
+    <div className="w-80 bg-background border-l h-full flex flex-col" data-testid="flow-panel">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b">
-        <div className="flex items-center gap-2">
-          <ArrowRight className="h-5 w-5 text-gray-600" />
-          <span className="font-medium">Data Flow</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <ArrowRight className="h-5 w-5 text-gray-600 shrink-0" />
+          <span className="font-medium">Flow</span>
+          <Badge variant="outline" className="text-[10px] h-5 px-1.5 truncate" title={flowTypeLabel}>
+            {flowTypeLabel}
+          </Badge>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="h-4 w-4" />
@@ -284,6 +343,23 @@ export const EdgeEditPanel = memo(function EdgeEditPanel({
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* Flow type, at the top */}
+        <div className="space-y-2">
+          <Label htmlFor="edge-flow-type">Type</Label>
+          <Select value={flowType} onValueChange={handleFlowTypeChange}>
+            <SelectTrigger id="edge-flow-type" data-testid="flow-type-select">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {FLOW_TYPES.map((entry) => (
+                <SelectItem key={entry.value} value={entry.value}>
+                  {entry.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Connection info */}
         <div className="p-3 bg-muted rounded-lg space-y-1 text-sm">
           <div className="flex items-center gap-2">
@@ -329,30 +405,32 @@ export const EdgeEditPanel = memo(function EdgeEditPanel({
             id="edge-description"
             value={edge.data?.description || ''}
             onChange={(e) => updateEdgeData({ description: e.target.value })}
-            placeholder="Describe this data flow..."
+            placeholder="Describe this flow..."
             rows={3}
           />
         </div>
 
-        {/* Protocol */}
-        <div className="space-y-2">
-          <Label htmlFor="edge-protocol">Protocol</Label>
-          <Select
-            value={edge.data?.protocol || ''}
-            onValueChange={(value) => updateEdgeData({ protocol: value as Protocol })}
-          >
-            <SelectTrigger id="edge-protocol">
-              <SelectValue placeholder="Select protocol..." />
-            </SelectTrigger>
-            <SelectContent>
-              {PROTOCOLS.map((protocol) => (
-                <SelectItem key={protocol} value={protocol}>
-                  {protocol}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Protocol: data-like types only */}
+        {dataLike && (
+          <div className="space-y-2">
+            <Label htmlFor="edge-protocol">Protocol</Label>
+            <Select
+              value={edge.data?.protocol || ''}
+              onValueChange={(value) => updateEdgeData({ protocol: value as Protocol })}
+            >
+              <SelectTrigger id="edge-protocol" data-testid="flow-protocol-select">
+                <SelectValue placeholder="Select protocol..." />
+              </SelectTrigger>
+              <SelectContent>
+                {PROTOCOLS.map((protocol) => (
+                  <SelectItem key={protocol} value={protocol}>
+                    {protocol}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <Separator />
 
@@ -375,36 +453,58 @@ export const EdgeEditPanel = memo(function EdgeEditPanel({
         <div className="space-y-3">
           <Label>Security</Label>
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="edge-encrypted"
-              checked={edge.data?.encrypted || false}
-              onCheckedChange={(checked) =>
-                updateEdgeData({ encrypted: checked as boolean })
-              }
-            />
-            <Label
-              htmlFor="edge-encrypted"
-              className="text-sm font-normal cursor-pointer"
-            >
-              Encryption in Transit
-            </Label>
-          </div>
+          {dataLike && (
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="edge-encrypted"
+                checked={edge.data?.encrypted || false}
+                onCheckedChange={(checked) =>
+                  updateEdgeData({ encrypted: checked as boolean })
+                }
+              />
+              <Label
+                htmlFor="edge-encrypted"
+                className="text-sm font-normal cursor-pointer"
+              >
+                Encryption in Transit
+              </Label>
+            </div>
+          )}
 
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="edge-authenticated"
-              checked={edge.data?.authenticated || false}
-              onCheckedChange={(checked) =>
-                updateEdgeData({ authenticated: checked as boolean })
-              }
+          {/* Authentication: the spec list; quick choices for the two placeholders */}
+          <div className="space-y-2">
+            <Label className="text-sm font-normal">Authentication</Label>
+            <MultiSelectCombobox
+              options={authenticationOptions}
+              selected={authentication}
+              onChange={handleAuthenticationChange}
+              placeholder="Add a method..."
+              searchPlaceholder="Search methods or type a custom name..."
+              allowCustom
             />
-            <Label
-              htmlFor="edge-authenticated"
-              className="text-sm font-normal cursor-pointer"
-            >
-              Authentication Required
-            </Label>
+            <div className="flex flex-wrap gap-1.5">
+              <Button
+                type="button"
+                variant={authentication.includes(UNSPECIFIED_AUTHENTICATION) ? 'secondary' : 'outline'}
+                size="sm"
+                className="h-6 text-xs"
+                onClick={() => updateEdgeData({ authentication: [UNSPECIFIED_AUTHENTICATION] })}
+              >
+                Authenticated, method not specified
+              </Button>
+              <Button
+                type="button"
+                variant={authentication.includes(NO_AUTHENTICATION) ? 'secondary' : 'outline'}
+                size="sm"
+                className="h-6 text-xs"
+                onClick={() => updateEdgeData({ authentication: [NO_AUTHENTICATION] })}
+              >
+                None
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Empty means not recorded.
+            </p>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -424,26 +524,21 @@ export const EdgeEditPanel = memo(function EdgeEditPanel({
           </div>
         </div>
 
-        {/* Data Flow Assets - only visible when edge has been synced to backend */}
-        {dataflowId && (
-          <DataFlowDataAssetsSection
-            dataFlowId={dataflowId}
-            threatModelId={threatModelId}
-          />
+        {/* Data assets: every flow type; links need the backend row (signed-in only) */}
+        {threatModelId && (
+          <FlowDataAssetsSection flowId={flowId} threatModelId={threatModelId} />
         )}
 
         <Separator />
 
-        {/* Zone Crossing */}
+        {/* Crossed boundary: the zone whose boundary this flow crosses */}
         {(() => {
-          const trustZones = (nodes as DiagramNode[]).filter(
-            (n) => n.type === 'trustZone'
-          )
-          if (trustZones.length === 0) return null
+          const zones = (nodes as DiagramNode[]).filter((n) => n.type === 'trustZone')
+          if (zones.length === 0) return null
 
           return (
             <div className="space-y-2">
-              <Label htmlFor="edge-zone">Crosses Zone</Label>
+              <Label htmlFor="edge-zone">Crosses boundary</Label>
               <Select
                 value={edge.data?.crossesZoneId || 'none'}
                 onValueChange={(value) => {
@@ -455,12 +550,12 @@ export const EdgeEditPanel = memo(function EdgeEditPanel({
                       crossesZoneColor: undefined,
                     })
                   } else {
-                    const selectedZoneNode = trustZones.find((b) => b.id === value)
+                    const selectedZoneNode = zones.find((zone) => zone.id === value)
                     const selectedData = selectedZoneNode?.data as TrustZoneNodeData | undefined
                     updateEdgeData({
                       crossesZoneId: value,
                       crossesZoneLabel: selectedData?.label ? String(selectedData.label) : undefined,
-                      crossesZoneTrustLevel: selectedData?.trustLevel,
+                      crossesZoneTrustLevel: getTrustLevel(selectedData) ?? undefined,
                       crossesZoneColor: selectedData?.zoneColor,
                     })
                   }
@@ -473,29 +568,58 @@ export const EdgeEditPanel = memo(function EdgeEditPanel({
                   <SelectItem value="none">
                     <span className="text-muted-foreground">None</span>
                   </SelectItem>
-                  {trustZones.map((boundary) => {
-                    const data = boundary.data as TrustZoneNodeData
+                  {zones.map((zone) => {
+                    const data = zone.data as TrustZoneNodeData
                     const config = getZoneColorConfig(data.zoneColor)
+                    const trustLevel = getTrustLevel(data)
                     return (
-                      <SelectItem key={boundary.id} value={boundary.id}>
+                      <SelectItem key={zone.id} value={zone.id}>
                         <div className="flex items-center gap-2">
                           <div
                             className="w-2 h-2 rounded-full"
                             style={{ backgroundColor: config.borderColor }}
                           />
-                          <span>{String(boundary.data.label)}</span>
-                          <span className="text-xs text-muted-foreground">
-                            (TL: {data.trustLevel ?? 75})
-                          </span>
+                          <span>{String(zone.data.label)}</span>
+                          {trustLevel !== null && (
+                            <span className="text-xs text-muted-foreground">(TL: {trustLevel})</span>
+                          )}
                         </div>
                       </SelectItem>
                     )
                   })}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                The zone whose boundary this flow crosses. Whether it crosses one is worked out from the boundaries when the diagram is saved.
+              </p>
             </div>
           )
         })()}
+
+        {/* Advanced: port, data-like types only */}
+        {dataLike && (
+          <>
+            <Separator />
+            <AdvancedSection>
+              <div className="space-y-1">
+                <Label htmlFor="edge-port" className="text-sm font-normal">
+                  Port
+                </Label>
+                <Input
+                  id="edge-port"
+                  type="number"
+                  min={0}
+                  max={65535}
+                  value={edge.data?.port ?? ''}
+                  onChange={(e) =>
+                    updateEdgeData({ port: e.target.value ? parseInt(e.target.value, 10) : undefined })
+                  }
+                  placeholder="e.g., 443"
+                />
+              </div>
+            </AdvancedSection>
+          </>
+        )}
 
         {/* Extra content (e.g. guest threat section) */}
         {renderExtra && (
@@ -522,7 +646,7 @@ export const EdgeEditPanel = memo(function EdgeEditPanel({
           onClick={handleDelete}
         >
           <Trash2 className="h-4 w-4 mr-2" />
-          Delete Data Flow
+          Delete Flow
         </Button>
       </div>
     </div>

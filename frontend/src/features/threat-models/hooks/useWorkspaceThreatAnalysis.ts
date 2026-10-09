@@ -2,35 +2,51 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import type { Diagram } from '@/types'
 import type {
   CompletionStatus,
-  ComponentThreat,
-  ComponentThreatCountermeasure,
+  AnalysisThreat,
+  AnalysisCountermeasure,
   CountermeasureStatus,
   ProgressChecklistItem,
 } from '@/features/dfd-editor/types/threat-analysis'
-import { deriveThreatStatus } from '@/features/dfd-editor/types/threat-analysis'
+import { deriveThreatStatus, targetCanvasId } from '@/features/dfd-editor/types/threat-analysis'
 import {
   useThreatModelThreats,
   useUpdateCountermeasure,
   useUpdateTriageStatus,
-  useUpdateFlowTriageStatus,
-  parseCountermeasureId,
-  parseThreatId,
-  useReorderComponentThreats,
-  useReorderFlowThreats,
+  useReorderThreats,
   useReorderCountermeasures,
 } from '@/features/threat-models/api/threats'
+import { parseCountermeasureId, threatIdFromUiId } from '@/features/threat-models/lib/threat-ids'
 import { isActiveThreat, type TriageStatus } from '@/types/triage'
 import { useThreatModel } from '@/features/threat-models/api/threat-models'
+import { ApiError } from '@/lib/api'
+import { toast } from 'sonner'
+import type { AnalysisSelection } from '@/features/dfd-editor/components/threat-analysis/analysis-selection'
+
+/** The message of a failed write, for the toast: the 403 on platform status names the role. */
+function writeErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    if (error.status === 403) return 'Only the Security Team can set or remove platform status.'
+    if (error.data && typeof error.data === 'object') {
+      const detail = (error.data as { detail?: unknown }).detail
+      if (typeof detail === 'string') return detail
+      const firstValue = Object.values(error.data as Record<string, unknown>)[0]
+      if (typeof firstValue === 'string') return firstValue
+      if (Array.isArray(firstValue) && typeof firstValue[0] === 'string') return firstValue[0]
+    }
+  }
+  return fallback
+}
 
 interface WorkspaceThreatAnalysisState {
   threatModelId: string
-  componentThreats: ComponentThreat[]
+  /** Every scenario of the model in the screen's shape (one entry per scenario). */
+  threats: AnalysisThreat[]
 }
 
 function getDefaultState(threatModelId: string | undefined): WorkspaceThreatAnalysisState {
   return {
     threatModelId: threatModelId || '',
-    componentThreats: [],
+    threats: [],
   }
 }
 
@@ -55,94 +71,55 @@ export function useWorkspaceThreatAnalysis(
   // Backend API mutations
   const updateCountermeasureMutation = useUpdateCountermeasure()
   const updateTriageStatusMutation = useUpdateTriageStatus()
-  const updateFlowTriageStatusMutation = useUpdateFlowTriageStatus()
-  const reorderComponentThreatsMutation = useReorderComponentThreats()
-  const reorderFlowThreatsMutation = useReorderFlowThreats()
+  const reorderThreatsMutation = useReorderThreats()
   const reorderCountermeasuresMutation = useReorderCountermeasures()
 
   // Use backend threats directly - no local threat generation
   useEffect(() => {
-    if (backendThreats?.componentThreats) {
+    if (backendThreats?.analysisThreats) {
       setState((prev) => ({
         ...prev,
-        componentThreats: backendThreats.componentThreats,
+        threats: backendThreats.analysisThreats,
       }))
     }
   }, [backendThreats])
 
-  // Filter threats when diagrams change (remove threats for deleted diagrams/components)
+  // Drop threats whose every target is gone from the current diagrams. A
+  // whole-system threat, an analysis-only target and a target off any canvas
+  // (zones and boundaries on no diagram) are always kept.
   useEffect(() => {
     if (!diagrams || diagrams.length === 0) return
     if (isLoadingThreats) return
 
     setState((prev) => {
-      const validComponentIds = new Set<string>()
+      const validCanvasIds = new Set<string>()
       const currentDiagramIds = new Set<string>()
       diagrams.forEach((d) => {
         currentDiagramIds.add(String(d.id))
         const canvasData = d.canvasData
         if (canvasData) {
-          canvasData.nodes?.forEach((node) => validComponentIds.add(String(node.id)))
-          canvasData.edges?.forEach((edge) => validComponentIds.add(String(edge.id)))
+          canvasData.nodes?.forEach((node) => validCanvasIds.add(String(node.id)))
+          canvasData.edges?.forEach((edge) => validCanvasIds.add(String(edge.id)))
         }
       })
 
-      const filteredThreats = prev.componentThreats.filter((ct) => {
-        const isAnalysisOnly = String(ct.componentId).startsWith('analysis-') ||
-                               (!ct.sourceDiagramId && !ct.diagramId)
-        if (isAnalysisOnly) return true
-
-        const diagramId = String(ct.sourceDiagramId || ct.diagramId)
-        if (!currentDiagramIds.has(diagramId)) return false
-        if (!validComponentIds.has(String(ct.componentId))) return false
-        return true
+      const filteredThreats = prev.threats.filter((threat) => {
+        if (threat.wholeSystem || threat.targets.length === 0) return true
+        return threat.targets.some((target) => {
+          const canvasId = targetCanvasId(target)
+          if (!canvasId) return true
+          if (canvasId.startsWith('analysis-')) return true
+          if (!target.dfdId) return true
+          return currentDiagramIds.has(target.dfdId) && validCanvasIds.has(canvasId)
+        })
       })
 
-      if (filteredThreats.length !== prev.componentThreats.length) {
-        return { ...prev, componentThreats: filteredThreats }
+      if (filteredThreats.length !== prev.threats.length) {
+        return { ...prev, threats: filteredThreats }
       }
       return prev
     })
   }, [diagrams, isLoadingThreats])
-
-  // Revert an inherited countermeasure back to gap status
-  const revertInheritedCountermeasure = useCallback(
-    (componentThreatId: string, countermeasureInstanceId: string) => {
-      const parsed = parseCountermeasureId(countermeasureInstanceId)
-      if (parsed.type === 'backend' && parsed.id !== null) {
-        updateCountermeasureMutation.mutate({
-          countermeasureId: parsed.id,
-          data: {
-            status: 'gap',
-            isInherited: false,
-            inheritedFromComponentName: '',
-            inheritedFromZoneName: '',
-          },
-        })
-      }
-      // Optimistic local state update
-      setState((prev) => ({
-        ...prev,
-        componentThreats: prev.componentThreats.map((ct) => {
-          if (ct.id !== componentThreatId) return ct
-          return {
-            ...ct,
-            countermeasures: ct.countermeasures.map((cm) => {
-              if (cm.id !== countermeasureInstanceId) return cm
-              return {
-                ...cm,
-                status: 'gap' as CountermeasureStatus,
-                isInherited: false,
-                inheritedFromComponentName: undefined,
-                inheritedFromZoneName: undefined,
-              }
-            }),
-          }
-        }),
-      }))
-    },
-    [updateCountermeasureMutation]
-  )
 
   // Update countermeasure status
   const updateCountermeasureStatus = useCallback(
@@ -156,20 +133,28 @@ export function useWorkspaceThreatAnalysis(
       const parsed = parseCountermeasureId(countermeasureInstanceId)
 
       if (parsed.type === 'backend' && parsed.id !== null) {
-        updateCountermeasureMutation.mutate({
-          countermeasureId: parsed.id,
-          data: {
-            status: status as 'platform' | 'gap' | 'planned' | 'verified' | 'waived',
-            ...(notes !== undefined && { evidenceUrl: notes }),
+        updateCountermeasureMutation.mutate(
+          {
+            countermeasureId: parsed.id,
+            data: {
+              status,
+              ...(notes !== undefined && { evidenceUrl: notes }),
+            },
           },
-        })
+          {
+            // The backend refuses platform status without the Security Team
+            // role (403); the toast says so and the refetch undoes the
+            // optimistic change below.
+            onError: (error) => toast.error(writeErrorMessage(error, 'Could not change the status')),
+          }
+        )
       }
 
       // Update local state immediately for responsiveness
       // For shared countermeasures, update across ALL threats that share this CM
       setState((prev) => ({
         ...prev,
-        componentThreats: prev.componentThreats.map((ct) => {
+        threats: prev.threats.map((ct) => {
           const hasCm = ct.countermeasures.some((cm) => cm.id === countermeasureInstanceId)
           if (!hasCm) return ct
           return {
@@ -199,7 +184,7 @@ export function useWorkspaceThreatAnalysis(
       assignee: { type: 'member'; userId: number; email: string; name: string | null },
       newStatus?: CountermeasureStatus
     ) => {
-      const threat = state.componentThreats.find((ct) => ct.id === componentThreatId)
+      const threat = state.threats.find((ct) => ct.id === componentThreatId)
       const countermeasure = threat?.countermeasures.find((cm) => cm.id === countermeasureInstanceId)
 
       if (countermeasure) {
@@ -221,7 +206,7 @@ export function useWorkspaceThreatAnalysis(
       const finalStatus = newStatus || (countermeasure?.status === 'gap' ? 'planned' : countermeasure?.status)
       setState((prev) => ({
         ...prev,
-        componentThreats: prev.componentThreats.map((ct) => {
+        threats: prev.threats.map((ct) => {
           if (ct.id !== componentThreatId) return ct
           return {
             ...ct,
@@ -239,13 +224,13 @@ export function useWorkspaceThreatAnalysis(
         }),
       }))
     },
-    [state.componentThreats, updateCountermeasureMutation]
+    [state.threats, updateCountermeasureMutation]
   )
 
   // Update countermeasure priority
   const updateCountermeasurePriority = useCallback(
-    (componentThreatId: string, countermeasureInstanceId: string, priority: ComponentThreatCountermeasure['priority']) => {
-      const threat = state.componentThreats.find((ct) => ct.id === componentThreatId)
+    (componentThreatId: string, countermeasureInstanceId: string, priority: AnalysisCountermeasure['priority']) => {
+      const threat = state.threats.find((ct) => ct.id === componentThreatId)
       const countermeasure = threat?.countermeasures.find((cm) => cm.id === countermeasureInstanceId)
 
       if (countermeasure) {
@@ -262,7 +247,7 @@ export function useWorkspaceThreatAnalysis(
       // Update local state immediately for responsiveness
       setState((prev) => ({
         ...prev,
-        componentThreats: prev.componentThreats.map((ct) => {
+        threats: prev.threats.map((ct) => {
           if (ct.id !== componentThreatId) return ct
           return {
             ...ct,
@@ -279,13 +264,13 @@ export function useWorkspaceThreatAnalysis(
         }),
       }))
     },
-    [state.componentThreats, updateCountermeasureMutation]
+    [state.threats, updateCountermeasureMutation]
   )
 
   // Update countermeasure due date
   const updateCountermeasureDueDate = useCallback(
     (componentThreatId: string, countermeasureInstanceId: string, dueDate: string | null) => {
-      const threat = state.componentThreats.find((ct) => ct.id === componentThreatId)
+      const threat = state.threats.find((ct) => ct.id === componentThreatId)
       const countermeasure = threat?.countermeasures.find((cm) => cm.id === countermeasureInstanceId)
 
       if (countermeasure) {
@@ -301,7 +286,7 @@ export function useWorkspaceThreatAnalysis(
 
       setState((prev) => ({
         ...prev,
-        componentThreats: prev.componentThreats.map((ct) => {
+        threats: prev.threats.map((ct) => {
           if (ct.id !== componentThreatId) return ct
           return {
             ...ct,
@@ -314,13 +299,13 @@ export function useWorkspaceThreatAnalysis(
         }),
       }))
     },
-    [state.componentThreats, updateCountermeasureMutation]
+    [state.threats, updateCountermeasureMutation]
   )
 
   // Update countermeasure external ticket URL
   const updateCountermeasureExternalTicket = useCallback(
     (componentThreatId: string, countermeasureInstanceId: string, externalTicketUrl: string) => {
-      const threat = state.componentThreats.find((ct) => ct.id === componentThreatId)
+      const threat = state.threats.find((ct) => ct.id === componentThreatId)
       const countermeasure = threat?.countermeasures.find((cm) => cm.id === countermeasureInstanceId)
 
       if (countermeasure) {
@@ -336,7 +321,7 @@ export function useWorkspaceThreatAnalysis(
 
       setState((prev) => ({
         ...prev,
-        componentThreats: prev.componentThreats.map((ct) => {
+        threats: prev.threats.map((ct) => {
           if (ct.id !== componentThreatId) return ct
           return {
             ...ct,
@@ -349,37 +334,25 @@ export function useWorkspaceThreatAnalysis(
         }),
       }))
     },
-    [state.componentThreats, updateCountermeasureMutation]
+    [state.threats, updateCountermeasureMutation]
   )
 
-  // Update triage status
+  // Update the triage status of one scenario; it shows under every target.
   const updateTriageStatus = useCallback((
     componentThreatId: string,
-    componentId: string,
     triageStatus: TriageStatus,
     decisionRationale?: string
   ) => {
-    // componentId is available for future use (e.g., optimistic updates per component)
-    void componentId
-    const threat = state.componentThreats.find((ct) => ct.id === componentThreatId)
+    const threat = state.threats.find((ct) => ct.id === componentThreatId)
     if (threat?.backendThreatId) {
-      if (threat.threatType === 'dataflow') {
-        updateFlowTriageStatusMutation.mutate({
-          threatId: threat.backendThreatId,
-          triageStatus,
-          decisionRationale,
-        })
-      } else {
-        updateTriageStatusMutation.mutate({
-          threatId: threat.backendThreatId,
-          triageStatus,
-          decisionRationale,
-        })
-      }
+      updateTriageStatusMutation.mutate(
+        { threatId: threat.backendThreatId, triageStatus, decisionRationale },
+        { onError: (error) => toast.error(writeErrorMessage(error, 'Could not change the triage status')) }
+      )
     }
     setState((prev) => ({
       ...prev,
-      componentThreats: prev.componentThreats.map((ct) => {
+      threats: prev.threats.map((ct) => {
         if (ct.id !== componentThreatId) return ct
         return {
           ...ct,
@@ -389,7 +362,7 @@ export function useWorkspaceThreatAnalysis(
         }
       }),
     }))
-  }, [state.componentThreats, updateTriageStatusMutation, updateFlowTriageStatusMutation])
+  }, [state.threats, updateTriageStatusMutation])
 
   // Add custom countermeasure
   const addCountermeasure = useCallback(
@@ -398,12 +371,12 @@ export function useWorkspaceThreatAnalysis(
         const timestamp = new Date().toISOString()
         return {
           ...prev,
-          componentThreats: prev.componentThreats.map((ct) => {
+          threats: prev.threats.map((ct) => {
             if (ct.id !== componentThreatId) return ct
             if (ct.countermeasures.some((cm) => cm.countermeasureId === countermeasureId)) {
               return ct
             }
-            const newCm: ComponentThreatCountermeasure = {
+            const newCm: AnalysisCountermeasure = {
               id: `ctcm-${componentThreatId}-${countermeasureId}-${Date.now()}`,
               countermeasureId,
               componentThreatId,
@@ -423,48 +396,42 @@ export function useWorkspaceThreatAnalysis(
     []
   )
 
-  // Reorder threats for a component
+  // Reorder the threats shown under one tree row: per target when a target
+  // is selected, the scenarios' own order for the whole-system list.
   const reorderThreats = useCallback(
-    (_componentId: string, reorderedThreats: ComponentThreat[]) => {
+    (selection: AnalysisSelection, reorderedThreats: AnalysisThreat[]) => {
       // Update local state immediately with new displayOrder values
       setState((prev) => {
         const reorderedIds = new Set(reorderedThreats.map((t) => t.id))
-        const otherThreats = prev.componentThreats.filter((ct) => !reorderedIds.has(ct.id))
+        const otherThreats = prev.threats.filter((ct) => !reorderedIds.has(ct.id))
         const updatedReordered = reorderedThreats.map((t, index) => ({
           ...t,
           displayOrder: index,
         }))
-        return { ...prev, componentThreats: [...otherThreats, ...updatedReordered] }
+        return { ...prev, threats: [...otherThreats, ...updatedReordered] }
       })
 
-      // Split IDs by type and fire mutations
-      const componentThreatIds: number[] = []
-      const flowThreatIds: number[] = []
-      for (const threat of reorderedThreats) {
-        const parsed = parseThreatId(threat.id)
-        if (parsed.type === 'component' && parsed.id !== null) {
-          componentThreatIds.push(parsed.id)
-        } else if (parsed.type === 'flow' && parsed.id !== null) {
-          flowThreatIds.push(parsed.id)
-        }
-      }
-      if (componentThreatIds.length > 0) {
-        reorderComponentThreatsMutation.mutate(componentThreatIds)
-      }
-      if (flowThreatIds.length > 0) {
-        reorderFlowThreatsMutation.mutate(flowThreatIds)
+      const orderedIds = reorderedThreats
+        .map((threat) => threatIdFromUiId(threat.id))
+        .filter((id): id is number => id !== null)
+      if (orderedIds.length > 0) {
+        reorderThreatsMutation.mutate(
+          selection.kind === 'target'
+            ? { orderedIds, targetType: selection.type, targetId: selection.id }
+            : { orderedIds }
+        )
       }
     },
-    [reorderComponentThreatsMutation, reorderFlowThreatsMutation]
+    [reorderThreatsMutation]
   )
 
   // Reorder countermeasures for a threat
   const reorderCountermeasures = useCallback(
-    (componentThreatId: string, reorderedCountermeasures: ComponentThreatCountermeasure[]) => {
+    (componentThreatId: string, reorderedCountermeasures: AnalysisCountermeasure[]) => {
       // Update local state immediately
       setState((prev) => ({
         ...prev,
-        componentThreats: prev.componentThreats.map((ct) => {
+        threats: prev.threats.map((ct) => {
           if (ct.id !== componentThreatId) return ct
           return {
             ...ct,
@@ -477,6 +444,7 @@ export function useWorkspaceThreatAnalysis(
       }))
 
       // Collect all backend CM IDs and fire single mutation
+      const threatId = threatIdFromUiId(componentThreatId)
       const backendCmIds: number[] = []
       for (const cm of reorderedCountermeasures) {
         const parsed = parseCountermeasureId(cm.id)
@@ -484,21 +452,21 @@ export function useWorkspaceThreatAnalysis(
           backendCmIds.push(parsed.id)
         }
       }
-      if (backendCmIds.length > 0) {
-        reorderCountermeasuresMutation.mutate(backendCmIds)
+      if (threatId !== null && backendCmIds.length > 0) {
+        reorderCountermeasuresMutation.mutate({ threatId, orderedIds: backendCmIds })
       }
     },
     [reorderCountermeasuresMutation]
   )
 
-  // Toggle checklist item — no-op since all items are now auto-computed by the backend
+  // Toggle checklist item: no-op since all items are now auto-computed by the backend
   const toggleChecklistItem = useCallback((_itemId: string, _checked: boolean) => {
     // All checklist items are auto-computed by the backend; no local state to update
   }, [])
 
   // Compute summary statistics
   const summaries = useMemo(() => {
-    const activeThreats = state.componentThreats.filter((ct) => isActiveThreat(ct.triageStatus))
+    const activeThreats = state.threats.filter((ct) => isActiveThreat(ct.triageStatus))
 
     const allNodes = diagrams.filter((d) => d.isPrimary).flatMap((d) => d.canvasData?.nodes || [])
 
@@ -544,7 +512,10 @@ export function useWorkspaceThreatAnalysis(
       mitigated: mitigatedThreats,
     }
 
-    const allCountermeasures = activeThreats.flatMap((ct) => ct.countermeasures)
+    // Each countermeasure counts once even when it mitigates several scenarios.
+    const countermeasuresById = new Map<string, AnalysisCountermeasure>()
+    activeThreats.forEach((ct) => ct.countermeasures.forEach((cm) => countermeasuresById.set(cm.id, cm)))
+    const allCountermeasures = Array.from(countermeasuresById.values())
     const countermeasureSummary = {
       total: allCountermeasures.length,
       platform: allCountermeasures.filter((cm) => cm.status === 'platform').length,
@@ -555,7 +526,7 @@ export function useWorkspaceThreatAnalysis(
     }
 
     return { componentSummary, threatSummary, countermeasureSummary }
-  }, [state.componentThreats, diagrams, analysisComponents])
+  }, [state.threats, diagrams, analysisComponents])
 
   // Progress checklist is computed by the backend and returned in workspace_data
   const progressChecklist: ProgressChecklistItem[] = useMemo(() => {
@@ -572,13 +543,14 @@ export function useWorkspaceThreatAnalysis(
   }, [threatModel?.workspaceData])
 
   return {
-    componentThreats: state.componentThreats,
+    threats: state.threats,
+    /** @deprecated Use `threats`; kept for the readers the step 15 UI rewrite replaces. */
+    componentThreats: state.threats,
     progressChecklist,
     completionStatus,
     summaries,
     isLoading: isLoadingThreats || isLoadingThreatModel,
     isLoadingThreats,
-    revertInheritedCountermeasure,
     updateCountermeasureStatus,
     updateCountermeasurePriority,
     updateCountermeasureDueDate,

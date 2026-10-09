@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Plus, Search, FileText, Link2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus, Search, FileText, Link2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,12 @@ import {
   useCountermeasuresInUse,
   useCreateCountermeasure,
   useApplyCountermeasure,
+  type TargetRef,
 } from '@/features/threat-models/api/threats'
+import { useAnalysisComponents } from '@/features/threat-models/api/components'
+import { MultiSelectCombobox } from '@/components/ui/multi-select-combobox'
+import { TargetPicker } from './TargetPicker'
+import { effectivenessFromInput } from './countermeasure-utils'
 import { Checkbox } from '@/components/ui/checkbox'
 import { COUNTERMEASURE_STATUS_CONFIG } from '@/features/dfd-editor/types/threat-analysis'
 import type { CountermeasureStatus } from '@/features/dfd-editor/types/threat-analysis'
@@ -37,10 +42,11 @@ interface AddCountermeasureDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   threatId: number // Backend threat instance ID
-  threatType: 'component' | 'dataflow'
   threatName: string
   threatLibraryId?: number | null // For filtering applicable countermeasures
   threatModelId?: string
+  /** Preset scope: the threat's targets (plan 11.3). Empty means the whole system. */
+  initialTargets?: TargetRef[]
   onSuccess?: () => void
 }
 
@@ -48,10 +54,10 @@ export function AddCountermeasureDialog({
   open,
   onOpenChange,
   threatId,
-  threatType,
   threatName,
   threatLibraryId,
   threatModelId,
+  initialTargets = [],
   onSuccess,
 }: AddCountermeasureDialogProps) {
   const [activeTab, setActiveTab] = useState<'in-use' | 'library' | 'custom'>('in-use')
@@ -64,6 +70,15 @@ export function AddCountermeasureDialog({
   const [customDescription, setCustomDescription] = useState('')
   const [customControlFunctions, setCustomControlFunctions] = useState<string[]>([])
   const [customControlNature, setCustomControlNature] = useState('')
+
+  // Scope (applies to) and, under Advanced, the provider and source (J3, J13)
+  const [scopeTargets, setScopeTargets] = useState<TargetRef[]>(initialTargets)
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [implementedBy, setImplementedBy] = useState<number[]>([])
+  const [implementedByParty, setImplementedByParty] = useState('')
+  const [source, setSource] = useState('')
+  const [effectiveness, setEffectiveness] = useState('')
+  const { data: modelComponents = [] } = useAnalysisComponents(threatModelId ?? null)
 
   // Fetch countermeasures - filter by applicable threats if we have a library threat
   const { data: countermeasureLibrary, isLoading } = useCountermeasureLibrary(threatLibraryId, threatModelId)
@@ -81,7 +96,7 @@ export function AddCountermeasureDialog({
       // Apply search filter
       if (inUseSearchQuery) {
         const query = inUseSearchQuery.toLowerCase()
-        return cm.countermeasureName.toLowerCase().includes(query)
+        return (cm.countermeasureName ?? '').toLowerCase().includes(query)
       }
       return true
     })
@@ -105,7 +120,7 @@ export function AddCountermeasureDialog({
       onSuccess?.()
     }
     applyCountermeasure.mutate(
-      { threatId, threatType, existingCountermeasureId: countermeasureId },
+      { threatId, existingCountermeasureId: countermeasureId },
       { onSuccess: onMutationSuccess }
     )
   }
@@ -121,10 +136,29 @@ export function AddCountermeasureDialog({
     }
 
     createCountermeasure.mutate(
-      { threatModel: threatModelId!, threatId, threatType, countermeasureLibrary: selectedCountermeasureId, status: countermeasureDefaultStatus },
+      {
+        threatModel: threatModelId!,
+        threatId,
+        countermeasureLibrary: selectedCountermeasureId,
+        status: countermeasureDefaultStatus as CountermeasureStatus,
+        ...scopeAndProviderInput(),
+      },
       { onSuccess: onMutationSuccess }
     )
   }
+
+  /** The scope and Advanced fields both tabs send. */
+  const scopeAndProviderInput = () => {
+    const parsedEffectiveness = effectivenessFromInput(effectiveness)
+    return {
+      targets: scopeTargets,
+      ...(implementedBy.length > 0 && { implementedBy }),
+      ...(implementedByParty.trim() && { implementedByParty: implementedByParty.trim() }),
+      ...(source.trim() && { source: source.trim() }),
+      ...(parsedEffectiveness !== undefined && parsedEffectiveness !== null && { effectiveness: parsedEffectiveness }),
+    }
+  }
+  const effectivenessInvalid = effectivenessFromInput(effectiveness) === undefined
 
   const handleAddCustom = () => {
     if (!customName.trim()) return
@@ -139,13 +173,13 @@ export function AddCountermeasureDialog({
       {
         threatModel: threatModelId!,
         threatId,
-        threatType,
         countermeasureLibrary: null as null,
         countermeasureName: customName,
         countermeasureDescription: customDescription,
         controlFunctions: customControlFunctions.length > 0 ? customControlFunctions : undefined,
         controlNature: customControlNature || undefined,
         status: 'gap',
+        ...scopeAndProviderInput(),
       },
       { onSuccess: onMutationSuccess }
     )
@@ -159,8 +193,86 @@ export function AddCountermeasureDialog({
     setCustomDescription('')
     setCustomControlFunctions([])
     setCustomControlNature('')
+    setScopeTargets(initialTargets)
+    setAdvancedOpen(false)
+    setImplementedBy([])
+    setImplementedByParty('')
+    setSource('')
+    setEffectiveness('')
     setActiveTab('in-use')
   }
+
+  const scopeSection = threatModelId && (
+    <div className="space-y-2 rounded-md border p-3">
+      <Label>Applies to</Label>
+      <TargetPicker
+        threatModelId={threatModelId}
+        value={scopeTargets}
+        onChange={setScopeTargets}
+        idPrefix="add-countermeasure"
+        emptyHint="No targets: the control applies to the whole system. Scope changes no threat status."
+      />
+      <button
+        type="button"
+        className="flex items-center gap-1 pt-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+        onClick={() => setAdvancedOpen((open) => !open)}
+        aria-expanded={advancedOpen}
+      >
+        {advancedOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+        Advanced
+      </button>
+      {advancedOpen && (
+        <div className="space-y-2">
+          <div className="space-y-1">
+            <Label className="text-xs">Implemented by: components</Label>
+            <MultiSelectCombobox
+              options={modelComponents.map((component) => ({ value: String(component.id), label: component.name }))}
+              selected={implementedBy.map(String)}
+              onChange={(selected) => setImplementedBy(selected.map(Number))}
+              placeholder="Components that implement this control"
+              searchPlaceholder="Search components"
+              emptyMessage="No component matches"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="add-cm-party" className="text-xs">Implemented by: other party</Label>
+              <Input
+                id="add-cm-party"
+                value={implementedByParty}
+                onChange={(event) => setImplementedByParty(event.target.value)}
+                placeholder="A cloud provider, another team"
+                className="h-8 text-xs"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="add-cm-source" className="text-xs">Source</Label>
+              <Input
+                id="add-cm-source"
+                value={source}
+                onChange={(event) => setSource(event.target.value)}
+                placeholder="A compliance tool, a pentest"
+                className="h-8 text-xs"
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="add-cm-effectiveness" className="text-xs">Effectiveness (%)</Label>
+            <Input
+              id="add-cm-effectiveness"
+              type="number"
+              min={0}
+              max={100}
+              value={effectiveness}
+              onChange={(event) => setEffectiveness(event.target.value)}
+              placeholder="not assessed"
+              className={cn('h-8 w-32 text-xs', effectivenessInvalid && 'border-red-500')}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  )
 
   const isSubmitting = createCountermeasure.isPending || applyCountermeasure.isPending
 
@@ -228,7 +340,7 @@ export function AddCountermeasureDialog({
                           </div>
                           {cm.linkedThreats.length > 0 && (
                             <div className="text-xs text-muted-foreground mt-1">
-                              Applied to: {cm.linkedThreats.map((lt) => lt.threatName || lt.componentName || lt.flowLabel).join(', ')}
+                              Applied to: {cm.linkedThreats.map((lt) => `${lt.displayNumber} ${lt.threatName ?? ''}`.trim()).join(', ')}
                             </div>
                           )}
                         </div>
@@ -325,6 +437,8 @@ export function AddCountermeasureDialog({
                 )}
               </div>
             )}
+
+            {scopeSection}
           </TabsContent>
 
           <TabsContent value="custom" className="space-y-4">
@@ -386,6 +500,8 @@ export function AddCountermeasureDialog({
               </Select>
             </div>
 
+            {scopeSection}
+
             <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-md text-sm text-muted-foreground">
               <FileText className="h-4 w-4 shrink-0" />
               <p>Custom countermeasures are not linked to the library and won't have compliance mappings by default.</p>
@@ -400,7 +516,7 @@ export function AddCountermeasureDialog({
           {activeTab === 'library' ? (
             <Button
               onClick={handleAddFromLibrary}
-              disabled={!selectedCountermeasureId || isSubmitting}
+              disabled={!selectedCountermeasureId || isSubmitting || effectivenessInvalid}
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Countermeasure
@@ -408,7 +524,7 @@ export function AddCountermeasureDialog({
           ) : activeTab === 'custom' ? (
             <Button
               onClick={handleAddCustom}
-              disabled={!customName.trim() || isSubmitting}
+              disabled={!customName.trim() || isSubmitting || effectivenessInvalid}
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Custom Countermeasure

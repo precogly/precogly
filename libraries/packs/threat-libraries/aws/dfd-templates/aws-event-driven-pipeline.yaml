@@ -32,7 +32,8 @@ canvas_data:
       style: { width: 280, height: 350 }
       data:
         label: "Event Ingestion"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-processing"
       type: "trustZone"
@@ -41,7 +42,8 @@ canvas_data:
       style: { width: 500, height: 350 }
       data:
         label: "Processing Tier"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-data"
       type: "trustZone"
@@ -50,7 +52,8 @@ canvas_data:
       style: { width: 500, height: 310 }
       data:
         label: "Data Tier"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     - id: "tz-observability"
       type: "trustZone"
@@ -59,7 +62,8 @@ canvas_data:
       style: { width: 280, height: 310 }
       data:
         label: "Observability"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     # ---- Processes: Event Ingestion ----
     - id: "process-eventbridge"
@@ -166,7 +170,7 @@ canvas_data:
         label: "Inbound events"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # EventBridge → Lambda (direct invocation)
     - id: "edge-eventbridge-to-lambda"
@@ -177,7 +181,7 @@ canvas_data:
         label: "Rule-matched event"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # EventBridge → Step Functions
     - id: "edge-eventbridge-to-step-functions"
@@ -188,7 +192,7 @@ canvas_data:
         label: "Workflow trigger"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # EventBridge → SNS (fan-out)
     - id: "edge-eventbridge-to-sns"
@@ -199,7 +203,7 @@ canvas_data:
         label: "Fan-out event"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # SNS → SQS (buffering)
     - id: "edge-sns-to-sqs"
@@ -210,7 +214,7 @@ canvas_data:
         label: "Buffered delivery"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # SQS → Lambda (poll-based)
     - id: "edge-sqs-to-lambda"
@@ -221,7 +225,7 @@ canvas_data:
         label: "Message batch"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Step Functions → Lambda (task execution)
     - id: "edge-step-functions-to-lambda"
@@ -232,7 +236,7 @@ canvas_data:
         label: "Step task invocation"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Lambda → DynamoDB
     - id: "edge-lambda-to-dynamodb"
@@ -243,7 +247,7 @@ canvas_data:
         label: "State read/write"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Lambda → S3 (output)
     - id: "edge-lambda-to-s3"
@@ -254,7 +258,7 @@ canvas_data:
         label: "Output artifacts"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Lambda → CloudWatch (logs)
     - id: "edge-lambda-to-cloudwatch"
@@ -265,7 +269,7 @@ canvas_data:
         label: "Logs and metrics"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Step Functions → CloudWatch
     - id: "edge-step-functions-to-cloudwatch"
@@ -276,7 +280,7 @@ canvas_data:
         label: "Execution history"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # EventBridge → CloudWatch
     - id: "edge-eventbridge-to-cloudwatch"
@@ -287,4 +291,4 @@ canvas_data:
         label: "Event metrics"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]

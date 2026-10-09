@@ -35,18 +35,18 @@ import {
 } from 'lucide-react'
 
 
-// Progress checklist items with labels
-// Note: Backend returns snake_case but DRF converts to camelCase at API boundary
-const PROGRESS_ITEMS = [
+// Progress checklist items, keyed as organizations/views.py
+// MagicLinkAccessView computes them (camelCased at the API boundary).
+const PROGRESS_ITEMS: Array<{ id: keyof ThreatModelStats['progress']; label: string }> = [
   { id: 'assetsDefined', label: 'Primary assets defined' },
   { id: 'componentsIdentified', label: 'Components identified' },
-  { id: 'trustBoundariesIdentified', label: 'Trust boundaries identified' },
-  { id: 'dataFlowsDefined', label: 'Data flows defined' },
+  { id: 'boundariesIdentified', label: 'Zones identified' },
+  { id: 'flowsDefined', label: 'Flows defined' },
   { id: 'ownersAssigned', label: 'Owners assigned' },
   { id: 'threatsLinkedComponents', label: 'Threats linked to components' },
   { id: 'threatsLinkedFlows', label: 'Threats linked to flows' },
   { id: 'countermeasuresAssigned', label: 'Countermeasures assigned' },
-] as const
+]
 
 export function SharedThreatModelView() {
   const { token } = useParams<{ token: string }>()
@@ -125,7 +125,7 @@ export function SharedThreatModelView() {
     gaps: 0,
   }
 
-  const progressValues = serverStats?.progress ?? {}
+  const progressValues: Partial<ThreatModelStats['progress']> = serverStats?.progress ?? {}
 
   const systemContext = tm.workspaceData?.systemContext
   const dfds = tm.dfds ?? []
@@ -219,7 +219,7 @@ export function SharedThreatModelView() {
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {PROGRESS_ITEMS.map((item) => {
-                      const isChecked = progressValues[item.id as keyof typeof progressValues]
+                      const isChecked = progressValues[item.id] ?? false
                       return (
                         <div key={item.id} className="flex items-center gap-2">
                           {isChecked ? (
@@ -258,7 +258,7 @@ export function SharedThreatModelView() {
                       {componentStats.systemActors > 0 && `${componentStats.systemActors} system actors`}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {componentStats.boundaries} boundaries
+                      {componentStats.boundaries} zones
                     </p>
                   </CardContent>
                 </Card>
@@ -412,7 +412,7 @@ export function SharedThreatModelView() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Layers className="h-5 w-5" />
-                      Data Flow Diagrams
+                      Diagrams
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -438,7 +438,7 @@ export function SharedThreatModelView() {
                                 )}
                               </h4>
                               <p className="text-sm text-muted-foreground mt-1">
-                                {nodeCount} components, {edgeCount} data flows
+                                {nodeCount} nodes, {edgeCount} flows
                               </p>
                             </div>
                             <div className="flex items-center gap-2">

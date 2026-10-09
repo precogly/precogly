@@ -16,6 +16,9 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { SuggestionCombobox } from '@/features/dfd-editor/components/suggestion-combobox'
+import { COMPONENT_KINDS, ZONE_TYPES, type ComponentKind, type ZoneType } from '@/types/domain'
+import { getComponentKind, getZoneType } from '@/features/dfd-editor/lib/canvas-defaults'
+import { NEW_ZONE_TRUST_LEVEL, getTrustLevel, zoneTypeHasTrustLevel } from '@/features/dfd-editor/lib/zone-trust-level'
 import type {
   DiagramNode,
   DiagramNodeType,
@@ -82,21 +85,15 @@ export const GuestNodeEditPanel = memo(function GuestNodeEditPanel({
     const nodes = getNodes() as DiagramNode[]
     const edges = getEdges()
 
-    // Threats and countermeasures live outside React Flow's node state. Clean
-    // up this node and its connected flows before removing the canvas items.
-    if (guestEditor) {
-      const deletedTargetIds = new Set([
-        node.id,
-        ...edges
-          .filter((edge) => edge.source === node.id || edge.target === node.id)
-          .map((edge) => edge.id),
-      ])
-      for (const targetId of deletedTargetIds) {
-        for (const threat of guestEditor.getThreatsForTarget(targetId)) {
-          guestEditor.removeThreat(threat.id)
-        }
-      }
-    }
+    // Threats and countermeasures live outside React Flow's node state. The
+    // deletion rule (H9) runs for this node and its connected edges before
+    // the canvas items go.
+    guestEditor?.removeDiagramElements([
+      node.id,
+      ...edges
+        .filter((edge) => edge.source === node.id || edge.target === node.id)
+        .map((edge) => edge.id),
+    ])
 
     // For container nodes (boundaries or process containers), convert children to root nodes
     const hasChildren = nodes.some((n) => n.parentId === node.id)
@@ -449,24 +446,59 @@ export const GuestNodeEditPanel = memo(function GuestNodeEditPanel({
 
         {node.type === 'trustZone' && (
           <>
-            <div className="space-y-3">
-              <Label>Trust Level</Label>
-              <Slider
-                value={[(node.data as { trustLevel?: number }).trustLevel ?? 75]}
-                onValueChange={([value]) => updateNodeData({ trustLevel: value })}
-                min={0}
-                max={100}
-                step={1}
-                className="w-full"
-              />
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>0 — untrusted</span>
-                <span className="font-medium text-foreground">
-                  {(node.data as { trustLevel?: number }).trustLevel ?? 75}
-                </span>
-                <span>100 — restricted</span>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="node-zone-type">Zone Type</Label>
+              <Select
+                value={getZoneType(node.data)}
+                onValueChange={(value) => updateNodeData({ zoneType: value as ZoneType })}
+              >
+                <SelectTrigger id="node-zone-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ZONE_TYPES.map((entry) => (
+                    <SelectItem key={entry.value} value={entry.value}>
+                      {entry.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            {zoneTypeHasTrustLevel(getZoneType(node.data)) && (() => {
+              const trustLevel = getTrustLevel(node.data)
+              return (
+                <div className="space-y-3">
+                  <label className="flex items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={trustLevel !== null}
+                      onCheckedChange={(checked) =>
+                        updateNodeData({ trustLevel: checked === true ? NEW_ZONE_TRUST_LEVEL : undefined })
+                      }
+                    />
+                    <span className="font-medium">Trust level</span>
+                    {trustLevel === null && <span className="text-xs text-muted-foreground">not set</span>}
+                  </label>
+                  {trustLevel !== null && (
+                    <>
+                      <Slider
+                        value={[trustLevel]}
+                        onValueChange={([value]) => updateNodeData({ trustLevel: value })}
+                        min={0}
+                        max={100}
+                        step={1}
+                        className="w-full"
+                      />
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>0: untrusted</span>
+                        <span className="font-medium text-foreground">{trustLevel}</span>
+                        <span>100: restricted</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )
+            })()}
 
             <div className="space-y-2">
               <Label>Zone Color</Label>
@@ -611,6 +643,29 @@ export const GuestNodeEditPanel = memo(function GuestNodeEditPanel({
               />
             </div>
           </>
+        )}
+
+        {/* Spec asset type (kind) for the nodes that sync to a component */}
+        {(node.type === 'process' || node.type === 'datastore' || node.type === 'humanActor' || node.type === 'systemActor' || node.type === 'systemScope') && (
+          <div className="space-y-2">
+            <Label htmlFor="node-kind">Kind</Label>
+            <Select
+              value={getComponentKind(node.data, node.type)}
+              onValueChange={(value) => updateNodeData({ kind: value as ComponentKind })}
+            >
+              <SelectTrigger id="node-kind">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {COMPONENT_KINDS.map((entry) => (
+                  <SelectItem key={entry.value} value={entry.value}>
+                    {entry.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">The CycloneDX asset type written to the file.</p>
+          </div>
         )}
 
         {/* Parent info */}

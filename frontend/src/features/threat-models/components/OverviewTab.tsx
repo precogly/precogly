@@ -6,10 +6,14 @@ import {
   RelationshipCards,
   DFDCarousel,
   SummaryCards,
-  SystemContextCard,
+  ReviewCard,
+  ModelDetailsCard,
+  BusinessObjectivesCard,
+  SystemContextSummary,
+  UseCasesCard,
 } from '@/features/threat-models/components/workspace'
 import type { Diagram } from '@/types'
-import type { ReferenceImage } from '@/features/threat-models/types/core'
+import type { Blueprint, ReferenceImage, ThreatModel } from '@/features/threat-models/types/core'
 import type { CompletionStatus, ProgressChecklistItem } from '@/features/dfd-editor/types/threat-analysis'
 
 interface SummaryData {
@@ -38,7 +42,10 @@ interface SummaryData {
 }
 
 interface OverviewTabProps {
-  threatModelId: string
+  threatModel: ThreatModel
+  /** Every blueprint of the model; the summary cards aggregate across them (plan 11.5). */
+  blueprints: Blueprint[]
+  /** The diagrams of the switcher's blueprint (or all, with one blueprint). */
   diagrams: Diagram[]
   progressChecklist: ProgressChecklistItem[]
   completionStatus?: CompletionStatus
@@ -47,13 +54,13 @@ interface OverviewTabProps {
   referenceImages: ReferenceImage[]
   isCreatingDiagram: boolean
   isUploadingImage: boolean
+  isSecurityTeam: boolean
   onSelectDiagram: (id: string | null) => void
   onEditDiagram: (diagramId: string) => void
   onCreateDiagram: () => void
   onUploadImage: (file: File, description?: string) => Promise<void>
   onDeleteImage: (imageId: number) => Promise<void>
   onImageClick: (index: number) => void
-  onManageSystems: () => void
   onManageThreatModels: () => void
   onManagePacks: () => void
   onManagePeople: () => void
@@ -62,7 +69,8 @@ interface OverviewTabProps {
 }
 
 export function OverviewTab({
-  threatModelId,
+  threatModel,
+  blueprints,
   diagrams,
   progressChecklist,
   completionStatus,
@@ -71,22 +79,24 @@ export function OverviewTab({
   referenceImages,
   isCreatingDiagram,
   isUploadingImage,
+  isSecurityTeam,
   onSelectDiagram,
   onEditDiagram,
   onCreateDiagram,
   onUploadImage,
   onDeleteImage,
   onImageClick,
-  onManageSystems,
   onManageThreatModels,
   onManagePacks,
   onManagePeople,
   onEditSystemContext,
   onNavigateToThreats,
 }: OverviewTabProps) {
+  const threatModelId = threatModel.id
+
   return (
     <div className="space-y-6">
-      {/* Completion Status + Relationship Cards */}
+      {/* Completion Status + Review */}
       <div className="grid grid-cols-2 gap-6">
         <div className="border rounded-lg p-4">
           <h3 className="text-sm font-medium">Completion Status</h3>
@@ -96,29 +106,43 @@ export function OverviewTab({
             progressChecklist={progressChecklist}
           />
         </div>
-        <RelationshipCards
-          onManageSystems={onManageSystems}
-          onManageThreatModels={onManageThreatModels}
-          onManagePacks={onManagePacks}
-          onManagePeople={onManagePeople}
+        <ReviewCard
+          threatModelId={threatModelId}
+          threatModelName={threatModel.name}
+          isSecurityTeam={isSecurityTeam}
         />
       </div>
 
-      {/* System Context Card */}
-      <SystemContextCard
-        threatModelId={threatModelId}
-        onEdit={onEditSystemContext}
-      />
-
-      {/* Summary Cards */}
+      {/* Summary Cards: counts across every blueprint */}
       <SummaryCards
         components={summaries.componentSummary}
         threats={summaries.threatSummary}
         countermeasures={summaries.countermeasureSummary}
+        blueprintCount={blueprints.length}
         onComponentsClick={onNavigateToThreats}
         onThreatsClick={onNavigateToThreats}
         onCountermeasuresClick={onNavigateToThreats}
       />
+
+      {/* Details + Business objectives */}
+      <div className="grid grid-cols-2 gap-6">
+        <ModelDetailsCard
+          threatModel={threatModel}
+          blueprints={blueprints}
+          onEditDescription={onEditSystemContext}
+        />
+        <div className="space-y-6">
+          <BusinessObjectivesCard threatModelId={threatModelId} />
+          <SystemContextSummary threatModelId={threatModelId} onOpen={onEditSystemContext} />
+          <RelationshipCards
+            onManageThreatModels={onManageThreatModels}
+            onManagePacks={onManagePacks}
+            onManagePeople={onManagePeople}
+          />
+        </div>
+      </div>
+
+      <UseCasesCard threatModelId={threatModelId} />
 
       {/* DFD Carousel */}
       {diagrams.length > 0 ? (

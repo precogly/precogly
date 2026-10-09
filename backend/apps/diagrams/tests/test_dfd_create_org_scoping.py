@@ -48,12 +48,12 @@ class DFDCreateOrgScopingTests(APITestCase):
     def test_create_dfd_for_own_org_succeeds(self):
         response = self._create_dfd(self.tm_a.id)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(DFD.objects.filter(threat_model=self.tm_a).exists())
+        self.assertTrue(DFD.objects.filter(blueprint__threat_model=self.tm_a).exists())
 
     def test_create_dfd_for_other_org_returns_404(self):
         response = self._create_dfd(self.tm_b.id)
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertFalse(DFD.objects.filter(threat_model=self.tm_b).exists())
+        self.assertFalse(DFD.objects.filter(blueprint__threat_model=self.tm_b).exists())
 
     def test_create_dfd_nonexistent_threat_model_returns_404(self):
         response = self._create_dfd(999999999)
@@ -63,7 +63,7 @@ class DFDCreateOrgScopingTests(APITestCase):
         self.assertFalse(self.tm_a.dfds.exists())
         response = self._create_dfd(self.tm_a.id)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        dfd = DFD.objects.get(threat_model=self.tm_a)
+        dfd = DFD.objects.get(blueprint__threat_model=self.tm_a)
         self.assertTrue(dfd.is_primary)
 
     def test_cross_org_cannot_inject_primary_dfd(self):

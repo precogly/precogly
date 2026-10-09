@@ -1,45 +1,94 @@
 """
 Views for systems app.
+
+Every model-scoped queryset here reaches the organization through one path,
+`blueprint__threat_model__organization`, with no nullable step. The
+`?threat_model=` and `?blueprint=` filters narrow within that scope; they
+never replace it (precogly/precogly#404).
 """
 
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.core.permissions import CanWrite
-from apps.threats.models import (
-    ComponentInstanceThreat,
-)
+from apps.threats.models import InstanceThreat
 
 from .models import (
+    Boundary,
     ComponentDataAsset,
     ComponentLibrary,
     DataAsset,
-    DataFlow,
-    DataFlowAsset,
+    Flow,
+    FlowAsset,
     IntegrationSource,
     Orgsystem,
     OrgsystemComponent,
-    TrustBoundary,
-    TrustZone,
+    Zone,
 )
 from .serializers import (
+    BoundarySerializer,
     ComponentDataAssetSerializer,
     ComponentLibrarySerializer,
     DataAssetSerializer,
-    DataFlowAssetSerializer,
-    DataFlowSerializer,
+    FlowAssetSerializer,
+    FlowSerializer,
     IntegrationSourceSerializer,
     OrgsystemComponentSerializer,
     OrgsystemListSerializer,
     OrgsystemSerializer,
-    TrustBoundarySerializer,
-    TrustZoneSerializer,
+    ZoneSerializer,
 )
+
+
+class BlueprintScopedMixin:
+    """Queryset scoping for rows that belong to a blueprint.
+
+    `blueprint_path` is the lookup from the model to its blueprint key
+    (`"blueprint"` for direct rows, `"component__blueprint"` for rows that hang
+    off a component, and so on).
+    """
+
+    blueprint_path = "blueprint"
+
+    def _organization_ids(self):
+        return self.request.user.organization_memberships.values_list(
+            "organization_id", flat=True
+        )
+
+    def scope_queryset(self, queryset):
+        path = self.blueprint_path
+        queryset = queryset.filter(
+            **{f"{path}__threat_model__organization_id__in": self._organization_ids()}
+        )
+        threat_model_id = self.request.query_params.get("threat_model")
+        if threat_model_id:
+            queryset = queryset.filter(**{f"{path}__threat_model_id": threat_model_id})
+        blueprint_id = self.request.query_params.get("blueprint")
+        if blueprint_id:
+            queryset = queryset.filter(**{f"{path}_id": blueprint_id})
+        return queryset
+
+    def perform_create(self, serializer):
+        """Refuse a row whose blueprint the caller cannot reach.
+
+        Object permissions run only for rows that exist, so a create carrying
+        another tenant's blueprint id has to be checked here. The blueprint's
+        threat model is the object the write permission is checked against.
+        """
+        blueprint = serializer.validated_data.get("blueprint")
+        if blueprint is not None:
+            if blueprint.threat_model.organization_id not in set(
+                self._organization_ids()
+            ):
+                raise NotFound("Blueprint not found")
+            self.check_object_permissions(self.request, blueprint.threat_model)
+        serializer.save()
 
 
 class OrgsystemViewSet(viewsets.ModelViewSet):
@@ -62,8 +111,13 @@ class OrgsystemViewSet(viewsets.ModelViewSet):
         org_ids = user.organization_memberships.values_list(
             "organization_id", flat=True
         )
-        return Orgsystem.objects.filter(organization_id__in=org_ids).select_related(
-            "organization"
+        return (
+            Orgsystem.objects.filter(organization_id__in=org_ids)
+            .select_related("organization")
+            .annotate(
+                primary_model_count=Count("primary_threat_models", distinct=True),
+                linked_component_count=Count("components", distinct=True),
+            )
         )
 
     def get_serializer_class(self):
@@ -72,46 +126,53 @@ class OrgsystemViewSet(viewsets.ModelViewSet):
             return OrgsystemListSerializer
         return OrgsystemSerializer
 
+    def destroy(self, request, *args, **kwargs):
+        """Refuse to delete a system that is some model's primary system (409,
+        naming the models; the key is RESTRICT, plan J1). Linked system assets
+        are only unlinked (SET_NULL, H5)."""
+        system = self.get_object()
+        primary_models = list(
+            system.primary_threat_models.order_by("name").values("id", "name")
+        )
+        if primary_models:
+            names = ", ".join(model["name"] for model in primary_models)
+            return Response(
+                {
+                    "error": f"'{system.name}' is the primary system of {names}. "
+                    "Change those models' primary system before deleting it.",
+                    "models": primary_models,
+                },
+                status=status.HTTP_409_CONFLICT,
+            )
+        return super().destroy(request, *args, **kwargs)
 
-class TrustZoneViewSet(viewsets.ModelViewSet):
-    """ViewSet for TrustZone CRUD operations."""
 
-    serializer_class = TrustZoneSerializer
+class ZoneViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
+    """ViewSet for Zone CRUD operations."""
+
+    serializer_class = ZoneSerializer
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ["parent", "zone_type"]
     search_fields = ["name", "description"]
 
     def get_queryset(self):
-        org_ids = self.request.user.organization_memberships.values_list(
-            "organization_id", flat=True
-        )
-        # The organization filter applies before the threat_model narrowing, not
-        # instead of it. Passing `?threat_model=` used to replace the org join
-        # rather than add to it, which returned any tenant's zones to any
-        # authenticated caller — precogly/precogly#404.
-        queryset = TrustZone.objects.filter(organization_id__in=org_ids)
-        threat_model_id = self.request.query_params.get("threat_model")
-        if threat_model_id:
-            queryset = queryset.filter(
-                components__threat_model_id=threat_model_id
-            ).distinct()
-        return queryset
+        return self.scope_queryset(Zone.objects.all()).select_related("blueprint")
 
 
-class TrustBoundaryViewSet(viewsets.ModelViewSet):
-    """ViewSet for TrustBoundary CRUD operations."""
+class BoundaryViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
+    """ViewSet for Boundary CRUD operations."""
 
-    serializer_class = TrustBoundarySerializer
+    serializer_class = BoundarySerializer
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ["zone_a", "zone_b"]
+    filterset_fields = ["zone_a", "zone_b", "boundary_type"]
     search_fields = ["label"]
 
     def get_queryset(self):
-        org_ids = self.request.user.organization_memberships.values_list(
-            "organization_id", flat=True
+        return self.scope_queryset(Boundary.objects.all()).select_related(
+            "zone_a", "zone_b"
         )
-        return TrustBoundary.objects.filter(organization_id__in=org_ids)
 
 
 class ComponentLibraryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -121,7 +182,7 @@ class ComponentLibraryViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = None
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ["category", "component_type", "provider"]
+    filterset_fields = ["category", "kind", "component_type", "provider"]
     search_fields = ["name", "component_type", "slug"]
 
     def get_queryset(self):
@@ -149,86 +210,27 @@ class ComponentLibraryViewSet(viewsets.ReadOnlyModelViewSet):
         return qs
 
 
-class OrgsystemComponentViewSet(viewsets.ModelViewSet):
+class OrgsystemComponentViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
     """ViewSet for OrgsystemComponent CRUD operations."""
 
     serializer_class = OrgsystemComponentSerializer
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ["orgsystem", "trust_zone", "threat_model"]
+    filterset_fields = ["orgsystem", "zone", "kind"]
     search_fields = ["name"]
 
-    def perform_create(self, serializer):
-        """Auto-assign orgsystem from the threat model when not explicitly provided."""
-        instance = serializer.save()
-        if instance.orgsystem_id is None and instance.threat_model_id:
-            from apps.threat_models.models import ThreatModelOrgsystem
-
-            association = (
-                ThreatModelOrgsystem.objects.filter(
-                    threat_model_id=instance.threat_model_id
-                )
-                .select_related("orgsystem")
-                .first()
-            )
-            if association:
-                instance.orgsystem = association.orgsystem
-                instance.save(update_fields=["orgsystem"])
-
     def get_queryset(self):
-        """Filter by organizations reachable through orgsystem or threat model."""
-        user = self.request.user
-        org_ids = user.organization_memberships.values_list(
-            "organization_id", flat=True
+        return self.scope_queryset(OrgsystemComponent.objects.all()).select_related(
+            "component_library", "zone", "blueprint"
         )
-        return OrgsystemComponent.objects.filter(
-            Q(orgsystem__organization_id__in=org_ids)
-            | Q(
-                orgsystem__isnull=True,
-                threat_model__organization_id__in=org_ids,
-            )
-        ).select_related("component_library", "trust_zone")
-
-    @action(detail=True, methods=["patch"])
-    def assign_system(self, request, pk=None):
-        """
-        Assign a component to a system (or unassign with null).
-
-        Request body:
-            orgsystemId: int | null - System ID to assign, or null to unassign
-        """
-        component = self.get_object()
-        orgsystem_id = request.data.get("orgsystemId")
-
-        if orgsystem_id:
-            # Validate system belongs to user's organization
-            user = self.request.user
-            org_ids = list(
-                user.organization_memberships.values_list("organization_id", flat=True)
-            )
-            try:
-                system = Orgsystem.objects.get(
-                    id=orgsystem_id, organization_id__in=org_ids
-                )
-                component.orgsystem = system
-            except Orgsystem.DoesNotExist:
-                return Response(
-                    {"error": "System not found or access denied"},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-        else:
-            component.orgsystem = None
-
-        component.save()
-        return Response({"status": "updated", "orgsystemId": orgsystem_id})
 
     @action(detail=True, methods=["post"])
     def generate_threats(self, request, pk=None):
         """
         Auto-generate threats for this component based on its library type.
 
-        Delegates to _generate_threats_for_component() in diagrams/services.py
-        to keep threat creation logic in a single place.
+        Delegates to ensure_generated_threats() in threats/services.py, the one
+        place instance threats are generated.
 
         Returns:
             - created_count: number of newly created threat instances
@@ -242,12 +244,12 @@ class OrgsystemComponentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        from apps.diagrams.services import _generate_threats_for_component
+        from apps.threats.services import ensure_generated_threats
 
         with transaction.atomic():
-            created_count = _generate_threats_for_component(component)
+            created_count = ensure_generated_threats(component)
 
-        total = ComponentInstanceThreat.objects.filter(component=component).count()
+        total = InstanceThreat.objects.filter(targets__component=component).count()
 
         return Response(
             {
@@ -259,43 +261,31 @@ class OrgsystemComponentViewSet(viewsets.ModelViewSet):
         )
 
 
-class DataAssetViewSet(viewsets.ModelViewSet):
+class DataAssetViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
     """ViewSet for DataAsset CRUD operations."""
 
     serializer_class = DataAssetSerializer
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ["classification", "confidentiality", "threat_model"]
+    filterset_fields = ["classification", "confidentiality"]
     search_fields = ["name"]
 
     def get_queryset(self):
-        org_ids = self.request.user.organization_memberships.values_list(
-            "organization_id", flat=True
-        )
-        return DataAsset.objects.filter(threat_model__organization_id__in=org_ids)
+        return self.scope_queryset(DataAsset.objects.all())
 
 
-class DataFlowViewSet(viewsets.ModelViewSet):
-    """ViewSet for DataFlow CRUD operations."""
+class FlowViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
+    """ViewSet for Flow CRUD operations."""
 
-    serializer_class = DataFlowSerializer
+    serializer_class = FlowSerializer
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["crosses_trust_zone", "protocol"]
+    filterset_fields = ["crosses_boundary", "protocol", "flow_type"]
 
     def get_queryset(self):
-        """Filter by user's organizations."""
-        user = self.request.user
-        org_ids = user.organization_memberships.values_list(
-            "organization_id", flat=True
+        return self.scope_queryset(Flow.objects.all()).select_related(
+            "source_component", "dest_component"
         )
-        return DataFlow.objects.filter(
-            Q(source_component__orgsystem__organization_id__in=org_ids)
-            | Q(
-                source_component__orgsystem__isnull=True,
-                source_component__threat_model__organization_id__in=org_ids,
-            )
-        ).select_related("source_component", "dest_component")
 
 
 class IntegrationSourceViewSet(viewsets.ModelViewSet):
@@ -318,7 +308,7 @@ class IntegrationSourceViewSet(viewsets.ModelViewSet):
         ).select_related("orgsystem")
 
 
-class ComponentDataAssetViewSet(viewsets.ModelViewSet):
+class ComponentDataAssetViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
     """ViewSet for ComponentDataAsset CRUD operations."""
 
     serializer_class = ComponentDataAssetSerializer
@@ -326,46 +316,28 @@ class ComponentDataAssetViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["component", "data_asset"]
     ordering = ["id"]
+    blueprint_path = "component__blueprint"
 
     def get_queryset(self):
-        """Filter by user's organizations."""
-        user = self.request.user
-        org_ids = user.organization_memberships.values_list(
-            "organization_id", flat=True
+        return self.scope_queryset(ComponentDataAsset.objects.all()).select_related(
+            "component", "data_asset"
         )
-        return ComponentDataAsset.objects.filter(
-            Q(component__orgsystem__organization_id__in=org_ids)
-            | Q(
-                component__orgsystem__isnull=True,
-                component__threat_model__organization_id__in=org_ids,
-            )
-        ).select_related("component", "data_asset")
 
 
-class DataFlowAssetViewSet(viewsets.ModelViewSet):
-    """ViewSet for DataFlowAsset CRUD operations."""
+class FlowAssetViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
+    """ViewSet for FlowAsset CRUD operations."""
 
-    serializer_class = DataFlowAssetSerializer
+    serializer_class = FlowAssetSerializer
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["data_flow", "data_asset"]
+    filterset_fields = ["flow", "data_asset"]
+    blueprint_path = "flow__blueprint"
 
     def get_queryset(self):
-        """Filter by organizations reachable through the data flow's source."""
-        user = self.request.user
-        org_ids = user.organization_memberships.values_list(
-            "organization_id", flat=True
-        )
         return (
-            DataFlowAsset.objects.filter(
-                Q(data_flow__source_component__orgsystem__organization_id__in=org_ids)
-                | Q(
-                    data_flow__source_component__orgsystem__isnull=True,
-                    data_flow__source_component__threat_model__organization_id__in=org_ids,
-                )
-            )
+            self.scope_queryset(FlowAsset.objects.all())
             .select_related(
-                "data_flow__source_component", "data_flow__dest_component", "data_asset"
+                "flow__source_component", "flow__dest_component", "data_asset"
             )
             .order_by("id")
         )

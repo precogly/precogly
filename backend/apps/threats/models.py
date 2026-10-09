@@ -9,7 +9,13 @@ from django.db import models
 
 from apps.core.models import TimestampedModel
 from apps.core.tenancy import Tenancy
-from apps.systems.models import ComponentLibrary, DataFlow, OrgsystemComponent
+from apps.systems.models import (
+    Boundary,
+    ComponentLibrary,
+    Flow,
+    OrgsystemComponent,
+    Zone,
+)
 
 
 class ThreatLibrary(TimestampedModel):
@@ -188,11 +194,27 @@ class ComponentLibraryThreat(TimestampedModel):
         on_delete=models.CASCADE,
         related_name="component_associations",
     )
-    default_severity = models.CharField(max_length=20, default="medium")
+    default_level = models.CharField(
+        max_length=20,
+        choices=[
+            ("info", "Info"),
+            ("low", "Low"),
+            ("medium", "Medium"),
+            ("high", "High"),
+            ("critical", "Critical"),
+        ],
+        default="medium",
+        help_text="Level of the generated scenario (CycloneDX riskScore.level)",
+    )
     applies_to = models.CharField(
         max_length=20,
         choices=AppliesTo.choices,
         default=AppliesTo.COMPONENT,
+    )
+    flow_types = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="Flow types the link applies to; empty means data-like flows only, 'any' means all",
     )
 
     class Meta:
@@ -341,154 +363,211 @@ class TriageStatus(models.TextChoices):
 ACTIVE_TRIAGE_STATUSES = (TriageStatus.OPEN, TriageStatus.MITIGATE)
 
 
-class ComponentInstanceThreat(TimestampedModel):
-    """Threat instance for a specific component."""
+class TargetRefMixin(models.Model):
+    """Exactly one of component, flow, zone or boundary (plan section 4.1).
 
-    tenancy = Tenancy.TENANT_OWNED
-
-    class Severity(models.TextChoices):
-        LOW = "low", "Low"
-        MEDIUM = "medium", "Medium"
-        HIGH = "high", "High"
-        CRITICAL = "critical", "Critical"
-
-    class Status(models.TextChoices):
-        EXPOSED = "exposed", "Exposed"
-        ADDRESSABLE = "addressable", "Addressable"
-        MITIGATED = "mitigated", "Mitigated"
+    Four real foreign keys instead of a generic relation, so joins, filters and
+    integrity all work. Concrete subclasses name their owner field and call
+    ``target_constraints`` to get the exactly-one check and the per-key unique
+    rules.
+    """
 
     component = models.ForeignKey(
         OrgsystemComponent,
         on_delete=models.CASCADE,
-        related_name="threats",
-    )
-    threat_library = models.ForeignKey(
-        ThreatLibrary,
-        on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="component_instances",
-        help_text="Null means orphaned/custom threat (library item was removed)",
+        related_name="%(class)s_targets",
     )
-    inherent_severity = models.CharField(max_length=20, choices=Severity.choices)
-    residual_severity = models.CharField(
-        max_length=20,
-        choices=Severity.choices,
+    flow = models.ForeignKey(
+        Flow,
+        on_delete=models.CASCADE,
+        null=True,
         blank=True,
+        related_name="%(class)s_targets",
     )
-    status = models.CharField(
-        max_length=20,
-        choices=Status.choices,
-        default=Status.EXPOSED,
-    )
-    severity_scoring_metadata = models.JSONField(default=dict, blank=True)
-
-    # Triage decision
-    triage_status = models.CharField(
-        max_length=20,
-        choices=TriageStatus.choices,
-        default=TriageStatus.OPEN,
-    )
-    decision_rationale = models.TextField(
+    zone = models.ForeignKey(
+        Zone,
+        on_delete=models.CASCADE,
+        null=True,
         blank=True,
-        default="",
-        help_text="Rationale for triage decision (recommended for accept/delegate/eliminate)",
+        related_name="%(class)s_targets",
     )
-
-    format_metadata = models.JSONField(default=dict, blank=True)
+    boundary = models.ForeignKey(
+        Boundary,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="%(class)s_targets",
+    )
     display_order = models.PositiveIntegerField(default=0)
 
-    # Metadata copied from library on creation (for self-sufficiency if orphaned)
-    threat_name = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text="Copied from ThreatLibrary.name on creation",
-    )
-    threat_description = models.TextField(
-        blank=True,
-        help_text="Copied from ThreatLibrary.description on creation",
-    )
-    taxonomy_snapshot = models.JSONField(
-        blank=True,
-        default=list,
-        help_text="Snapshot of taxonomy entries at creation time",
-    )
-
-    impact_description = models.TextField(
-        blank=True,
-        default="",
-        help_text="Narrative description of what the attacker achieves",
-    )
-    threat_actor_text = models.CharField(
-        max_length=100,
-        blank=True,
-        default="",
-        help_text="Free-text threat actor (e.g. 'state actor', 'hacktivist')",
-    )
-    intent = models.CharField(
-        max_length=20,
-        choices=ThreatIntent.choices,
-        blank=True,
-        default="",
-        help_text="Attacker intent: accidental, opportunistic, targeted, or persistent",
-    )
-    access_level = models.CharField(
-        max_length=20,
-        choices=ThreatAccessLevel.choices,
-        blank=True,
-        default="",
-        help_text="Access level required: none, external, internal, privileged, or physical",
-    )
+    TARGET_KINDS = ("component", "flow", "zone", "boundary")
 
     class Meta:
-        unique_together = ["component", "threat_library"]
-        ordering = ["component", "display_order", "created_at"]
+        abstract = True
 
-    def __str__(self):
-        return f"{self.component} - {self.threat_library}"
+    @classmethod
+    def target_constraints(cls, owner_field: str, prefix: str):
+        exactly_one = models.Q()
+        for kind in cls.TARGET_KINDS:
+            clause = models.Q(**{f"{kind}__isnull": False})
+            for other in cls.TARGET_KINDS:
+                if other != kind:
+                    clause &= models.Q(**{f"{other}__isnull": True})
+            exactly_one |= clause
+        constraints = [
+            models.CheckConstraint(
+                check=exactly_one, name=f"{prefix}_exactly_one_target"
+            )
+        ]
+        for kind in cls.TARGET_KINDS:
+            constraints.append(
+                models.UniqueConstraint(
+                    fields=[owner_field, kind],
+                    condition=models.Q(**{f"{kind}__isnull": False}),
+                    name=f"{prefix}_unique_{kind}",
+                )
+            )
+        return constraints
+
+    @property
+    def target_kind(self) -> str:
+        for kind in self.TARGET_KINDS:
+            if getattr(self, f"{kind}_id") is not None:
+                return kind
+        return ""
+
+    @property
+    def target(self):
+        kind = self.target_kind
+        return getattr(self, kind) if kind else None
+
+    @property
+    def target_id(self):
+        kind = self.target_kind
+        return getattr(self, f"{kind}_id") if kind else None
 
 
-class DataFlowInstanceThreat(TimestampedModel):
-    """Threat instance for a specific data flow."""
+class Rating(TimestampedModel):
+    """One rating, shaped on the CycloneDX ``rating`` object (#31 comment, 2.1).
+
+    Holds a threat's rating and a risk's inherent, residual and target
+    ratings. ``level`` is the one value comparable across methods; ``score``
+    stays on the method's native scale and is null for level-only ratings.
+    ``organization`` is set by ``apply_rating`` from the owner's threat model,
+    never from a request body.
+    """
 
     tenancy = Tenancy.TENANT_OWNED
 
-    class Severity(models.TextChoices):
+    class Level(models.TextChoices):  # CycloneDX riskScore.level
+        INFO = "info", "Info"
         LOW = "low", "Low"
         MEDIUM = "medium", "Medium"
         HIGH = "high", "High"
         CRITICAL = "critical", "Critical"
+
+    class LikelihoodLevel(models.TextChoices):  # CycloneDX likelihood.level
+        VERY_LOW = "very-low", "Very low"
+        LOW = "low", "Low"
+        MEDIUM = "medium", "Medium"
+        HIGH = "high", "High"
+        VERY_HIGH = "very-high", "Very high"
+        CERTAIN = "certain", "Certain"
+
+    class ImpactLevel(models.TextChoices):  # CycloneDX impact.level
+        NEGLIGIBLE = "negligible", "Negligible"
+        LOW = "low", "Low"
+        MODERATE = "moderate", "Moderate"
+        MAJOR = "major", "Major"
+        CATASTROPHIC = "catastrophic", "Catastrophic"
+
+    organization = models.ForeignKey(
+        "organizations.Organization", on_delete=models.CASCADE, related_name="+"
+    )
+    methodology = models.CharField(
+        max_length=40, help_text="CycloneDX methodology value, or a custom name"
+    )
+    level = models.CharField(max_length=10, choices=Level.choices, db_index=True)
+    score = models.FloatField(null=True, blank=True, db_index=True)
+
+    likelihood_level = models.CharField(
+        max_length=10, choices=LikelihoodLevel.choices, blank=True
+    )
+    likelihood_score = models.FloatField(null=True, blank=True)
+    likelihood_factors = models.JSONField(default=list, blank=True)
+    likelihood_extra = models.JSONField(default=dict, blank=True)
+
+    impact_level = models.CharField(
+        max_length=12, choices=ImpactLevel.choices, blank=True
+    )
+    impact_score = models.FloatField(null=True, blank=True)
+    impact_factors = models.JSONField(default=list, blank=True)
+    impact_extra = models.JSONField(default=dict, blank=True)
+
+    rationale = models.TextField(blank=True)
+
+    LEVEL_RANK = {"info": 0, "low": 1, "medium": 2, "high": 3, "critical": 4}
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        score = f" {self.score:g}" if self.score is not None else ""
+        return f"{self.level}{score} ({self.methodology})"
+
+
+class InstanceThreat(TimestampedModel):
+    """A threat scenario of a threat model: the attack story on its targets.
+
+    One table for every scenario, whatever it targets (plan section 4.1). A
+    scenario has zero or many targets through ``InstanceThreatTarget``; with
+    ``whole_system`` set it has none and applies to the whole system. The two
+    states are exclusive and the flag is explicit, so losing targets can never
+    turn a scenario into a whole-system one by accident (H9).
+    """
+
+    tenancy = Tenancy.TENANT_OWNED
 
     class Status(models.TextChoices):
         EXPOSED = "exposed", "Exposed"
         ADDRESSABLE = "addressable", "Addressable"
         MITIGATED = "mitigated", "Mitigated"
 
-    data_flow = models.ForeignKey(
-        DataFlow,
+    threat_model = models.ForeignKey(
+        "threat_models.ThreatModel",
         on_delete=models.CASCADE,
         related_name="threats",
+    )
+    number = models.PositiveIntegerField(
+        help_text="Unique within the threat model, assigned once, never reused (T7 is 7)"
+    )
+    whole_system = models.BooleanField(
+        default=False,
+        help_text="True: applies to the whole system and has no targets",
+    )
+    auto_generated = models.BooleanField(
+        default=False,
+        help_text="Set by library generation, cleared on the first user edit",
     )
     threat_library = models.ForeignKey(
         ThreatLibrary,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="flow_instances",
+        related_name="instances",
         help_text="Null means orphaned/custom threat (library item was removed)",
     )
-    inherent_severity = models.CharField(max_length=20, choices=Severity.choices)
-    residual_severity = models.CharField(
-        max_length=20,
-        choices=Severity.choices,
-        blank=True,
-    )
+    # The scenario's one rating (section 4.2, K1): RESTRICT, so a rating a
+    # scenario points at cannot be deleted on its own, while an organization
+    # delete that takes both in one operation goes through.
+    rating = models.OneToOneField(Rating, on_delete=models.RESTRICT, related_name="+")
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
         default=Status.EXPOSED,
     )
-    severity_scoring_metadata = models.JSONField(default=dict, blank=True)
 
     # Triage decision
     triage_status = models.CharField(
@@ -526,6 +605,14 @@ class DataFlowInstanceThreat(TimestampedModel):
         default="",
         help_text="Narrative description of what the attacker achieves",
     )
+    # The scenario's actor: a persona of this model, or free text, never both (K3).
+    actor_persona = models.ForeignKey(
+        "ThreatPersona",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="threats",
+    )
     threat_actor_text = models.CharField(
         max_length=100,
         blank=True,
@@ -548,11 +635,58 @@ class DataFlowInstanceThreat(TimestampedModel):
     )
 
     class Meta:
-        unique_together = ["data_flow", "threat_library"]
-        ordering = ["data_flow", "display_order", "created_at"]
+        ordering = ["display_order", "created_at", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["threat_model", "number"], name="unique_threat_number_per_model"
+            ),
+            models.CheckConstraint(
+                check=models.Q(actor_persona__isnull=True)
+                | models.Q(threat_actor_text=""),
+                name="threat_actor_persona_or_text",
+            ),
+        ]
 
     def __str__(self):
-        return f"{self.data_flow} - {self.threat_library}"
+        return f"T{self.number} {self.threat_name or self.threat_library or ''}".strip()
+
+    def save(self, *args, **kwargs):
+        if self.number is None and self.threat_model_id:
+            from apps.threat_models.numbering import THREATS, allocate_numbers
+
+            self.number = allocate_numbers(self.threat_model_id, THREATS, 1)[0]
+        if self.rating_id is None and self.threat_model_id:
+            # A direct create (admin, a test) gets a level-only medium rating;
+            # the service is the normal path and rates from the inputs.
+            self.rating = Rating.objects.create(
+                organization_id=self.threat_model.organization_id,
+                methodology="manual",
+                level=Rating.Level.MEDIUM,
+            )
+        super().save(*args, **kwargs)
+
+    @property
+    def display_number(self) -> str:
+        return f"T{self.number}"
+
+
+class InstanceThreatTarget(TargetRefMixin):
+    """One target of a scenario: a component, flow, zone or boundary."""
+
+    tenancy = Tenancy.TENANT_OWNED
+
+    threat = models.ForeignKey(
+        InstanceThreat,
+        on_delete=models.CASCADE,
+        related_name="targets",
+    )
+
+    class Meta:
+        ordering = ["display_order", "id"]
+        constraints = TargetRefMixin.target_constraints("threat", "threat_target")
+
+    def __str__(self):
+        return f"{self.threat} -> {self.target_kind} {self.target_id}"
 
 
 class InstanceCountermeasure(TimestampedModel):
@@ -636,21 +770,127 @@ class InstanceCountermeasure(TimestampedModel):
         blank=True, help_text="Link to Jira/GitHub/etc. ticket"
     )
     format_metadata = models.JSONField(default=dict, blank=True)
-
-    # Zone inheritance tracking
-    is_inherited = models.BooleanField(default=False)
-    inherited_from_component_name = models.CharField(max_length=255, blank=True)
-    inherited_from_zone_name = models.CharField(max_length=255, blank=True)
+    auto_generated = models.BooleanField(
+        default=False,
+        help_text="Set by library generation, cleared on the first user edit",
+    )
+    number = models.PositiveIntegerField(
+        help_text="Unique within the threat model, assigned once, never reused (C3 is 3)"
+    )
+    implemented_by_party = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        help_text="The provider that implements the control, as text (until a party model exists)",
+    )
+    source = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        help_text="Where the control came from: a compliance tool, a pentest, a vendor list",
+    )
 
     class Meta:
         ordering = ["created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["threat_model", "number"],
+                name="unique_countermeasure_number_per_model",
+            ),
+        ]
 
     def __str__(self):
         return f"CM:{self.countermeasure_name or self.countermeasure_library}"
 
+    def save(self, *args, **kwargs):
+        # The service allocates numbers; a direct create (admin, a test) gets
+        # one here so a row can never be saved without its number.
+        if self.number is None and self.threat_model_id:
+            from apps.threat_models.numbering import COUNTERMEASURES, allocate_numbers
+
+            self.number = allocate_numbers(self.threat_model_id, COUNTERMEASURES, 1)[0]
+        super().save(*args, **kwargs)
+
+    @property
+    def display_number(self) -> str:
+        return f"C{self.number}"
+
+    @property
+    def days_overdue(self) -> int | None:
+        """Days past ``due_date`` for a control that is not yet in effect, else None.
+
+        From PR #559: a POA&M scheduled completion date and the due date are
+        the same thing under different vocabulary, so one field serves both.
+        """
+        if self.due_date and self.status not in (
+            self.Status.IMPLEMENTED,
+            self.Status.VERIFIED,
+            self.Status.PLATFORM,
+        ):
+            from datetime import date
+
+            delta = (date.today() - self.due_date).days
+            return delta if delta > 0 else None
+        return None
+
+
+class InstanceCountermeasureTarget(TargetRefMixin):
+    """Where a control applies (``appliesTo``). No rows means the whole system.
+
+    Targets say scope; they never change a threat's status (plan section 4.3,
+    L4). Coverage is only ever by explicit threat links.
+    """
+
+    tenancy = Tenancy.TENANT_OWNED
+
+    countermeasure = models.ForeignKey(
+        InstanceCountermeasure,
+        on_delete=models.CASCADE,
+        related_name="targets",
+    )
+
+    class Meta:
+        ordering = ["display_order", "id"]
+        constraints = TargetRefMixin.target_constraints(
+            "countermeasure", "countermeasure_target"
+        )
+
+    def __str__(self):
+        return f"{self.countermeasure} applies to {self.target_kind} {self.target_id}"
+
+
+class InstanceCountermeasureProvider(TimestampedModel):
+    """A component that implements a control (``implementedBy``, G10)."""
+
+    tenancy = Tenancy.TENANT_OWNED
+
+    countermeasure = models.ForeignKey(
+        InstanceCountermeasure,
+        on_delete=models.CASCADE,
+        related_name="provider_links",
+    )
+    component = models.ForeignKey(
+        OrgsystemComponent,
+        on_delete=models.CASCADE,
+        related_name="implemented_countermeasure_links",
+    )
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["display_order", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["countermeasure", "component"],
+                name="unique_countermeasure_provider",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.countermeasure} implemented by {self.component}"
+
 
 class CountermeasureThreatLink(TimestampedModel):
-    """Polymorphic junction table linking a countermeasure to component and/or flow threats."""
+    """A countermeasure explicitly linked to a threat scenario."""
 
     tenancy = Tenancy.TENANT_OWNED
 
@@ -659,54 +899,31 @@ class CountermeasureThreatLink(TimestampedModel):
         on_delete=models.CASCADE,
         related_name="threat_links",
     )
-    component_threat = models.ForeignKey(
-        ComponentInstanceThreat,
+    threat = models.ForeignKey(
+        InstanceThreat,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="countermeasure_links",
-    )
-    flow_threat = models.ForeignKey(
-        DataFlowInstanceThreat,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         related_name="countermeasure_links",
     )
     display_order = models.PositiveIntegerField(default=0)
 
     class Meta:
         constraints = [
-            models.CheckConstraint(
-                check=(
-                    models.Q(component_threat__isnull=False, flow_threat__isnull=True)
-                    | models.Q(component_threat__isnull=True, flow_threat__isnull=False)
-                ),
-                name="cm_link_exactly_one_threat_fk",
-            ),
             models.UniqueConstraint(
-                fields=["countermeasure", "component_threat"],
-                condition=models.Q(component_threat__isnull=False),
-                name="unique_cm_component_threat_link",
-            ),
-            models.UniqueConstraint(
-                fields=["countermeasure", "flow_threat"],
-                condition=models.Q(flow_threat__isnull=False),
-                name="unique_cm_flow_threat_link",
+                fields=["countermeasure", "threat"],
+                name="unique_cm_threat_link",
             ),
         ]
         ordering = ["display_order", "created_at"]
 
     def __str__(self):
-        threat = self.component_threat or self.flow_threat
-        return f"{self.countermeasure} -> {threat}"
+        return f"{self.countermeasure} -> {self.threat}"
 
 
 class VerificationTest(TimestampedModel):
     """Verification test for countermeasures."""
 
     # Tenant-owned despite reading like a template: `last_run_at`, `passed`, and
-    # `evidence` are one organization's test result, not a definition. Like TrustZone it
+    # `evidence` are one organization's test result, not a definition. Like Zone it
     # carries no foreign key saying so — it is reached only through
     # `InstanceCountermeasureTest` — and `/api/verification-tests/` serves it. Suspected
     # to leak the same way #404 does; unverified.
@@ -895,17 +1112,13 @@ class Risk(TimestampedModel):
 
     tenancy = Tenancy.TENANT_OWNED
 
-    class Level(models.TextChoices):
-        LOW = "low", "Low"
-        MEDIUM = "medium", "Medium"
-        HIGH = "high", "High"
-        CRITICAL = "critical", "Critical"
-
-    class Response(models.TextChoices):
-        ACCEPT = "accept", "Accept"
-        MITIGATE = "mitigate", "Mitigate"
-        TRANSFER = "transfer", "Transfer"
-        AVOID = "avoid", "Avoid"
+    class Status(models.TextChoices):  # CycloneDX risk.status
+        IDENTIFIED = "identified", "Identified"
+        ASSESSED = "assessed", "Assessed"
+        MITIGATED = "mitigated", "Mitigated"
+        ACCEPTED = "accepted", "Accepted"
+        TRANSFERRED = "transferred", "Transferred"
+        RETIRED = "retired", "Retired"
 
     threat_model = models.ForeignKey(
         "threat_models.ThreatModel",
@@ -914,52 +1127,27 @@ class Risk(TimestampedModel):
     )
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True)
-    scoring_metadata = models.JSONField(default=dict)
-    inherent_score = models.IntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    # Where the risk is in its lifecycle (section 4.7). The derived `exposure`
+    # (what the threats look like) is a different question and is not stored.
+    status = models.CharField(
+        max_length=20, choices=Status.choices, default=Status.IDENTIFIED
     )
-    inherent_level = models.CharField(max_length=10, choices=Level.choices)
-    residual_score = models.IntegerField(
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(0), MaxValueValidator(100)],
+    statement = models.TextField(
+        blank=True, default="", help_text="Source, event and impact in one sentence"
     )
-    residual_level = models.CharField(
-        max_length=10,
-        choices=Level.choices,
-        blank=True,
+    # The three ratings of the CycloneDX risk (section 4.2). Inherent is
+    # RESTRICT for the same reason as the scenario's rating (K1).
+    inherent = models.OneToOneField(Rating, on_delete=models.RESTRICT, related_name="+")
+    residual = models.OneToOneField(
+        Rating, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
-    # TODO: drop `null=True` and migrate existing NULLs to "". `residual_level` two
-    # fields up is the same shape and spells "not set" as `blank=True` alone, so this
-    # model carries two spellings for it.
-    #
-    # Backend and frontend have to land together. `RiskViewSet.bulk_update` writes
-    # NULL deliberately — `request.data["response"] or None` — and the risk board
-    # filters with `r.response === col.response` against a column whose key is `null`,
-    # so a stored "" would drop every cleared risk off the board.
-    response = models.CharField(  # noqa: DJ001
-        max_length=20,
-        choices=Response.choices,
-        null=True,
-        blank=True,
-        help_text="Risk response strategy per NIST IR 8286",
+    target = models.OneToOneField(
+        Rating, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
     domains = models.JSONField(
         default=list,
         blank=True,
         help_text="Risk domains, e.g. ['security', 'compliance']",
-    )
-    target_score = models.IntegerField(
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(0), MaxValueValidator(100)],
-        help_text="Target risk score after planned mitigations",
-    )
-    target_level = models.CharField(
-        max_length=10,
-        choices=Level.choices,
-        blank=True,
-        help_text="Target risk level after planned mitigations",
     )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -978,7 +1166,7 @@ class Risk(TimestampedModel):
     format_metadata = models.JSONField(default=dict)
 
     class Meta:
-        ordering = ["-inherent_score"]
+        ordering = ["-created_at"]
         constraints = [
             models.UniqueConstraint(
                 fields=["threat_model", "name"],
@@ -987,7 +1175,16 @@ class Risk(TimestampedModel):
         ]
 
     def __str__(self):
-        return f"{self.name} ({self.inherent_level})"
+        return f"{self.name} ({self.inherent.level})"
+
+    def save(self, *args, **kwargs):
+        if self.inherent_id is None and self.threat_model_id:
+            self.inherent = Rating.objects.create(
+                organization_id=self.threat_model.organization_id,
+                methodology="manual",
+                level=Rating.Level.MEDIUM,
+            )
+        super().save(*args, **kwargs)
 
 
 class ThreatPersona(TimestampedModel):
@@ -1031,57 +1228,6 @@ class ThreatPersona(TimestampedModel):
         return self.name
 
 
-class ThreatPersonaLink(TimestampedModel):
-    """Links a ThreatPersona to a threat instance (dual-FK pattern)."""
-
-    tenancy = Tenancy.TENANT_OWNED
-
-    persona = models.ForeignKey(
-        ThreatPersona,
-        on_delete=models.CASCADE,
-        related_name="threat_links",
-    )
-    component_threat = models.ForeignKey(
-        ComponentInstanceThreat,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="persona_links",
-    )
-    flow_threat = models.ForeignKey(
-        DataFlowInstanceThreat,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="persona_links",
-    )
-
-    class Meta:
-        constraints = [
-            models.CheckConstraint(
-                check=(
-                    models.Q(component_threat__isnull=False, flow_threat__isnull=True)
-                    | models.Q(component_threat__isnull=True, flow_threat__isnull=False)
-                ),
-                name="persona_link_exactly_one_fk",
-            ),
-            models.UniqueConstraint(
-                fields=["persona", "component_threat"],
-                condition=models.Q(component_threat__isnull=False),
-                name="unique_persona_component_threat",
-            ),
-            models.UniqueConstraint(
-                fields=["persona", "flow_threat"],
-                condition=models.Q(flow_threat__isnull=False),
-                name="unique_persona_flow_threat",
-            ),
-        ]
-
-    def __str__(self):
-        threat = self.component_threat or self.flow_threat
-        return f"{self.persona.name} -> {threat}"
-
-
 class ThreatSource(TimestampedModel):
     """Global reference table for threat sources (e.g., NIST SP 800-30r1)."""
 
@@ -1099,7 +1245,7 @@ class ThreatSource(TimestampedModel):
 
 
 class ThreatSourceLink(TimestampedModel):
-    """Links a ThreatSource to a threat instance (dual-FK pattern)."""
+    """A threat source cited by a threat scenario."""
 
     # The source is shared; which threat instance cites it is not.
     tenancy = Tenancy.TENANT_OWNED
@@ -1109,52 +1255,28 @@ class ThreatSourceLink(TimestampedModel):
         on_delete=models.CASCADE,
         related_name="threat_links",
     )
-    component_threat = models.ForeignKey(
-        ComponentInstanceThreat,
+    threat = models.ForeignKey(
+        InstanceThreat,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="source_links",
-    )
-    flow_threat = models.ForeignKey(
-        DataFlowInstanceThreat,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         related_name="source_links",
     )
 
     class Meta:
         constraints = [
-            models.CheckConstraint(
-                check=(
-                    models.Q(component_threat__isnull=False, flow_threat__isnull=True)
-                    | models.Q(component_threat__isnull=True, flow_threat__isnull=False)
-                ),
-                name="source_link_exactly_one_fk",
-            ),
             models.UniqueConstraint(
-                fields=["source", "component_threat"],
-                condition=models.Q(component_threat__isnull=False),
-                name="unique_source_component_threat",
-            ),
-            models.UniqueConstraint(
-                fields=["source", "flow_threat"],
-                condition=models.Q(flow_threat__isnull=False),
-                name="unique_source_flow_threat",
+                fields=["source", "threat"], name="unique_source_threat"
             ),
         ]
 
     def __str__(self):
-        threat = self.component_threat or self.flow_threat
-        return f"{self.source.name} -> {threat}"
+        return f"{self.source.name} -> {self.threat}"
 
 
 class InstanceThreatTaxonomyEntry(TimestampedModel):
-    """Instance-level taxonomy entry for a threat instance (dual-FK pattern).
+    """Instance-level taxonomy entry on a threat scenario.
 
     Supplements library-level taxonomy associations (ThreatLibraryTaxonomyEntry)
-    with user-added entries on individual threat instances.
+    with user-added entries on individual scenarios.
     """
 
     tenancy = Tenancy.TENANT_OWNED
@@ -1164,45 +1286,21 @@ class InstanceThreatTaxonomyEntry(TimestampedModel):
         on_delete=models.CASCADE,
         related_name="instance_threat_links",
     )
-    component_threat = models.ForeignKey(
-        ComponentInstanceThreat,
+    threat = models.ForeignKey(
+        InstanceThreat,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="instance_taxonomy_links",
-    )
-    flow_threat = models.ForeignKey(
-        DataFlowInstanceThreat,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         related_name="instance_taxonomy_links",
     )
 
     class Meta:
         constraints = [
-            models.CheckConstraint(
-                check=(
-                    models.Q(component_threat__isnull=False, flow_threat__isnull=True)
-                    | models.Q(component_threat__isnull=True, flow_threat__isnull=False)
-                ),
-                name="taxonomy_link_exactly_one_fk",
-            ),
             models.UniqueConstraint(
-                fields=["taxonomy_entry", "component_threat"],
-                condition=models.Q(component_threat__isnull=False),
-                name="unique_taxonomy_component_threat",
-            ),
-            models.UniqueConstraint(
-                fields=["taxonomy_entry", "flow_threat"],
-                condition=models.Q(flow_threat__isnull=False),
-                name="unique_taxonomy_flow_threat",
+                fields=["taxonomy_entry", "threat"], name="unique_taxonomy_threat"
             ),
         ]
 
     def __str__(self):
-        threat = self.component_threat or self.flow_threat
-        return f"{self.taxonomy_entry} -> {threat}"
+        return f"{self.taxonomy_entry} -> {self.threat}"
 
 
 class RiskResponse(TimestampedModel):
@@ -1239,8 +1337,25 @@ class RiskResponse(TimestampedModel):
         blank=True,
         validators=[MinValueValidator(0.0), MaxValueValidator(1.0)],
     )
-    cost = models.CharField(max_length=20, blank=True)
-    priority = models.CharField(max_length=20, blank=True)
+
+    class Cost(models.TextChoices):
+        TRIVIAL = "trivial", "Trivial"
+        LOW = "low", "Low"
+        MEDIUM = "medium", "Medium"
+        HIGH = "high", "High"
+        EXTREME = "extreme", "Extreme"
+
+    class Priority(models.TextChoices):
+        NONE = "none", "None"
+        LOW = "low", "Low"
+        MEDIUM = "medium", "Medium"
+        HIGH = "high", "High"
+        CRITICAL = "critical", "Critical"
+
+    cost = models.CharField(max_length=20, choices=Cost.choices, blank=True, default="")
+    priority = models.CharField(
+        max_length=20, choices=Priority.choices, blank=True, default=""
+    )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
@@ -1258,8 +1373,89 @@ class RiskResponse(TimestampedModel):
         return f"{self.risk.name} - {self.strategy}"
 
 
+class InstanceThreatBusinessObjective(TimestampedModel):
+    """A business objective a scenario puts at risk (spec
+    ``threat.relatedBusinessObjectives``, M13)."""
+
+    tenancy = Tenancy.TENANT_OWNED
+
+    threat = models.ForeignKey(
+        InstanceThreat,
+        on_delete=models.CASCADE,
+        related_name="business_objective_links",
+    )
+    business_objective = models.ForeignKey(
+        "threat_models.BusinessObjective",
+        on_delete=models.CASCADE,
+        related_name="threat_links",
+    )
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["display_order", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["threat", "business_objective"],
+                name="unique_threat_business_objective",
+            ),
+        ]
+
+
+class RiskBusinessObjective(TimestampedModel):
+    """A business objective a risk puts at risk (spec ``risk.relatedBusinessObjectives``)."""
+
+    tenancy = Tenancy.TENANT_OWNED
+
+    risk = models.ForeignKey(
+        Risk, on_delete=models.CASCADE, related_name="business_objective_links"
+    )
+    business_objective = models.ForeignKey(
+        "threat_models.BusinessObjective",
+        on_delete=models.CASCADE,
+        related_name="risk_links",
+    )
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["display_order", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["risk", "business_objective"],
+                name="unique_risk_business_objective",
+            ),
+        ]
+
+
+class RiskResponseCountermeasure(TimestampedModel):
+    """A control a risk response relies on (spec ``riskResponse.controls``, D6, M13)."""
+
+    tenancy = Tenancy.TENANT_OWNED
+
+    response = models.ForeignKey(
+        RiskResponse, on_delete=models.CASCADE, related_name="countermeasure_links"
+    )
+    countermeasure = models.ForeignKey(
+        InstanceCountermeasure,
+        on_delete=models.CASCADE,
+        related_name="risk_response_links",
+    )
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["display_order", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["response", "countermeasure"],
+                name="unique_risk_response_countermeasure",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.response} relies on {self.countermeasure}"
+
+
 class RiskThreat(TimestampedModel):
-    """Junction table linking a Risk to threat instances."""
+    """Junction table linking a Risk to threat scenarios."""
 
     tenancy = Tenancy.TENANT_OWNED
 
@@ -1268,42 +1464,18 @@ class RiskThreat(TimestampedModel):
         on_delete=models.CASCADE,
         related_name="risk_threats",
     )
-    component_threat = models.ForeignKey(
-        ComponentInstanceThreat,
+    threat = models.ForeignKey(
+        InstanceThreat,
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="risk_links",
-    )
-    flow_threat = models.ForeignKey(
-        DataFlowInstanceThreat,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         related_name="risk_links",
     )
 
     class Meta:
         constraints = [
-            models.CheckConstraint(
-                check=(
-                    models.Q(component_threat__isnull=False, flow_threat__isnull=True)
-                    | models.Q(component_threat__isnull=True, flow_threat__isnull=False)
-                ),
-                name="risk_threat_exactly_one_fk",
-            ),
             models.UniqueConstraint(
-                fields=["risk", "component_threat"],
-                condition=models.Q(component_threat__isnull=False),
-                name="unique_risk_component_threat",
-            ),
-            models.UniqueConstraint(
-                fields=["risk", "flow_threat"],
-                condition=models.Q(flow_threat__isnull=False),
-                name="unique_risk_flow_threat",
+                fields=["risk", "threat"], name="unique_risk_threat"
             ),
         ]
 
     def __str__(self):
-        threat = self.component_threat or self.flow_threat
-        return f"{self.risk.name} <- {threat}"
+        return f"{self.risk.name} <- {self.threat}"

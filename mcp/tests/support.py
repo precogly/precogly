@@ -31,7 +31,14 @@ THREAT_MODEL_ROW: dict[str, object] = {
         {"id": 4, "name": "CRA", "version": "2024"},
         {"id": 1, "name": "OWASP", "version": "2021"},
     ],
-    "riskScoringMethod": "tm_library",
+    "riskScoringMethod": "qualitative-matrix",
+    "methodologies": ["STRIDE"],
+    "lifecyclePhase": "",
+    "approvedAt": None,
+    "primarySystemName": None,
+    "serialNumber": "6d9e7f2c-2b2a-4c7c-9b0e-4a3b2c1d0e9f",
+    "version": 1,
+    "blueprintCount": 1,
     "createdAt": "2026-07-29T12:58:38.046907Z",
     "updatedAt": "2026-07-29T12:58:38.046917Z",
 }
@@ -99,6 +106,8 @@ COUNTERMEASURE_LIBRARY_ROWS: list[dict[str, object]] = [
     {
         "id": 14,
         "name": "API Gateway API Keys",
+        "description": "Require an API key on every request so unauthenticated "
+        "callers are rejected at the gateway.",
         "controlFunctions": ["preventive"],
         "controlNature": "technical",
         "cost": "low",
@@ -110,6 +119,8 @@ COUNTERMEASURE_LIBRARY_ROWS: list[dict[str, object]] = [
     {
         "id": 18,
         "name": "API Gateway CloudWatch Logging",
+        "description": "Send access logs to CloudWatch so rate limiting breaches "
+        "and abuse can be reviewed.",
         "controlFunctions": ["detective"],
         "controlNature": "technical",
         "cost": "medium",

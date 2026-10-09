@@ -6,13 +6,10 @@ from django.test import TestCase
 from apps.organizations.models import Organization, OrganizationMember
 from apps.systems.models import OrgsystemComponent
 from apps.threat_models.models import ThreatModel
-from apps.threats.models import (
-    ComponentInstanceThreat,
-    CountermeasureThreatLink,
-    InstanceCountermeasure,
-)
+from apps.threats.models import CountermeasureThreatLink, InstanceCountermeasure
 from apps.threats.services import (
     STATUS_EFFECTIVENESS_FALLBACK,
+    create_instance_threat,
     recalculate_threat_status,
 )
 
@@ -31,14 +28,12 @@ class StatusEffectivenessTestCase(TestCase):
         OrganizationMember.objects.create(
             organization=cls.org, user=cls.user, role="security_team"
         )
-        cls.tm = ThreatModel.objects.create(
-            name="Test TM", organization=cls.org
-        )
+        cls.tm = ThreatModel.objects.create(name="Test TM", organization=cls.org)
         cls.component = OrgsystemComponent.objects.create(
-            threat_model=cls.tm, name="Test Component"
+            blueprint=cls.tm.default_blueprint, name="Test Component"
         )
-        cls.threat = ComponentInstanceThreat.objects.create(
-            component=cls.component, inherent_severity="high"
+        cls.threat = create_instance_threat(
+            cls.tm, targets=[cls.component], level="high"
         )
 
     def _add_countermeasure(self, status, effectiveness=None):
@@ -47,9 +42,7 @@ class StatusEffectivenessTestCase(TestCase):
             status=status,
             effectiveness=effectiveness,
         )
-        CountermeasureThreatLink.objects.create(
-            countermeasure=cm, component_threat=self.threat
-        )
+        CountermeasureThreatLink.objects.create(countermeasure=cm, threat=self.threat)
         return cm
 
 
@@ -63,8 +56,9 @@ class EffectivenessFallbackCoverageTests(StatusEffectivenessTestCase):
             if s.value not in STATUS_EFFECTIVENESS_FALLBACK
         ]
         self.assertEqual(
-            missing, [],
-            f"Statuses missing from STATUS_EFFECTIVENESS_FALLBACK: {missing}"
+            missing,
+            [],
+            f"Statuses missing from STATUS_EFFECTIVENESS_FALLBACK: {missing}",
         )
 
     def test_in_progress_has_nonzero_effectiveness(self):

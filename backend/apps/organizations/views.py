@@ -8,6 +8,7 @@ from datetime import timedelta
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
+from django.db.models import Count
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
@@ -17,6 +18,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.permissions import IsSecurityTeam
+from apps.threat_models.analysis_service import SHARED, build_threat_analysis
 
 from .models import (
     BusinessUnit,
@@ -631,7 +633,7 @@ class MagicLinkAccessView(APIView):
         )
 
         # Get threat analysis data first (stats depend on it)
-        threat_analysis = self._get_threat_analysis_data(link.threat_model)
+        threat_analysis = build_threat_analysis(link.threat_model, audience=SHARED)
 
         # Compute summary stats from real DB data
         stats = self._compute_stats_from_threat_analysis(
@@ -694,45 +696,23 @@ class MagicLinkAccessView(APIView):
         )
         gaps_count = sum(1 for cm in all_countermeasures if cm.get("status") == "gap")
 
-        # Count components from primary DFD canvas nodes
-        from apps.systems.models import OrgsystemComponent
-
-        dfds = threat_model.dfds.filter(is_primary=True)
-        processes = 0
-        datastores = 0
-        human_actors = 0
-        system_actors = 0
-        boundaries = 0
-        has_data_flows = False
-
-        for dfd in dfds:
-            canvas_data = dfd.canvas_data or {}
-            for node in canvas_data.get("nodes", []):
-                node_type = node.get("type", "")
-                if node_type == "process":
-                    processes += 1
-                elif node_type == "datastore":
-                    datastores += 1
-                elif node_type == "humanActor":
-                    human_actors += 1
-                elif node_type == "systemActor":
-                    system_actors += 1
-                elif node_type == "trustZone":
-                    boundaries += 1
-            if canvas_data.get("edges"):
-                has_data_flows = True
-
-        # Include trust zones from components (DB-level, DFD-independent)
-        db_zone_count = (
-            OrgsystemComponent.objects.filter(
-                threat_model=threat_model,
-                trust_zone__isnull=False,
-            )
-            .values_list("trust_zone_id", flat=True)
-            .distinct()
-            .count()
+        # Counted from rows, across every blueprint of the model, so the shared
+        # page agrees with the report and the analysis screen (F30).
+        category_counts = dict(
+            threat_model.components.values_list("category")
+            .annotate(count=Count("id"))
+            .values_list("category", "count")
         )
-        boundaries = max(boundaries, db_zone_count)
+        processes = (
+            category_counts.get("process", 0)
+            + category_counts.get(None, 0)
+            + category_counts.get("", 0)
+        )
+        datastores = category_counts.get("datastore", 0)
+        human_actors = category_counts.get("external_human_actor", 0)
+        system_actors = category_counts.get("external_system_actor", 0)
+        boundaries = threat_model.zones.count()
+        has_flows = threat_model.flows.exists()
 
         # Compute progress checklist
         workspace_data = threat_model.workspace_data or {}
@@ -749,12 +729,12 @@ class MagicLinkAccessView(APIView):
         progress = {
             "assets_defined": manual_progress.get("assets_defined", len(assets) > 0),
             "components_identified": (processes + datastores) > 0,
-            "trust_boundaries_identified": boundaries > 0,
-            "data_flows_defined": has_data_flows,
+            "boundaries_identified": boundaries > 0,
+            "flows_defined": has_flows,
             "owners_assigned": manual_progress.get("owners_assigned", False),
             "threats_linked_components": total_threats > 0
             and (processes + datastores) > 0,
-            "threats_linked_flows": total_threats > 0 and has_data_flows,
+            "threats_linked_flows": total_threats > 0 and has_flows,
             "countermeasures_assigned": total_countermeasures > 0,
         }
 
@@ -778,360 +758,6 @@ class MagicLinkAccessView(APIView):
                 "gaps": gaps_count,
             },
             "progress": progress,
-        }
-
-    def _serialize_taxonomy_entries(self, threat_instance):
-        """Serialize taxonomy entries, merging library and instance entries."""
-        seen = {}
-
-        if threat_instance.threat_library:
-            for join in threat_instance.threat_library.taxonomy_entries.select_related(
-                "taxonomy_entry__taxonomy"
-            ).all():
-                entry = join.taxonomy_entry
-                key = (entry.taxonomy.slug, entry.external_id)
-                seen[key] = {
-                    "taxonomy_slug": entry.taxonomy.slug,
-                    "taxonomy_name": entry.taxonomy.name,
-                    "external_id": entry.external_id,
-                    "title": entry.title,
-                }
-
-        for link in threat_instance.instance_taxonomy_links.select_related(
-            "taxonomy_entry__taxonomy"
-        ).all():
-            entry = link.taxonomy_entry
-            key = (entry.taxonomy.slug, entry.external_id)
-            if key not in seen:
-                seen[key] = {
-                    "taxonomy_slug": entry.taxonomy.slug,
-                    "taxonomy_name": entry.taxonomy.name,
-                    "external_id": entry.external_id,
-                    "title": entry.title,
-                }
-
-        if not seen:
-            return threat_instance.taxonomy_snapshot or []
-
-        return list(seen.values())
-
-    def _get_threat_analysis_data(self, threat_model):
-        """
-        Get threat analysis data for the threat model.
-        Returns threats with their countermeasures and compliance mappings.
-        Includes both component threats and data flow threats, including custom threats.
-        """
-        from apps.threats.models import (
-            ComponentInstanceThreat,
-            DataFlowInstanceThreat,
-        )
-
-        # Get all DFDs for this threat model
-        dfds = threat_model.dfds.all()
-
-        # Build node_id -> component_id mapping and edge_id -> flow_id mapping from all DFDs
-        node_component_map = {}
-        edge_flow_map = {}
-        for dfd in dfds:
-            canvas_data = dfd.canvas_data or {}
-            # Map nodes to components
-            for node in canvas_data.get("nodes", []):
-                node_id = node.get("id")
-                component_id = node.get("data", {}).get("component_id")
-                if node_id and component_id:
-                    node_component_map[node_id] = {
-                        "component_id": component_id,
-                        "dfd_id": str(dfd.id),
-                        "dfd_name": dfd.name,
-                    }
-            # Map edges to data flows
-            for edge in canvas_data.get("edges", []):
-                edge_id = edge.get("id")
-                dataflow_id = edge.get("data", {}).get("dataflow_id")
-                if edge_id and dataflow_id:
-                    edge_flow_map[edge_id] = {
-                        "flow_id": dataflow_id,
-                        "dfd_id": str(dfd.id),
-                        "dfd_name": dfd.name,
-                    }
-
-        # Get component IDs from DFD canvas (DFD-based modeling)
-        canvas_component_ids = [v["component_id"] for v in node_component_map.values()]
-        canvas_flow_ids = [v["flow_id"] for v in edge_flow_map.values()]
-
-        # Get analysis-only components (DFD-free modeling)
-        # These are components directly linked to the threat model via threat_model FK
-        analysis_only_components = threat_model.analysis_components.all()
-        analysis_component_ids = [comp.id for comp in analysis_only_components]
-
-        # Combine both sources
-        component_ids = list(set(canvas_component_ids + analysis_component_ids))
-        flow_ids = canvas_flow_ids  # Flows are currently only via DFD
-
-        result = []
-
-        from django.db.models import Prefetch
-
-        from apps.threats.models import CountermeasureThreatLink
-
-        # Fetch component threats
-        if component_ids:
-            component_threats = (
-                ComponentInstanceThreat.objects.filter(component_id__in=component_ids)
-                .select_related("component", "threat_library")
-                .prefetch_related(
-                    "threat_library__taxonomy_entries__taxonomy_entry__taxonomy",
-                    "instance_taxonomy_links__taxonomy_entry__taxonomy",
-                    Prefetch(
-                        "countermeasure_links",
-                        queryset=CountermeasureThreatLink.objects.select_related(
-                            "countermeasure",
-                            "countermeasure__countermeasure_library",
-                            "countermeasure__assigned_owner",
-                            "countermeasure__verified_by",
-                        )
-                        .prefetch_related(
-                            "countermeasure__instance_standard_mappings__requirement__framework",
-                        )
-                        .order_by("display_order"),
-                    ),
-                )
-            )
-
-            for threat in component_threats:
-                # Find which node this component corresponds to (if it's in a DFD)
-                node_info = None
-                for node_id, info in node_component_map.items():
-                    if info["component_id"] == threat.component_id:
-                        node_info = {"node_id": node_id, **info}
-                        break
-
-                # If not in DFD, it's an analysis-only component (DFD-free modeling)
-                # Use component ID directly without node mapping
-                if not node_info and threat.component_id in analysis_component_ids:
-                    # Analysis-only component - create a synthetic mapping
-                    node_info = {
-                        "node_id": f"analysis-{threat.component_id}",
-                        "component_id": threat.component_id,
-                        "dfd_id": None,
-                        "dfd_name": None,
-                    }
-
-                # Support custom threats (threat_library can be null)
-                threat_name = threat.threat_name or (
-                    threat.threat_library.name if threat.threat_library else None
-                )
-                threat_description = threat.threat_description or (
-                    threat.threat_library.description if threat.threat_library else None
-                )
-                taxonomy_entries = self._serialize_taxonomy_entries(threat)
-
-                threat_data = {
-                    "id": threat.id,
-                    "type": "component",
-                    "component_id": threat.component_id,
-                    "component_name": threat.component.name
-                    if threat.component
-                    else None,
-                    "node_id": node_info["node_id"] if node_info else None,
-                    "dfd_id": node_info["dfd_id"] if node_info else None,
-                    "dfd_name": node_info["dfd_name"] if node_info else None,
-                    "threat_library_id": threat.threat_library_id,
-                    "threat_name": threat_name,
-                    "threat_description": threat_description,
-                    "taxonomy_entries": taxonomy_entries,
-                    "inherent_severity": threat.inherent_severity,
-                    "residual_severity": threat.residual_severity,
-                    "status": threat.status,
-                    "severity_scoring_metadata": threat.severity_scoring_metadata,
-                    "triage_status": threat.triage_status,
-                    "format_metadata": threat.format_metadata,
-                    "countermeasures": [
-                        {
-                            "id": link.countermeasure.id,
-                            "countermeasure_library_id": link.countermeasure.countermeasure_library_id,
-                            "countermeasure_name": link.countermeasure.countermeasure_name
-                            or (
-                                link.countermeasure.countermeasure_library.name
-                                if link.countermeasure.countermeasure_library
-                                else None
-                            ),
-                            "countermeasure_description": link.countermeasure.countermeasure_description
-                            or (
-                                link.countermeasure.countermeasure_library.description
-                                if link.countermeasure.countermeasure_library
-                                else None
-                            ),
-                            "control_functions": link.countermeasure.control_functions
-                            or (
-                                link.countermeasure.countermeasure_library.control_functions
-                                if link.countermeasure.countermeasure_library
-                                else []
-                            ),
-                            "control_nature": link.countermeasure.control_nature
-                            or (
-                                link.countermeasure.countermeasure_library.control_nature
-                                if link.countermeasure.countermeasure_library
-                                else ""
-                            ),
-                            "status": link.countermeasure.status,
-                            "priority": link.countermeasure.priority,
-                            "evidence_url": link.countermeasure.evidence_url,
-                            "assigned_owner_email": link.countermeasure.assigned_owner.email
-                            if link.countermeasure.assigned_owner
-                            else None,
-                            "verified_by_email": link.countermeasure.verified_by.email
-                            if link.countermeasure.verified_by
-                            else None,
-                            "format_metadata": link.countermeasure.format_metadata,
-                            "compliance_standards": [
-                                {
-                                    "id": std.id,
-                                    "requirement_id": std.requirement_id,
-                                    "framework_name": std.requirement.framework.name,
-                                    "framework_slug": std.requirement.framework.slug,
-                                    "section_code": std.requirement.section_code,
-                                    "requirement_description": std.requirement.description,
-                                    "sufficiency": std.sufficiency,
-                                }
-                                for std in link.countermeasure.instance_standard_mappings.all()
-                            ],
-                        }
-                        for link in threat.countermeasure_links.all()
-                    ],
-                }
-                result.append(threat_data)
-
-        # Fetch data flow threats
-        if flow_ids:
-            flow_threats = (
-                DataFlowInstanceThreat.objects.filter(data_flow_id__in=flow_ids)
-                .select_related("data_flow", "threat_library")
-                .prefetch_related(
-                    "threat_library__taxonomy_entries__taxonomy_entry__taxonomy",
-                    "instance_taxonomy_links__taxonomy_entry__taxonomy",
-                    Prefetch(
-                        "countermeasure_links",
-                        queryset=CountermeasureThreatLink.objects.select_related(
-                            "countermeasure",
-                            "countermeasure__countermeasure_library",
-                            "countermeasure__assigned_owner",
-                            "countermeasure__verified_by",
-                        )
-                        .prefetch_related(
-                            "countermeasure__instance_standard_mappings__requirement__framework",
-                        )
-                        .order_by("display_order"),
-                    ),
-                )
-            )
-
-            for threat in flow_threats:
-                # Find which edge this flow corresponds to
-                edge_info = None
-                for edge_id, info in edge_flow_map.items():
-                    if info["flow_id"] == threat.data_flow_id:
-                        edge_info = {"edge_id": edge_id, **info}
-                        break
-
-                # Support custom threats (threat_library can be null)
-                threat_name = threat.threat_name or (
-                    threat.threat_library.name if threat.threat_library else None
-                )
-                threat_description = threat.threat_description or (
-                    threat.threat_library.description if threat.threat_library else None
-                )
-                taxonomy_entries = self._serialize_taxonomy_entries(threat)
-
-                threat_data = {
-                    "id": threat.id,
-                    "type": "flow",
-                    "flow_id": threat.data_flow_id,
-                    "flow_label": threat.data_flow.label if threat.data_flow else None,
-                    "edge_id": edge_info["edge_id"] if edge_info else None,
-                    "dfd_id": edge_info["dfd_id"] if edge_info else None,
-                    "dfd_name": edge_info["dfd_name"] if edge_info else None,
-                    "threat_library_id": threat.threat_library_id,
-                    "threat_name": threat_name,
-                    "threat_description": threat_description,
-                    "taxonomy_entries": taxonomy_entries,
-                    "inherent_severity": threat.inherent_severity,
-                    "residual_severity": threat.residual_severity,
-                    "status": threat.status,
-                    "triage_status": threat.triage_status,
-                    "format_metadata": threat.format_metadata,
-                    "countermeasures": [
-                        {
-                            "id": link.countermeasure.id,
-                            "countermeasure_library_id": link.countermeasure.countermeasure_library_id,
-                            "countermeasure_name": link.countermeasure.countermeasure_name
-                            or (
-                                link.countermeasure.countermeasure_library.name
-                                if link.countermeasure.countermeasure_library
-                                else None
-                            ),
-                            "countermeasure_description": link.countermeasure.countermeasure_description
-                            or (
-                                link.countermeasure.countermeasure_library.description
-                                if link.countermeasure.countermeasure_library
-                                else None
-                            ),
-                            "control_functions": link.countermeasure.control_functions
-                            or (
-                                link.countermeasure.countermeasure_library.control_functions
-                                if link.countermeasure.countermeasure_library
-                                else []
-                            ),
-                            "control_nature": link.countermeasure.control_nature
-                            or (
-                                link.countermeasure.countermeasure_library.control_nature
-                                if link.countermeasure.countermeasure_library
-                                else ""
-                            ),
-                            "status": link.countermeasure.status,
-                            "priority": link.countermeasure.priority,
-                            "evidence_url": link.countermeasure.evidence_url,
-                            "assigned_owner_email": link.countermeasure.assigned_owner.email
-                            if link.countermeasure.assigned_owner
-                            else None,
-                            "verified_by_email": link.countermeasure.verified_by.email
-                            if link.countermeasure.verified_by
-                            else None,
-                            "format_metadata": link.countermeasure.format_metadata,
-                            "compliance_standards": [
-                                {
-                                    "id": std.id,
-                                    "requirement_id": std.requirement_id,
-                                    "framework_name": std.requirement.framework.name,
-                                    "framework_slug": std.requirement.framework.slug,
-                                    "section_code": std.requirement.section_code,
-                                    "requirement_description": std.requirement.description,
-                                    "sufficiency": std.sufficiency,
-                                }
-                                for std in link.countermeasure.instance_standard_mappings.all()
-                            ],
-                        }
-                        for link in threat.countermeasure_links.all()
-                    ],
-                }
-                result.append(threat_data)
-
-        # Add analysis-only components to the node_component_map
-        # Use synthetic node IDs for frontend compatibility
-        for comp_id in analysis_component_ids:
-            if comp_id not in [v["component_id"] for v in node_component_map.values()]:
-                node_component_map[f"analysis-{comp_id}"] = {
-                    "component_id": comp_id,
-                    "dfd_id": None,
-                    "dfd_name": "Analysis-Only",
-                }
-
-        return {
-            "threat_model_id": str(threat_model.id),
-            "threats": result,
-            "total_count": len(result),
-            "node_component_map": node_component_map,
-            "edge_flow_map": edge_flow_map,
         }
 
 

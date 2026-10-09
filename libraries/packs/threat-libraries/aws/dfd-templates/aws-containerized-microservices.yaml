@@ -32,7 +32,8 @@ canvas_data:
       style: { width: 250, height: 280 }
       data:
         label: "Public Edge"
-        zoneType: "zoneInternet"
+        zoneType: "trust"
+        trustLevel: 0
 
     - id: "tz-dmz"
       type: "trustZone"
@@ -41,7 +42,8 @@ canvas_data:
       style: { width: 250, height: 280 }
       data:
         label: "Public Subnet"
-        zoneType: "zoneDmz"
+        zoneType: "trust"
+        trustLevel: 25
 
     - id: "tz-app"
       type: "trustZone"
@@ -50,7 +52,8 @@ canvas_data:
       style: { width: 480, height: 280 }
       data:
         label: "Private Subnet: App Tier"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-data"
       type: "trustZone"
@@ -59,7 +62,8 @@ canvas_data:
       style: { width: 500, height: 260 }
       data:
         label: "Private Subnet: Data Tier"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     - id: "tz-mgmt"
       type: "trustZone"
@@ -68,7 +72,8 @@ canvas_data:
       style: { width: 250, height: 430 }
       data:
         label: "Management"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     # ---- Processes: Public Edge ----
     - id: "process-waf"
@@ -186,7 +191,6 @@ canvas_data:
         label: "HTTPS request"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false
 
     # WAF → ALB
     - id: "edge-waf-to-elb"
@@ -197,7 +201,6 @@ canvas_data:
         label: "Filtered request"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false
 
     # ALB → ECS Service A
     - id: "edge-elb-to-ecs-a"
@@ -208,7 +211,6 @@ canvas_data:
         label: "Routed request"
         protocol: "HTTP"
         encrypted: false
-        authenticated: false
 
     # ALB → ECS Service B
     - id: "edge-elb-to-ecs-b"
@@ -219,7 +221,6 @@ canvas_data:
         label: "Routed request"
         protocol: "HTTP"
         encrypted: false
-        authenticated: false
 
     # ECS Service A → ECS Service B (internal)
     - id: "edge-ecs-a-to-ecs-b"
@@ -230,7 +231,7 @@ canvas_data:
         label: "Internal service call"
         protocol: "HTTP"
         encrypted: false
-        authenticated: true
+        authentication: ["unspecified"]
 
     # ECS Service A → RDS
     - id: "edge-ecs-a-to-rds"
@@ -241,7 +242,7 @@ canvas_data:
         label: "SQL queries"
         protocol: "SQL"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     # ECS Service B → RDS
     - id: "edge-ecs-b-to-rds"
@@ -252,7 +253,7 @@ canvas_data:
         label: "SQL queries"
         protocol: "SQL"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     # ECS Service A → ElastiCache
     - id: "edge-ecs-a-to-elasticache"
@@ -263,7 +264,7 @@ canvas_data:
         label: "Session/cache read/write"
         protocol: "TCP"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     # ECR → ECS (image pull)
     - id: "edge-ecr-to-ecs-a"
@@ -274,7 +275,7 @@ canvas_data:
         label: "Container image pull"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     - id: "edge-ecr-to-ecs-b"
       source: "process-ecr"
@@ -284,7 +285,7 @@ canvas_data:
         label: "Container image pull"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # ECS → Secrets Manager
     - id: "edge-ecs-a-to-secrets"
@@ -295,7 +296,7 @@ canvas_data:
         label: "Credential retrieval"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # ECS → CloudWatch (logs)
     - id: "edge-ecs-a-to-cloudwatch"
@@ -306,7 +307,7 @@ canvas_data:
         label: "Logs and metrics"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     - id: "edge-ecs-b-to-cloudwatch"
       source: "process-ecs-service-b"
@@ -316,7 +317,7 @@ canvas_data:
         label: "Logs and metrics"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # ALB → User (response)
     - id: "edge-elb-to-user"
@@ -327,4 +328,3 @@ canvas_data:
         label: "HTTPS response"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false

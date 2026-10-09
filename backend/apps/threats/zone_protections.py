@@ -7,7 +7,7 @@ from outer (lower trust_level) zones to inner (higher trust_level) zones.
 
 from django.db.models import Q
 
-from apps.systems.models import TrustBoundary
+from apps.systems.models import Boundary
 from apps.threats.models import (
     CountermeasureThreatLink,
     InstanceCountermeasure,
@@ -25,7 +25,7 @@ def _get_all_outer_zones(zone, visited=None):
     visited.add(zone.id)
 
     outer_zones = []
-    boundaries = TrustBoundary.objects.filter(
+    boundaries = Boundary.objects.filter(
         Q(zone_a=zone) | Q(zone_b=zone)
     ).select_related("zone_a", "zone_b")
 
@@ -76,12 +76,12 @@ def analyze_zone_protections(threat_model):
     # linked threats' components have a trust zone
     gap_links = CountermeasureThreatLink.objects.filter(
         component_threat__component_id__in=component_ids,
-        component_threat__component__trust_zone__isnull=False,
+        component_threat__component__zone__isnull=False,
         countermeasure__countermeasure_library__isnull=False,
         countermeasure__status="gap",
         component_threat__isnull=False,
     ).select_related(
-        "component_threat__component__trust_zone",
+        "component_threat__component__zone",
         "countermeasure__countermeasure_library",
     )
 
@@ -95,7 +95,7 @@ def analyze_zone_protections(threat_model):
     for gap_link in gap_links:
         gap_cm = gap_link.countermeasure
         component = gap_link.component_threat.component
-        zone = component.trust_zone
+        zone = component.zone
         zone_id = zone.id
 
         if zone_id not in outer_zones_cache:
@@ -109,13 +109,13 @@ def analyze_zone_protections(threat_model):
         source_link = (
             CountermeasureThreatLink.objects.filter(
                 component_threat__component_id__in=component_ids,
-                component_threat__component__trust_zone__in=outer_zones,
+                component_threat__component__zone__in=outer_zones,
                 countermeasure__countermeasure_library=gap_cm.countermeasure_library,
                 countermeasure__status="platform",
                 component_threat__isnull=False,
             )
             .select_related(
-                "component_threat__component__trust_zone",
+                "component_threat__component__zone",
                 "countermeasure__countermeasure_library",
             )
             .first()
@@ -128,7 +128,7 @@ def analyze_zone_protections(threat_model):
                     "target_component_name": component.name,
                     "target_zone_name": zone.name,
                     "source_component_name": source_link.component_threat.component.name,
-                    "source_zone_name": source_link.component_threat.component.trust_zone.name,
+                    "source_zone_name": source_link.component_threat.component.zone.name,
                     "countermeasure_name": gap_cm.countermeasure_library.name,
                     "control_functions": gap_cm.countermeasure_library.control_functions,
                 }

@@ -36,6 +36,7 @@ import {
   GUEST_ASSUMPTION_VALIDITY,
 } from '../types'
 import type { GuestDataAsset, GuestAssumption, GuestOutOfScopeItem } from '../types'
+import { ASSUMPTION_TOPICS } from '@/types/domain'
 
 type ContextView = 'session' | 'system' | 'assets' | 'assumptions' | 'out-of-scope'
 
@@ -259,6 +260,8 @@ function AssetsView() {
       availability: asset.availability,
       complianceTags: asset.complianceTags,
       dataSensitivity: asset.dataSensitivity,
+      ...(asset.bomRef ? { bomRef: asset.bomRef } : {}),
+      ...(asset.passthrough ? { passthrough: asset.passthrough } : {}),
     })
     setComplianceInput('')
     setSensitivityInput('')
@@ -525,16 +528,14 @@ function AssumptionsView() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [formData, setFormData] = useState<Omit<GuestAssumption, 'id'>>({
     description: '',
-    validity: 'unconfirmed',
-    topics: [],
+    validity: 'unverified',
+    topic: '',
   })
-  const [topicInput, setTopicInput] = useState('')
 
   if (!guestEditor) return null
 
   const resetForm = () => {
-    setFormData({ description: '', validity: 'unconfirmed', topics: [] })
-    setTopicInput('')
+    setFormData({ description: '', validity: 'unverified', topic: '' })
     setShowAddForm(false)
     setEditingId(null)
   }
@@ -553,23 +554,18 @@ function AssumptionsView() {
     setFormData({
       description: assumption.description,
       validity: assumption.validity,
-      topics: [...assumption.topics],
+      topic: assumption.topic,
+      ...(assumption.bomRef ? { bomRef: assumption.bomRef } : {}),
+      ...(assumption.passthrough ? { passthrough: assumption.passthrough } : {}),
     })
-    setTopicInput('')
     setEditingId(assumption.id)
     setShowAddForm(true)
   }
 
-  const handleAddTopic = () => {
-    const trimmed = topicInput.trim()
-    if (trimmed && !formData.topics.includes(trimmed)) {
-      setFormData({ ...formData, topics: [...formData.topics, trimmed] })
-      setTopicInput('')
-    }
-  }
-
   const validityLabel = (validity: GuestAssumption['validity']) =>
     GUEST_ASSUMPTION_VALIDITY.find((o) => o.value === validity)?.label ?? validity
+
+  const topicLabel = (topic: string) => ASSUMPTION_TOPICS.find((o) => o.value === topic)?.label ?? topic
 
   return (
     <div className="space-y-4">
@@ -587,11 +583,11 @@ function AssumptionsView() {
                   <Badge variant="outline" className="text-xs">
                     {validityLabel(assumption.validity)}
                   </Badge>
-                  {assumption.topics.map((topic) => (
-                    <Badge key={topic} variant="secondary" className="text-xs">
-                      {topic}
+                  {assumption.topic && (
+                    <Badge variant="secondary" className="text-xs">
+                      {topicLabel(assumption.topic)}
                     </Badge>
-                  ))}
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-1 ml-2">
@@ -624,65 +620,46 @@ function AssumptionsView() {
             />
           </div>
 
-          <div className="space-y-1">
-            <Label className="text-xs">Validity</Label>
-            <Select
-              value={formData.validity}
-              onValueChange={(value) =>
-                setFormData({ ...formData, validity: value as GuestAssumption['validity'] })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {GUEST_ASSUMPTION_VALIDITY.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1">
-            <Label className="text-xs">Topics</Label>
-            <div className="flex gap-2">
-              <Input
-                value={topicInput}
-                onChange={(e) => setTopicInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    handleAddTopic()
-                  }
-                }}
-                placeholder="e.g. authentication, encryption, networking"
-                className="flex-1"
-              />
-              <Button variant="outline" size="sm" onClick={handleAddTopic}>
-                <Plus className="h-3 w-3" />
-              </Button>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Validity</Label>
+              <Select
+                value={formData.validity}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, validity: value as GuestAssumption['validity'] })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {GUEST_ASSUMPTION_VALIDITY.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            {formData.topics.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-1">
-                {formData.topics.map((topic) => (
-                  <Badge key={topic} variant="secondary" className="text-xs gap-1">
-                    {topic}
-                    <button
-                      onClick={() =>
-                        setFormData({
-                          ...formData,
-                          topics: formData.topics.filter((t) => t !== topic),
-                        })
-                      }
-                    >
-                      <X className="h-2.5 w-2.5" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
+            <div className="space-y-1">
+              <Label className="text-xs">Topic</Label>
+              <Select
+                value={formData.topic || 'none'}
+                onValueChange={(value) => setFormData({ ...formData, topic: value === 'none' ? '' : value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {ASSUMPTION_TOPICS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2">

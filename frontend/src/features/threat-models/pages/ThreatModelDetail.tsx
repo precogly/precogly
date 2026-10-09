@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
-import { Link, useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChevronLeft, Loader2, LayoutDashboard, Shield, Trash2, BarChart3, FileText, Share2, Download, Pencil, Crosshair } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -13,8 +13,12 @@ import {
 import {
   ReferenceImageViewer,
   SystemContextModal,
-  ManageSystemsModal,
   ManageThreatModelsModal,
+  BlueprintSwitcher,
+  ManageBlueprintsModal,
+  type ManageBlueprintsMode,
+  resolveSelectedBlueprintId,
+  showsBlueprintChoice,
   ManagePacksModal,
   ManagePeopleModal,
   ViewFrameworksModal,
@@ -31,37 +35,51 @@ import { TableView } from '@/features/dfd-editor/components/threat-analysis/Tabl
 import { AddThreatDialog } from '@/features/dfd-editor/components/threat-analysis/AddThreatDialog'
 import { AddCountermeasureDialog } from '@/features/dfd-editor/components/threat-analysis/AddCountermeasureDialog'
 import { AddCustomComponentDialog } from '@/features/dfd-editor/components/threat-analysis/AddCustomComponentDialog'
-import { ReviewZoneProtectionsDialog } from '@/features/dfd-editor/components/threat-analysis/ReviewZoneProtectionsDialog'
-import { useThreatModelThreats } from '@/features/threat-models/api/threats'
-import { useAnalysisComponents, useTrustZones } from '@/features/threat-models/api/components'
+import { useThreatModelThreats, useGenerateModelThreats, type TargetRef } from '@/features/threat-models/api/threats'
+import { useAnalysisComponents } from '@/features/threat-models/api/components'
+import {
+  SYSTEM_SELECTION,
+  selectionTargetRef,
+  targetSelection,
+  threatMatchesSelection,
+  type AnalysisSelection,
+} from '@/features/dfd-editor/components/threat-analysis/analysis-selection'
+import { useModelTargets } from '@/features/dfd-editor/components/threat-analysis/useModelTargets'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { toast } from 'sonner'
 import type { ThreatModel, Diagram, ScoringMethodKey } from '@/types'
-import type { DiagramNode, DataFlowEdge, CanvasData } from '@/features/dfd-editor/types'
 import { cn } from '@/lib/utils'
-import { api } from '@/lib/api'
+import { api, ApiError } from '@/lib/api'
 import {
   useThreatModel,
   useThreatModels,
-  useSystems,
   useDeleteThreatModel,
   useDeleteDFD,
   useUpdateThreatModel,
-  useAddThreatModelSystem,
-  useRemoveThreatModelSystem,
   useAddReferencedModel,
   useRemoveReferencedModel,
   useRemoveThreatModelPack,
   useAddThreatModelPack,
-  exportTmLibrary,
   exportCycloneDx,
 } from '@/features/threat-models/api/threat-models'
 import { usePacks } from '@/features/libraries/api/packs'
 import { DeleteThreatModelDialog, DeleteDFDDialog } from '@/features/threat-models/components'
 import { useReferenceImages, useUploadReferenceImage, useDeleteReferenceImage } from '@/features/threat-models/api/reference-images'
 
-async function createDiagram(threatModelId: string, title: string): Promise<Diagram> {
+async function createDiagram(threatModelId: string, title: string, blueprintId: number | null): Promise<Diagram> {
   return api.post<Diagram>('/diagrams/create_for_threat_model/', {
     threatModelId,
     name: title,
+    ...(blueprintId !== null ? { blueprintId } : {}),
     canvas_data: { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 } },
   })
 }
@@ -78,12 +96,15 @@ export function ThreatModelDetail() {
   const [activeTab, setActiveTab] = useState<string>('overview')
   const [viewMode, setViewMode] = useState<ViewMode>('component')
   const [selectedDiagramId, setSelectedDiagramId] = useState<string | null>(null)
-  const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null)
+  // The selection is a target reference or the whole system, not a canvas id.
+  const [selectedTarget, setSelectedTarget] = useState<AnalysisSelection | null>(null)
   const [selectedThreatId, setSelectedThreatId] = useState<string | null>(null)
+  const [generateThreatsConfirmOpen, setGenerateThreatsConfirmOpen] = useState(false)
 
   // Modal state
   const [systemContextModalOpen, setSystemContextModalOpen] = useState(false)
-  const [manageSystemsModalOpen, setManageSystemsModalOpen] = useState(false)
+  const [manageBlueprintsOpen, setManageBlueprintsOpen] = useState(false)
+  const [manageBlueprintsMode, setManageBlueprintsMode] = useState<ManageBlueprintsMode>('list')
   const [manageThreatModelsModalOpen, setManageThreatModelsModalOpen] = useState(false)
   const [managePacksModalOpen, setManagePacksModalOpen] = useState(false)
   const [managePeopleModalOpen, setManagePeopleModalOpen] = useState(false)
@@ -97,7 +118,6 @@ export function ThreatModelDetail() {
   const [addThreatDialogOpen, setAddThreatDialogOpen] = useState(false)
   const [addCountermeasureDialogOpen, setAddCountermeasureDialogOpen] = useState(false)
   const [addComponentDialogOpen, setAddComponentDialogOpen] = useState(false)
-  const [zoneProtectionsDialogOpen, setZoneProtectionsDialogOpen] = useState(false)
 
   // Inline name editing state
   const [isEditingName, setIsEditingName] = useState(false)
@@ -112,8 +132,6 @@ export function ThreatModelDetail() {
   const deleteMutation = useDeleteThreatModel()
   const deleteDFDMutation = useDeleteDFD()
   const updateThreatModelMutation = useUpdateThreatModel()
-  const addSystemMutation = useAddThreatModelSystem()
-  const removeSystemMutation = useRemoveThreatModelSystem()
   const addReferencedModelMutation = useAddReferencedModel()
   const removeReferencedModelMutation = useRemoveReferencedModel()
   const removePackMutation = useRemoveThreatModelPack()
@@ -137,15 +155,48 @@ export function ThreatModelDetail() {
 
   const diagrams = useMemo(() => (threatModel?.dfds || []) as Diagram[], [threatModel?.dfds])
 
-  const { data: systems = [] } = useSystems()
+  // Blueprints (plan J2): the selected one lives in the URL query `blueprint`
+  // and goes to the system context dialog and the DFD lists. The summary
+  // cards and the threat tree cover every blueprint.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const blueprints = useMemo(() => threatModel?.blueprints ?? [], [threatModel?.blueprints])
+  const requestedBlueprint = searchParams.get('blueprint')
+  const selectedBlueprintId = useMemo(
+    () => resolveSelectedBlueprintId(requestedBlueprint ? Number(requestedBlueprint) : null, blueprints),
+    [requestedBlueprint, blueprints]
+  )
+  const handleSelectBlueprint = useCallback(
+    (blueprintId: number) => {
+      setSearchParams(
+        (current) => {
+          const next = new URLSearchParams(current)
+          next.set('blueprint', String(blueprintId))
+          return next
+        },
+        { replace: true }
+      )
+      setSelectedDiagramId(null)
+    },
+    [setSearchParams]
+  )
+  const blueprintDiagrams = useMemo(() => {
+    if (!showsBlueprintChoice(blueprints) || selectedBlueprintId === null) return diagrams
+    const diagramIds = new Set(
+      (threatModel?.dfds ?? [])
+        .filter((dfd) => dfd.blueprint == null || dfd.blueprint === selectedBlueprintId)
+        .map((dfd) => String(dfd.id))
+    )
+    return diagrams.filter((diagram) => diagramIds.has(String(diagram.id)))
+  }, [diagrams, blueprints, selectedBlueprintId, threatModel?.dfds])
 
   const { data: allThreatModels = [] } = useThreatModels()
 
   // Fetch analysis-only components (linked directly to threat model, not via DFD canvas)
   const { data: analysisComponents = [] } = useAnalysisComponents(id ?? null)
 
-  // Fetch trust zones for this threat model (used for models without DFD canvas)
-  const { data: backendTrustZones = [] } = useTrustZones(id)
+  // The model's targets by key, for the selection's name (plan 11.3).
+  const modelTargets = useModelTargets(id)
+  const generateModelThreats = useGenerateModelThreats()
 
   // Workspace threat analysis state
   const {
@@ -154,7 +205,6 @@ export function ThreatModelDetail() {
     completionStatus,
     summaries,
     isLoadingThreats,
-    revertInheritedCountermeasure,
     updateCountermeasureStatus,
     updateCountermeasurePriority,
     updateCountermeasureDueDate,
@@ -165,203 +215,78 @@ export function ThreatModelDetail() {
     reorderCountermeasures,
   } = useWorkspaceThreatAnalysis(id, diagrams, analysisComponents)
 
-  // Fetch threat model threats data (for nodeComponentMap)
-  const { data: threatData, refetch: refetchThreats } = useThreatModelThreats(id)
-  const nodeComponentMap = useMemo(() => threatData?.nodeComponentMap || {}, [threatData?.nodeComponentMap])
+  const { refetch: refetchThreats } = useThreatModelThreats(id)
 
   // Create diagram mutation
   const createDiagramMutation = useMutation({
-    mutationFn: (title: string) => createDiagram(id!, title),
+    mutationFn: (title: string) => createDiagram(id!, title, selectedBlueprintId),
     onSuccess: (newDiagram) => {
       queryClient.invalidateQueries({ queryKey: ['threat-models', id] })
       navigate(`/threat-models/${id}/diagrams/${newDiagram.id}`)
     },
   })
 
-  // Get linked systems (use String() because systemIds are strings from serializer but s.id may be number at runtime)
-  const linkedSystems = useMemo(() => {
-    return systems.filter((s) => threatModel?.systemIds?.includes(String(s.id)))
-  }, [systems, threatModel?.systemIds])
-
-  // Get referenced threat models (use String() because referencedModelIds are strings from serializer but m.id may be number at runtime)
-  const referencedModels = useMemo(() => {
-    return allThreatModels.filter((m) =>
-      threatModel?.referencedModelIds?.includes(String(m.id))
-    )
-  }, [allThreatModels, threatModel?.referencedModelIds])
-
-  // Aggregate canvas data from all diagrams or selected diagram
-  const aggregatedCanvasData = useMemo((): CanvasData => {
-    const diagramsToUse = selectedDiagramId
-      ? diagrams.filter((d) => String(d.id) === selectedDiagramId)
-      : diagrams.filter((d) => d.isPrimary)
-
-    const nodes: DiagramNode[] = []
-    const edges: DataFlowEdge[] = []
-
-    diagramsToUse.forEach((diagram) => {
-      const canvasData = diagram.canvasData
-      if (canvasData) {
-        nodes.push(...(canvasData.nodes || []))
-        edges.push(...(canvasData.edges || []))
-      }
-    })
-
-    return { nodes, edges }
-  }, [diagrams, selectedDiagramId])
-
-  // Filter component threats by selected diagram
+  // The analysis screen builds its tree from the backend rows (ComponentView); this page
+  // only filters the scenarios by the chosen diagram and holds the selection.
   const filteredComponentThreats = useMemo(() => {
     if (!selectedDiagramId) return componentThreats
     return componentThreats.filter(
-      (ct) => String(ct.sourceDiagramId) === selectedDiagramId || String(ct.diagramId) === selectedDiagramId
+      (ct) => ct.wholeSystem || ct.targets.some((target) => String(target.dfdId) === selectedDiagramId)
     )
   }, [componentThreats, selectedDiagramId])
 
-  // Get analyzable components, trust boundaries, and data flows
-  const analyzableComponents = useMemo(() => {
-    // Get components from DFD canvas nodes
-    const canvasComponents = aggregatedCanvasData.nodes.filter(
-      (node) => node.type === 'process' || node.type === 'datastore' ||
-        node.type === 'humanActor' || node.type === 'systemActor'
-    )
-
-    // Get IDs of components already on canvas to avoid duplicates
-    const canvasComponentIds = new Set(
-      canvasComponents
-        .map((node) => node.data?.componentId)
-        .filter(Boolean)
-    )
-
-    // Create synthetic DiagramNode objects for analysis-only components
-    // Only include components not already on canvas (when not filtering by specific DFD)
-    const analysisOnlyNodes: DiagramNode[] = !selectedDiagramId
-      ? analysisComponents
-          .filter((comp) => !canvasComponentIds.has(comp.id))
-          .map((comp) => ({
-            id: `analysis-${comp.id}`,
-            type: comp.category === 'process' ? 'process' :
-                  comp.category === 'datastore' ? 'datastore' :
-                  comp.category === 'external_human_actor' ? 'humanActor' :
-                  comp.category === 'external_system_actor' ? 'systemActor' : 'process',
-            position: { x: 0, y: 0 },
-            data: {
-              label: comp.name,
-              componentId: comp.id,
-              isAnalysisOnly: true,
-            },
-          }))
-      : []
-
-    return [...canvasComponents, ...analysisOnlyNodes]
-  }, [aggregatedCanvasData.nodes, analysisComponents, selectedDiagramId])
-
-  const trustZones = useMemo((): DiagramNode[] => {
-    const canvasZones = aggregatedCanvasData.nodes.filter((node) => node.type === 'trustZone')
-    if (canvasZones.length > 0) return canvasZones
-
-    // For models without DFD canvas (e.g., imported TM-Library), derive zones from backend
-    return backendTrustZones.map((zone) => ({
-      id: `analysis-zone-${zone.id}`,
-      type: 'trustZone',
-      position: { x: 0, y: 0 },
-      data: { label: zone.name },
-    }))
-  }, [aggregatedCanvasData.nodes, backendTrustZones])
-
-  const dataFlows = useMemo(() => {
-    if (aggregatedCanvasData.edges.length > 0) return aggregatedCanvasData.edges
-
-    // For models without DFD canvas, derive flows from the edge_dataflow_map
-    const edgeMap = threatData?.edgeDataflowMap || {}
-    const syntheticEdges: DataFlowEdge[] = Object.entries(edgeMap).map(([edgeId, entry]) => ({
-      id: edgeId,
-      source: entry.sourceComponentName || '',
-      target: entry.destComponentName || '',
-      type: 'dataFlow' as const,
-      data: {
-        label: entry.label || 'Data Flow',
-        dataflowId: entry.dataflowId,
-      },
-    }))
-    return syntheticEdges
-  }, [aggregatedCanvasData.edges, threatData?.edgeDataflowMap])
-
-  // Get selected component threat
   const selectedComponentThreat = useMemo(() => {
     if (!selectedThreatId) return null
     return filteredComponentThreats.find((ct) => ct.id === selectedThreatId) || null
   }, [filteredComponentThreats, selectedThreatId])
 
-  // Get backend info for selected component (for AddThreatDialog)
-  const selectedBackendInfo = useMemo(() => {
-    if (!selectedComponentId) return null
-
-    // Check if it's a data flow (edge)
-    const isDataflow = dataFlows.some(df => df.id === selectedComponentId)
-
-    if (isDataflow) {
-      const edge = dataFlows.find(df => df.id === selectedComponentId)
-      // Get dataflow backend ID from edge metadata or edgeDataflowMap
-      const dataflowId = (edge?.data?.dataflowId as number | undefined)
-        ?? threatData?.edgeDataflowMap?.[selectedComponentId]?.dataflowId
-      if (dataflowId) {
-        return {
-          backendId: dataflowId,
-          type: 'dataflow' as const,
-          name: edge?.data?.label || `${edge?.source} → ${edge?.target}` || 'Data Flow',
-        }
-      }
-      return null
+  // What the Add threat dialog is preset with: the selection's target, or the whole system.
+  const addThreatPreset = useMemo(() => {
+    if (!selectedTarget) return null
+    if (selectedTarget.kind === 'system') {
+      return { targets: [] as TargetRef[], wholeSystem: true, name: 'System' }
     }
+    const ref = selectionTargetRef(selectedTarget)!
+    const option = modelTargets.byKey.get(`${ref.type}:${ref.id}`)
+    return { targets: [ref], wholeSystem: false, name: option?.label ?? `${ref.type} ${ref.id}` }
+  }, [selectedTarget, modelTargets.byKey])
 
-    // Check if it's an analysis-only component (ID starts with "analysis-")
-    if (selectedComponentId.startsWith('analysis-')) {
-      const backendId = parseInt(selectedComponentId.replace('analysis-', ''), 10)
-      const analysisComp = analysisComponents.find(c => c.id === backendId)
-      if (analysisComp) {
-        return {
-          backendId,
-          type: 'component' as const,
-          name: analysisComp.name,
-        }
-      }
-      return null
-    }
-
-    // For canvas components, use the nodeComponentMap
-    const mapping = nodeComponentMap[selectedComponentId]
-    if (mapping) {
-      const node = aggregatedCanvasData.nodes.find(n => n.id === selectedComponentId)
-      const nodeName = node ? String(node.data.label) : selectedComponentId
-      return {
-        backendId: mapping.componentId,
-        type: 'component' as const,
-        name: nodeName,
-      }
-    }
-
-    return null
-  }, [selectedComponentId, dataFlows, threatData?.edgeDataflowMap, nodeComponentMap, aggregatedCanvasData.nodes, analysisComponents])
-
-  // Get backend info for selected threat (for AddCountermeasureDialog)
   const selectedThreatBackendInfo = useMemo(() => {
-    if (!selectedComponentThreat) return null
-    if (!selectedComponentThreat.backendThreatId) return null
-
-    // Parse threatLibraryId from threatId (format: "lib-{id}")
+    if (!selectedComponentThreat?.backendThreatId) return null
     const parsedId = selectedComponentThreat.threatId.startsWith('lib-')
       ? parseInt(selectedComponentThreat.threatId.slice(4), 10)
       : null
-    const threatLibraryId = parsedId != null && !Number.isNaN(parsedId) ? parsedId : null
-
     return {
       backendId: selectedComponentThreat.backendThreatId,
-      type: selectedComponentThreat.threatType || 'component',
       name: selectedComponentThreat.threatName || 'Unknown Threat',
-      threatLibraryId,
+      threatLibraryId: parsedId != null && !Number.isNaN(parsedId) ? parsedId : null,
+      targets: selectedComponentThreat.targets.map((target): TargetRef => ({ type: target.type, id: target.id })),
     }
   }, [selectedComponentThreat])
+
+  const handleSelectTarget = useCallback((selection: AnalysisSelection) => {
+    setSelectedTarget((current) => {
+      const changed = !current || JSON.stringify(current) !== JSON.stringify(selection)
+      if (changed) setSelectedThreatId(null)
+      return selection
+    })
+  }, [])
+
+  const handleGenerateMissingThreats = () => {
+    if (!id) return
+    generateModelThreats.mutate(id, {
+      onSuccess: (result) => {
+        toast.success(
+          result.created === 0
+            ? 'No missing library threats'
+            : `Added ${result.created} ${result.created === 1 ? 'threat' : 'threats'} on ${result.targets} targets`
+        )
+        setGenerateThreatsConfirmOpen(false)
+        refetchThreats()
+      },
+      onError: () => toast.error('Could not add the library threats'),
+    })
+  }
 
   // Inline name editing handlers
   const handleStartEditingName = useCallback(() => {
@@ -507,6 +432,19 @@ export function ThreatModelDetail() {
             )}
             <span className="text-muted-foreground">/</span>
             <span className="text-sm text-muted-foreground">Workspace</span>
+            <BlueprintSwitcher
+              blueprints={blueprints}
+              selectedBlueprintId={selectedBlueprintId}
+              onSelect={handleSelectBlueprint}
+              onAddBlueprint={() => {
+                setManageBlueprintsMode('add')
+                setManageBlueprintsOpen(true)
+              }}
+              onManageBlueprints={() => {
+                setManageBlueprintsMode('list')
+                setManageBlueprintsOpen(true)
+              }}
+            />
           </div>
 
           {/* Right: Actions */}
@@ -535,12 +473,6 @@ export function ThreatModelDetail() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => id && exportTmLibrary(id)}
-                  className="text-xs"
-                >
-                  TM-Library (JSON)
-                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => id && exportCycloneDx(id)}
                   className="text-xs"
@@ -624,8 +556,9 @@ export function ThreatModelDetail() {
         {/* Overview Tab */}
         <TabsContent value="overview" className="flex-1 overflow-auto m-0 p-6">
           <OverviewTab
-            threatModelId={id!}
-            diagrams={diagrams}
+            threatModel={threatModel}
+            blueprints={blueprints}
+            diagrams={blueprintDiagrams}
             progressChecklist={progressChecklist}
             completionStatus={completionStatus}
             summaries={summaries}
@@ -633,6 +566,7 @@ export function ThreatModelDetail() {
             referenceImages={referenceImages}
             isCreatingDiagram={createDiagramMutation.isPending}
             isUploadingImage={uploadImageMutation.isPending}
+            isSecurityTeam={isSecurityTeam}
             onSelectDiagram={setSelectedDiagramId}
             onEditDiagram={(diagramId) => navigate(`/threat-models/${id}/diagrams/${diagramId}`)}
             onCreateDiagram={handleCreateDFD}
@@ -650,7 +584,6 @@ export function ThreatModelDetail() {
               setSelectedImageIndex(index)
               setReferenceImageViewerOpen(true)
             }}
-            onManageSystems={() => setManageSystemsModalOpen(true)}
             onManageThreatModels={() => setManageThreatModelsModalOpen(true)}
             onManagePacks={() => setManagePacksModalOpen(true)}
             onManagePeople={() => setManagePeopleModalOpen(true)}
@@ -672,7 +605,7 @@ export function ThreatModelDetail() {
                 <div className="flex items-center gap-4">
                   <h2 className="font-semibold">Threat Analysis</h2>
                   {/* DFD Filter - only show if DFDs exist */}
-                  {diagrams.length > 0 && (
+                  {blueprintDiagrams.length > 0 && (
                     <div className="flex items-center gap-2">
                       <select
                         value={selectedDiagramId || ''}
@@ -680,7 +613,7 @@ export function ThreatModelDetail() {
                         className="text-sm border rounded-md px-2 py-1 bg-background"
                       >
                         <option value="">All</option>
-                        {diagrams.map((d) => (
+                        {blueprintDiagrams.map((d) => (
                           <option key={d.id} value={d.id}>
                             {d.name}{!d.isPrimary ? ' (Reference)' : ''}
                           </option>
@@ -691,7 +624,8 @@ export function ThreatModelDetail() {
                         size="sm"
                         className="h-7 text-xs"
                         onClick={() => {
-                          const diagramId = selectedDiagramId || diagrams.find((d) => d.isPrimary)?.id || diagrams[0].id
+                          const diagramId =
+                            selectedDiagramId || blueprintDiagrams.find((d) => d.isPrimary)?.id || blueprintDiagrams[0].id
                           navigate(`/threat-models/${id}/diagrams/${diagramId}`)
                         }}
                       >
@@ -699,15 +633,16 @@ export function ThreatModelDetail() {
                       </Button>
                     </div>
                   )}
-                  {/* Zone Protections Button */}
+                  {/* "Add missing library threats" (plan L7), where the zone protections button was. */}
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setZoneProtectionsDialogOpen(true)}
-                    className="gap-1"
+                    className="h-7 text-xs"
+                    onClick={() => setGenerateThreatsConfirmOpen(true)}
+                    disabled={generateModelThreats.isPending}
                   >
-                    <Shield className="h-4 w-4" />
-                    Zone Protections
+                    {generateModelThreats.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
+                    Add missing library threats
                   </Button>
                 </div>
                 <div className="flex items-center rounded-lg border bg-background p-1">
@@ -741,47 +676,34 @@ export function ThreatModelDetail() {
                 {viewMode === 'component' ? (
                   <ComponentView
                     threatModelId={id!}
-                    canvasData={aggregatedCanvasData}
-                    analyzableComponents={analyzableComponents}
-                    trustZones={trustZones}
-                    dataFlows={dataFlows}
-                    componentThreats={filteredComponentThreats}
-                    selectedComponentId={selectedComponentId}
+                    threats={filteredComponentThreats}
+                    selection={selectedTarget}
                     selectedThreatId={selectedThreatId}
-                    selectedComponentThreat={selectedComponentThreat}
-                    onSelectComponent={(id: string) => {
-                      if (id !== selectedComponentId) {
-                        setSelectedThreatId(null)
-                      }
-                      setSelectedComponentId(id)
-                    }}
+                    selectedThreat={selectedComponentThreat}
+                    onSelectTarget={handleSelectTarget}
                     onSelectThreat={setSelectedThreatId}
                     onCountermeasureStatusChange={updateCountermeasureStatus}
                     onAssignOwner={assignOwner}
                     onAddComponent={() => setAddComponentDialogOpen(true)}
                     onAddCustomThreat={() => setAddThreatDialogOpen(true)}
-                    onUpdateTriageStatus={(threatId, status, rationale) => {
-                      if (selectedComponentId) {
-                        updateTriageStatus(threatId, selectedComponentId, status, rationale)
-                      }
-                    }}
+                    onUpdateTriageStatus={updateTriageStatus}
                     onAddCustomCountermeasure={() => setAddCountermeasureDialogOpen(true)}
                     onCountermeasurePriorityChange={updateCountermeasurePriority}
                     onCountermeasureDueDateChange={updateCountermeasureDueDate}
                     onCountermeasureExternalTicketChange={updateCountermeasureExternalTicket}
-                    onRevertCountermeasure={revertInheritedCountermeasure}
                     onReorderThreats={reorderThreats}
                     onReorderCountermeasures={reorderCountermeasures}
                     isSecurityTeam={isSecurityTeam}
                   />
                 ) : (
                   <TableView
-                    canvasData={aggregatedCanvasData}
-                    componentThreats={filteredComponentThreats}
-                    onCountermeasureStatusChange={updateCountermeasureStatus}
-                    onSelectThreat={(componentId, threatId) => {
-                      setSelectedComponentId(componentId)
-                      setSelectedThreatId(threatId)
+                    threats={filteredComponentThreats}
+                    onSelectThreat={(threat) => {
+                      const firstTarget = threat.targets[0]
+                      const selection =
+                        threat.wholeSystem || !firstTarget ? SYSTEM_SELECTION : targetSelection(firstTarget.type, firstTarget.id)
+                      if (!threatMatchesSelection(threat, selectedTarget)) setSelectedTarget(selection)
+                      setSelectedThreatId(threat.id)
                       setViewMode('component')
                     }}
                   />
@@ -796,7 +718,7 @@ export function ThreatModelDetail() {
           <RiskAnalysisTab
             threatModelId={id!}
             componentThreats={componentThreats}
-            riskScoringMethod={threatModel.riskScoringMethod ?? 'tm_library'}
+            riskScoringMethod={threatModel.riskScoringMethod ?? 'qualitative-matrix'}
             onScoringMethodChange={handleScoringMethodChange}
           />
         </TabsContent>
@@ -817,25 +739,49 @@ export function ThreatModelDetail() {
         open={systemContextModalOpen}
         onOpenChange={setSystemContextModalOpen}
         threatModelId={id!}
-      />
-
-      <ManageSystemsModal
-        open={manageSystemsModalOpen}
-        onOpenChange={setManageSystemsModalOpen}
-        connectedSystems={linkedSystems}
-        availableSystems={systems}
-        onAdd={(systemId) => addSystemMutation.mutate({ threatModelId: id!, systemId: Number(systemId) })}
-        onRemove={(systemId) => removeSystemMutation.mutate({ threatModelId: id!, systemId: Number(systemId) })}
+        blueprints={blueprints}
+        selectedBlueprintId={selectedBlueprintId}
       />
 
       <ManageThreatModelsModal
         open={manageThreatModelsModalOpen}
         onOpenChange={setManageThreatModelsModalOpen}
-        connectedModels={referencedModels}
+        relatedModels={threatModel.relatedModels ?? []}
         availableModels={allThreatModels.filter((m) => String(m.id) !== id)}
         currentModelId={id!}
-        onAdd={(modelId) => addReferencedModelMutation.mutate({ threatModelId: id!, targetModelId: Number(modelId) })}
-        onRemove={(modelId) => removeReferencedModelMutation.mutate({ threatModelId: id!, targetModelId: Number(modelId) })}
+        isAdding={addReferencedModelMutation.isPending}
+        onAdd={async (targetModelId, relationType) => {
+          try {
+            await addReferencedModelMutation.mutateAsync({ threatModelId: id!, targetModelId, relationType })
+          } catch (error) {
+            // The backend answers 400 with `{error}` for a self link or a loop (plan J15).
+            const body = error instanceof ApiError ? (error.data as { error?: string } | undefined) : undefined
+            throw new Error(body?.error ?? (error instanceof Error ? error.message : 'Could not link the model'))
+          }
+        }}
+        onRemove={(targetModelId, relationType) =>
+          removeReferencedModelMutation.mutate({ threatModelId: id!, targetModelId, relationType })
+        }
+      />
+
+      <ManageBlueprintsModal
+        open={manageBlueprintsOpen}
+        onOpenChange={setManageBlueprintsOpen}
+        threatModelId={id!}
+        blueprints={blueprints}
+        initialMode={manageBlueprintsMode}
+        onDeleted={(deletedBlueprintId) => {
+          if (deletedBlueprintId === selectedBlueprintId) {
+            setSearchParams(
+              (current) => {
+                const next = new URLSearchParams(current)
+                next.delete('blueprint')
+                return next
+              },
+              { replace: true }
+            )
+          }
+        }}
       />
 
       <ManagePacksModal
@@ -903,13 +849,13 @@ export function ThreatModelDetail() {
       />
 
       {/* Add Threat Dialog */}
-      {selectedBackendInfo && (
+      {addThreatPreset && (
         <AddThreatDialog
           open={addThreatDialogOpen}
           onOpenChange={setAddThreatDialogOpen}
-          targetId={selectedBackendInfo.backendId}
-          targetType={selectedBackendInfo.type}
-          targetName={selectedBackendInfo.name}
+          initialTargets={addThreatPreset.targets}
+          initialWholeSystem={addThreatPreset.wholeSystem}
+          targetName={addThreatPreset.name}
           threatModelId={id}
           onSuccess={() => {
             refetchThreats()
@@ -917,16 +863,41 @@ export function ThreatModelDetail() {
         />
       )}
 
+      <AlertDialog open={generateThreatsConfirmOpen} onOpenChange={setGenerateThreatsConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Add missing library threats?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This adds every library threat that applies to this model and is not in it, including ones you
+              deleted earlier.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={generateModelThreats.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault()
+                handleGenerateMissingThreats()
+              }}
+              disabled={generateModelThreats.isPending}
+            >
+              {generateModelThreats.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Add threats
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Add Countermeasure Dialog */}
       {selectedThreatBackendInfo && (
         <AddCountermeasureDialog
           open={addCountermeasureDialogOpen}
           onOpenChange={setAddCountermeasureDialogOpen}
           threatId={selectedThreatBackendInfo.backendId}
-          threatType={selectedThreatBackendInfo.type as 'component' | 'dataflow'}
           threatName={selectedThreatBackendInfo.name}
           threatLibraryId={selectedThreatBackendInfo.threatLibraryId}
           threatModelId={id}
+          initialTargets={selectedThreatBackendInfo.targets}
           onSuccess={() => {
             refetchThreats()
           }}
@@ -938,16 +909,7 @@ export function ThreatModelDetail() {
         open={addComponentDialogOpen}
         onOpenChange={setAddComponentDialogOpen}
         threatModelId={id!}
-        onSuccess={() => {
-          refetchThreats()
-        }}
-      />
-
-      {/* Zone Protections Dialog */}
-      <ReviewZoneProtectionsDialog
-        open={zoneProtectionsDialogOpen}
-        onOpenChange={setZoneProtectionsDialogOpen}
-        threatModelId={id!}
+        blueprintId={selectedBlueprintId ?? undefined}
         onSuccess={() => {
           refetchThreats()
         }}

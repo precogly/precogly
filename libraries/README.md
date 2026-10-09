@@ -157,7 +157,8 @@ components:
 |---|---|---|
 | `id` | yes | Unique within pack. Lowercase + hyphens. |
 | `name` | yes | Display name. |
-| `category` | yes | `process`, `datastore`, `external_human_actor`, `external_system_actor` |
+| `category` | yes | `process`, `datastore`, `external_human_actor`, `external_system_actor`. Any other value is a validation error. |
+| `kind` | no | The CycloneDX asset type the component exports as, for example `device`, `service`, `api`, `gateway`, `data-store`. Defaults from the category: `process` gives `process`, `datastore` gives `data-store`, the two actor categories give `actor`. Any value outside the asset type list is a validation error. |
 | `type` | yes | Free-text component type (e.g. "Object Storage", "NoSQL Database"). |
 | `provider` | no | Provider name (e.g. `aws`, `azure`, `gcp`). |
 | `description` | no | Multi-line description. |
@@ -247,13 +248,16 @@ mappings:
         applies_to: component
       - threat: dataflow-eavesdropping
         applies_to: flow
+        flow_types: [data, message]
       - threat: dataflow-mitm
         applies_to: flow
+        severity: high
 
   - component: api-gateway
     threats:
       - threat: apigw-injection
         applies_to: both
+        flow_types: any
 ```
 
 `applies_to` values:
@@ -261,8 +265,15 @@ mappings:
 | Value | Meaning |
 |---|---|
 | `component` | Threat applies to the component itself |
-| `flow` | Threat applies to data flows involving the component |
+| `flow` | Threat applies to flows involving the component |
 | `both` | Threat applies to both |
+
+Two optional keys on each threat entry:
+
+| Key | Default | Meaning |
+|---|---|---|
+| `flow_types` | data-like flows only (`data`, `message`, `event`) | The flow types a `flow` or `both` link reaches: a list of flow types (see `flowType` under templates) or `any`. A link that says nothing never lands on a `signal`, `energy`, `physical`, `control`, `process` or `financial` flow. Not allowed on `applies_to: component`. |
+| `severity` | `medium` | The level a generated threat starts with: `info`, `low`, `medium`, `high` or `critical`. |
 
 ### threats-countermeasures.yaml
 
@@ -465,7 +476,8 @@ canvas_data:
       style: { width: 440, height: 220 }
       data:
         label: "AWS Account"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "AWS"
 
     - id: "datastore-s3"
@@ -496,6 +508,7 @@ canvas_data:
         label: "Upload File"
         protocol: "HTTPS"
         encrypted: true
+        authentication: ["oidc"]
 
     - id: "edge-2"
       source: "datastore-s3"
@@ -503,8 +516,10 @@ canvas_data:
       type: "dataFlow"
       data:
         label: "S3 Event Trigger"
+        flowType: "event"
         protocol: "AWS Internal"
         encrypted: true
+        authentication: ["hmac"]
 ```
 
 ### Template Metadata
@@ -525,11 +540,11 @@ canvas_data:
 
 | `type` | Use for | Key `data` fields |
 |---|---|---|
-| `process` | Applications, services, functions | `technology`, `dataSensitivity`, `component_ref` |
-| `datastore` | Databases, file storage, caches | `technology`, `dataSensitivity`, `component_ref` |
+| `process` | Applications, services, functions | `technology`, `dataSensitivity`, `component_ref`, `kind` |
+| `datastore` | Databases, file storage, caches | `technology`, `dataSensitivity`, `component_ref`, `kind` |
 | `humanActor` | Users, admins, attackers | `actorType` |
-| `systemActor` | External APIs, third-party services | `systemType`, `vendor` |
-| `trustZone` | Network zones, security perimeters | `zoneType`, `technology` |
+| `systemActor` | External APIs, third-party services, field devices | `systemType`, `vendor`, `component_ref`, `kind` |
+| `trustZone` | Trust, network and other zones | `zoneType`, `trustLevel`, `technology` |
 | `systemScope` | Top-level system containers | `owner`, `classification` |
 | `table` | Workshop worksheets, annotation grids | `headerRow`, `columnWidths`, `rows` (array of `{ height, cells }`) |
 
@@ -537,27 +552,50 @@ Containers (`trustZone`, `systemScope`) support nesting via `parentId` and must 
 
 Table nodes are canvas annotations with no DFD semantics. They do not participate in threat analysis. Each cell in `rows[].cells` supports `text`, `fill` (`yellow`, `gray`, etc.), `rowSpan`, and `colSpan`.
 
+A node's optional `kind` names the CycloneDX asset type of the component the node becomes (`device`, `service`, `api`, `gateway`, `data-store`, `actor` and so on; the same list as the `kind` key in `components.yaml`). When absent, the kind comes from the linked library component, or from the category when the library says nothing.
+
+Trust zones nest: a `trustZone` whose `parentId` is another `trustZone` becomes a child zone, which is how Purdue levels or subnets inside a site are modelled.
+
 ### Trust Zone Types
 
-| `zoneType` | Label |
-|---|---|
-| `zoneInternet` | Internet / Public Zone |
-| `zoneDmz` | DMZ |
-| `zoneInternal` | Internal Network |
-| `zoneRestricted` | Restricted Zone |
+`zoneType` is the CycloneDX zone type. Valid values: `availability`, `compliance`, `data`, `deployment`, `functional`, `geographic`, `logical`, `network`, `organizational`, `physical`, `process`, `tenant`, `trust`. The default is `trust`; use `network` for network segments such as a DMZ, a VPC or a Purdue level.
 
-### Edge Type
+`trustLevel` is an optional integer from 0 (untrusted, internet) to 100 (most trusted). A zone without it exports no trust level.
 
-All edges use `type: "dataFlow"`.
+**Retired:** the old values `zoneInternet`, `zoneDmz`, `zoneInternal` and `zoneRestricted` (and the variants `dmz`, `internal`, `internet`, `privateSecured`) are not zone types. A template that still uses one fails validation and the import is refused; map them to `trust` (or `network`) and say the trust level with `trustLevel`.
+
+### Edge Types
+
+Edges are `type: "dataFlow"` (a flow between two component nodes) or `type: "trustBoundary"` (a boundary between two trust zone nodes).
+
+#### `dataFlow`
 
 | `data` field | Required | Description |
 |---|---|---|
 | `label` | no | Display label on the edge. |
+| `flowType` | no | CycloneDX flow type: `control`, `data`, `energy`, `event`, `financial`, `message`, `physical`, `process`, `signal`. Default `data`. Protocol, port and encryption only apply to the data-like types (`data`, `message`, `event`). |
 | `protocol` | no | `HTTP`, `HTTPS`, `gRPC`, `WebSocket`, `TCP`, `UDP`, `MQTT`, `AMQP`, `SQL`, `Custom` |
 | `encrypted` | no | `true` or `false` |
-| `authenticated` | no | `true` or `false` |
+| `authentication` | no | List of authentication methods on the flow: the CycloneDX values (`api-key`, `basic`, `bearer`, `certificate`, `hmac`, `jwt`, `kerberos`, `mtls`, `oauth2`, `oidc`, `saml`, `session-cookie`, `ssh`, `totp` and the rest of the spec list) or `unspecified` when the flow is authenticated but the template does not know how. An empty list, or no key, means not recorded. `none` means explicitly unauthenticated and cannot sit beside other values. |
 | `dataClassification` | no | List of: `PII`, `Customer Data`, `Financial`, `PHI`, `Confidential`, `Internal`, `Public` |
 | `description` | no | Edge description. |
+
+**Retired:** the boolean `authenticated` is no longer read. A template that still has it fails validation and the import is refused; replace `authenticated: true` with the real method (`authentication: ["oidc"]`) or, only when the method is unknown, `authentication: ["unspecified"]`, and drop `authenticated: false`.
+
+#### `trustBoundary`
+
+`source` and `target` are trust zone node ids. A flow whose ends sit on opposite sides of the boundary (in either zone or any zone nested inside it) is marked as crossing it.
+
+| `data` field | Required | Description |
+|---|---|---|
+| `label` | no | Display label. |
+| `boundaryType` | no | CycloneDX boundary type: `data`, `functional`, `network`, `organizational`, `physical`, `process`, `trust`. Default `trust`. |
+| `authenticationMethods` | no | Authentication the crossing requires, same values as `authentication` above. |
+| `accessControlMethods` | no | Authorization the crossing requires: `abac`, `acl`, `capability`, `dac`, `mac`, `pbac`, `radac`, `rbac`, `rebac`, or `none`. |
+| `dataValidation`, `logging`, `monitoring` | no | `true` or `false`. |
+| `rateLimit` | no | Free text, for example `100 req/s`. |
+
+The format changed with these keys but `schema_version` stays `1`: validation refuses the two retired keys by name, which is all a version bump would have done.
 
 ### Linking Nodes to Components
 
@@ -669,7 +707,12 @@ POST /api/packs/validate/
 | Components/threats/countermeasures have `id` | Error | Missing identifier |
 | Valid `control_type` in countermeasures | Warning | Invalid enum value |
 | Valid `cost` in countermeasures | Warning | Invalid enum value |
-| Valid `category` in components | Warning | Invalid enum value |
+| Valid `category` in components | Error | Invalid enum value |
+| Valid `kind` in components and template nodes | Error | Value outside the CycloneDX asset type list |
+| Valid `applies_to`, `flow_types`, `severity` in `components-threats.yaml` | Error | Value outside its list; `flow_types` on an `applies_to: component` entry |
+| Template `zoneType`, `flowType`, `boundaryType` | Error | Value outside the CycloneDX lists, including the retired `zoneInternet`, `zoneDmz`, `zoneInternal`, `zoneRestricted` |
+| Template `trustLevel` | Error | Not an integer from 0 to 100 |
+| Template `authentication` | Error | Not a list, or the retired boolean `authenticated` is present |
 | Join file references resolve | Error | Broken cross-references |
 | Template `component_ref` values resolve | Error | Broken template links |
 
@@ -691,4 +734,7 @@ Before submitting a pack, verify:
 - [ ] All `source_framework` slugs in requirement overlays match a published compliance pack
 - [ ] All `section_code` values match requirements in the referenced framework
 - [ ] DFD template `component_ref` values match ids in `components.yaml`
+- [ ] Component and node `kind` values, template `zoneType`, `flowType` and `boundaryType` values are from the CycloneDX lists above; no `zoneRestricted` family values remain
+- [ ] Flow edges use `authentication` lists, never the retired boolean `authenticated`; `unspecified` only where the method is unknown
+- [ ] Flow threat links that should reach non-data flows (signal, control, energy and so on) say so with `flow_types`
 - [ ] Version follows semantic versioning (`X.Y.Z`)

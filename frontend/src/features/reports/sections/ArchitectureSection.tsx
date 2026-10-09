@@ -4,12 +4,14 @@ import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ReadOnlyDFDViewer } from '@/components/shared/ReadOnlyDFDViewer'
 import type { ReportArchitecture } from '@/features/reports/types/report'
+import { boundaryCrossingRequirementsText, boundaryTypeLabel, zoneTrustLevelText, zoneTypeLabel } from '../utils/labels'
 import { ReportSection } from '../ReportSection'
 
 interface ArchitectureSectionProps {
   architecture: ReportArchitecture
 }
 
+/** Diagrams, then zones with their type and level, then boundaries with their type and crossing requirements (plan 11.6). */
 export function ArchitectureSection({ architecture }: ArchitectureSectionProps) {
   const primaryDfdId = architecture.dfds.find((dfd) => dfd.isPrimary)?.id ?? null
   const [expandedDFDId, setExpandedDFDId] = useState<string | null>(primaryDfdId)
@@ -17,10 +19,9 @@ export function ArchitectureSection({ architecture }: ArchitectureSectionProps) 
   return (
     <ReportSection title="Architecture">
       <div className="space-y-4">
-        {/* DFDs */}
         {architecture.dfds.length > 0 && (
           <div>
-            <h4 className="font-medium mb-2">Data Flow Diagrams</h4>
+            <h4 className="font-medium mb-2">Diagrams</h4>
             <div className="space-y-3">
               {architecture.dfds.map((dfd) => {
                 const isExpanded = expandedDFDId === dfd.id
@@ -41,7 +42,7 @@ export function ArchitectureSection({ architecture }: ArchitectureSectionProps) 
                           )}
                         </h4>
                         <p className="text-sm text-muted-foreground mt-1">
-                          {dfd.nodeCount} components, {dfd.edgeCount} data flows
+                          {dfd.nodeCount} nodes, {dfd.edgeCount} flows
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -59,22 +60,13 @@ export function ArchitectureSection({ architecture }: ArchitectureSectionProps) 
                     {isExpanded && dfd.canvasData && (
                       <div className="border-t">
                         <div className="p-2 bg-muted/20 flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground">
-                            Pan and zoom to explore the diagram
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setExpandedDFDId(null)}
-                          >
+                          <span className="text-xs text-muted-foreground">Pan and zoom to explore the diagram</span>
+                          <Button variant="ghost" size="sm" onClick={() => setExpandedDFDId(null)}>
                             <X className="h-4 w-4 mr-1" />
                             Close
                           </Button>
                         </div>
-                        <ReadOnlyDFDViewer
-                          canvasData={dfd.canvasData}
-                          className="h-[500px] w-full"
-                        />
+                        <ReadOnlyDFDViewer canvasData={dfd.canvasData} className="h-[500px] w-full" />
                       </div>
                     )}
                   </div>
@@ -84,23 +76,24 @@ export function ArchitectureSection({ architecture }: ArchitectureSectionProps) 
           </div>
         )}
 
-        {/* Trust Zones */}
-        {architecture.trustZones.length > 0 && (
+        {architecture.zones.length > 0 && (
           <div>
-            <h4 className="font-medium mb-2">Trust Zones</h4>
+            <h4 className="font-medium mb-2">Zones ({architecture.zones.length})</h4>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead className="text-right">Trust Level</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead className="text-right">Trust level</TableHead>
                   <TableHead>Description</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {architecture.trustZones.map((zone) => (
+                {architecture.zones.map((zone) => (
                   <TableRow key={zone.id}>
                     <TableCell className="font-medium">{zone.name}</TableCell>
-                    <TableCell className="text-right">{zone.trustLevel}</TableCell>
+                    <TableCell>{zoneTypeLabel(zone.zoneType)}</TableCell>
+                    <TableCell className="text-right">{zoneTrustLevelText(zone)}</TableCell>
                     <TableCell className="text-muted-foreground">{zone.description}</TableCell>
                   </TableRow>
                 ))}
@@ -109,24 +102,32 @@ export function ArchitectureSection({ architecture }: ArchitectureSectionProps) 
           </div>
         )}
 
-        {/* Trust Boundaries */}
-        {architecture.trustBoundaries.length > 0 && (
+        {architecture.boundaries.length > 0 && (
           <div>
-            <h4 className="font-medium mb-2">Trust Boundaries</h4>
+            <h4 className="font-medium mb-2">Boundaries ({architecture.boundaries.length})</h4>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Label</TableHead>
-                  <TableHead>Zone A</TableHead>
-                  <TableHead>Zone B</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Between</TableHead>
+                  <TableHead>Crossing requirements</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {architecture.trustBoundaries.map((boundary) => (
+                {architecture.boundaries.map((boundary) => (
                   <TableRow key={boundary.id}>
-                    <TableCell className="font-medium">{boundary.label}</TableCell>
-                    <TableCell>{boundary.zoneA}</TableCell>
-                    <TableCell>{boundary.zoneB}</TableCell>
+                    <TableCell className="font-medium">
+                      {boundary.label}
+                      {boundary.description && (
+                        <div className="text-xs text-muted-foreground">{boundary.description}</div>
+                      )}
+                    </TableCell>
+                    <TableCell>{boundaryTypeLabel(boundary.boundaryType)}</TableCell>
+                    <TableCell>
+                      {boundary.zoneA} and {boundary.zoneB}
+                    </TableCell>
+                    <TableCell className="text-sm">{boundaryCrossingRequirementsText(boundary)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -134,17 +135,14 @@ export function ArchitectureSection({ architecture }: ArchitectureSectionProps) 
           </div>
         )}
 
-        {/* Reference Images */}
         {architecture.referenceImages.length > 0 && (
           <div>
             <h4 className="font-medium mb-2">Reference Images</h4>
             <div className="space-y-1">
-              {architecture.referenceImages.map((img) => (
-                <div key={img.id} className="text-sm">
-                  <span className="font-medium">{img.filename}</span>
-                  {img.description && (
-                    <span className="text-muted-foreground"> — {img.description}</span>
-                  )}
+              {architecture.referenceImages.map((image) => (
+                <div key={image.id} className="text-sm">
+                  <span className="font-medium">{image.filename}</span>
+                  {image.description && <span className="text-muted-foreground">: {image.description}</span>}
                 </div>
               ))}
             </div>

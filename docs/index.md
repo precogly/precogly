@@ -13,9 +13,9 @@ Open-source threat modeling tools lack enterprise features. Commercial tools com
 
 ## Key Features
 
-- **Import and export TM-BOM style JSON files** — improves interoperability with other threat modeling platforms
+- **CycloneDX 2.0 TM-BOM import and export**: one interchange format, validated against the CycloneDX schema, for moving models between Precogly and other tools
 - **Collaborative workspaces** — team collaboration for threat modeling programs
-- **Advanced DFD editor** — nested components, trust zones with trust boundaries, and more
+- **Advanced DFD editor**: nested components, typed zones, boundaries and flows, numbered threats and controls, and more
 - **Community library packs** — links to MITRE ATT&CK, CAPEC, LINDDUN, STRIDE, and other taxonomies for high-quality threat models
 
 ## Who is Precogly for?

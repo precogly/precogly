@@ -42,7 +42,8 @@ canvas_data:
       style: { width: 500, height: 340 }
       data:
         label: "Central Operations (Level 2-3)"
-        zoneType: "zoneInternal"
+        zoneType: "network"
+        trustLevel: 70
 
     - id: "zone-wan"
       type: "trustZone"
@@ -51,7 +52,8 @@ canvas_data:
       style: { width: 500, height: 180 }
       data:
         label: "WAN / Satellite Link"
-        zoneType: "zoneInternet"
+        zoneType: "network"
+        trustLevel: 10
 
     - id: "zone-site-a"
       type: "trustZone"
@@ -60,7 +62,8 @@ canvas_data:
       style: { width: 500, height: 260 }
       data:
         label: "Remote Site A - Pipeline Station"
-        zoneType: "zoneRestricted"
+        zoneType: "network"
+        trustLevel: 80
 
     - id: "zone-site-b"
       type: "trustZone"
@@ -69,7 +72,8 @@ canvas_data:
       style: { width: 500, height: 260 }
       data:
         label: "Remote Site B - Compressor Station"
-        zoneType: "zoneRestricted"
+        zoneType: "network"
+        trustLevel: 80
 
     - id: "zone-remote-access"
       type: "trustZone"
@@ -78,7 +82,8 @@ canvas_data:
       style: { width: 500, height: 175 }
       data:
         label: "Secure Remote Access Zone"
-        zoneType: "zoneDMZ"
+        zoneType: "network"
+        trustLevel: 40
 
     # Central Operations Components
     - id: "process-central-scada"
@@ -147,6 +152,7 @@ canvas_data:
       data:
         label: "Pipeline Sensors"
         component_ref: "field-sensor"
+        kind: "device"
         description: "Pressure, flow, and leak detection sensors along the pipeline"
 
     - id: "actor-pipeline-valves"
@@ -156,6 +162,7 @@ canvas_data:
       data:
         label: "Isolation Valves"
         component_ref: "actuator"
+        kind: "device"
         description: "Pipeline emergency isolation valves"
 
     # Site B Components
@@ -186,6 +193,7 @@ canvas_data:
       data:
         label: "Compressor Sensors"
         component_ref: "field-sensor"
+        kind: "device"
         description: "Vibration, temperature, pressure, and surge detection"
 
     # Remote Access Zone
@@ -207,7 +215,7 @@ canvas_data:
       data:
         label: "Monitoring and commands"
         encrypted: false
-        authenticated: true
+        authentication: ["unspecified"]
 
     # HMI -> SCADA
     - id: "edge-hmi-scada-roc"
@@ -217,7 +225,7 @@ canvas_data:
       data:
         label: "Operator commands"
         encrypted: false
-        authenticated: true
+        authentication: ["unspecified"]
 
     # SCADA -> HMI
     - id: "edge-scada-hmi-roc"
@@ -227,7 +235,6 @@ canvas_data:
       data:
         label: "Multi-site overview"
         encrypted: false
-        authenticated: false
 
     # SCADA -> Historian
     - id: "edge-scada-hist-roc"
@@ -237,7 +244,6 @@ canvas_data:
       data:
         label: "Aggregated site data"
         encrypted: false
-        authenticated: false
 
     # SCADA -> WAN Firewall
     - id: "edge-scada-wan"
@@ -247,7 +253,7 @@ canvas_data:
       data:
         label: "Remote commands"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     # WAN Firewall -> OPC Broker
     - id: "edge-wan-opc"
@@ -257,7 +263,7 @@ canvas_data:
       data:
         label: "Filtered site traffic"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     # OPC Broker -> SCADA (return path)
     - id: "edge-opc-scada"
@@ -267,7 +273,7 @@ canvas_data:
       data:
         label: "Aggregated site data"
         encrypted: true
-        authenticated: true
+        authentication: ["certificate"]
         protocol: "OPC UA"
 
     # OPC Broker -> RTU (Site A)
@@ -278,7 +284,6 @@ canvas_data:
       data:
         label: "Pipeline commands"
         encrypted: false
-        authenticated: false
         protocol: "DNP3"
 
     # RTU -> OPC Broker
@@ -289,7 +294,6 @@ canvas_data:
       data:
         label: "Pipeline telemetry"
         encrypted: false
-        authenticated: false
         protocol: "DNP3"
 
     # Pipeline Sensors -> RTU
@@ -299,8 +303,8 @@ canvas_data:
       type: "dataFlow"
       data:
         label: "Pipeline measurements"
+        flowType: "signal"
         encrypted: false
-        authenticated: false
 
     # RTU -> Pipeline Valves
     - id: "edge-rtu-valves"
@@ -309,8 +313,8 @@ canvas_data:
       type: "dataFlow"
       data:
         label: "Valve commands"
+        flowType: "control"
         encrypted: false
-        authenticated: false
 
     # OPC Broker -> PLC (Site B)
     - id: "edge-opc-plc"
@@ -320,7 +324,6 @@ canvas_data:
       data:
         label: "Compressor setpoints"
         encrypted: false
-        authenticated: false
         protocol: "EtherNet/IP"
 
     # PLC -> OPC Broker
@@ -331,7 +334,6 @@ canvas_data:
       data:
         label: "Compressor telemetry"
         encrypted: false
-        authenticated: false
         protocol: "EtherNet/IP"
 
     # Compressor Sensors -> PLC
@@ -341,8 +343,8 @@ canvas_data:
       type: "dataFlow"
       data:
         label: "Vibration and pressure"
+        flowType: "signal"
         encrypted: false
-        authenticated: false
 
     # Compressor Sensors -> SIS
     - id: "edge-comp-sensors-sis"
@@ -351,8 +353,8 @@ canvas_data:
       type: "dataFlow"
       data:
         label: "Safety-critical values"
+        flowType: "signal"
         encrypted: false
-        authenticated: false
 
     # Field Engineer -> Jump Server
     - id: "edge-eng-jump"
@@ -362,7 +364,7 @@ canvas_data:
       data:
         label: "Authenticated remote session"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
         protocol: "VPN + MFA"
 
     # Jump Server -> WAN Firewall
@@ -373,4 +375,18 @@ canvas_data:
       data:
         label: "Engineering access"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
+
+    # Conduit between the operations center and the WAN link to the sites
+    - id: "boundary-roc-wan"
+      source: "zone-roc-center"
+      target: "zone-wan"
+      type: "trustBoundary"
+      data:
+        label: "WAN conduit"
+        boundaryType: "network"
+        authenticationMethods: ["certificate"]
+        accessControlMethods: ["acl"]
+        dataValidation: true
+        logging: true
+        monitoring: true

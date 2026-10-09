@@ -48,7 +48,8 @@ canvas_data:
       style: { width: 220, height: 660 }
       data:
         label: "Edge / API"
-        zoneType: "zoneInternet"
+        zoneType: "trust"
+        trustLevel: 0
 
     - id: "tz-orchestration"
       type: "trustZone"
@@ -57,7 +58,8 @@ canvas_data:
       style: { width: 340, height: 350 }
       data:
         label: "Agent Orchestration"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-tools"
       type: "trustZone"
@@ -66,7 +68,8 @@ canvas_data:
       style: { width: 240, height: 350 }
       data:
         label: "Tool Execution"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-data"
       type: "trustZone"
@@ -75,7 +78,8 @@ canvas_data:
       style: { width: 610, height: 250 }
       data:
         label: "Shared State"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     # ---- Edge Processes ----
     - id: "process-gateway"
@@ -201,7 +205,7 @@ canvas_data:
         label: "User request"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-gateway-to-input-guard"
       source: "process-gateway"
@@ -211,7 +215,7 @@ canvas_data:
         label: "Authenticated request"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-input-guard-to-supervisor"
       source: "process-input-guardrail"
@@ -221,7 +225,7 @@ canvas_data:
         label: "Validated request"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-supervisor-to-agent-a"
       source: "process-supervisor"
@@ -231,7 +235,7 @@ canvas_data:
         label: "Delegated task"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-agent-a-to-supervisor"
       source: "process-agent-a"
@@ -241,7 +245,7 @@ canvas_data:
         label: "Task result"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-supervisor-to-agent-b"
       source: "process-supervisor"
@@ -251,7 +255,7 @@ canvas_data:
         label: "Delegated task"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-agent-b-to-supervisor"
       source: "process-agent-b"
@@ -261,7 +265,7 @@ canvas_data:
         label: "Task result"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-agents-to-llm"
       source: "process-supervisor"
@@ -271,7 +275,7 @@ canvas_data:
         label: "LLM inference request"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-llm-to-agents"
       source: "process-llm"
@@ -281,7 +285,7 @@ canvas_data:
         label: "Model completion"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-llm-to-provider"
       source: "process-llm"
@@ -291,7 +295,7 @@ canvas_data:
         label: "Inference request"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["api-key"]
 
     - id: "edge-provider-to-llm"
       source: "actor-llm-provider"
@@ -301,7 +305,7 @@ canvas_data:
         label: "Model completion"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["api-key"]
 
     - id: "edge-agent-a-to-tool"
       source: "process-agent-a"
@@ -311,7 +315,7 @@ canvas_data:
         label: "Tool invocation"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-tool-to-agent-a"
       source: "process-tool-executor"
@@ -321,7 +325,7 @@ canvas_data:
         label: "Tool result"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-agent-b-to-mcp"
       source: "process-agent-b"
@@ -331,7 +335,7 @@ canvas_data:
         label: "MCP tool call"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-mcp-to-agent-b"
       source: "process-mcp-server"
@@ -341,7 +345,7 @@ canvas_data:
         label: "MCP tool result"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-mcp-to-external"
       source: "process-mcp-server"
@@ -351,7 +355,7 @@ canvas_data:
         label: "External API call"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-external-to-mcp"
       source: "actor-external-api"
@@ -361,7 +365,7 @@ canvas_data:
         label: "API response"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-supervisor-to-memory"
       source: "process-supervisor"
@@ -371,7 +375,7 @@ canvas_data:
         label: "Write shared state"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-memory-to-agents"
       source: "datastore-shared-memory"
@@ -381,7 +385,7 @@ canvas_data:
         label: "Read shared context"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-agents-to-vectordb"
       source: "process-agent-a"
@@ -391,7 +395,7 @@ canvas_data:
         label: "Knowledge retrieval"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-vectordb-to-agents"
       source: "datastore-vectordb"
@@ -401,7 +405,7 @@ canvas_data:
         label: "Retrieved context"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-supervisor-to-output-guard"
       source: "process-supervisor"
@@ -411,7 +415,7 @@ canvas_data:
         label: "Final response"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-output-guard-to-gateway"
       source: "process-output-guardrail"
@@ -421,7 +425,7 @@ canvas_data:
         label: "Validated response"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-gateway-to-user"
       source: "process-gateway"
@@ -431,4 +435,4 @@ canvas_data:
         label: "AI response"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]

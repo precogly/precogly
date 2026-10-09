@@ -305,8 +305,7 @@ async def test_nothing_matching_is_not_an_empty_catalog(
     """`matched` of 0 beside a non-zero `catalogSize` says which of the two happened.
 
     A bare empty list cannot: an agent reading it has to guess whether the catalog was
-    searched and held nothing relevant, or was empty to begin with. That distinction is
-    the one the countermeasure description gap makes people get wrong.
+    searched and held nothing relevant, or was empty to begin with.
     """
     patched_server_http(json_response(200, COUNTERMEASURE_LIBRARY_ROWS))
 
@@ -341,17 +340,23 @@ async def test_countermeasure_search_narrows_by_control_function_and_cost(
     assert both == []
 
 
-async def test_countermeasure_description_gap_is_disclosed() -> None:
-    """The listing omits `description`, so a query matches the name and nothing else.
+async def test_countermeasure_query_matches_the_description(
+    patched_server_http: Callable[[Handler], None], token: str
+) -> None:
+    """The listing carries `description`, so a mechanism the name does not mention
+    is still found through it, and the tool description says so."""
+    patched_server_http(json_response(200, COUNTERMEASURE_LIBRARY_ROWS))
 
-    An agent searching for a mechanism — "encryption", "rate limiting" — will miss
-    controls whose names do not name it, and has no way to tell a real absence from
-    this one. Delete this test if the list serializer gains the field upstream.
-    """
+    async with Client(server) as client:
+        by_mechanism = await call(
+            client, "search_countermeasure_library", {"query": "rate limiting"}
+        )
+
+    assert [row["id"] for row in by_mechanism] == [18]
+    assert by_mechanism[0]["description"].startswith("Send access logs")
+
     description = await described("search_countermeasure_library")
-
-    assert "name only" in description
-    assert "does not return a description" in description
+    assert "name and the description" in description
 
 
 async def test_component_search_matches_type_and_slug_not_only_name(
@@ -386,6 +391,8 @@ async def test_component_projection_drops_timestamps_and_the_bare_slug(
         "qualifiedSlug",
         "name",
         "category",
+        "kind",
+        "effectiveKind",
         "componentType",
         "provider",
         "sourcePackName",

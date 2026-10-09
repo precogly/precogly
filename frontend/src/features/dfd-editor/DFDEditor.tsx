@@ -14,7 +14,7 @@ import {
   reconnectEdge,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { Save, Clock, Loader2, Pencil, Trash2, ShieldAlert, Info, Undo2, Redo2, HelpCircle, LayoutTemplate, ImageDown, PanelLeft, MoreHorizontal } from 'lucide-react'
+import { Save, Clock, Loader2, Pencil, Trash2, ShieldAlert, Info, Undo2, Redo2, HelpCircle, LayoutTemplate, ImageDown, PanelLeft, MoreHorizontal, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/select'
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuRadioGroup,
@@ -50,7 +51,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import { useThreatModel, useDeleteDFD } from '@/features/threat-models/api/threat-models'
+import { useThreatModel, useDeleteDFD, useBlueprints } from '@/features/threat-models/api/threat-models'
 import { OwlMark } from '@/features/ai/components/OwlMark'
 import { AI_PROVIDER_SETTINGS_PATH } from '@/features/ai/constants'
 // DFD Editor internal imports
@@ -59,6 +60,14 @@ import { NodeEditPanel } from './components/panels/NodeEditPanel'
 import { EdgeEditPanel } from './components/panels/EdgeEditPanel'
 import { CanvasThreatSection } from './components/panels/CanvasThreatSection'
 import { useThreatModelThreats } from '@/features/threat-models/api/threats'
+import { DEFAULT_FLOW_TYPE, FLOW_TYPES, type FlowType } from '@/types/domain'
+import { getFlowType } from './lib/canvas-defaults'
+import {
+  describeVisibleFlowTypes,
+  isFlowFilterActive,
+  isFlowTypeVisible,
+  toggleFlowTypeVisibility,
+} from './lib/flow-visibility'
 import { TrustBoundaryEdgeEditPanel } from './components/panels/TrustBoundaryEdgeEditPanel'
 import { ComponentPanel } from './components/panels/ComponentPanel'
 import { TemplateBrowser } from './components/TemplateBrowser'
@@ -106,6 +115,7 @@ function DFDEditorContent() {
     nodes,
     edges,
     initialNotationStyle,
+    initialVisibleFlowTypes,
     isLoading,
     isSaving,
     isError,
@@ -114,6 +124,7 @@ function DFDEditorContent() {
     onNodesChange,
     onEdgesChange,
     saveNow,
+    setVisibleFlowTypes: storeVisibleFlowTypes,
     updateTitle,
     undo,
     redo,
@@ -133,6 +144,36 @@ function DFDEditorContent() {
   useEffect(() => {
     setNotationStyle(initialNotationStyle)
   }, [initialNotationStyle])
+
+  // The flow type filter (the "physical view", plan F22): canvas state like
+  // the notation, stored on the canvas root as `visibleFlowTypes`. The loaded
+  // value applies until the user changes it here; no effect needed to sync.
+  const [visibleFlowTypesChoice, setVisibleFlowTypesChoice] = useState<{
+    diagramId: string | undefined
+    value: FlowType[] | undefined
+  } | null>(null)
+  const visibleFlowTypes =
+    visibleFlowTypesChoice && visibleFlowTypesChoice.diagramId === diagramId
+      ? visibleFlowTypesChoice.value
+      : initialVisibleFlowTypes
+
+  const handleToggleFlowType = useCallback(
+    (flowType: FlowType) => {
+      const next = toggleFlowTypeVisibility(visibleFlowTypes, flowType)
+      setVisibleFlowTypesChoice({ diagramId, value: next })
+      storeVisibleFlowTypes(next)
+      // A flow that just went out of view should not keep its panel open.
+      setSelectedEdge((current) =>
+        current?.type === 'dataFlow' && !isFlowTypeVisible(getFlowType(current.data), next) ? null : current
+      )
+    },
+    [visibleFlowTypes, storeVisibleFlowTypes, diagramId]
+  )
+
+  const handleShowAllFlowTypes = useCallback(() => {
+    setVisibleFlowTypesChoice({ diagramId, value: undefined })
+    storeVisibleFlowTypes(undefined)
+  }, [storeVisibleFlowTypes, diagramId])
 
   // Handle notation change — resize affected nodes to new notation defaults
   const handleNotationChange = useCallback(
@@ -176,6 +217,13 @@ function DFDEditorContent() {
 
   // Fetch threat model for name display
   const { data: threatModel } = useThreatModel(threatModelId || '')
+
+  // Blueprint context: the diagram belongs to one blueprint; name it in the
+  // header when the model has more than one (plan 11.2, 11.11 "Switcher").
+  const { data: blueprints } = useBlueprints(threatModelId)
+  const diagramBlueprint = blueprints?.find((blueprint) => blueprint.id === diagram?.blueprint)
+  const blueprintContextLabel =
+    blueprints && blueprints.length > 1 && diagramBlueprint ? `Blueprint: ${diagramBlueprint.name}` : null
 
   // Fetch threat data for canvas badges and threat sections
   const { data: threatData } = useThreatModelThreats(threatModelId)
@@ -369,8 +417,9 @@ function DFDEditorContent() {
         animated: true,
         data: {
           label: '',
+          flowType: DEFAULT_FLOW_TYPE,
           encrypted: false,
-          authenticated: false,
+          authentication: [],
         },
       }
 
@@ -627,8 +676,9 @@ function DFDEditorContent() {
                 <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 touch:opacity-100 transition-opacity shrink-0" />
               </button>
             )}
-            <p className="text-xs text-muted-foreground truncate">
+            <p className="text-xs text-muted-foreground truncate" data-testid="diagram-context">
               {threatModel?.name ? `${threatModel.name}` : 'Data Flow Diagram'}
+              {blueprintContextLabel ? ` / ${blueprintContextLabel}` : ''}
             </p>
           </div>
 
@@ -665,6 +715,46 @@ function DFDEditorContent() {
                 <SelectItem value="yourdon">Yourdon</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Flow type filter: untick a type and its flows are not drawn; nothing is deleted */}
+          <div className="hidden xl:block">
+            <DropdownMenu>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant={isFlowFilterActive(visibleFlowTypes) ? 'secondary' : 'ghost'}
+                      size="sm"
+                      className="h-8 gap-1.5 text-xs max-w-[220px]"
+                      aria-label="Show flows"
+                      data-testid="flow-type-filter"
+                    >
+                      <Eye className="h-4 w-4 shrink-0" />
+                      <span className="truncate">Show flows: {describeVisibleFlowTypes(visibleFlowTypes)}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Choose which flow types are drawn (a view, nothing is deleted)</TooltipContent>
+              </Tooltip>
+              <DropdownMenuContent align="start" className="w-52">
+                <DropdownMenuLabel className="text-xs text-muted-foreground">Flow types</DropdownMenuLabel>
+                {FLOW_TYPES.map((entry) => (
+                  <DropdownMenuCheckboxItem
+                    key={entry.value}
+                    checked={isFlowTypeVisible(entry.value, visibleFlowTypes)}
+                    onCheckedChange={() => handleToggleFlowType(entry.value)}
+                    onSelect={(event) => event.preventDefault()}
+                  >
+                    {entry.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleShowAllFlowTypes} disabled={!isFlowFilterActive(visibleFlowTypes)}>
+                  Show all flows
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="hidden xl:block">
@@ -757,6 +847,18 @@ function DFDEditorContent() {
                 <DropdownMenuRadioItem value="dfd3">DFD3</DropdownMenuRadioItem>
                 <DropdownMenuRadioItem value="yourdon">Yourdon</DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs text-muted-foreground">Show flows</DropdownMenuLabel>
+              {FLOW_TYPES.map((entry) => (
+                <DropdownMenuCheckboxItem
+                  key={entry.value}
+                  checked={isFlowTypeVisible(entry.value, visibleFlowTypes)}
+                  onCheckedChange={() => handleToggleFlowType(entry.value)}
+                  onSelect={(event) => event.preventDefault()}
+                >
+                  {entry.label}
+                </DropdownMenuCheckboxItem>
+              ))}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setShortcutsOpen(true)}>
                 <HelpCircle className="h-4 w-4 mr-2" />
@@ -863,7 +965,7 @@ function DFDEditorContent() {
         )}
         {/* Canvas */}
         <div className={`flex-1 ${connectionMode ? 'connection-mode' : ''}`} ref={reactFlowWrapper} onMouseMove={handleMouseMove} onDragOver={handleDragOver} onDrop={handleDrop}>
-          <DFDNotationProvider notationStyle={notationStyle}>
+          <DFDNotationProvider notationStyle={notationStyle} visibleFlowTypes={visibleFlowTypes}>
             <ReactFlow
               nodes={nodes}
               edges={edges}
@@ -922,7 +1024,15 @@ function DFDEditorContent() {
             onClose={() => setSelectedNode(null)}
             threatModelId={threatModelId}
             renderExtra={
-              nodeSupportsComponentThreats(currentSelectedNode.type) ? (
+              currentSelectedNode.type === 'trustZone' ? (
+                <CanvasThreatSection
+                  threatModelId={threatModelId}
+                  canvasId={currentSelectedNode.id}
+                  targetType="zone"
+                  targetName={currentSelectedNode.data.label || 'Zone'}
+                  backendId={(currentSelectedNode.data as { trustZoneId?: number }).trustZoneId}
+                />
+              ) : nodeSupportsComponentThreats(currentSelectedNode.type) ? (
                 <CanvasThreatSection
                   threatModelId={threatModelId}
                   canvasId={currentSelectedNode.id}
@@ -946,11 +1056,11 @@ function DFDEditorContent() {
               <CanvasThreatSection
                 threatModelId={threatModelId}
                 canvasId={currentSelectedEdge.id}
-                targetType="dataflow"
-                targetName={(currentSelectedEdge as DataFlowEdge).data?.label || 'Data Flow'}
+                targetType="flow"
+                targetName={(currentSelectedEdge as DataFlowEdge).data?.label || 'Flow'}
                 backendId={
                   (currentSelectedEdge as DataFlowEdge).data?.dataflowId ??
-                  threatData?.edgeDataflowMap[currentSelectedEdge.id]?.dataflowId
+                  threatData?.edgeFlowMap[currentSelectedEdge.id]?.flowId
                 }
               />
             }
@@ -960,6 +1070,15 @@ function DFDEditorContent() {
           <TrustBoundaryEdgeEditPanel
             edge={currentSelectedEdge as TrustBoundaryEdge}
             onClose={() => setSelectedEdge(null)}
+            renderExtra={
+              <CanvasThreatSection
+                threatModelId={threatModelId}
+                canvasId={currentSelectedEdge.id}
+                targetType="boundary"
+                targetName={(currentSelectedEdge as TrustBoundaryEdge).data?.label || 'Boundary'}
+                backendId={(currentSelectedEdge as TrustBoundaryEdge).data?.trustBoundaryId}
+              />
+            }
           />
         )}
       </div>

@@ -13,7 +13,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from apps.core.pagination import ClientSizedPagination
 from apps.organizations.models import Organization, OrganizationMember
 from apps.threat_models.models import ThreatModel
-from apps.threats.models import Risk
+from apps.threats.services import create_risk
 
 User = get_user_model()
 
@@ -35,12 +35,7 @@ class RiskRegisterPaginationTests(TestCase):
             organization=cls.org, created_by=cls.user, name="Contoso threat model"
         )
         for i in range(RISK_COUNT):
-            Risk.objects.create(
-                threat_model=cls.threat_model,
-                name=f"Risk {i:02d}",
-                inherent_score=i,
-                inherent_level="medium",
-            )
+            create_risk(cls.threat_model, name=f"Risk {i:02d}", level="medium")
 
     def setUp(self):
         self.client = APIClient()

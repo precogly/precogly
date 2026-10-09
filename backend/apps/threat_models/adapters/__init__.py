@@ -1,4 +1,11 @@
-from .cyclonedx import CycloneDxAdapter
-from .tm_library import TmLibraryAdapter
+"""Legacy format adapters.
 
-__all__ = ["TmLibraryAdapter", "CycloneDxAdapter"]
+`cyclonedx.py` and `tm_library.py` in this package are the pre-2.0 adapters.
+They are switched off: nothing imports them, the views call
+`apps.threat_models.tmbom` instead, and the files are listed for removal.
+`base.py` stays for the adapter interface.
+"""
+
+from .base import BaseAdapter
+
+__all__ = ["BaseAdapter"]

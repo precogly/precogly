@@ -37,7 +37,6 @@ interface EditTaxonomyMappingsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   threatId: number
-  threatType: 'component' | 'flow'
   threatName: string
   libraryTaxonomyEntries: TaxonomyEntry[]
 }
@@ -66,7 +65,6 @@ export function EditTaxonomyMappingsDialog({
   open,
   onOpenChange,
   threatId,
-  threatType,
   threatName,
   libraryTaxonomyEntries,
 }: EditTaxonomyMappingsDialogProps) {
@@ -76,7 +74,7 @@ export function EditTaxonomyMappingsDialog({
   const { data: taxonomies, isLoading: taxonomiesLoading } = useTaxonomies()
   const { data: allEntries, isLoading: entriesLoading } = useTaxonomyEntries()
   const { data: instanceEntries, isLoading: instanceLoading } =
-    useInstanceTaxonomyEntries(threatId, threatType)
+    useInstanceTaxonomyEntries(threatId)
 
   const createEntry = useCreateInstanceTaxonomyEntry()
   const deleteEntry = useDeleteInstanceTaxonomyEntry()
@@ -155,17 +153,7 @@ export function EditTaxonomyMappingsDialog({
   }, [allEntries, selectedTaxonomySlug, mappedEntryIds, searchQuery])
 
   const handleAddEntry = (taxonomyEntryId: number) => {
-    const payload: {
-      taxonomyEntry: number
-      componentThreat?: number
-      flowThreat?: number
-    } = { taxonomyEntry: taxonomyEntryId }
-    if (threatType === 'component') {
-      payload.componentThreat = threatId
-    } else {
-      payload.flowThreat = threatId
-    }
-    createEntry.mutate(payload)
+    createEntry.mutate({ taxonomyEntry: taxonomyEntryId, threat: threatId })
   }
 
   const handleDeleteEntry = (instanceLinkId: number) => {

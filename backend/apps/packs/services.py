@@ -16,7 +16,15 @@ import yaml
 from django.conf import settings
 from django.db import transaction
 
+from apps.diagrams.canvas import normalize_canvas
 from apps.diagrams.models import DFDTemplatesLibrary
+from apps.systems.crossing import (
+    ANY_FLOW_TYPE,
+    ASSET_TYPES,
+    BOUNDARY_TYPES,
+    FLOW_TYPES,
+    ZONE_TYPES,
+)
 from apps.systems.models import ComponentLibrary
 from apps.threats.models import (
     ComponentLibraryThreat,
@@ -418,7 +426,6 @@ def _extract_pack_preview(pack_dir: Path, pack_data: dict) -> dict:
                         "slug": threat.get("slug", threat.get("id", "")),
                         "name": threat.get("name", ""),
                         "taxonomy_entries": [],
-                        "severity": threat.get("severity", ""),
                         "description": threat.get("description", ""),
                     }
                 )
@@ -596,6 +603,148 @@ class ValidationResult:
             "error_count": len(self.errors),
             "warning_count": len(self.warnings),
         }
+
+
+APPLIES_TO_VALUES = ("component", "flow", "both")
+LEVEL_VALUES = ("info", "low", "medium", "high", "critical")
+RETIRED_TEMPLATE_KEYS = {"authenticated": "authentication (a list of methods)"}
+LEGACY_ZONE_TYPES = {
+    "zoneInternet",
+    "zoneInternal",
+    "zoneRestricted",
+    "zoneDmz",
+    "zoneExternal",
+}
+
+
+def _validate_join_entry(threat_ref: str, threat_entry: dict) -> list:
+    """Errors for a component-threat join entry's `applies_to`, `flow_types`
+    and `severity` (section 6.2)."""
+    found = []
+
+    def error(message):
+        found.append(
+            ValidationError(
+                file="joins/components-threats.yaml",
+                line=None,
+                ref_type="threat",
+                reference=threat_ref,
+                message=message,
+            )
+        )
+
+    applies_to = threat_entry.get("applies_to", "component")
+    if applies_to not in APPLIES_TO_VALUES:
+        error(
+            f"Join '{threat_ref}': applies_to '{applies_to}' is not one of "
+            f"{', '.join(APPLIES_TO_VALUES)}"
+        )
+    flow_types = threat_entry.get("flow_types")
+    if flow_types is not None:
+        values = flow_types if isinstance(flow_types, list) else [flow_types]
+        bad = [v for v in values if v not in FLOW_TYPES and v != ANY_FLOW_TYPE]
+        if bad or not isinstance(flow_types, (list, str)):
+            error(
+                f"Join '{threat_ref}': flow_types {bad or flow_types} are not flow "
+                f"types (use {', '.join(FLOW_TYPES)} or 'any')"
+            )
+        if applies_to == "component":
+            error(
+                f"Join '{threat_ref}': flow_types is set on an entry with "
+                "applies_to: component"
+            )
+    severity = threat_entry.get("severity")
+    if severity is not None and severity not in LEVEL_VALUES:
+        error(
+            f"Join '{threat_ref}': severity '{severity}' is not one of "
+            f"{', '.join(LEVEL_VALUES)}"
+        )
+    return found
+
+
+def _validate_template_canvas(template_name: str, canvas_data: dict) -> list:
+    """Errors for the type and authentication keys of a template canvas (M19, S2).
+
+    These are what refuse an old template: a legacy `zoneType`, a `flowType`
+    or `kind` outside the spec lists, a `trustLevel` outside 0 to 100, an
+    `authentication` that is not a list, and the retired `authenticated`.
+    """
+    found = []
+
+    def error(reference, message):
+        found.append(
+            ValidationError(
+                file=f"dfd-templates/{template_name}",
+                line=None,
+                ref_type="template",
+                reference=reference,
+                message=message,
+            )
+        )
+
+    for node in canvas_data.get("nodes", []) or []:
+        if not isinstance(node, dict):
+            continue
+        data = node.get("data") or {}
+        node_id = str(node.get("id", "?"))
+        zone_type = data.get("zoneType", data.get("zone_type"))
+        if (
+            node.get("type") == "trustZone"
+            and zone_type is not None
+            and zone_type not in ZONE_TYPES
+        ):
+            hint = (
+                " (legacy value; use 'trust' or 'network')"
+                if zone_type in LEGACY_ZONE_TYPES
+                else ""
+            )
+            error(
+                node_id,
+                f"Node '{node_id}': zoneType '{zone_type}' is not a zone type{hint}",
+            )
+        trust_level = data.get("trustLevel", data.get("trust_level"))
+        if trust_level is not None and (
+            isinstance(trust_level, bool)
+            or not isinstance(trust_level, int)
+            or not 0 <= trust_level <= 100
+        ):
+            error(
+                node_id,
+                f"Node '{node_id}': trustLevel '{trust_level}' must be 0 to 100",
+            )
+        kind = data.get("kind")
+        if kind is not None and kind not in ASSET_TYPES:
+            error(
+                node_id,
+                f"Node '{node_id}': kind '{kind}' is not a CycloneDX asset type",
+            )
+    for edge in canvas_data.get("edges", []) or []:
+        if not isinstance(edge, dict):
+            continue
+        data = edge.get("data") or {}
+        edge_id = str(edge.get("id", "?"))
+        flow_type = data.get("flowType", data.get("flow_type"))
+        if flow_type is not None and flow_type not in FLOW_TYPES:
+            error(
+                edge_id, f"Edge '{edge_id}': flowType '{flow_type}' is not a flow type"
+            )
+        boundary_type = data.get("boundaryType", data.get("boundary_type"))
+        if boundary_type is not None and boundary_type not in BOUNDARY_TYPES:
+            error(
+                edge_id,
+                f"Edge '{edge_id}': boundaryType '{boundary_type}' is not a boundary type",
+            )
+        for key, replacement in RETIRED_TEMPLATE_KEYS.items():
+            if key in data:
+                error(
+                    edge_id, f"Edge '{edge_id}': '{key}' is retired; use {replacement}"
+                )
+        authentication = data.get("authentication")
+        if authentication is not None and not isinstance(authentication, list):
+            error(
+                edge_id, f"Edge '{edge_id}': authentication must be a list of methods"
+            )
+    return found
 
 
 def validate_pack(pack_path: Path) -> ValidationResult:
@@ -900,15 +1049,31 @@ def validate_pack(pack_path: Path) -> ValidationResult:
                         )
                 category_value = comp.get("category", "")
                 if category_value and category_value not in valid_categories:
-                    warnings.append(
-                        ValidationWarning(
+                    errors.append(
+                        ValidationError(
                             file="components.yaml",
-                            field="category",
+                            line=None,
+                            ref_type="component",
+                            reference=comp.get("id", comp.get("slug", f"[{i}]")),
                             message=(
                                 f"Component '{comp.get('id', comp.get('slug', f'[{i}]'))}'"
-                                f" has unknown category: '{category_value}'"
+                                f" has unknown category: '{category_value}'. Use one of: "
+                                f"{', '.join(sorted(valid_categories))}"
                             ),
-                            suggestion=f"Use one of: {', '.join(sorted(valid_categories))}",
+                        )
+                    )
+                kind_value = comp.get("kind", "")
+                if kind_value and kind_value not in ASSET_TYPES:
+                    errors.append(
+                        ValidationError(
+                            file="components.yaml",
+                            line=None,
+                            ref_type="component",
+                            reference=comp.get("id", comp.get("slug", f"[{i}]")),
+                            message=(
+                                f"Component '{comp.get('id', comp.get('slug', f'[{i}]'))}'"
+                                f" has unknown kind: '{kind_value}'. Use a CycloneDX asset type."
+                            ),
                         )
                     )
         except Exception:
@@ -1191,6 +1356,7 @@ def validate_pack(pack_path: Path) -> ValidationResult:
                             )
                             continue
                         threat_ref = threat_entry.get("threat", "")
+                        errors.extend(_validate_join_entry(threat_ref, threat_entry))
                         if (
                             threat_ref
                             and "/" not in threat_ref
@@ -1457,6 +1623,9 @@ def validate_pack(pack_path: Path) -> ValidationResult:
                     template_data = yaml.safe_load(f)
 
                 canvas_data = template_data.get("canvas_data", {})
+                errors.extend(
+                    _validate_template_canvas(template_file.name, canvas_data or {})
+                )
                 for node in canvas_data.get("nodes", []):
                     comp_ref = node.get("data", {}).get("component_ref")
                     if (
@@ -1683,15 +1852,12 @@ def _import_pack(
 
     try:
         with transaction.atomic():
-            # Hard delete existing items if forcing reinstall
+            # A forced import upgrades in place. Every loader below uses
+            # update_or_create keyed on the qualified slug, so rows keep their
+            # ids and the instance links, numbers and refs that point at them
+            # (plan M1). Rows the pack no longer ships are pruned at the end.
             if existing and force:
-                logger.warning(
-                    "Force reimporting pack '%s' — existing component, threat,"
-                    " and countermeasure instance links will be orphaned"
-                    " (set to NULL).",
-                    slug,
-                )
-                _hard_delete_pack_items(existing)
+                logger.info("Upgrading pack '%s' in place.", slug)
 
             # Create/update LibraryPack
             library_pack = _create_or_update_pack(pack_data)
@@ -1790,6 +1956,10 @@ def _import_pack(
 
             # Phase 5: Load frameworks and requirements (for compliance packs)
             _load_frameworks(library_pack, pack_data, import_warnings)
+
+            # Phase 6: on an upgrade, drop what the pack no longer ships
+            if existing and force:
+                _prune_rows_missing_from_pack(library_pack, pack_path, pack_data)
 
         # Outside the transaction, so this reads committed data.
         #
@@ -2038,23 +2208,292 @@ def reconcile_taxonomy_joins_from_source(
 # =============================================================================
 
 
-def _hard_delete_pack_items(pack: LibraryPack):
-    """Hard delete all library items from a pack.
+def _qualified(pack_slug: str, ref: str) -> str:
+    """The qualified slug a pack-local or cross-pack reference resolves to."""
+    return ref if "/" in ref else f"{pack_slug}/{ref}"
 
-    Note: Instance models use SET_NULL for library FKs, so deleting library items
-    will orphan instances but not delete them. This preserves user work.
+
+def _read_yaml(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    try:
+        with open(path) as handle:
+            return yaml.safe_load(handle) or {}
+    except Exception as error:
+        logger.error(f"Error reading {path}: {error}")
+        return {}
+
+
+def _read_pack_manifest(pack_slug: str, pack_path: Path, pack_data: dict) -> dict:
+    """Every key the pack's files declare, in the shape the pruner compares.
+
+    Read from the files rather than collected from the loaders, so pruning
+    cannot drift from what a loader happened to skip.
     """
-    from apps.compliance.models import StandardFramework, StandardRequirementMapping
 
-    ComponentLibrary.objects.filter(source_pack=pack).delete()
-    ThreatLibrary.objects.filter(source_pack=pack).delete()
-    CountermeasureLibrary.objects.filter(source_pack=pack).delete()
-    DFDTemplatesLibrary.objects.filter(source_pack=pack).delete()
-    ExternalTaxonomy.objects.filter(source_pack=pack).delete()
-    StandardRequirementMapping.objects.filter(source_pack=pack).delete()
-    PendingRequirementOverlay.objects.filter(pack=pack).delete()
-    PendingTaxonomyOverlay.objects.filter(pack=pack).delete()
-    StandardFramework.objects.filter(source_pack=pack).delete()
+    def ids(data: dict, key: str) -> set[str]:
+        return {
+            f"{pack_slug}/{item.get('id', item.get('slug', ''))}"
+            for item in data.get(key, [])
+            if item.get("id", item.get("slug", ""))
+        }
+
+    manifest = {
+        "components": ids(_read_yaml(pack_path / "components.yaml"), "components"),
+        "threats": ids(_read_yaml(pack_path / "threats.yaml"), "threats"),
+        "countermeasures": ids(
+            _read_yaml(pack_path / "countermeasures.yaml"), "countermeasures"
+        ),
+        "templates": set(),
+        "taxonomies": set(),
+        "taxonomy_entries": {},
+        "component_threat_pairs": set(),
+        "threat_countermeasure_pairs": set(),
+        "threat_taxonomy_pairs": {},
+        "countermeasure_requirement_pairs": {},
+        "requirement_mapping_pairs": set(),
+        "frameworks": {
+            framework.get("slug", "")
+            for framework in pack_data.get("frameworks", [])
+            if framework.get("slug")
+        },
+        "overlay_frameworks": set(),
+        "overlay_taxonomies": set(),
+        "overlay_requirement_pairs": set(),
+    }
+
+    templates_dir = pack_path / "dfd-templates"
+    if templates_dir.exists():
+        for template_file in list(templates_dir.glob("*.yaml")) + list(
+            templates_dir.glob("*.yml")
+        ):
+            template = _read_yaml(template_file).get("template", {})
+            slug = template.get("id", template.get("slug", template_file.stem))
+            manifest["templates"].add(f"{pack_slug}/{slug}")
+
+    for taxonomy in _read_yaml(pack_path / "taxonomy.yaml").get("taxonomies", []):
+        slug = taxonomy.get("slug", "")
+        if not slug:
+            continue
+        manifest["taxonomies"].add(slug)
+        manifest["taxonomy_entries"][slug] = {
+            str(entry.get("external_id"))
+            for entry in taxonomy.get("entries", [])
+            if entry.get("external_id")
+        }
+
+    joins_dir = pack_path / "joins"
+    if joins_dir.exists():
+        for mapping in _read_yaml(joins_dir / "components-threats.yaml").get(
+            "mappings", []
+        ):
+            component = _qualified(pack_slug, mapping.get("component", ""))
+            for entry in mapping.get("threats", []):
+                if isinstance(entry, dict) and entry.get("threat"):
+                    manifest["component_threat_pairs"].add(
+                        (component, _qualified(pack_slug, entry["threat"]))
+                    )
+
+        for mapping in _read_yaml(joins_dir / "threats-countermeasures.yaml").get(
+            "mappings", []
+        ):
+            threat = _qualified(pack_slug, mapping.get("threat", ""))
+            for countermeasure_ref in mapping.get("countermeasures", []):
+                manifest["threat_countermeasure_pairs"].add(
+                    (threat, _qualified(pack_slug, countermeasure_ref))
+                )
+
+        for join_file in joins_dir.glob("threats-*.yaml"):
+            if join_file.name == "threats-countermeasures.yaml":
+                continue
+            data = _read_yaml(join_file)
+            taxonomy_slug = data.get("taxonomy", "")
+            if not taxonomy_slug:
+                continue
+            manifest["overlay_taxonomies"].add(taxonomy_slug)
+            pairs = manifest["threat_taxonomy_pairs"].setdefault(taxonomy_slug, set())
+            for mapping in data.get("mappings", []):
+                threat = _qualified(pack_slug, mapping.get("threat", ""))
+                for external_id in mapping.get("entries", []):
+                    pairs.add((threat, str(external_id)))
+
+        for join_file in joins_dir.glob("countermeasures-*.yaml"):
+            if "threats" in join_file.name:
+                continue
+            data = _read_yaml(join_file)
+            framework_slug = data.get("framework", "")
+            if not framework_slug:
+                continue
+            manifest["overlay_frameworks"].add(framework_slug)
+            pairs = manifest["countermeasure_requirement_pairs"].setdefault(
+                framework_slug, set()
+            )
+            for mapping in data.get("mappings", []):
+                countermeasure = _qualified(
+                    pack_slug, mapping.get("countermeasure", "")
+                )
+                for requirement_code in mapping.get("requirements", []):
+                    pairs.add((countermeasure, str(requirement_code)))
+
+        for join_file in joins_dir.glob("requirements-*.yaml"):
+            data = _read_yaml(join_file)
+            target = data.get("framework", "")
+            source = data.get("source_framework", "")
+            if not target or not source:
+                continue
+            manifest["overlay_requirement_pairs"].add((source, target))
+            for mapping in data.get("mappings", []):
+                from_code = str(mapping.get("requirement", ""))
+                for to_code in mapping.get("entries", []):
+                    manifest["requirement_mapping_pairs"].add(
+                        (source, from_code, target, str(to_code))
+                    )
+
+    return manifest
+
+
+def _prune_rows_missing_from_pack(
+    library_pack: LibraryPack, pack_path: Path, pack_data: dict
+) -> dict:
+    """Delete rows this pack owns that its files no longer declare.
+
+    The counterpart of the in-place upgrade: loaders update what the files
+    contain, this removes what they dropped. Joins are pruned only where both
+    sides belong to this pack (or the pack carries the join file for that
+    taxonomy or framework), so links another pack's files created stay.
+    Instance rows that pointed at a removed library row are orphaned through
+    their SET_NULL keys, as before.
+    """
+    from apps.compliance.models import (
+        CountermeasureLibraryStandard,
+        StandardFramework,
+        StandardRequirementMapping,
+    )
+
+    pack = library_pack
+    manifest = _read_pack_manifest(pack.slug, pack_path, pack_data)
+    removed: dict[str, int] = {}
+
+    removed["components"] = (
+        ComponentLibrary.objects.filter(source_pack=pack)
+        .exclude(qualified_slug__in=manifest["components"])
+        .delete()[0]
+    )
+    removed["threats"] = (
+        ThreatLibrary.objects.filter(source_pack=pack)
+        .exclude(qualified_slug__in=manifest["threats"])
+        .delete()[0]
+    )
+    removed["countermeasures"] = (
+        CountermeasureLibrary.objects.filter(source_pack=pack)
+        .exclude(qualified_slug__in=manifest["countermeasures"])
+        .delete()[0]
+    )
+    removed["templates"] = (
+        DFDTemplatesLibrary.objects.filter(source_pack=pack)
+        .exclude(qualified_slug__in=manifest["templates"])
+        .delete()[0]
+    )
+    removed["taxonomies"] = (
+        ExternalTaxonomy.objects.filter(source_pack=pack)
+        .exclude(slug__in=manifest["taxonomies"])
+        .delete()[0]
+    )
+    removed["taxonomy_entries"] = 0
+    for taxonomy_slug, external_ids in manifest["taxonomy_entries"].items():
+        removed["taxonomy_entries"] += (
+            TaxonomyEntry.objects.filter(
+                taxonomy__slug=taxonomy_slug, taxonomy__source_pack=pack
+            )
+            .exclude(external_id__in=external_ids)
+            .delete()[0]
+        )
+
+    removed["component_threat_joins"] = 0
+    for join in ComponentLibraryThreat.objects.filter(
+        component_library__source_pack=pack, threat_library__source_pack=pack
+    ).select_related("component_library", "threat_library"):
+        pair = (
+            join.component_library.qualified_slug,
+            join.threat_library.qualified_slug,
+        )
+        if pair not in manifest["component_threat_pairs"]:
+            join.delete()
+            removed["component_threat_joins"] += 1
+
+    removed["threat_countermeasure_joins"] = 0
+    through = CountermeasureLibrary.applicable_threats.through
+    for row in through.objects.filter(
+        countermeasurelibrary__source_pack=pack, threatlibrary__source_pack=pack
+    ).select_related("countermeasurelibrary", "threatlibrary"):
+        pair = (
+            row.threatlibrary.qualified_slug,
+            row.countermeasurelibrary.qualified_slug,
+        )
+        if pair not in manifest["threat_countermeasure_pairs"]:
+            row.delete()
+            removed["threat_countermeasure_joins"] += 1
+
+    removed["threat_taxonomy_joins"] = 0
+    for taxonomy_slug, pairs in manifest["threat_taxonomy_pairs"].items():
+        for join in ThreatLibraryTaxonomyEntry.objects.filter(
+            threat_library__source_pack=pack,
+            taxonomy_entry__taxonomy__slug=taxonomy_slug,
+        ).select_related("threat_library", "taxonomy_entry"):
+            pair = (join.threat_library.qualified_slug, join.taxonomy_entry.external_id)
+            if pair not in pairs:
+                join.delete()
+                removed["threat_taxonomy_joins"] += 1
+
+    removed["countermeasure_requirement_joins"] = 0
+    for framework_slug, pairs in manifest["countermeasure_requirement_pairs"].items():
+        for join in CountermeasureLibraryStandard.objects.filter(
+            countermeasure_library__source_pack=pack,
+            requirement__framework__slug=framework_slug,
+        ).select_related("countermeasure_library", "requirement"):
+            pair = (
+                join.countermeasure_library.qualified_slug,
+                join.requirement.section_code,
+            )
+            if pair not in pairs:
+                join.delete()
+                removed["countermeasure_requirement_joins"] += 1
+
+    removed["frameworks"] = (
+        StandardFramework.objects.filter(source_pack=pack)
+        .exclude(slug__in=manifest["frameworks"])
+        .delete()[0]
+    )
+
+    removed["requirement_mappings"] = 0
+    for mapping in StandardRequirementMapping.objects.filter(
+        source_pack=pack
+    ).select_related("from_requirement__framework", "to_requirement__framework"):
+        key = (
+            mapping.from_requirement.framework.slug,
+            mapping.from_requirement.section_code,
+            mapping.to_requirement.framework.slug,
+            mapping.to_requirement.section_code,
+        )
+        if key not in manifest["requirement_mapping_pairs"]:
+            mapping.delete()
+            removed["requirement_mappings"] += 1
+
+    PendingFrameworkOverlay.objects.filter(pack=pack).exclude(
+        framework_slug__in=manifest["overlay_frameworks"]
+    ).delete()
+    PendingTaxonomyOverlay.objects.filter(pack=pack).exclude(
+        taxonomy_slug__in=manifest["overlay_taxonomies"]
+    ).delete()
+    for overlay in PendingRequirementOverlay.objects.filter(pack=pack):
+        key = (overlay.source_framework_slug, overlay.target_framework_slug)
+        if key not in manifest["overlay_requirement_pairs"]:
+            overlay.delete()
+
+    pruned = {key: count for key, count in removed.items() if count}
+    if pruned:
+        logger.info("Pack '%s' upgrade pruned: %s", pack.slug, pruned)
+    return removed
 
 
 def _create_or_update_pack(pack_data: dict) -> LibraryPack:
@@ -2447,6 +2886,9 @@ def _load_components(
                 "slug": comp_id,
                 "name": comp.get("name", comp_id),
                 "category": comp.get("category", "process"),
+                "kind": comp.get("kind", "")
+                if comp.get("kind", "") in ASSET_TYPES
+                else "",
                 "component_type": comp.get("type", comp.get("component_type", "")),
                 "provider": comp.get("provider", ""),
                 "icon_svg": icon_svg,
@@ -2699,6 +3141,18 @@ def _load_frameworks(
     return count
 
 
+def _flow_types_from_entry(threat_entry: dict) -> list:
+    """``flow_types`` of a join entry: a list, or ``any`` (section 6.1)."""
+    raw = threat_entry.get("flow_types")
+    if raw is None:
+        return []
+    if raw == ANY_FLOW_TYPE:
+        return [ANY_FLOW_TYPE]
+    if isinstance(raw, list):
+        return [value for value in raw if value in FLOW_TYPES or value == ANY_FLOW_TYPE]
+    return []
+
+
 def _load_component_threat_joins(
     library_pack: LibraryPack, file_path: Path, import_warnings: list[str] | None = None
 ) -> int:
@@ -2750,8 +3204,12 @@ def _load_component_threat_joins(
                 component_library=component,
                 threat_library=threat,
                 defaults={
-                    "default_severity": mapping.get("severity", "medium"),
+                    # The level sits on the threat entry of the join (F13).
+                    "default_level": threat_entry.get(
+                        "severity", mapping.get("severity", "medium")
+                    ),
                     "applies_to": applies_to,
+                    "flow_types": _flow_types_from_entry(threat_entry),
                 },
             )
             count += 1
@@ -3297,8 +3755,9 @@ def _load_templates(
             slug = template.get("id", template.get("slug", template_file.stem))
             qualified_slug = f"{library_pack.slug}/{slug}"
 
-            # Validate component_refs if present
-            canvas_data = template_data.get("canvas_data", {})
+            # Template YAML is written in camelCase; everything that reads a
+            # canvas expects snake_case (apps.diagrams.canvas).
+            canvas_data = normalize_canvas(template_data.get("canvas_data", {}))
             _validate_template_component_refs(
                 library_pack, canvas_data, template_file.name, import_warnings
             )

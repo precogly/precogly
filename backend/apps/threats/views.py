@@ -4,11 +4,11 @@ Views for threats app.
 
 import contextlib
 
-from django.db.models import Prefetch, Q
+from django.db.models import Count, Prefetch, Q
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -21,18 +21,19 @@ from apps.threat_models.models import ThreatModel
 from apps.threats.ai.suggest import suggest_component_threats
 
 from .models import (
-    ComponentInstanceThreat,
     ComponentLibraryThreat,
     CountermeasureComment,
     CountermeasureLibrary,
     CountermeasureThreatLink,
-    DataFlowInstanceThreat,
     ExternalTaxonomy,
     InstanceCountermeasure,
     InstanceCountermeasureStandard,
+    InstanceThreat,
+    InstanceThreatTarget,
     InstanceThreatTaxonomyEntry,
     PentestFinding,
     Risk,
+    RiskResponse,
     RiskThreat,
     TaxonomyEntry,
     ThreatLibrary,
@@ -43,19 +44,19 @@ from .models import (
 )
 from .scoring.registry import get_scoring_methods_list
 from .serializers import (
-    ComponentInstanceThreatSerializer,
     ComponentLibraryThreatSerializer,
     CountermeasureCommentSerializer,
     CountermeasureLibraryListSerializer,
     CountermeasureLibrarySerializer,
-    DataFlowInstanceThreatSerializer,
     ExternalTaxonomySerializer,
     InstanceCountermeasureSerializer,
     InstanceCountermeasureStandardSerializer,
+    InstanceThreatSerializer,
     InstanceThreatTaxonomyEntrySerializer,
     PentestFindingSerializer,
     RiskDetailSerializer,
     RiskListSerializer,
+    RiskResponseSerializer,
     TaxonomyEntryNestedSerializer,
     ThreatLibraryListSerializer,
     ThreatLibrarySerializer,
@@ -64,8 +65,13 @@ from .serializers import (
     VerificationTestSerializer,
 )
 from .services import (
+    check_platform_status,
+    create_instance_countermeasure,
+    link_countermeasure,
+    note_user_edit,
+    rating_level_rank,
     recalculate_all_threats_for_countermeasure,
-    recalculate_risk,
+    recalculate_residual,
     recalculate_risks_for_threat,
     recalculate_threat_status,
 )
@@ -74,16 +80,6 @@ from .services import (
 def _is_security_team(user):
     """Check if user has Security Team role in any organization."""
     return user.organization_memberships.filter(role="security_team").exists()
-
-
-def _check_platform_status_permission(user, current_status=None, new_status=None):
-    """Raise PermissionDenied if non-Security Team user tries to set or remove platform status."""
-    if (
-        new_status == "platform" or current_status == "platform"
-    ) and not _is_security_team(user):
-        raise PermissionDenied(
-            "Only Security Team members can assign or remove platform status."
-        )
 
 
 class ThreatLibraryViewSet(viewsets.ModelViewSet):
@@ -229,63 +225,100 @@ class ComponentLibraryThreatViewSet(viewsets.ModelViewSet):
     filterset_fields = ["component_library", "threat_library", "applies_to"]
 
 
-class ComponentInstanceThreatViewSet(viewsets.ModelViewSet):
-    """ViewSet for ComponentInstanceThreat."""
+class InstanceThreatViewSet(viewsets.ModelViewSet):
+    """One endpoint for every scenario, whatever it targets.
 
-    serializer_class = ComponentInstanceThreatSerializer
+    Filters: ``threat_model``, ``blueprint``, ``component``, ``flow``, ``zone``,
+    ``boundary`` (through the targets), ``threat_library``, ``status``,
+    ``triage_status``, ``number``, ``whole_system``. ``search`` matches the name,
+    and ``T7`` or ``7`` matches the number.
+    """
+
+    serializer_class = InstanceThreatSerializer
     permission_classes = [IsAuthenticated, CanWrite]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = [
+        "threat_model",
+        "threat_library",
+        "status",
+        "triage_status",
+        "rating__level",
+        "number",
+        "whole_system",
+    ]
+    ordering_fields = [
+        "number",
+        "level_rank",
+        "rating__score",
+        "status",
+        "created_at",
+        "display_order",
+    ]
+    ordering = ["display_order", "number"]
+
+    TARGET_FILTERS = ("component", "flow", "zone", "boundary")
 
     def get_queryset(self):
         org_ids = self.request.user.organization_memberships.values_list(
             "organization_id", flat=True
         )
-        return (
-            ComponentInstanceThreat.objects.filter(
-                Q(component__orgsystem__organization_id__in=org_ids)
-                | Q(
-                    component__orgsystem__isnull=True,
-                    component__threat_model__organization_id__in=org_ids,
-                )
+        queryset = (
+            InstanceThreat.objects.filter(threat_model__organization_id__in=org_ids)
+            .select_related("threat_library", "actor_persona", "rating")
+            .annotate(level_rank=rating_level_rank("rating__level"))
+            .prefetch_related(
+                "instance_taxonomy_links__taxonomy_entry__taxonomy",
+                "targets__component",
+                "targets__flow__source_component",
+                "targets__flow__dest_component",
+                "targets__zone",
+                "targets__boundary",
             )
-            .select_related("component", "threat_library")
-            .prefetch_related("instance_taxonomy_links__taxonomy_entry__taxonomy")
         )
-
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ["component", "threat_library", "status", "inherent_severity"]
-    ordering_fields = ["inherent_severity", "status", "created_at"]
-    ordering = ["-inherent_severity"]
+        params = self.request.query_params
+        for kind in self.TARGET_FILTERS:
+            value = params.get(kind)
+            if value:
+                queryset = queryset.filter(**{f"targets__{kind}_id": value})
+        blueprint_id = params.get("blueprint")
+        if blueprint_id:
+            queryset = queryset.filter(
+                Q(targets__component__blueprint_id=blueprint_id)
+                | Q(targets__flow__blueprint_id=blueprint_id)
+                | Q(targets__zone__blueprint_id=blueprint_id)
+                | Q(targets__boundary__blueprint_id=blueprint_id)
+            )
+        search = (params.get("search") or "").strip()
+        if search:
+            number_text = search[1:] if search[:1].lower() == "t" else search
+            condition = Q(threat_name__icontains=search) | Q(
+                threat_library__name__icontains=search
+            )
+            if number_text.isdigit():
+                condition |= Q(number=int(number_text))
+            queryset = queryset.filter(condition)
+        return queryset.distinct()
 
     @action(detail=True, methods=["get"])
     def suggested_countermeasures(self, request, pk=None):
-        """
-        Get suggested countermeasures for this threat instance.
-
-        Queries CountermeasureLibrary.applicable_threats to find countermeasures
-        that can mitigate this threat type.
+        """Library countermeasures that can mitigate this scenario's threat.
 
         Returns:
             - suggested: countermeasures not yet applied
-            - applied: countermeasures already applied to this threat instance
+            - applied: countermeasures already applied to this scenario
         """
-        instance_threat = self.get_object()
-        threat_library = instance_threat.threat_library
-
-        # Get countermeasures applicable to this threat type
+        threat = self.get_object()
+        threat_library = threat.threat_library
         applicable_countermeasures = CountermeasureLibrary.objects.filter(
             applicable_threats=threat_library,
         )
-
-        # Get countermeasures already applied to this instance (via junction table)
         applied_ids = set(
-            CountermeasureThreatLink.objects.filter(
-                component_threat=instance_threat
-            ).values_list("countermeasure__countermeasure_library_id", flat=True)
+            CountermeasureThreatLink.objects.filter(threat=threat).values_list(
+                "countermeasure__countermeasure_library_id", flat=True
+            )
         )
-
         suggested = []
         applied = []
-
         for cm in applicable_countermeasures:
             if cm.id in applied_ids:
                 applied.append(cm)
@@ -294,8 +327,10 @@ class ComponentInstanceThreatViewSet(viewsets.ModelViewSet):
 
         return Response(
             {
-                "threat_id": instance_threat.id,
-                "threat_name": threat_library.name,
+                "threat_id": threat.id,
+                "threat_name": threat_library.name
+                if threat_library
+                else threat.threat_name,
                 "suggested": CountermeasureLibraryListSerializer(
                     suggested, many=True
                 ).data,
@@ -308,37 +343,35 @@ class ComponentInstanceThreatViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def apply_countermeasure(self, request, pk=None):
         """
-        Apply a countermeasure to this threat instance.
+        Apply a countermeasure to this scenario.
 
         Request body:
             - countermeasure_library_id: ID of the library countermeasure to create+link
             - existing_countermeasure_id: ID of an existing countermeasure instance to link
-            - status: optional, defaults to 'gap' (only used with countermeasure_library_id)
+            - status: optional, defaults to the library default (only used with countermeasure_library_id)
         """
-        instance_threat = self.get_object()
+        threat = self.get_object()
+        threat_model = threat.threat_model
 
-        # Option 1: Link an existing countermeasure instance
         existing_countermeasure_id = request.data.get("existing_countermeasure_id")
         if existing_countermeasure_id:
-            try:
-                existing_cm = InstanceCountermeasure.objects.get(
-                    id=existing_countermeasure_id
-                )
-            except InstanceCountermeasure.DoesNotExist:
+            existing_cm = InstanceCountermeasure.objects.filter(
+                id=existing_countermeasure_id, threat_model=threat_model
+            ).first()
+            if existing_cm is None:
                 return Response(
                     {"error": "Countermeasure instance not found"},
                     status=status.HTTP_404_NOT_FOUND,
                 )
-            _link, link_created = CountermeasureThreatLink.objects.get_or_create(
-                countermeasure=existing_cm,
-                component_threat=instance_threat,
-            )
+            _link, link_created = link_countermeasure(existing_cm, threat)
             if not link_created:
                 return Response(
                     {"error": "Countermeasure already linked to this threat"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            recalculate_threat_status(instance_threat)
+            note_user_edit(threat)
+            note_user_edit(existing_cm)
+            recalculate_threat_status(threat)
             return Response(
                 {
                     "countermeasure": InstanceCountermeasureSerializer(
@@ -349,7 +382,6 @@ class ComponentInstanceThreatViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED,
             )
 
-        # Option 2: Create new countermeasure instance from library + link
         countermeasure_id = request.data.get("countermeasure_library_id")
         if not countermeasure_id:
             return Response(
@@ -369,35 +401,16 @@ class ComponentInstanceThreatViewSet(viewsets.ModelViewSet):
 
         # Block non-Security Team users from explicitly setting platform status.
         requested_status = request.data.get("status")
-        if requested_status == "platform":
-            _check_platform_status_permission(request.user, new_status="platform")
+        check_platform_status(request.user, threat_model, new_status=requested_status)
 
-        # Derive threat_model from the threat's component
-        threat_model = instance_threat.component.threat_model or (
-            instance_threat.component.orgsystem.threat_models.first()
-            if instance_threat.component.orgsystem
-            else None
-        )
-
-        effective_status = requested_status or countermeasure.default_status
-        instance_cm = InstanceCountermeasure.objects.create(
-            threat_model=threat_model,
+        instance_cm = create_instance_countermeasure(
+            threat_model,
             countermeasure_library=countermeasure,
-            countermeasure_name=countermeasure.name,
-            countermeasure_description=countermeasure.description,
-            control_functions=countermeasure.control_functions,
-            control_nature=countermeasure.control_nature,
-            status=effective_status,
+            status=requested_status,
         )
-
-        # Create junction link
-        CountermeasureThreatLink.objects.create(
-            countermeasure=instance_cm,
-            component_threat=instance_threat,
-        )
-
-        # Recalculate threat status
-        recalculate_threat_status(instance_threat)
+        link_countermeasure(instance_cm, threat)
+        note_user_edit(threat)
+        recalculate_threat_status(threat)
 
         return Response(
             {
@@ -409,29 +422,48 @@ class ComponentInstanceThreatViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def recalculate_status(self, request, pk=None):
-        """
-        Recalculate the threat status based on applied countermeasures.
-
-        Status logic:
-            - EXPOSED: No countermeasures applied OR any countermeasure is a gap
-            - ADDRESSABLE: Some countermeasures are planned/waived (none are gaps)
-            - MITIGATED: All countermeasures are verified or platform
-        """
-        instance_threat = self.get_object()
-        new_status = recalculate_threat_status(instance_threat)
-
+        """Recalculate the threat status based on applied countermeasures."""
+        threat = self.get_object()
+        old_status = threat.status
+        new_status = recalculate_threat_status(threat)
         return Response(
             {
-                "threat_id": instance_threat.id,
-                "old_status": instance_threat.status,
+                "threat_id": threat.id,
+                "old_status": old_status,
                 "new_status": new_status,
                 "message": f"Status updated to {new_status}",
             }
         )
 
+    @action(detail=True, methods=["post"])
+    def set_targets(self, request, pk=None):
+        """Replace the scenario's targets.
+
+        Body: ``targets`` as ``[{type, id}]`` and optional ``whole_system``.
+        An empty list is refused unless ``whole_system`` is true (I8).
+        """
+        threat = self.get_object()
+        serializer = InstanceThreatSerializer(
+            threat,
+            data={
+                "targets": request.data.get("targets", []),
+                "whole_system": bool(request.data.get("whole_system", False)),
+            },
+            partial=True,
+            context=self.get_serializer_context(),
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(InstanceThreatSerializer(threat).data)
+
     @action(detail=False, methods=["post"])
     def reorder(self, request):
-        """Bulk-update display_order for component threats."""
+        """Bulk-update display_order.
+
+        With ``target_type`` and ``target_id`` the order is per target (what
+        the tree shows under one node); otherwise it is the scenario's own
+        order within the model.
+        """
         ordered_ids = request.data.get("ordered_ids", [])
         if not ordered_ids or not isinstance(ordered_ids, list):
             return Response(
@@ -447,50 +479,62 @@ class ComponentInstanceThreatViewSet(viewsets.ModelViewSet):
                 {"error": "Some IDs not found or not accessible"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        instances = []
-        for position, threat_id in enumerate(ordered_ids):
-            instances.append(
-                ComponentInstanceThreat(id=threat_id, display_order=position)
+        target_type = request.data.get("target_type")
+        target_id = request.data.get("target_id")
+        if target_type in InstanceThreatTarget.TARGET_KINDS and target_id:
+            rows = InstanceThreatTarget.objects.filter(
+                threat_id__in=ordered_ids, **{f"{target_type}_id": target_id}
             )
-        ComponentInstanceThreat.objects.bulk_update(instances, ["display_order"])
+            by_threat = {row.threat_id: row for row in rows}
+            for position, threat_id in enumerate(ordered_ids):
+                row = by_threat.get(threat_id)
+                if row is not None and row.display_order != position:
+                    row.display_order = position
+                    row.save(update_fields=["display_order"])
+            return Response({"status": "ok", "updated": len(by_threat)})
+        InstanceThreat.objects.bulk_update(
+            [
+                InstanceThreat(id=threat_id, display_order=position)
+                for position, threat_id in enumerate(ordered_ids)
+            ],
+            ["display_order"],
+        )
         return Response({"status": "ok", "updated": len(ordered_ids)})
 
-    @action(detail=False, methods=["post"])
-    def suggest(self, request):
-        """Return AI-ranked, grounded threat candidates for a component.
-
-        Unlike ``generate_threats`` (which mechanically attaches every library
-        threat for the component's type), this ranks the most relevant ones,
-        explains why each applies, and proposes a per-component severity. It
-        persists nothing — the caller reviews the candidates and accepts them
-        through the normal create path. Suggestions are grounded in installed
-        packs, so the model can only select real threats, never invent them.
-        """
-        component_id = request.data.get("component_id")
-        if not component_id:
-            return Response(
-                {"error": "component_id is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Scope the component to the requesting user's organizations, mirroring
-        # this viewset's own queryset (org-owned components, plus unassigned
-        # components reachable through their threat model).
+    def _scoped_component(self, request, component_id):
         org_ids = request.user.organization_memberships.values_list(
             "organization_id", flat=True
         )
-        component = (
+        return (
             OrgsystemComponent.objects.filter(
-                Q(orgsystem__organization_id__in=org_ids)
-                | Q(
-                    orgsystem__isnull=True,
-                    threat_model__organization_id__in=org_ids,
-                ),
+                blueprint__threat_model__organization_id__in=org_ids,
                 id=component_id,
             )
             .select_related("component_library")
             .first()
         )
+
+    @action(detail=False, methods=["post"])
+    def suggest(self, request):
+        """Return AI-ranked, grounded threat candidates for a target.
+
+        Component targets only in this version; other target types return an
+        empty list. Persists nothing — the caller reviews the candidates and
+        accepts them through the normal create path.
+        """
+        target_type = request.data.get("target_type", "component")
+        target_id = request.data.get("target_id") or request.data.get("component_id")
+        if not target_id:
+            return Response(
+                {"error": "target_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if target_type != "component":
+            return Response(
+                {"target_type": target_type, "target_id": target_id, "suggestions": []}
+            )
+
+        component = self._scoped_component(request, target_id)
         if component is None:
             return Response(
                 {"error": "Component not found or not accessible"},
@@ -500,228 +544,50 @@ class ComponentInstanceThreatViewSet(viewsets.ModelViewSet):
         try:
             suggestions = suggest_component_threats(component, user=request.user)
         except AIDisabledError as err:
-            return Response(
-                {"error": str(err)},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return Response({"error": str(err)}, status=status.HTTP_400_BAD_REQUEST)
         except AIProviderError as err:
             # The model is enabled but unreachable/misbehaving; 503 signals a
             # transient/operational problem the user can act on (start the
             # model, fix the URL) rather than a bug in their request.
             return Response(
-                {"error": str(err)},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                {"error": str(err)}, status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 
-        return Response({"component": component.id, "suggestions": suggestions})
+        return Response(
+            {
+                "target_type": "component",
+                "target_id": component.id,
+                "suggestions": suggestions,
+            }
+        )
 
     @action(detail=False, methods=["get"])
     def ai_availability(self, request):
         """Report whether AI suggestions are available for a component's org.
 
-        The "suggest threats" affordance has to render its enabled/disabled
-        state *before* the user clicks, so an unconfigured tenant can be routed
-        to the provider settings instead of firing a request that would only
-        return a 400. This is a cheap config lookup — it never builds a provider
-        or probes the network; an enabled-but-unreachable model still surfaces
-        later as a 503 from ``suggest``.
+        A cheap config lookup — it never builds a provider or probes the
+        network; an enabled-but-unreachable model still surfaces later as a
+        503 from ``suggest``.
         """
-        component_id = request.query_params.get("component_id")
-        if not component_id:
+        target_id = request.query_params.get("target_id") or request.query_params.get(
+            "component_id"
+        )
+        if not target_id:
             return Response(
-                {"error": "component_id is required"},
+                {"error": "target_id is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        # Same org scoping as ``suggest`` so availability can't leak across
-        # tenants: a user only learns about components their orgs can reach.
-        org_ids = request.user.organization_memberships.values_list(
-            "organization_id", flat=True
-        )
-        component = OrgsystemComponent.objects.filter(
-            Q(orgsystem__organization_id__in=org_ids)
-            | Q(
-                orgsystem__isnull=True,
-                threat_model__organization_id__in=org_ids,
-            ),
-            id=component_id,
-        ).first()
+        component = self._scoped_component(request, target_id)
         if component is None:
             return Response(
                 {"error": "Component not found or not accessible"},
                 status=status.HTTP_404_NOT_FOUND,
             )
-
-        # ``resolve_config`` applies the org -> settings-fallback -> off
-        # precedence and raises when nothing serves this org; that exception is
-        # exactly the "AI is off here" signal the owl needs.
         try:
             resolve_config(organization_for_component(component))
         except AIDisabledError as err:
             return Response({"available": False, "reason": str(err)})
         return Response({"available": True, "reason": None})
-
-
-class DataFlowInstanceThreatViewSet(viewsets.ModelViewSet):
-    """ViewSet for DataFlowInstanceThreat."""
-
-    serializer_class = DataFlowInstanceThreatSerializer
-    permission_classes = [IsAuthenticated, CanWrite]
-
-    def get_queryset(self):
-        org_ids = self.request.user.organization_memberships.values_list(
-            "organization_id", flat=True
-        )
-        return (
-            DataFlowInstanceThreat.objects.filter(
-                Q(data_flow__source_component__orgsystem__organization_id__in=org_ids)
-                | Q(
-                    data_flow__source_component__orgsystem__isnull=True,
-                    data_flow__source_component__threat_model__organization_id__in=org_ids,
-                )
-            )
-            .select_related("data_flow", "threat_library")
-            .prefetch_related("instance_taxonomy_links__taxonomy_entry__taxonomy")
-        )
-
-    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ["data_flow", "threat_library", "status", "inherent_severity"]
-    ordering_fields = ["inherent_severity", "status", "created_at"]
-    ordering = ["-inherent_severity"]
-
-    @action(detail=True, methods=["post"])
-    def apply_countermeasure(self, request, pk=None):
-        """Apply a countermeasure to this flow threat instance."""
-        flow_threat = self.get_object()
-
-        # Option 1: Link an existing countermeasure instance
-        existing_countermeasure_id = request.data.get("existing_countermeasure_id")
-        if existing_countermeasure_id:
-            try:
-                existing_cm = InstanceCountermeasure.objects.get(
-                    id=existing_countermeasure_id
-                )
-            except InstanceCountermeasure.DoesNotExist:
-                return Response(
-                    {"error": "Countermeasure instance not found"},
-                    status=status.HTTP_404_NOT_FOUND,
-                )
-            _link, link_created = CountermeasureThreatLink.objects.get_or_create(
-                countermeasure=existing_cm,
-                flow_threat=flow_threat,
-            )
-            if not link_created:
-                return Response(
-                    {"error": "Countermeasure already linked to this threat"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-            recalculate_threat_status(flow_threat)
-            return Response(
-                {
-                    "countermeasure": InstanceCountermeasureSerializer(
-                        existing_cm
-                    ).data,
-                    "message": "Linked existing countermeasure to flow threat",
-                },
-                status=status.HTTP_201_CREATED,
-            )
-
-        # Option 2: Create new countermeasure from library + link
-        countermeasure_id = request.data.get("countermeasure_library_id")
-        if not countermeasure_id:
-            return Response(
-                {
-                    "error": "countermeasure_library_id or existing_countermeasure_id is required"
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            countermeasure = CountermeasureLibrary.objects.get(id=countermeasure_id)
-        except CountermeasureLibrary.DoesNotExist:
-            return Response(
-                {"error": "Countermeasure not found"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        requested_status = request.data.get("status")
-        if requested_status == "platform":
-            _check_platform_status_permission(request.user, new_status="platform")
-
-        # Derive threat_model from the flow's source component
-        source_component = (
-            flow_threat.data_flow.source_component if flow_threat.data_flow else None
-        )
-        threat_model = None
-        if source_component:
-            threat_model = getattr(source_component, "threat_model", None)
-
-        effective_status = requested_status or countermeasure.default_status
-        instance_cm = InstanceCountermeasure.objects.create(
-            threat_model=threat_model,
-            countermeasure_library=countermeasure,
-            countermeasure_name=countermeasure.name,
-            countermeasure_description=countermeasure.description,
-            control_functions=countermeasure.control_functions,
-            control_nature=countermeasure.control_nature,
-            status=effective_status,
-        )
-
-        CountermeasureThreatLink.objects.create(
-            countermeasure=instance_cm,
-            flow_threat=flow_threat,
-        )
-
-        recalculate_threat_status(flow_threat)
-
-        return Response(
-            {
-                "countermeasure": InstanceCountermeasureSerializer(instance_cm).data,
-                "message": f"Applied countermeasure '{countermeasure.name}' to flow threat",
-            },
-            status=status.HTTP_201_CREATED,
-        )
-
-    @action(detail=True, methods=["post"])
-    def recalculate_status(self, request, pk=None):
-        """Recalculate the flow threat status based on applied countermeasures."""
-        flow_threat = self.get_object()
-        new_status = recalculate_threat_status(flow_threat)
-
-        return Response(
-            {
-                "threat_id": flow_threat.id,
-                "old_status": flow_threat.status,
-                "new_status": new_status,
-                "message": f"Status updated to {new_status}",
-            }
-        )
-
-    @action(detail=False, methods=["post"])
-    def reorder(self, request):
-        """Bulk-update display_order for flow threats."""
-        ordered_ids = request.data.get("ordered_ids", [])
-        if not ordered_ids or not isinstance(ordered_ids, list):
-            return Response(
-                {"error": "ordered_ids list is required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        queryset = self.get_queryset()
-        existing_ids = set(
-            queryset.filter(id__in=ordered_ids).values_list("id", flat=True)
-        )
-        if len(existing_ids) != len(ordered_ids):
-            return Response(
-                {"error": "Some IDs not found or not accessible"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        instances = []
-        for position, threat_id in enumerate(ordered_ids):
-            instances.append(
-                DataFlowInstanceThreat(id=threat_id, display_order=position)
-            )
-        DataFlowInstanceThreat.objects.bulk_update(instances, ["display_order"])
-        return Response({"status": "ok", "updated": len(ordered_ids)})
 
 
 class InstanceCountermeasureViewSet(viewsets.ModelViewSet):
@@ -734,7 +600,7 @@ class InstanceCountermeasureViewSet(viewsets.ModelViewSet):
         org_ids = self.request.user.organization_memberships.values_list(
             "organization_id", flat=True
         )
-        return (
+        queryset = (
             InstanceCountermeasure.objects.filter(
                 threat_model__organization_id__in=org_ids
             )
@@ -745,10 +611,31 @@ class InstanceCountermeasureViewSet(viewsets.ModelViewSet):
                 "assigned_owner",
             )
             .prefetch_related(
-                "threat_links__component_threat__component",
-                "threat_links__flow_threat__data_flow",
+                "threat_links__threat__threat_library",
+                "threat_links__threat__targets__component",
+                "threat_links__threat__targets__flow__source_component",
+                "threat_links__threat__targets__flow__dest_component",
+                "threat_links__threat__targets__zone",
+                "threat_links__threat__targets__boundary",
+                "targets__component",
+                "targets__flow__source_component",
+                "targets__flow__dest_component",
+                "targets__zone",
+                "targets__boundary",
+                "provider_links",
             )
         )
+        if self.request.query_params.get("overdue") in ("1", "true", "yes"):
+            from datetime import date
+
+            queryset = queryset.filter(due_date__lt=date.today()).exclude(
+                status__in=[
+                    InstanceCountermeasure.Status.IMPLEMENTED,
+                    InstanceCountermeasure.Status.VERIFIED,
+                    InstanceCountermeasure.Status.PLATFORM,
+                ]
+            )
+        return queryset
 
     filter_backends = [DjangoFilterBackend]
     filterset_fields = [
@@ -756,52 +643,65 @@ class InstanceCountermeasureViewSet(viewsets.ModelViewSet):
         "countermeasure_library",
         "status",
         "required_for_release",
+        "number",
     ]
 
     def perform_update(self, serializer):
         new_status = serializer.validated_data.get("status")
         if new_status is not None:
-            current_status = serializer.instance.status
-            _check_platform_status_permission(
-                self.request.user, current_status, new_status
+            check_platform_status(
+                self.request.user,
+                serializer.instance.threat_model,
+                serializer.instance.status,
+                new_status,
             )
         instance = serializer.save()
+        note_user_edit(instance)
         recalculate_all_threats_for_countermeasure(instance)
 
     @action(detail=True, methods=["post"])
+    def set_targets(self, request, pk=None):
+        """Replace where the control applies: ``targets`` as ``[{type, id}]``.
+
+        An empty list is allowed and means the whole system. Scope never
+        changes a threat's status.
+        """
+        countermeasure = self.get_object()
+        serializer = InstanceCountermeasureSerializer(
+            countermeasure,
+            data={"targets": request.data.get("targets", [])},
+            partial=True,
+            context=self.get_serializer_context(),
+        )
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        note_user_edit(instance)
+        return Response(InstanceCountermeasureSerializer(instance).data)
+
+    @action(detail=True, methods=["post"])
     def link(self, request, pk=None):
-        """Link this countermeasure to an additional threat (component or flow)."""
+        """Link this countermeasure to one more scenario of its model."""
         countermeasure = self.get_object()
         threat_id = request.data.get("threat_id")
-        threat_type = request.data.get("threat_type", "component")
         if not threat_id:
             return Response(
                 {"error": "threat_id is required"}, status=status.HTTP_400_BAD_REQUEST
             )
+        threat = InstanceThreat.objects.filter(
+            id=threat_id, threat_model=countermeasure.threat_model
+        ).first()
+        if threat is None:
+            return Response(
+                {"error": "Threat not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
-        link_kwargs = {"countermeasure": countermeasure}
-        if threat_type in ("flow", "dataflow"):
-            try:
-                threat = DataFlowInstanceThreat.objects.get(id=threat_id)
-            except DataFlowInstanceThreat.DoesNotExist:
-                return Response(
-                    {"error": "Threat not found"}, status=status.HTTP_404_NOT_FOUND
-                )
-            link_kwargs["flow_threat"] = threat
-        else:
-            try:
-                threat = ComponentInstanceThreat.objects.get(id=threat_id)
-            except ComponentInstanceThreat.DoesNotExist:
-                return Response(
-                    {"error": "Threat not found"}, status=status.HTTP_404_NOT_FOUND
-                )
-            link_kwargs["component_threat"] = threat
-
-        link, created = CountermeasureThreatLink.objects.get_or_create(**link_kwargs)
+        link, created = link_countermeasure(countermeasure, threat)
         if not created:
             return Response(
                 {"error": "Already linked"}, status=status.HTTP_400_BAD_REQUEST
             )
+        note_user_edit(countermeasure)
+        note_user_edit(threat)
         recalculate_threat_status(threat)
         return Response(
             {"status": "linked", "link_id": link.id}, status=status.HTTP_201_CREATED
@@ -809,96 +709,68 @@ class InstanceCountermeasureViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def unlink(self, request, pk=None):
-        """Unlink this countermeasure from a threat. Deletes countermeasure if last link."""
+        """Unlink this countermeasure from a scenario.
+
+        An untouched generated countermeasure that lost its last link is
+        deleted (the orphan rule); anything a user edited, or that applies to
+        the whole system, stays and is listed as unattached.
+        """
         countermeasure = self.get_object()
         threat_id = request.data.get("threat_id")
-        threat_type = request.data.get("threat_type", "component")
         if not threat_id:
             return Response(
                 {"error": "threat_id is required"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-        if threat_type in ("flow", "dataflow"):
-            deleted_count, _ = CountermeasureThreatLink.objects.filter(
-                countermeasure=countermeasure,
-                flow_threat_id=threat_id,
-            ).delete()
-        else:
-            deleted_count, _ = CountermeasureThreatLink.objects.filter(
-                countermeasure=countermeasure,
-                component_threat_id=threat_id,
-            ).delete()
-
+        deleted_count, _ = CountermeasureThreatLink.objects.filter(
+            countermeasure=countermeasure, threat_id=threat_id
+        ).delete()
         if deleted_count == 0:
             return Response(
                 {"error": "Link not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        # Recalculate the threat we just unlinked from
-        try:
-            if threat_type in ("flow", "dataflow"):
-                threat = DataFlowInstanceThreat.objects.get(id=threat_id)
-                recalculate_threat_status(threat)
-                recalculate_risks_for_threat(threat, threat_type="flow")
-            else:
-                threat = ComponentInstanceThreat.objects.get(id=threat_id)
-                recalculate_threat_status(threat)
-                recalculate_risks_for_threat(threat, threat_type="component")
-        except (
-            ComponentInstanceThreat.DoesNotExist,
-            DataFlowInstanceThreat.DoesNotExist,
-        ):
-            pass
+        threat = InstanceThreat.objects.filter(id=threat_id).first()
+        if threat is not None:
+            recalculate_threat_status(threat)
+            recalculate_risks_for_threat(threat)
 
-        # If no more links remain, cascade-delete the countermeasure
-        remaining_links = countermeasure.threat_links.count()
-        if remaining_links == 0:
-            countermeasure.delete()
+        if not InstanceCountermeasure.objects.filter(id=countermeasure.id).exists():
+            # The post_delete rule already removed an orphaned generated row.
             return Response(
                 {
                     "status": "deleted",
                     "message": "Last link removed, countermeasure deleted",
                 }
             )
-
+        countermeasure.refresh_from_db()
+        remaining_links = countermeasure.threat_links.count()
         return Response({"status": "unlinked", "remaining_links": remaining_links})
 
     @action(detail=False, methods=["post"])
     def reorder(self, request):
-        """Bulk-update display_order on junction table for countermeasures within a threat."""
+        """Bulk-update display_order on junction table for countermeasures within a scenario."""
         threat_id = request.data.get("threat_id")
-        threat_type = request.data.get("threat_type", "component")
         ordered_ids = request.data.get("ordered_ids", [])
         if not ordered_ids or not isinstance(ordered_ids, list):
             return Response(
                 {"error": "ordered_ids list is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if threat_type in ("flow", "dataflow"):
-            links = CountermeasureThreatLink.objects.filter(
-                flow_threat_id=threat_id,
-                countermeasure_id__in=ordered_ids,
-            )
-        else:
-            links = CountermeasureThreatLink.objects.filter(
-                component_threat_id=threat_id,
-                countermeasure_id__in=ordered_ids,
-            )
-        if links.count() != len(ordered_ids):
+        links = CountermeasureThreatLink.objects.filter(
+            threat_id=threat_id, countermeasure_id__in=ordered_ids
+        )
+        by_countermeasure = {link.countermeasure_id: link for link in links}
+        if len(by_countermeasure) != len(ordered_ids):
             return Response(
                 {"error": "Some IDs not found or not accessible"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        instances = []
         for position, cm_id in enumerate(ordered_ids):
-            link = CountermeasureThreatLink(
-                id=links.filter(countermeasure_id=cm_id)
-                .values_list("id", flat=True)
-                .first()
-            )
-            link.display_order = position
-            instances.append(link)
-        CountermeasureThreatLink.objects.bulk_update(instances, ["display_order"])
+            by_countermeasure[cm_id].display_order = position
+        CountermeasureThreatLink.objects.bulk_update(
+            list(by_countermeasure.values()), ["display_order"]
+        )
         return Response({"status": "ok", "updated": len(ordered_ids)})
 
 
@@ -974,7 +846,7 @@ class InstanceCountermeasureStandardViewSet(viewsets.ModelViewSet):
 
 
 class InstanceThreatTaxonomyEntryViewSet(viewsets.ModelViewSet):
-    """CRUD for instance-level taxonomy entries on threat instances."""
+    """CRUD for instance-level taxonomy entries on threat scenarios."""
 
     serializer_class = InstanceThreatTaxonomyEntrySerializer
     permission_classes = [IsAuthenticated, CanWrite]
@@ -984,27 +856,11 @@ class InstanceThreatTaxonomyEntryViewSet(viewsets.ModelViewSet):
             "organization_id", flat=True
         )
         return InstanceThreatTaxonomyEntry.objects.filter(
-            Q(component_threat__component__orgsystem__organization_id__in=org_ids)
-            | Q(
-                component_threat__component__orgsystem__isnull=True,
-                component_threat__component__threat_model__organization_id__in=org_ids,
-            )
-            | Q(
-                flow_threat__data_flow__source_component__orgsystem__organization_id__in=org_ids
-            )
-            | Q(
-                flow_threat__data_flow__source_component__orgsystem__isnull=True,
-                flow_threat__data_flow__source_component__threat_model__organization_id__in=org_ids,
-            )
-        ).select_related(
-            "taxonomy_entry",
-            "taxonomy_entry__taxonomy",
-            "component_threat",
-            "flow_threat",
-        )
+            threat__threat_model__organization_id__in=org_ids
+        ).select_related("taxonomy_entry", "taxonomy_entry__taxonomy", "threat")
 
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ["component_threat", "flow_threat", "taxonomy_entry"]
+    filterset_fields = ["threat", "taxonomy_entry"]
 
 
 class ExternalTaxonomyViewSet(viewsets.ReadOnlyModelViewSet):
@@ -1039,19 +895,49 @@ class RiskViewSet(viewsets.ModelViewSet):
         filters.SearchFilter,
         filters.OrderingFilter,
     ]
-    filterset_fields = ["inherent_level", "residual_level", "owner", "assigned_to"]
+    filterset_fields = [
+        "status",
+        "inherent__level",
+        "residual__level",
+        "owner",
+        "assigned_to",
+    ]
     search_fields = ["name", "description"]
-    ordering_fields = ["inherent_score", "residual_score", "created_at", "name"]
-    ordering = ["-inherent_score"]
+    ordering_fields = [
+        "inherent_rank",
+        "residual_rank",
+        "inherent__score",
+        "residual__score",
+        "created_at",
+        "name",
+    ]
+    ordering = ["-inherent_rank", "-inherent__score", "-created_at"]
 
     def get_queryset(self):
+        from django.db.models import Count
+
         org_ids = self.request.user.organization_memberships.values_list(
             "organization_id", flat=True
         )
-        return Risk.objects.filter(
-            threat_model_id=self.kwargs["threat_model_pk"],
-            threat_model__organization_id__in=org_ids,
-        ).select_related("owner", "assigned_to", "threat_model")
+        return (
+            Risk.objects.filter(
+                threat_model_id=self.kwargs["threat_model_pk"],
+                threat_model__organization_id__in=org_ids,
+            )
+            .select_related(
+                "owner", "assigned_to", "threat_model", "inherent", "residual", "target"
+            )
+            .prefetch_related(
+                "risk_threats__threat",
+                "responses__owner",
+                "responses__countermeasure_links__countermeasure",
+            )
+            .annotate(
+                inherent_rank=rating_level_rank("inherent__level"),
+                residual_rank=rating_level_rank("residual__level"),
+                threat_count=Count("risk_threats", distinct=True),
+            )
+        )
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -1067,40 +953,29 @@ class RiskViewSet(viewsets.ModelViewSet):
         return context
 
     def perform_create(self, serializer):
-        serializer.save(threat_model_id=self.kwargs["threat_model_pk"])
+        serializer.save(threat_model=self.get_serializer_context()["threat_model"])
 
     @action(detail=True, methods=["post"])
     def recalculate(self, request, threat_model_pk=None, pk=None):
         """Recompute residual score and level for this risk."""
         risk = self.get_object()
-        recalculate_risk(risk)
+        recalculate_residual(risk)
         risk.refresh_from_db()
         serializer = RiskDetailSerializer(risk, context=self.get_serializer_context())
         return Response(serializer.data)
 
     @action(detail=True, methods=["post"], url_path="add-threats")
     def add_threats(self, request, threat_model_pk=None, pk=None):
-        """Bulk link threats to this risk."""
+        """Bulk link scenarios to this risk."""
         risk = self.get_object()
-        component_threat_ids = request.data.get("component_threat_ids", [])
-        flow_threat_ids = request.data.get("flow_threat_ids", [])
+        threat_ids = list(request.data.get("threat_ids", []))
 
-        valid_component_ids = set(
-            ComponentInstanceThreat.objects.filter(
-                id__in=component_threat_ids,
-                component__threat_model_id=threat_model_pk,
+        valid_ids = set(
+            InstanceThreat.objects.filter(
+                id__in=threat_ids, threat_model_id=threat_model_pk
             ).values_list("id", flat=True)
         )
-        valid_flow_ids = set(
-            DataFlowInstanceThreat.objects.filter(
-                id__in=flow_threat_ids,
-                data_flow__source_component__threat_model_id=threat_model_pk,
-            ).values_list("id", flat=True)
-        )
-
-        rejected = (set(component_threat_ids) - valid_component_ids) | (
-            set(flow_threat_ids) - valid_flow_ids
-        )
+        rejected = set(threat_ids) - valid_ids
         if rejected:
             return Response(
                 {
@@ -1110,45 +985,34 @@ class RiskViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        risk_threat_rows = []
-        for threat_id in valid_component_ids:
-            if not RiskThreat.objects.filter(
-                risk=risk, component_threat_id=threat_id
-            ).exists():
-                risk_threat_rows.append(
-                    RiskThreat(risk=risk, component_threat_id=threat_id)
-                )
-        for threat_id in valid_flow_ids:
-            if not RiskThreat.objects.filter(
-                risk=risk, flow_threat_id=threat_id
-            ).exists():
-                risk_threat_rows.append(RiskThreat(risk=risk, flow_threat_id=threat_id))
+        existing = set(
+            RiskThreat.objects.filter(risk=risk, threat_id__in=valid_ids).values_list(
+                "threat_id", flat=True
+            )
+        )
+        RiskThreat.objects.bulk_create(
+            [
+                RiskThreat(risk=risk, threat_id=threat_id)
+                for threat_id in valid_ids - existing
+            ]
+        )
+        for threat in InstanceThreat.objects.filter(id__in=valid_ids - existing):
+            note_user_edit(threat)
 
-        if risk_threat_rows:
-            RiskThreat.objects.bulk_create(risk_threat_rows)
-
-        recalculate_risk(risk)
+        recalculate_residual(risk)
         risk.refresh_from_db()
         serializer = RiskDetailSerializer(risk, context=self.get_serializer_context())
         return Response(serializer.data)
 
     @action(detail=True, methods=["post"], url_path="remove-threats")
     def remove_threats(self, request, threat_model_pk=None, pk=None):
-        """Bulk unlink threats from this risk."""
+        """Bulk unlink scenarios from this risk."""
         risk = self.get_object()
-        component_threat_ids = request.data.get("component_threat_ids", [])
-        flow_threat_ids = request.data.get("flow_threat_ids", [])
+        threat_ids = request.data.get("threat_ids", [])
+        if threat_ids:
+            RiskThreat.objects.filter(risk=risk, threat_id__in=threat_ids).delete()
 
-        if component_threat_ids:
-            RiskThreat.objects.filter(
-                risk=risk, component_threat_id__in=component_threat_ids
-            ).delete()
-        if flow_threat_ids:
-            RiskThreat.objects.filter(
-                risk=risk, flow_threat_id__in=flow_threat_ids
-            ).delete()
-
-        recalculate_risk(risk)
+        recalculate_residual(risk)
         risk.refresh_from_db()
         serializer = RiskDetailSerializer(risk, context=self.get_serializer_context())
         return Response(serializer.data)
@@ -1156,11 +1020,12 @@ class RiskViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["post"], url_path="bulk-update")
     def bulk_update(self, request, threat_model_pk=None):
         """
-        Bulk update response or owner on multiple risks.
+        Bulk update status or owner on multiple risks.
 
         Request body:
             risk_ids: list of risk IDs
-            response: optional risk response strategy (accept/mitigate/transfer/avoid, null to clear)
+            status: optional lifecycle status (identified, assessed, mitigated,
+                accepted, transferred, retired)
             owner: optional owner user ID (null to clear)
         """
         risk_ids = request.data.get("risk_ids", [])
@@ -1176,8 +1041,14 @@ class RiskViewSet(viewsets.ModelViewSet):
             )
 
         update_fields = {}
-        if "response" in request.data:
-            update_fields["response"] = request.data["response"] or None
+        if "status" in request.data:
+            new_status = request.data["status"]
+            if new_status not in Risk.Status.values:
+                return Response(
+                    {"status": f"'{new_status}' is not a risk status."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            update_fields["status"] = new_status
         if "owner" in request.data:
             update_fields["owner_id"] = request.data["owner"]
 
@@ -1188,6 +1059,39 @@ class RiskViewSet(viewsets.ModelViewSet):
 
         updated = queryset.update(**update_fields)
         return Response({"updated": updated})
+
+
+class RiskResponseViewSet(viewsets.ModelViewSet):
+    """Responses of one risk: ``/api/threat-models/{id}/risks/{risk_id}/responses/``."""
+
+    serializer_class = RiskResponseSerializer
+    permission_classes = [IsAuthenticated, CanWrite]
+
+    def _risk(self):
+        org_ids = self.request.user.organization_memberships.values_list(
+            "organization_id", flat=True
+        )
+        return get_object_or_404(
+            Risk,
+            pk=self.kwargs["risk_pk"],
+            threat_model_id=self.kwargs["threat_model_pk"],
+            threat_model__organization_id__in=org_ids,
+        )
+
+    def get_queryset(self):
+        return (
+            RiskResponse.objects.filter(risk=self._risk())
+            .select_related("owner")
+            .prefetch_related("countermeasure_links__countermeasure")
+        )
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["risk"] = self._risk()
+        return context
+
+    def perform_create(self, serializer):
+        serializer.save(risk=self._risk())
 
 
 class CountermeasureCommentViewSet(viewsets.ModelViewSet):
@@ -1216,17 +1120,25 @@ class ThreatPersonaViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     search_fields = ["name", "symbolic_name"]
 
-    def get_queryset(self):
+    def _threat_model(self):
         org_ids = self.request.user.organization_memberships.values_list(
             "organization_id", flat=True
         )
-        return ThreatPersona.objects.filter(
-            threat_model_id=self.kwargs["threat_model_pk"],
-            threat_model__organization_id__in=org_ids,
+        return get_object_or_404(
+            ThreatModel,
+            pk=self.kwargs["threat_model_pk"],
+            organization_id__in=org_ids,
+        )
+
+    def get_queryset(self):
+        return ThreatPersona.objects.filter(threat_model=self._threat_model()).annotate(
+            threat_count=Count("threats", distinct=True)
         )
 
     def perform_create(self, serializer):
-        serializer.save(threat_model_id=self.kwargs["threat_model_pk"])
+        threat_model = self._threat_model()
+        self.check_object_permissions(self.request, threat_model)
+        serializer.save(threat_model=threat_model)
 
 
 class ThreatSourceViewSet(viewsets.ReadOnlyModelViewSet):

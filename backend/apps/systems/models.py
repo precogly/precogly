@@ -4,11 +4,19 @@ Systems models - Orgsystems, components, data flows.
 
 from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from apps.core.models import TimestampedModel
 from apps.core.tenancy import Tenancy
 from apps.organizations.models import Organization
+from apps.systems.crossing import (
+    ASSET_TYPES,
+    BOUNDARY_TYPES,
+    FLOW_TYPES,
+    ZONE_TYPES,
+    kind_for_category,
+)
 
 
 class Orgsystem(TimestampedModel):
@@ -93,21 +101,35 @@ class IntegrationSource(TimestampedModel):
         return f"{self.name} ({self.source_type})"
 
 
-class TrustZone(TimestampedModel):
+class Zone(TimestampedModel):
     """Trust zone (named security region)."""
 
     tenancy = Tenancy.TENANT_OWNED
 
-    # A zone used to be reached only in reverse, through `components`, and both hops
-    # to an organization were nullable. #404 read across tenants that way and #406
-    # wrote through it. This column is the boundary now; nothing should re-derive it.
-    organization = models.ForeignKey(
-        Organization,
+    # A zone belongs to exactly one blueprint. The organization is reached
+    # through `blueprint.threat_model.organization`, a chain with no nullable
+    # step, which is what #404 and #406 needed (an unscoped reverse lookup
+    # through `components` read and wrote across tenants).
+    blueprint = models.ForeignKey(
+        "threat_models.Blueprint",
         on_delete=models.CASCADE,
-        related_name="trust_zones",
+        related_name="zones",
     )
     name = models.CharField(max_length=255)
-    trust_level = models.IntegerField(default=50, help_text="0-100 scale")
+    zone_type = models.CharField(
+        max_length=20,
+        choices=[(value, value) for value in ZONE_TYPES],
+        default="trust",
+        help_text="CycloneDX zone type",
+    )
+    # Null means "not set" (F13). Meaningful on trust and network zones; the
+    # editor starts a new trust zone at 50.
+    trust_level = models.IntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="0-100 scale, null when not set",
+    )
     description = models.TextField(blank=True)
     format_metadata = models.JSONField(default=dict, blank=True)
     parent = models.ForeignKey(
@@ -119,33 +141,34 @@ class TrustZone(TimestampedModel):
     )
 
     class Meta:
-        verbose_name_plural = "Trust zones"
+        verbose_name_plural = "Zones"
         ordering = ["name"]
 
     def __str__(self):
         return self.name
 
 
-class TrustBoundary(TimestampedModel):
+class Boundary(TimestampedModel):
     """Security boundary between two trust zones."""
 
     tenancy = Tenancy.TENANT_OWNED
 
-    # Carries its own owner rather than reading it off `zone_a`: the two zones are
-    # separate rows and nothing but this column stops a boundary being drawn between
-    # organizations. Lifecycle still comes from the zones, which cascade.
-    organization = models.ForeignKey(
-        Organization,
+    # Carries its own blueprint rather than reading it off `zone_a`: the two zones
+    # are separate rows and this column, with the same-blueprint validation in the
+    # serializer and in sync, is what stops a boundary being drawn between
+    # blueprints or organizations. Lifecycle still comes from the zones, which cascade.
+    blueprint = models.ForeignKey(
+        "threat_models.Blueprint",
         on_delete=models.CASCADE,
-        related_name="trust_boundaries",
+        related_name="boundaries",
     )
     zone_a = models.ForeignKey(
-        TrustZone,
+        Zone,
         on_delete=models.CASCADE,
         related_name="boundaries_as_source",
     )
     zone_b = models.ForeignKey(
-        TrustZone,
+        Zone,
         on_delete=models.CASCADE,
         related_name="boundaries_as_target",
     )
@@ -157,24 +180,51 @@ class TrustBoundary(TimestampedModel):
         db_index=True,
         help_text="DFD edge ID this boundary was created from",
     )
-    format_metadata = models.JSONField(
-        default=dict,
-        blank=True,
-        help_text="Auth methods, access control, token TTL, etc.",
+    format_metadata = models.JSONField(default=dict, blank=True)
+    boundary_type = models.CharField(
+        max_length=20,
+        choices=[(value, value) for value in BOUNDARY_TYPES],
+        default="trust",
+        help_text="CycloneDX boundary type",
     )
 
-    # Crossing requirements (CycloneDX 2.0 TM-BOM)
-    authentication = models.BooleanField(default=False)
-    authorization = models.BooleanField(default=False)
+    # Crossing requirements, shaped like the spec (section 4.5). The lists hold
+    # spec values or custom names; `none` cannot sit beside other values. The
+    # booleans are exported only when true (M14, S4).
+    authentication = models.JSONField(default=list, blank=True)
+    authorization = models.JSONField(default=list, blank=True)
     data_validation = models.BooleanField(default=False)
+    data_transformation = models.BooleanField(default=False)
     logging = models.BooleanField(default=False)
     monitoring = models.BooleanField(default=False)
-    rate_limiting = models.BooleanField(default=False)
+    rate_limit = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        help_text="Policy text; blank means none",
+    )
+    protocols = models.JSONField(default=list, blank=True)
+    session_management = models.JSONField(
+        default=dict, blank=True, help_text="The spec's nine sessionManagement keys"
+    )
 
+    # No unique rule on the zone pair (M11): a network boundary and a trust
+    # boundary between the same two zones are both normal.
     class Meta:
-        verbose_name_plural = "Trust boundaries"
+        verbose_name_plural = "Boundaries"
         ordering = ["zone_a", "zone_b"]
-        unique_together = ["zone_a", "zone_b"]
+
+    @property
+    def requires_authentication(self) -> bool:
+        from .crossing import requires
+
+        return requires(self.authentication)
+
+    @property
+    def requires_authorization(self) -> bool:
+        from .crossing import requires
+
+        return requires(self.authorization)
 
     def __str__(self):
         return self.label or f"{self.zone_a} <-> {self.zone_b}"
@@ -224,6 +274,13 @@ class ComponentLibrary(TimestampedModel):
     )
     name = models.CharField(max_length=255)
     category = models.CharField(max_length=30, choices=Category.choices)
+    kind = models.CharField(
+        max_length=30,
+        blank=True,
+        default="",
+        choices=[(value, value) for value in ASSET_TYPES],
+        help_text="CycloneDX asset type; blank derives from the category",
+    )
     component_type = models.CharField(max_length=100)
     provider = models.CharField(max_length=100, blank=True)
     icon_svg = models.TextField(blank=True, default="")
@@ -332,6 +389,10 @@ class ComponentLibrary(TimestampedModel):
             max_depth = max(max_depth, child_depth)
         return max_depth
 
+    @property
+    def effective_kind(self) -> str:
+        return self.kind or kind_for_category(self.category)
+
     def save(self, *args, **kwargs):
         # Auto-generate qualified_slug if not set
         if not self.qualified_slug and self.slug:
@@ -345,18 +406,21 @@ class ComponentLibrary(TimestampedModel):
 class OrgsystemComponent(TimestampedModel):
     """Component instance, optionally linked to an orgsystem."""
 
-    # "Optionally linked" is the nullable `orgsystem` that made #227 possible: with it
-    # null the organization is reached through `threat_model` instead, and the queryset
-    # has to cover both.
+    # The organization is reached through `blueprint.threat_model`; `orgsystem` is
+    # an optional inventory link, not a tenancy path (it was the nullable key that
+    # made #227 possible).
     tenancy = Tenancy.TENANT_OWNED
 
+    # Set only on system and subsystem assets: "this asset stands for that
+    # inventory system" (section 4.9). Not a tenancy path. SET_NULL, so deleting
+    # an inventory system unlinks the assets and never deletes components (H5).
     orgsystem = models.ForeignKey(
         Orgsystem,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="components",
         null=True,
         blank=True,
-        help_text="Optional link to a system. Null means component exists without system assignment.",
+        help_text="The inventory system a system or subsystem asset stands for",
     )
     component_library = models.ForeignKey(
         ComponentLibrary,
@@ -367,8 +431,8 @@ class OrgsystemComponent(TimestampedModel):
         help_text="Null means orphaned/custom component (library item was removed)",
     )
     name = models.CharField(max_length=255)
-    trust_zone = models.ForeignKey(
-        TrustZone,
+    zone = models.ForeignKey(
+        Zone,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -381,13 +445,11 @@ class OrgsystemComponent(TimestampedModel):
         blank=True,
         related_name="discovered_components",
     )
-    threat_model = models.ForeignKey(
-        "threat_models.ThreatModel",
+    blueprint = models.ForeignKey(
+        "threat_models.Blueprint",
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        related_name="analysis_components",
-        help_text="For analysis-only components not linked to a DFD. Null means linked via DFD sync.",
+        related_name="components",
+        help_text="The structural model this component belongs to",
     )
 
     description = models.TextField(blank=True, default="")
@@ -429,12 +491,23 @@ class OrgsystemComponent(TimestampedModel):
         blank=True,
         help_text="Copied from ComponentLibrary.provider on creation",
     )
+    kind = models.CharField(
+        max_length=30,
+        blank=True,
+        default="",
+        choices=[(value, value) for value in ASSET_TYPES],
+        help_text="CycloneDX asset type; copied from the library, editable; blank derives from the category",
+    )
 
     class Meta:
         ordering = ["name"]
 
     def __str__(self):
         return self.name
+
+    @property
+    def effective_kind(self) -> str:
+        return self.kind or kind_for_category(self.category)
 
 
 class DataAsset(TimestampedModel):
@@ -447,11 +520,9 @@ class DataAsset(TimestampedModel):
         MEDIUM = "medium", "Medium"
         HIGH = "high", "High"
 
-    threat_model = models.ForeignKey(
-        "threat_models.ThreatModel",
+    blueprint = models.ForeignKey(
+        "threat_models.Blueprint",
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         related_name="data_assets",
     )
     name = models.CharField(max_length=255)
@@ -529,11 +600,16 @@ class ComponentDataAsset(TimestampedModel):
         return f"{self.component} - {self.data_asset}"
 
 
-class DataFlow(TimestampedModel):
+class Flow(TimestampedModel):
     """Data flow between components."""
 
     tenancy = Tenancy.TENANT_OWNED
 
+    blueprint = models.ForeignKey(
+        "threat_models.Blueprint",
+        on_delete=models.CASCADE,
+        related_name="flows",
+    )
     source_component = models.ForeignKey(
         OrgsystemComponent,
         on_delete=models.CASCADE,
@@ -556,11 +632,22 @@ class DataFlow(TimestampedModel):
         help_text="DFD edge ID this flow was created from",
     )
     description = models.TextField(blank=True, default="")
+    flow_type = models.CharField(
+        max_length=20,
+        choices=[(value, value) for value in FLOW_TYPES],
+        default="data",
+        help_text="CycloneDX flow type",
+    )
+    # Shown for data-like types only (data, message, event).
     protocol = models.CharField(max_length=50, blank=True)
     port = models.IntegerField(null=True, blank=True)
     encrypted = models.BooleanField(default=False)
-    authenticated = models.BooleanField(default=False)
-    crosses_trust_zone = models.BooleanField(default=False)
+    # Lists of spec values or custom names, with the boundary's rule (I5):
+    # authenticated means not empty and not `none`.
+    authentication = models.JSONField(default=list, blank=True)
+    authorization = models.JSONField(default=list, blank=True)
+    # True when a Boundary row separates the two ends (H19); set by sync.
+    crosses_boundary = models.BooleanField(default=False)
     has_sensitive_data = models.BooleanField(default=False)
     data_classification = models.JSONField(default=list, blank=True)
     format_metadata = models.JSONField(default=dict, blank=True)
@@ -572,6 +659,18 @@ class DataFlow(TimestampedModel):
         if self.label:
             return self.label
         return f"{self.source_component} -> {self.dest_component}"
+
+    @property
+    def is_data_like(self) -> bool:
+        from .crossing import is_data_like
+
+        return is_data_like(self.flow_type)
+
+    @property
+    def requires_authentication(self) -> bool:
+        from .crossing import requires
+
+        return requires(self.authentication)
 
     def save(self, *args, **kwargs):
         if self.data_classification:
@@ -586,7 +685,7 @@ class DataFlow(TimestampedModel):
         super().save(*args, **kwargs)
 
 
-class DataFlowAsset(TimestampedModel):
+class FlowAsset(TimestampedModel):
     """Data assets transported in a data flow."""
 
     tenancy = Tenancy.TENANT_OWNED
@@ -598,8 +697,8 @@ class DataFlowAsset(TimestampedModel):
         HASHED = "hashed", "Hashed"
         NONE = "none", "None"
 
-    data_flow = models.ForeignKey(
-        DataFlow,
+    flow = models.ForeignKey(
+        Flow,
         on_delete=models.CASCADE,
         related_name="assets",
     )
@@ -618,7 +717,7 @@ class DataFlowAsset(TimestampedModel):
     sensitivity_override = models.CharField(max_length=20, blank=True)
 
     class Meta:
-        unique_together = ["data_flow", "data_asset"]
+        unique_together = ["flow", "data_asset"]
 
     def __str__(self):
-        return f"{self.data_flow} - {self.data_asset}"
+        return f"{self.flow} - {self.data_asset}"

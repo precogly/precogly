@@ -21,8 +21,10 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
-import { useCreateAnalysisComponent, useComponentLibrary, useTrustZones } from '@/features/threat-models/api/components'
+import { useCreateAnalysisComponent, useComponentLibrary, useZones } from '@/features/threat-models/api/components'
 import { useGenerateThreats } from '@/features/threat-models/api/threats'
+import { useThreatModel } from '@/features/threat-models/api/threat-models'
+import { COMPONENT_KINDS, type ComponentKind } from '@/types/domain'
 
 const COMPONENT_CATEGORIES = [
   { value: 'process', label: 'Process' },
@@ -35,6 +37,8 @@ interface AddCustomComponentDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   threatModelId: string
+  /** Blueprint selected on the page; falls back to the model's first blueprint. */
+  blueprintId?: number
   onSuccess?: () => void
 }
 
@@ -42,6 +46,7 @@ export function AddCustomComponentDialog({
   open,
   onOpenChange,
   threatModelId,
+  blueprintId: selectedBlueprintId,
   onSuccess,
 }: AddCustomComponentDialogProps) {
   const [activeTab, setActiveTab] = useState<'library' | 'custom'>('library')
@@ -52,10 +57,14 @@ export function AddCustomComponentDialog({
   const [customName, setCustomName] = useState('')
   const [customCategory, setCustomCategory] = useState('')
   const [selectedTrustZone, setSelectedTrustZone] = useState<string>('')
+  // Kind (plan 11.11 "Component" row): empty defaults from the category.
+  const [selectedKind, setSelectedKind] = useState<string>('default')
 
-  // Fetch component library and trust zones
+  // Fetch component library and zones
   const { data: componentLibrary, isLoading } = useComponentLibrary(threatModelId)
-  const { data: trustZones } = useTrustZones(threatModelId)
+  const { data: threatModel } = useThreatModel(threatModelId)
+  const blueprintId = selectedBlueprintId ?? threatModel?.blueprints?.[0]?.id
+  const { data: trustZones } = useZones({ blueprint: blueprintId })
   const createComponent = useCreateAnalysisComponent()
   const generateThreats = useGenerateThreats()
 
@@ -71,15 +80,16 @@ export function AddCustomComponentDialog({
   const selectedLibraryItem = componentLibrary?.find((cl) => cl.id === selectedLibraryId)
 
   const handleAddFromLibrary = () => {
-    if (!selectedLibraryId || !selectedLibraryItem) return
+    if (!selectedLibraryId || !selectedLibraryItem || blueprintId === undefined) return
 
     createComponent.mutate(
       {
         name: selectedLibraryItem.name,
         category: selectedLibraryItem.category,
         componentLibrary: selectedLibraryId,
-        threatModel: parseInt(threatModelId, 10),
-        trustZone: selectedTrustZone && selectedTrustZone !== 'none' ? parseInt(selectedTrustZone, 10) : null,
+        blueprint: blueprintId,
+        zone: selectedTrustZone && selectedTrustZone !== 'none' ? parseInt(selectedTrustZone, 10) : null,
+        kind: selectedKind === 'default' ? '' : (selectedKind as ComponentKind),
       },
       {
         onSuccess: (createdComponent) => {
@@ -99,15 +109,16 @@ export function AddCustomComponentDialog({
   }
 
   const handleAddCustom = () => {
-    if (!customName.trim() || !customCategory) return
+    if (!customName.trim() || !customCategory || blueprintId === undefined) return
 
     createComponent.mutate(
       {
         name: customName,
         category: customCategory,
         componentLibrary: null,
-        threatModel: parseInt(threatModelId, 10),
-        trustZone: selectedTrustZone && selectedTrustZone !== 'none' ? parseInt(selectedTrustZone, 10) : null,
+        blueprint: blueprintId,
+        zone: selectedTrustZone && selectedTrustZone !== 'none' ? parseInt(selectedTrustZone, 10) : null,
+        kind: selectedKind === 'default' ? '' : (selectedKind as ComponentKind),
       },
       {
         onSuccess: () => {
@@ -125,8 +136,28 @@ export function AddCustomComponentDialog({
     setCustomName('')
     setCustomCategory('')
     setSelectedTrustZone('')
+    setSelectedKind('default')
     setActiveTab('library')
   }
+
+  const kindSelect = (id: string) => (
+    <div className="space-y-2">
+      <Label htmlFor={id}>Kind</Label>
+      <Select value={selectedKind} onValueChange={setSelectedKind}>
+        <SelectTrigger id={id}>
+          <SelectValue placeholder="Default from the category" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="default">Default from the category</SelectItem>
+          {COMPONENT_KINDS.map((kind) => (
+            <SelectItem key={kind.value} value={kind.value}>
+              {kind.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )
 
   const isSubmitting = createComponent.isPending
 
@@ -206,6 +237,8 @@ export function AddCustomComponentDialog({
               </div>
             )}
 
+            {kindSelect('library-kind')}
+
             {/* Trust Zone selector for library tab */}
             <div className="space-y-2">
               <Label htmlFor="library-trust-zone">Trust Zone</Label>
@@ -217,7 +250,7 @@ export function AddCustomComponentDialog({
                   <SelectItem value="none">None</SelectItem>
                   {trustZones?.map((zone) => (
                     <SelectItem key={zone.id} value={String(zone.id)}>
-                      {zone.name} (Trust Level: {zone.trustLevel})
+                      {zone.name}{zone.trustLevel !== null ? ` (Trust Level: ${zone.trustLevel})` : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -252,6 +285,8 @@ export function AddCustomComponentDialog({
               </Select>
             </div>
 
+            {kindSelect('custom-kind')}
+
             {/* Trust Zone selector for custom tab */}
             <div className="space-y-2">
               <Label htmlFor="custom-trust-zone">Trust Zone</Label>
@@ -263,7 +298,7 @@ export function AddCustomComponentDialog({
                   <SelectItem value="none">None</SelectItem>
                   {trustZones?.map((zone) => (
                     <SelectItem key={zone.id} value={String(zone.id)}>
-                      {zone.name} (Trust Level: {zone.trustLevel})
+                      {zone.name}{zone.trustLevel !== null ? ` (Trust Level: ${zone.trustLevel})` : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>

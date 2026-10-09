@@ -31,6 +31,8 @@ interface SummaryCardsProps {
   components: ComponentSummary
   threats: ThreatSummary
   countermeasures: CountermeasureSummary
+  /** The counts cover every blueprint (plan 11.5); with more than one a note says so. */
+  blueprintCount?: number
   onComponentsClick?: () => void
   onThreatsClick?: () => void
   onCountermeasuresClick?: () => void
@@ -40,11 +42,16 @@ export function SummaryCards({
   components,
   threats,
   countermeasures,
+  blueprintCount,
   onComponentsClick,
   onThreatsClick,
   onCountermeasuresClick,
 }: SummaryCardsProps) {
   return (
+    <div className="space-y-2">
+      {blueprintCount !== undefined && blueprintCount > 1 && (
+        <p className="text-xs text-muted-foreground">Counts cover all {blueprintCount} blueprints.</p>
+      )}
     <div className="grid grid-cols-3 gap-4">
       {/* In-Scope Components */}
       <Card
@@ -187,6 +194,7 @@ export function SummaryCards({
           </div>
         </CardContent>
       </Card>
+    </div>
     </div>
   )
 }

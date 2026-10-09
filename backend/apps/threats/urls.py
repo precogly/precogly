@@ -6,16 +6,16 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
-    ComponentInstanceThreatViewSet,
     ComponentLibraryThreatViewSet,
     CountermeasureCommentViewSet,
     CountermeasureLibraryViewSet,
-    DataFlowInstanceThreatViewSet,
     ExternalTaxonomyViewSet,
     InstanceCountermeasureStandardViewSet,
     InstanceCountermeasureViewSet,
     InstanceThreatTaxonomyEntryViewSet,
+    InstanceThreatViewSet,
     PentestFindingViewSet,
+    RiskResponseViewSet,
     RiskViewSet,
     ScoringMethodsView,
     TaxonomyEntryViewSet,
@@ -37,16 +37,8 @@ router.register(
     ComponentLibraryThreatViewSet,
     basename="component-library-threat",
 )
-router.register(
-    r"component-threats",
-    ComponentInstanceThreatViewSet,
-    basename="component-threat",
-)
-router.register(
-    r"flow-threats",
-    DataFlowInstanceThreatViewSet,
-    basename="flow-threat",
-)
+# One table for every scenario, whatever it targets (plan section 4.1).
+router.register(r"threats", InstanceThreatViewSet, basename="threat")
 router.register(
     r"countermeasures",
     InstanceCountermeasureViewSet,
@@ -88,6 +80,11 @@ router.register(
     r"threat-models/(?P<threat_model_pk>\d+)/risks",
     RiskViewSet,
     basename="threat-model-risk",
+)
+router.register(
+    r"threat-models/(?P<threat_model_pk>\d+)/risks/(?P<risk_pk>\d+)/responses",
+    RiskResponseViewSet,
+    basename="threat-model-risk-response",
 )
 router.register(
     r"threat-models/(?P<threat_model_pk>\d+)/threat-personas",

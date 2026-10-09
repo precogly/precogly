@@ -21,7 +21,7 @@ def test_parses_the_camelcase_the_api_sends() -> None:
     row = ThreatModelSummary.model_validate(THREAT_MODEL_ROW)
 
     assert row.owning_team_name == "My Team"
-    assert row.risk_scoring_method == "tm_library"
+    assert row.risk_scoring_method == "qualitative-matrix"
     assert isinstance(row.created_at, datetime)
 
 
@@ -75,7 +75,7 @@ def test_unknown_criticality_is_rejected_loudly() -> None:
 def test_unknown_risk_scoring_method_is_rejected_loudly() -> None:
     mutated = dict(THREAT_MODEL_ROW, riskScoringMethod="monte_carlo")
 
-    with pytest.raises(ValidationError, match="tm_library"):
+    with pytest.raises(ValidationError, match="qualitative-matrix"):
         ThreatModelSummary.model_validate(mutated)
 
 

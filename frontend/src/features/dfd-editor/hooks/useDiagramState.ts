@@ -4,6 +4,7 @@ import { applyNodeChanges, applyEdgeChanges } from '@xyflow/react'
 import type { NodeChange, EdgeChange } from '@xyflow/react'
 import type { Diagram, DiagramNode, DiagramEdge } from '../types'
 import type { DFDNotationStyle } from '../types/notation'
+import type { FlowType } from '@/types/domain'
 import { api } from '@/lib/api'
 // Undo feature - remove this import to disable undo functionality
 import { useUndoHistory } from './useUndoHistory'
@@ -19,6 +20,8 @@ interface UseDiagramStateReturn {
   nodes: DiagramNode[]
   edges: DiagramEdge[]
   initialNotationStyle: DFDNotationStyle
+  /** The flow type filter loaded with the diagram; missing means every type (plan F22). */
+  initialVisibleFlowTypes: FlowType[] | undefined
 
   // Loading states
   isLoading: boolean
@@ -32,6 +35,8 @@ interface UseDiagramStateReturn {
   onNodesChange: (changes: NodeChange<DiagramNode>[]) => void
   onEdgesChange: (changes: EdgeChange<DiagramEdge>[]) => void
   saveNow: (notationStyle?: DFDNotationStyle) => Promise<void>
+  /** Store the flow type filter on the canvas root; saved with the next save. */
+  setVisibleFlowTypes: (visibleFlowTypes: FlowType[] | undefined) => void
   updateTitle: (title: string) => Promise<void>
   // Undo feature - remove this line to disable undo functionality
   undo: () => void
@@ -59,15 +64,23 @@ function stripTransientNodeFlags(nodes: DiagramNode[]): DiagramNode[] {
   })
 }
 
-async function saveDiagram(
-  diagramId: string,
-  data: { nodes: DiagramNode[]; edges: DiagramEdge[]; notationStyle?: DFDNotationStyle }
-): Promise<Diagram> {
+interface SaveDiagramData {
+  nodes: DiagramNode[]
+  edges: DiagramEdge[]
+  notationStyle?: DFDNotationStyle
+  visibleFlowTypes?: FlowType[]
+  /** The blueprint the diagram belongs to: read-only server side, sent as context (plan 11.2). */
+  blueprint?: number
+}
+
+async function saveDiagram(diagramId: string, data: SaveDiagramData): Promise<Diagram> {
   return api.patch<Diagram>(`/diagrams/${diagramId}/`, {
+    blueprint: data.blueprint,
     canvas_data: {
       nodes: stripTransientNodeFlags(data.nodes),
       edges: data.edges,
       notationStyle: data.notationStyle,
+      visibleFlowTypes: data.visibleFlowTypes,
     },
   })
 }
@@ -92,6 +105,8 @@ export function useDiagramState({
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [initialNotationStyle, setInitialNotationStyle] = useState<DFDNotationStyle>('yourdon')
   const notationStyleRef = useRef<DFDNotationStyle>('yourdon')
+  const [initialVisibleFlowTypes, setInitialVisibleFlowTypes] = useState<FlowType[] | undefined>(undefined)
+  const visibleFlowTypesRef = useRef<FlowType[] | undefined>(undefined)
 
   // Track if initial data has been loaded
   const initialLoadRef = useRef(false)
@@ -143,8 +158,7 @@ export function useDiagramState({
 
   // Save mutation
   const saveMutation = useMutation({
-    mutationFn: (data: { nodes: DiagramNode[]; edges: DiagramEdge[]; notationStyle?: DFDNotationStyle }) =>
-      saveDiagram(diagramId, data),
+    mutationFn: (data: SaveDiagramData) => saveDiagram(diagramId, data),
     onSuccess: (updatedDiagram) => {
       queryClient.setQueryData(['diagram', diagramId], updatedDiagram)
       // Invalidate delete preview cache since component sync may have changed
@@ -154,6 +168,11 @@ export function useDiagramState({
       queryClient.invalidateQueries({ queryKey: ['threat-models', threatModelId] })
       queryClient.invalidateQueries({ queryKey: ['threat-model-threats', threatModelId] })
       queryClient.invalidateQueries({ queryKey: ['components', 'analysis', threatModelId] })
+      // The blueprint-scoped rows sync rewrote: zones, boundaries, flows
+      // (useZones, useBoundaries, useFlows key on these roots).
+      queryClient.invalidateQueries({ queryKey: ['zones'] })
+      queryClient.invalidateQueries({ queryKey: ['boundaries'] })
+      queryClient.invalidateQueries({ queryKey: ['flows'] })
       // Invalidate risk queries (technology changes CASCADE-delete RiskThreat links)
       queryClient.invalidateQueries({ queryKey: ['risks'] })
 
@@ -226,6 +245,11 @@ export function useDiagramState({
       const loadedNotation = canvasData?.notationStyle ?? 'yourdon'
       setInitialNotationStyle(loadedNotation)
       notationStyleRef.current = loadedNotation
+      const loadedVisibleFlowTypes = Array.isArray(canvasData?.visibleFlowTypes)
+        ? canvasData.visibleFlowTypes
+        : undefined
+      setInitialVisibleFlowTypes(loadedVisibleFlowTypes)
+      visibleFlowTypesRef.current = loadedVisibleFlowTypes
       const updatedAt = diagram.updatedAt
       if (updatedAt) setLastSaved(new Date(updatedAt))
       initialLoadRef.current = true
@@ -289,18 +313,36 @@ export function useDiagramState({
     if (autoSaveInterval <= 0 || !hasUnsavedChanges) return
 
     const timer = setTimeout(() => {
-      saveMutation.mutate({ nodes, edges, notationStyle: notationStyleRef.current })
+      saveMutation.mutate({
+        nodes,
+        edges,
+        notationStyle: notationStyleRef.current,
+        visibleFlowTypes: visibleFlowTypesRef.current,
+        blueprint: diagram?.blueprint,
+      })
     }, autoSaveInterval)
 
     return () => clearTimeout(timer)
-  }, [nodes, edges, hasUnsavedChanges, autoSaveInterval, saveMutation])
+  }, [nodes, edges, hasUnsavedChanges, autoSaveInterval, saveMutation, diagram?.blueprint])
 
-  // Save now function — accepts optional notationStyle override to capture latest value
+  // Save now function: accepts an optional notationStyle override to capture the latest value
   const saveNow = useCallback(async (currentNotationStyle?: DFDNotationStyle) => {
     const styleToSave = currentNotationStyle ?? notationStyleRef.current
     notationStyleRef.current = styleToSave
-    await saveMutation.mutateAsync({ nodes, edges, notationStyle: styleToSave })
-  }, [nodes, edges, saveMutation])
+    await saveMutation.mutateAsync({
+      nodes,
+      edges,
+      notationStyle: styleToSave,
+      visibleFlowTypes: visibleFlowTypesRef.current,
+      blueprint: diagram?.blueprint,
+    })
+  }, [nodes, edges, saveMutation, diagram?.blueprint])
+
+  // The flow type filter is canvas data (plan F22): changing it is a change to save.
+  const setVisibleFlowTypes = useCallback((visibleFlowTypes: FlowType[] | undefined) => {
+    visibleFlowTypesRef.current = visibleFlowTypes
+    setHasUnsavedChanges(true)
+  }, [])
 
   // Update title function
   const updateTitle = useCallback(async (title: string) => {
@@ -344,6 +386,7 @@ export function useDiagramState({
     nodes,
     edges,
     initialNotationStyle,
+    initialVisibleFlowTypes,
     isLoading,
     isSaving: saveMutation.isPending,
     isError,
@@ -353,6 +396,7 @@ export function useDiagramState({
     onNodesChange: handleNodesChange,
     onEdgesChange: handleEdgesChange,
     saveNow,
+    setVisibleFlowTypes,
     updateTitle,
     // Undo feature - remove these lines to disable undo functionality
     undo,

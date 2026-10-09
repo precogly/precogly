@@ -20,6 +20,8 @@ dist-ssr
 # Test artifacts
 test-results
 playwright-report
+# Signed-in storage state written by e2e/global-setup.ts (carries a JWT)
+e2e/.auth
 
 # Editor directories and files
 .vscode/*

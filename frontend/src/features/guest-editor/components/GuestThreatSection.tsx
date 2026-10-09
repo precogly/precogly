@@ -6,28 +6,19 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { cn } from '@/lib/utils'
 import { useGuestEditor } from '../context/GuestEditorContext'
 import { GuestThreatDialog } from './GuestAddThreatDialog'
-import type { GuestThreat } from '../types'
-import { STATUS_COLORS, getThreatWarning } from '../types'
+import type { GuestTargetRef, GuestThreat } from '../types'
+import { LEVEL_COLORS, STATUS_COLORS, getThreatWarning, threatDisplayNumber } from '../types'
 import { STRIDE_CONFIG } from '@/types/domain'
-
-const SEVERITY_COLORS: Record<GuestThreat['severity'], string> = {
-  low: 'bg-blue-100 text-blue-800',
-  medium: 'bg-yellow-100 text-yellow-800',
-  high: 'bg-orange-100 text-orange-800',
-  critical: 'bg-red-100 text-red-800',
-}
+import { targetLabel } from '../lib/guest-model'
+import { hiddenTargetsNote } from '../lib/guest-targets'
 
 interface GuestThreatSectionProps {
-  targetId: string
-  targetType: GuestThreat['targetType']
+  target: GuestTargetRef
   targetName: string
 }
 
-export function GuestThreatSection({
-  targetId,
-  targetType,
-  targetName,
-}: GuestThreatSectionProps) {
+/** The threat list in a side panel: every threat that names this element among its targets. */
+export function GuestThreatSection({ target, targetName }: GuestThreatSectionProps) {
   const guestEditor = useGuestEditor()
   const [isOpen, setIsOpen] = useState(true)
   const [showDialog, setShowDialog] = useState(false)
@@ -35,7 +26,7 @@ export function GuestThreatSection({
 
   if (!guestEditor) return null
 
-  const threats = guestEditor.getThreatsForTarget(targetId)
+  const threats = guestEditor.getThreatsForTarget(target.id)
   const threatCount = threats.length
 
   const handleAddNew = () => {
@@ -79,6 +70,8 @@ export function GuestThreatSection({
               {threats.map((threat) => {
                 const countermeasureCount = guestEditor.getCountermeasureCount(threat.id)
                 const warning = getThreatWarning(threat, countermeasureCount)
+                const otherTargets = threat.targets.filter((candidate) => candidate.id !== target.id)
+                const hiddenNote = hiddenTargetsNote(threat.hiddenTargetRefs, threat.hiddenBlueprintTargetCount)
                 return (
                   <div
                     key={threat.id}
@@ -87,6 +80,7 @@ export function GuestThreatSection({
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-mono text-xs text-muted-foreground shrink-0">{threatDisplayNumber(threat)}</span>
                         <span className="font-medium leading-snug truncate">{threat.name}</span>
                         {warning && (
                           <Tooltip>
@@ -116,6 +110,15 @@ export function GuestThreatSection({
                         {threat.description}
                       </p>
                     )}
+                    {(otherTargets.length > 0 || hiddenNote) && (
+                      <p className="text-xs text-muted-foreground leading-snug">
+                        {otherTargets.length > 0 && (
+                          <>Also on: {otherTargets.map((candidate) => targetLabel(candidate, guestEditor.nodes, guestEditor.edges)).join(', ')}</>
+                        )}
+                        {otherTargets.length > 0 && hiddenNote ? '; ' : ''}
+                        {hiddenNote}
+                      </p>
+                    )}
                     <div className="flex flex-wrap items-center gap-1">
                       <Badge
                         variant="secondary"
@@ -125,9 +128,9 @@ export function GuestThreatSection({
                       </Badge>
                       <Badge
                         variant="secondary"
-                        className={cn('shrink-0 text-xs', SEVERITY_COLORS[threat.severity])}
+                        className={cn('shrink-0 text-xs capitalize', LEVEL_COLORS[threat.level])}
                       >
-                        {threat.severity}
+                        {threat.level}
                       </Badge>
                       {threat.category && STRIDE_CONFIG[threat.category] && (
                         <Badge
@@ -163,8 +166,7 @@ export function GuestThreatSection({
       <GuestThreatDialog
         open={showDialog}
         onOpenChange={setShowDialog}
-        targetId={targetId}
-        targetType={targetType}
+        initialTarget={target}
         targetName={targetName}
         editThreat={editingThreat}
       />

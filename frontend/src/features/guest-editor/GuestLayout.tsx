@@ -5,13 +5,16 @@ import type { DiagramNode, DiagramEdge } from '@/features/dfd-editor/types'
 import type { DFDNotationStyle } from '@/features/dfd-editor/types/notation'
 import type { ExportImageOptions } from '@/features/dfd-editor/lib/export-diagram-image'
 import { useGuestDiagramState } from './hooks/useGuestDiagramState'
-import { useGuestThreats } from './hooks/useGuestThreats'
-import { useGuestCountermeasures } from './hooks/useGuestCountermeasures'
+import { useGuestModel } from './hooks/useGuestModel'
 import { useGuestSystemContext } from './hooks/useGuestSystemContext'
 import { useFileHandle } from './hooks/useFileHandle'
-import { GuestEditorProvider } from './context/GuestEditorContext'
+import { GuestEditorProvider, type GuestEditorContextType } from './context/GuestEditorContext'
 import { GuestEditorHeader } from './components/GuestEditorHeader'
-import type { GuestSystemContext } from './types'
+import { GuestFileNotices } from './components/GuestFileNotices'
+import type { DeserializedFile } from './lib/cyclonedx-guest'
+
+/** The notation the canvas draws when the file does not say (the file keeps saying nothing). */
+export const DEFAULT_GUEST_NOTATION: DFDNotationStyle = 'yourdon'
 
 export interface GuestDiagramOutletContext {
   title: string
@@ -39,59 +42,33 @@ export interface GuestDiagramOutletContext {
 export function GuestLayout() {
   const navigate = useNavigate()
   const diagramState = useGuestDiagramState()
-  const threatOps = useGuestThreats()
-  const countermeasureOps = useGuestCountermeasures()
+  const model = useGuestModel()
   const systemContextOps = useGuestSystemContext()
-  const [notationStyle, setNotationStyle] = useState<DFDNotationStyle>('yourdon')
+  // Undefined means the file did not record a notation; the canvas draws the default.
+  const [notationStyle, setNotationStyle] = useState<DFDNotationStyle | undefined>(undefined)
   const [showComponentPanel, setShowComponentPanel] = useState(true)
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
+  const [fileWarnings, setFileWarnings] = useState<string[]>([])
+  const [hiddenBlueprintCount, setHiddenBlueprintCount] = useState(0)
+  const [hiddenElementCount, setHiddenElementCount] = useState(0)
   const fileHandleState = useFileHandle()
   const exportImageRef = useRef<((format: 'png' | 'svg', options?: ExportImageOptions) => void | Promise<void>) | null>(null)
   const captureImageRef = useRef<(() => Promise<Uint8Array | null>) | null>(null)
   const [cachedDiagramImage, setCachedDiagramImage] = useState<Uint8Array | null>(null)
 
-  // Wrap removeThreat to cascade-delete countermeasures
-  const removeThreatWithCascade = useCallback(
-    (threatId: string) => {
-      threatOps.removeThreat(threatId)
-      countermeasureOps.removeCountermeasuresForThreat(threatId)
-    },
-    [threatOps.removeThreat, countermeasureOps.removeCountermeasuresForThreat]
-  )
-
-  const contextValue = useMemo(
+  const contextValue: GuestEditorContextType = useMemo(
     () => ({
-      // Diagram data (read-only)
+      ...model,
       nodes: diagramState.nodes,
       edges: diagramState.edges,
       title: diagramState.title,
-
-      // Threat operations (with cascade delete)
-      addThreat: threatOps.addThreat,
-      updateThreat: threatOps.updateThreat,
-      removeThreat: removeThreatWithCascade,
-      getThreatsForTarget: threatOps.getThreatsForTarget,
-      getThreatCount: threatOps.getThreatCount,
-      getAllThreats: threatOps.getAllThreats,
-      loadThreats: threatOps.loadThreats,
-
-      // Countermeasure operations
-      addCountermeasure: countermeasureOps.addCountermeasure,
-      updateCountermeasure: countermeasureOps.updateCountermeasure,
-      removeCountermeasure: countermeasureOps.removeCountermeasure,
-      getCountermeasuresForThreat: countermeasureOps.getCountermeasuresForThreat,
-      getCountermeasureCount: countermeasureOps.getCountermeasureCount,
-      getAllCountermeasures: countermeasureOps.getAllCountermeasures,
-      loadCountermeasures: countermeasureOps.loadCountermeasures,
-
-      // System Context state
+      hiddenBlueprintCount,
+      hiddenElementCount,
       session: systemContextOps.session,
       systemInfo: systemContextOps.systemInfo,
       dataAssets: systemContextOps.dataAssets,
       assumptions: systemContextOps.assumptions,
       outOfScopeItems: systemContextOps.outOfScopeItems,
-
-      // System Context operations
       updateSession: systemContextOps.updateSession,
       updateSystemInfo: systemContextOps.updateSystemInfo,
       addDataAsset: systemContextOps.addDataAsset,
@@ -106,43 +83,7 @@ export function GuestLayout() {
       loadSystemContext: systemContextOps.loadSystemContext,
       getSystemContext: systemContextOps.getSystemContext,
     }),
-    [
-      diagramState.nodes,
-      diagramState.edges,
-      diagramState.title,
-      threatOps.addThreat,
-      threatOps.updateThreat,
-      removeThreatWithCascade,
-      threatOps.getThreatsForTarget,
-      threatOps.getThreatCount,
-      threatOps.getAllThreats,
-      threatOps.loadThreats,
-      countermeasureOps.addCountermeasure,
-      countermeasureOps.updateCountermeasure,
-      countermeasureOps.removeCountermeasure,
-      countermeasureOps.getCountermeasuresForThreat,
-      countermeasureOps.getCountermeasureCount,
-      countermeasureOps.getAllCountermeasures,
-      countermeasureOps.loadCountermeasures,
-      systemContextOps.session,
-      systemContextOps.systemInfo,
-      systemContextOps.dataAssets,
-      systemContextOps.assumptions,
-      systemContextOps.outOfScopeItems,
-      systemContextOps.updateSession,
-      systemContextOps.updateSystemInfo,
-      systemContextOps.addDataAsset,
-      systemContextOps.updateDataAsset,
-      systemContextOps.removeDataAsset,
-      systemContextOps.addAssumption,
-      systemContextOps.updateAssumption,
-      systemContextOps.removeAssumption,
-      systemContextOps.addOutOfScopeItem,
-      systemContextOps.updateOutOfScopeItem,
-      systemContextOps.removeOutOfScopeItem,
-      systemContextOps.loadSystemContext,
-      systemContextOps.getSystemContext,
-    ]
+    [model, diagramState.nodes, diagramState.edges, diagramState.title, hiddenBlueprintCount, hiddenElementCount, systemContextOps]
   )
 
   const handleCacheImage = useCallback((image: Uint8Array | null) => {
@@ -162,7 +103,7 @@ export function GuestLayout() {
       canUndo: diagramState.canUndo,
       redo: diagramState.redo,
       canRedo: diagramState.canRedo,
-      notationStyle,
+      notationStyle: notationStyle ?? DEFAULT_GUEST_NOTATION,
       setNotationStyle,
       exportImageRef,
       captureImageRef,
@@ -192,15 +133,21 @@ export function GuestLayout() {
   )
 
   const handleLoadFromFile = useCallback(
-    (data: { title: string; nodes: DiagramNode[]; edges: DiagramEdge[]; notationStyle?: DFDNotationStyle; systemContext?: GuestSystemContext }) => {
-      diagramState.loadFromFile(data)
-      setNotationStyle(data.notationStyle ?? 'yourdon')
+    (loaded: DeserializedFile) => {
+      diagramState.loadFromFile({ title: loaded.title, nodes: loaded.nodes, edges: loaded.edges })
+      setNotationStyle(loaded.notationStyle)
       setCachedDiagramImage(null)
-      if (data.systemContext) {
-        systemContextOps.loadSystemContext(data.systemContext)
-      }
+      systemContextOps.loadSystemContext(loaded.systemContext)
+      model.loadModel({
+        threats: loaded.threats,
+        countermeasures: loaded.countermeasures,
+        documentState: loaded.documentState,
+      })
+      setFileWarnings(loaded.warnings)
+      setHiddenBlueprintCount(loaded.hiddenBlueprintCount)
+      setHiddenElementCount(loaded.hiddenElementCount)
     },
-    [diagramState.loadFromFile, systemContextOps.loadSystemContext]
+    [diagramState, systemContextOps, model]
   )
 
   const handleAnalyzeThreats = useCallback(async () => {
@@ -233,6 +180,12 @@ export function GuestLayout() {
           fileName={fileHandleState.fileName}
           onFileHandleChange={fileHandleState.updateHandle}
           onFileHandleClear={fileHandleState.clearHandle}
+        />
+        <GuestFileNotices
+          warnings={fileWarnings}
+          onDismissWarnings={() => setFileWarnings([])}
+          hiddenBlueprintCount={hiddenBlueprintCount}
+          hiddenElementCount={hiddenElementCount}
         />
         <Outlet context={outletContext} />
       </div>

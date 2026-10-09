@@ -32,7 +32,8 @@ The challenge is not implementing each framework in isolation. It is demonstrati
 | Proportionality (DORA tiers) | Separate compliance framework per tier, same pattern as IEC 62443 security levels |
 | System-specific obligations | Link only the frameworks relevant to each threat model |
 | Audit evidence | Compliance tab shows requirement satisfaction with countermeasure status |
-| Third-party risk (DORA) | Connected threat models linking to vendor/provider systems |
+| Third-party risk (DORA) | Related threat models with a "depends on" link to each provider's model |
+| System inventory | Each model names its primary system; the Systems page shows which systems have a model |
 
 ---
 
@@ -157,7 +158,7 @@ Not every system requires every framework. Use this matrix as a starting point:
 
 ### 1. Create the threat model
 
-Create a new threat model for the specific system (e.g., "Payment Processing Service", "Mobile Banking App"). Set criticality based on business impact:
+Create a new threat model for the specific system (e.g., "Payment Processing Service", "Mobile Banking App") and choose it as the model's **primary system** from the inventory, creating the inventory entry in place if it does not exist yet. The Systems page under Settings then shows which systems have a model, which supervisors ask for. Set criticality based on business impact:
 
 - **Critical**: payment processing, core banking, authentication services
 - **High**: customer-facing applications, open banking APIs
@@ -195,7 +196,7 @@ This is the step that defines your compliance scope. The compliance tab will sho
 
 Use the DFD editor to model the system. If using the banking library pack, components arrive with pre-mapped threats and countermeasures.
 
-Organize components into trust zones that reflect your network architecture:
+Organize components into zones that reflect your network architecture (network zones with a trust level, or trust zones), and draw boundaries where a crossing has requirements such as strong customer authentication:
 
 - **Internet Zone**: customer-facing endpoints, CDN
 - **DMZ**: API gateways, WAF, load balancers
@@ -248,12 +249,12 @@ Link threats from the threat analysis to these risks, and score using the method
 
 DORA places significant emphasis on ICT third-party risk management. Use Precogly's connected threat models to model this:
 
-1. Create a separate threat model for each critical ICT third-party provider
-2. Link it to your system's threat model using the **depends on** relationship
+1. Create a separate threat model for each critical ICT third-party provider, with the provider's system as its primary system
+2. In your system's model, open **Manage Threat Models**, choose **depends on**, and add the provider's model
 3. In the provider's threat model, link the **DORA Critical ICT Provider** framework
 4. Track the provider's compliance status independently
 
-This gives you a connected view: your system's threat model shows its dependencies, and each dependency has its own compliance tracking.
+This gives you a connected view: your system's threat model shows its dependencies, and each dependency has its own compliance tracking. The export carries each dependency as a BOM-Link to the provider's model, so an auditor can follow the chain from one file to the next. See [Systems and Related Threat Models](../concepts/connected-systems-tm.md).
 
 ---
 
@@ -273,7 +274,7 @@ The achieved compliance tier is determined the same way as [IEC 62443 security l
 
 When preparing for supervisory examinations or audits:
 
-1. **Export the threat model** as JSON for archival (see [Importing & Exporting](../guides/importing-exporting.md))
+1. **Export the threat model** as CycloneDX TM-BOM for archival (see [Importing & Exporting](../guides/importing-exporting.md))
 2. **Share via magic links** to give auditors read-only access without creating accounts (see [Magic Links](../concepts/magic-links.md))
 3. **Use the compliance tab** as evidence of requirement coverage across all applicable frameworks
 4. **Reference the risk analysis** to show that threats have been assessed and scored using a recognized methodology

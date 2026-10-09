@@ -7,68 +7,45 @@ from all related models in optimized query batches.
 
 from collections import defaultdict
 
-from django.db.models import Q
-
 from apps.compliance.models import StandardFramework, StandardRequirementMapping
 from apps.systems.models import (
+    Boundary,
     ComponentDataAsset,
-    DataFlow,
-    DataFlowAsset,
+    Flow,
+    FlowAsset,
     OrgsystemComponent,
-    TrustBoundary,
-    TrustZone,
+    Zone,
 )
 from apps.threats.models import (
     ACTIVE_TRIAGE_STATUSES,
-    ComponentInstanceThreat,
     CountermeasureThreatLink,
-    DataFlowInstanceThreat,
     InstanceCountermeasure,
     InstanceCountermeasureStandard,
+    InstanceThreat,
     Risk,
 )
+from apps.threats.services import derive_risk_status
+
+from .models import Assumption
 
 
 def _get_scoped_ids(threat_model):
-    """
-    Extract component_ids and dataflow_ids from DFD canvas data,
-    including analysis-only components and their flows.
-    """
-    dfds = threat_model.dfds.filter(is_primary=True)
-    component_ids = set()
-    dataflow_ids = set()
+    """The component and flow ids of every blueprint of the model.
 
-    for dfd in dfds:
-        canvas_data = dfd.canvas_data or {}
-        for node in canvas_data.get("nodes", []):
-            component_id = node.get("data", {}).get("component_id")
-            if component_id:
-                component_ids.add(component_id)
-        for edge in canvas_data.get("edges", []):
-            dataflow_id = edge.get("data", {}).get("dataflow_id")
-            if dataflow_id:
-                dataflow_ids.add(dataflow_id)
-
-    # Include analysis-only components
-    analysis_only_ids = (
-        OrgsystemComponent.objects.filter(threat_model=threat_model)
-        .exclude(id__in=component_ids)
-        .values_list("id", flat=True)
+    Read from the rows' blueprint keys, not from canvas JSON, so the report
+    agrees with the analysis screen and completion status (F30).
+    """
+    component_ids = list(
+        OrgsystemComponent.objects.filter(
+            blueprint__threat_model=threat_model
+        ).values_list("id", flat=True)
     )
-    component_ids.update(analysis_only_ids)
-
-    # Include data flows connected to analysis-only components
-    extra_flow_ids = (
-        DataFlow.objects.filter(
-            Q(source_component_id__in=component_ids)
-            | Q(dest_component_id__in=component_ids)
+    dataflow_ids = list(
+        Flow.objects.filter(blueprint__threat_model=threat_model).values_list(
+            "id", flat=True
         )
-        .exclude(id__in=dataflow_ids)
-        .values_list("id", flat=True)
     )
-    dataflow_ids.update(extra_flow_ids)
-
-    return list(component_ids), list(dataflow_ids)
+    return component_ids, dataflow_ids
 
 
 def _build_metadata(threat_model):
@@ -88,6 +65,7 @@ def _build_metadata(threat_model):
         "description": threat_model.description,
         "criticality": threat_model.criticality,
         "risk_scoring_method": threat_model.risk_scoring_method,
+        "methodologies": list(threat_model.methodologies or []),
         "owning_team": threat_model.owning_team.name
         if threat_model.owning_team
         else None,
@@ -101,6 +79,33 @@ def _build_metadata(threat_model):
         if threat_model.updated_at
         else None,
         "frameworks": frameworks,
+        "lifecycle_phase": threat_model.lifecycle_phase,
+        "valid_from": threat_model.valid_from.isoformat()
+        if threat_model.valid_from
+        else None,
+        "valid_until": threat_model.valid_until.isoformat()
+        if threat_model.valid_until
+        else None,
+        "review_frequency": threat_model.review_frequency,
+        "review": _review(threat_model),
+    }
+
+
+def _review(threat_model):
+    from .review import review_state
+
+    state = review_state(threat_model)
+    return {
+        "approval_state": state["approval_state"],
+        "reviewer": state["reviewer_email"],
+        "reviewed_at": state["reviewed_at"].isoformat()
+        if state["reviewed_at"]
+        else None,
+        "approver": state["approver_email"],
+        "approved_at": state["approved_at"].isoformat()
+        if state["approved_at"]
+        else None,
+        "source_document_review": state["source_document_review"],
     }
 
 
@@ -120,10 +125,48 @@ def _build_scope(threat_model):
             }
         )
 
+    assumptions = [
+        {
+            "id": assumption.id,
+            "blueprint": assumption.blueprint.name,
+            "description": assumption.description,
+            "topic": assumption.topic,
+            "validity": assumption.validity,
+            "impact": assumption.impact,
+            "owner": assumption.owner.email
+            if assumption.owner
+            else assumption.owner_name,
+            "validation_method": assumption.validation_method,
+            "validation_date": assumption.validation_date.isoformat()
+            if assumption.validation_date
+            else None,
+            "components": [
+                link.component.name for link in assumption.component_links.all()
+            ],
+        }
+        for assumption in Assumption.objects.filter(
+            blueprint__threat_model=threat_model
+        )
+        .select_related("owner", "blueprint")
+        .prefetch_related("component_links__component")
+    ]
+    objectives = [
+        {
+            "id": objective.id,
+            "name": objective.name,
+            "description": objective.description,
+            "criticality": objective.criticality,
+            "owner": objective.owner.email if objective.owner else objective.owner_name,
+            "threat_count": objective.threat_links.count(),
+            "risk_count": objective.risk_links.count(),
+        }
+        for objective in threat_model.business_objectives.select_related("owner")
+    ]
+
     return {
         "description": threat_model.description,
-        "scope_locked": threat_model.scope_locked,
-        "assumptions": threat_model.assumptions or [],
+        "assumptions": assumptions,
+        "business_objectives": objectives,
         "out_of_scope_items": out_of_scope,
         "referenced_models": referenced_models,
     }
@@ -156,47 +199,46 @@ def _build_architecture(threat_model, component_ids):
             }
         )
 
-    # Trust zones from components in scope
-    zone_ids = (
-        OrgsystemComponent.objects.filter(
-            id__in=component_ids,
-            trust_zone__isnull=False,
-        )
-        .values_list("trust_zone_id", flat=True)
-        .distinct()
-    )
-
-    trust_zones = []
-    for zone in TrustZone.objects.filter(id__in=zone_ids):
-        trust_zones.append(
+    zones = []
+    for zone in Zone.objects.filter(blueprint__threat_model=threat_model):
+        zones.append(
             {
                 "id": zone.id,
                 "name": zone.name,
+                "zone_type": zone.zone_type,
                 "trust_level": zone.trust_level,
                 "description": zone.description,
             }
         )
 
-    zone_id_set = set(zone_ids)
-    trust_boundaries = []
-    for boundary in TrustBoundary.objects.filter(
-        Q(zone_a_id__in=zone_id_set) | Q(zone_b_id__in=zone_id_set)
+    boundaries = []
+    for boundary in Boundary.objects.filter(
+        blueprint__threat_model=threat_model
     ).select_related("zone_a", "zone_b"):
-        trust_boundaries.append(
+        boundaries.append(
             {
                 "id": boundary.id,
                 "label": boundary.label,
+                "boundary_type": boundary.boundary_type,
                 "zone_a": boundary.zone_a.name,
                 "zone_b": boundary.zone_b.name,
                 "description": boundary.description,
+                "authentication": list(boundary.authentication or []),
+                "authorization": list(boundary.authorization or []),
+                "requires_authentication": boundary.requires_authentication,
+                "requires_authorization": boundary.requires_authorization,
+                "data_validation": boundary.data_validation,
+                "logging": boundary.logging,
+                "monitoring": boundary.monitoring,
+                "rate_limit": boundary.rate_limit,
             }
         )
 
     return {
         "dfds": dfds,
         "reference_images": reference_images,
-        "trust_zones": trust_zones,
-        "trust_boundaries": trust_boundaries,
+        "zones": zones,
+        "boundaries": boundaries,
     }
 
 
@@ -213,12 +255,12 @@ def _build_data_assets(threat_model, component_ids, dataflow_ids):
             .values("component__name", "data_state", "volume", "encrypted")
         )
         in_transit = list(
-            DataFlowAsset.objects.filter(
+            FlowAsset.objects.filter(
                 data_asset=asset,
-                data_flow_id__in=dataflow_ids,
+                flow_id__in=dataflow_ids,
             )
-            .select_related("data_flow")
-            .values("data_flow__label", "protection_method", "encryption_type")
+            .select_related("flow")
+            .values("flow__label", "protection_method", "encryption_type")
         )
         assets.append(
             {
@@ -240,7 +282,7 @@ def _build_data_assets(threat_model, component_ids, dataflow_ids):
                 ],
                 "in_transit": [
                     {
-                        "data_flow_label": t["data_flow__label"],
+                        "flow_label": t["flow__label"],
                         "protection_method": t["protection_method"],
                         "encryption_type": t["encryption_type"],
                     }
@@ -255,7 +297,7 @@ def _build_data_assets(threat_model, component_ids, dataflow_ids):
 def _build_components(component_ids):
     """Build components section grouped by category."""
     components = OrgsystemComponent.objects.filter(id__in=component_ids).select_related(
-        "trust_zone"
+        "zone"
     )
 
     grouped = {
@@ -271,9 +313,10 @@ def _build_components(component_ids):
             "name": comp.name,
             "category": comp.category,
             "component_type": comp.component_type,
+            "kind": comp.effective_kind,
             "actor_type": comp.actor_type,
             "provider": comp.provider,
-            "trust_zone": comp.trust_zone.name if comp.trust_zone else None,
+            "zone": comp.zone.name if comp.zone else None,
             "description": comp.description,
         }
         category = comp.category or ""
@@ -291,9 +334,9 @@ def _build_components(component_ids):
     return grouped
 
 
-def _build_data_flows(dataflow_ids):
+def _build_flows(dataflow_ids):
     """Build data flows section."""
-    flows = DataFlow.objects.filter(id__in=dataflow_ids).select_related(
+    flows = Flow.objects.filter(id__in=dataflow_ids).select_related(
         "source_component", "dest_component"
     )
 
@@ -309,8 +352,11 @@ def _build_data_flows(dataflow_ids):
                 else None,
                 "protocol": flow.protocol,
                 "encrypted": flow.encrypted,
-                "authenticated": flow.authenticated,
-                "crosses_trust_zone": flow.crosses_trust_zone,
+                "flow_type": flow.flow_type,
+                "authentication": list(flow.authentication or []),
+                "authorization": list(flow.authorization or []),
+                "requires_authentication": flow.requires_authentication,
+                "crosses_boundary": flow.crosses_boundary,
                 "has_sensitive_data": flow.has_sensitive_data,
             }
         )
@@ -429,15 +475,50 @@ def _serialize_countermeasure(cm):
         "assigned_owner_email": cm.assigned_owner.email if cm.assigned_owner else None,
         "verified_by_email": cm.verified_by.email if cm.verified_by else None,
         "evidence_url": cm.evidence_url,
-        "is_inherited": cm.is_inherited,
-        "inherited_from_component_name": cm.inherited_from_component_name,
-        "inherited_from_zone_name": cm.inherited_from_zone_name,
+        "number": cm.number,
+        "display_number": cm.display_number,
+        "scope": _target_names(cm),
+        "implemented_by_party": cm.implemented_by_party,
+        "source": cm.source,
         "compliance_standards": _serialize_compliance_standards(cm),
     }
 
 
-def _build_threat_analysis(component_ids, dataflow_ids):
-    """Build threat analysis section with STRIDE summary and detailed threats."""
+def _rating(rating):
+    """A rating for the report: level, score, methodology, likelihood, impact."""
+    if rating is None:
+        return None
+    return {
+        "level": rating.level,
+        "score": rating.score,
+        "methodology": rating.methodology,
+        "likelihood_level": rating.likelihood_level or None,
+        "likelihood_score": rating.likelihood_score,
+        "impact_level": rating.impact_level or None,
+        "impact_score": rating.impact_score,
+        "rationale": rating.rationale,
+    }
+
+
+def _target_names(threat):
+    """The names a scenario's targets are shown under, in target order."""
+    from .analysis_service import target_name
+
+    names = []
+    for target_row in threat.targets.all():
+        row = target_row.target
+        if row is not None:
+            names.append(target_name(row))
+    return names
+
+
+def _build_threat_analysis(threat_model):
+    """Build threat analysis section: STRIDE summary and every scenario once.
+
+    One list keyed by scenario, each carrying its targets (plan section 5.3),
+    in place of two dicts keyed by component name and flow label, which
+    collided on equal names.
+    """
     from django.db.models import Prefetch
 
     countermeasure_links_prefetch = Prefetch(
@@ -455,137 +536,82 @@ def _build_threat_analysis(component_ids, dataflow_ids):
         .order_by("display_order"),
     )
 
-    # Component threats
-    component_threats = (
-        ComponentInstanceThreat.objects.filter(component_id__in=component_ids)
-        .select_related("component", "threat_library")
+    threats = (
+        InstanceThreat.objects.filter(threat_model=threat_model)
+        .select_related("threat_library", "rating")
         .prefetch_related(
             "threat_library__taxonomy_entries__taxonomy_entry__taxonomy",
             "instance_taxonomy_links__taxonomy_entry__taxonomy",
+            "targets__component",
+            "targets__flow__source_component",
+            "targets__flow__dest_component",
+            "targets__zone",
+            "targets__boundary",
+            "business_objective_links__business_objective",
             countermeasure_links_prefetch,
         )
+        .order_by("number")
     )
 
-    # Data flow threats
-    flow_threats = (
-        DataFlowInstanceThreat.objects.filter(data_flow_id__in=dataflow_ids)
-        .select_related("data_flow", "threat_library")
-        .prefetch_related(
-            "threat_library__taxonomy_entries__taxonomy_entry__taxonomy",
-            "instance_taxonomy_links__taxonomy_entry__taxonomy",
-            countermeasure_links_prefetch,
-        )
-    )
-
-    # STRIDE category counts
     stride_counts = defaultdict(int)
-    active_component_threats = []
-    triaged_component_threats = []
+    active = []
+    triaged = []
 
-    for threat in component_threats:
-        category = _get_stride_category(threat)
+    for threat in threats:
+        name = threat.threat_name or (
+            threat.threat_library.name if threat.threat_library else None
+        )
+        targets = _target_names(threat)
         if threat.triage_status in ACTIVE_TRIAGE_STATUSES:
+            category = _get_stride_category(threat)
             stride_counts[category] += 1
-            active_component_threats.append(threat)
+            active.append(
+                {
+                    "id": threat.id,
+                    "number": threat.number,
+                    "display_number": threat.display_number,
+                    "whole_system": threat.whole_system,
+                    "targets": targets,
+                    "threat_name": name,
+                    "threat_description": threat.threat_description
+                    or (
+                        threat.threat_library.description
+                        if threat.threat_library
+                        else None
+                    ),
+                    "stride_category": category,
+                    "business_objectives": [
+                        link.business_objective.name
+                        for link in threat.business_objective_links.all()
+                    ],
+                    "taxonomy_entries": _get_taxonomy_entries(threat),
+                    "rating": _rating(threat.rating),
+                    "status": threat.status,
+                    "impact_description": threat.impact_description,
+                    "threat_actor_text": threat.threat_actor_text,
+                    "countermeasures": [
+                        _serialize_countermeasure(link.countermeasure)
+                        for link in threat.countermeasure_links.all()
+                    ],
+                }
+            )
         else:
-            triaged_component_threats.append(threat)
-
-    active_flow_threats = []
-    triaged_flow_threats = []
-    for threat in flow_threats:
-        category = _get_stride_category(threat)
-        if threat.triage_status in ACTIVE_TRIAGE_STATUSES:
-            stride_counts[category] += 1
-            active_flow_threats.append(threat)
-        else:
-            triaged_flow_threats.append(threat)
-
-    # Group component threats by component
-    threats_by_component = defaultdict(list)
-    for threat in active_component_threats:
-        component_name = threat.component.name if threat.component else "Unknown"
-        threats_by_component[component_name].append(
-            {
-                "id": threat.id,
-                "threat_name": threat.threat_name
-                or (threat.threat_library.name if threat.threat_library else None),
-                "threat_description": threat.threat_description
-                or (
-                    threat.threat_library.description if threat.threat_library else None
-                ),
-                "stride_category": _get_stride_category(threat),
-                "taxonomy_entries": _get_taxonomy_entries(threat),
-                "inherent_severity": threat.inherent_severity,
-                "residual_severity": threat.residual_severity,
-                "status": threat.status,
-                "impact_description": threat.impact_description,
-                "threat_actor_text": threat.threat_actor_text,
-                "countermeasures": [
-                    _serialize_countermeasure(link.countermeasure)
-                    for link in threat.countermeasure_links.all()
-                ],
-            }
-        )
-
-    # Group flow threats
-    threats_by_flow = defaultdict(list)
-    for threat in active_flow_threats:
-        flow_label = threat.data_flow.label if threat.data_flow else "Unknown"
-        threats_by_flow[flow_label].append(
-            {
-                "id": threat.id,
-                "threat_name": threat.threat_name
-                or (threat.threat_library.name if threat.threat_library else None),
-                "threat_description": threat.threat_description
-                or (
-                    threat.threat_library.description if threat.threat_library else None
-                ),
-                "stride_category": _get_stride_category(threat),
-                "taxonomy_entries": _get_taxonomy_entries(threat),
-                "inherent_severity": threat.inherent_severity,
-                "residual_severity": threat.residual_severity,
-                "status": threat.status,
-                "impact_description": threat.impact_description,
-                "threat_actor_text": threat.threat_actor_text,
-                "countermeasures": [
-                    _serialize_countermeasure(link.countermeasure)
-                    for link in threat.countermeasure_links.all()
-                ],
-            }
-        )
-
-    # Triaged threats (simple list)
-    triaged_threats = []
-    for threat in triaged_component_threats:
-        triaged_threats.append(
-            {
-                "id": threat.id,
-                "type": "component",
-                "threat_name": threat.threat_name
-                or (threat.threat_library.name if threat.threat_library else None),
-                "component_name": threat.component.name if threat.component else None,
-                "triage_status": threat.triage_status,
-                "decision_rationale": threat.decision_rationale,
-            }
-        )
-    for threat in triaged_flow_threats:
-        triaged_threats.append(
-            {
-                "id": threat.id,
-                "type": "dataflow",
-                "threat_name": threat.threat_name
-                or (threat.threat_library.name if threat.threat_library else None),
-                "flow_label": threat.data_flow.label if threat.data_flow else None,
-                "triage_status": threat.triage_status,
-                "decision_rationale": threat.decision_rationale,
-            }
-        )
+            triaged.append(
+                {
+                    "id": threat.id,
+                    "number": threat.number,
+                    "display_number": threat.display_number,
+                    "threat_name": name,
+                    "targets": targets,
+                    "triage_status": threat.triage_status,
+                    "decision_rationale": threat.decision_rationale,
+                }
+            )
 
     return {
         "stride_summary": dict(stride_counts),
-        "component_threats": dict(threats_by_component),
-        "data_flow_threats": dict(threats_by_flow),
-        "triaged_threats": triaged_threats,
+        "threats": active,
+        "triaged_threats": triaged,
     }
 
 
@@ -593,23 +619,30 @@ def _build_countermeasure_summary(threat_model):
     """Build countermeasure summary with status breakdown.
 
     Uses direct threat_model FK — each countermeasure counted once even if shared.
+    Controls with no threat link are listed on their own (I3): they are left
+    out of gap and coverage figures by the readers, not hidden.
     """
     all_countermeasures = (
         InstanceCountermeasure.objects.filter(threat_model=threat_model)
-        .select_related(
-            "countermeasure_library",
-            "assigned_owner",
-        )
+        .select_related("countermeasure_library", "assigned_owner")
         .prefetch_related(
-            "threat_links__component_threat__component",
-            "threat_links__flow_threat__data_flow",
+            "threat_links__threat__targets__component",
+            "threat_links__threat__targets__flow__source_component",
+            "threat_links__threat__targets__flow__dest_component",
+            "threat_links__threat__targets__zone",
+            "threat_links__threat__targets__boundary",
+            "targets__component",
+            "targets__flow__source_component",
+            "targets__flow__dest_component",
+            "targets__zone",
+            "targets__boundary",
         )
     )
 
     status_counts = defaultdict(int)
     gaps = []
     waived = []
-    inherited = []
+    unattached = []
 
     for cm in all_countermeasures:
         status_counts[cm.status] += 1
@@ -617,115 +650,128 @@ def _build_countermeasure_summary(threat_model):
             cm.countermeasure_library.name if cm.countermeasure_library else None
         ) or cm.countermeasure_name
 
-        # Determine the display context from the first threat link
-        first_link = cm.threat_links.all()[:1]
-        component_name = None
-        flow_label = None
-        if first_link:
-            link = first_link[0]
-            if link.component_threat and link.component_threat.component:
-                component_name = link.component_threat.component.name
-            elif link.flow_threat and link.flow_threat.data_flow:
-                flow_label = link.flow_threat.data_flow.label
-
+        links = list(cm.threat_links.all())
+        first_threat = links[0].threat if links else None
+        targets = _target_names(first_threat) if first_threat else []
         entry_id = str(cm.id)
 
+        if not links:
+            unattached.append(
+                {
+                    "id": entry_id,
+                    "countermeasure_name": cm_name,
+                    "control_number": cm.display_number,
+                    "status": cm.status,
+                    "auto_generated": cm.auto_generated,
+                    "scope": _target_names(cm),
+                }
+            )
+
+        # Unattached controls are listed on their own and stay out of the gap
+        # and waived lists, which are about threats (I3).
+        if not links:
+            continue
         if cm.status == "gap":
-            gap_entry = {
-                "id": entry_id,
-                "countermeasure_name": cm_name,
-                "priority": cm.priority,
-                "assigned_owner_email": cm.assigned_owner.email
-                if cm.assigned_owner
-                else None,
-            }
-            if component_name:
-                gap_entry["component_name"] = component_name
-            if flow_label:
-                gap_entry["flow_label"] = flow_label
-            gaps.append(gap_entry)
-
+            gaps.append(
+                {
+                    "id": entry_id,
+                    "countermeasure_name": cm_name,
+                    "control_number": cm.display_number,
+                    "priority": cm.priority,
+                    "assigned_owner_email": cm.assigned_owner.email
+                    if cm.assigned_owner
+                    else None,
+                    "targets": targets,
+                    "display_number": first_threat.display_number
+                    if first_threat
+                    else None,
+                }
+            )
         elif cm.status == "waived":
-            waived_entry = {
-                "id": entry_id,
-                "countermeasure_name": cm_name,
-            }
-            if component_name:
-                waived_entry["component_name"] = component_name
-            if flow_label:
-                waived_entry["flow_label"] = flow_label
-            waived.append(waived_entry)
-
-        if cm.is_inherited:
-            inherited_entry = {
-                "id": entry_id,
-                "countermeasure_name": cm_name,
-                "inherited_from_component_name": cm.inherited_from_component_name,
-                "inherited_from_zone_name": cm.inherited_from_zone_name,
-            }
-            if component_name:
-                inherited_entry["component_name"] = component_name
-            if flow_label:
-                inherited_entry["flow_label"] = flow_label
-            inherited.append(inherited_entry)
+            waived.append(
+                {
+                    "id": entry_id,
+                    "countermeasure_name": cm_name,
+                    "control_number": cm.display_number,
+                    "targets": targets,
+                    "display_number": first_threat.display_number
+                    if first_threat
+                    else None,
+                }
+            )
 
     return {
         "status_breakdown": dict(status_counts),
         "gaps": gaps,
         "waived": waived,
-        "inherited": inherited,
+        "unattached": unattached,
     }
 
 
 def _build_risks(threat_model):
     """Build risk register section."""
-    risks = Risk.objects.filter(threat_model=threat_model).prefetch_related(
-        "risk_threats__component_threat__threat_library",
-        "risk_threats__flow_threat__threat_library",
+    risks = (
+        Risk.objects.filter(threat_model=threat_model)
+        .select_related("inherent", "residual", "target", "owner")
+        .prefetch_related(
+            "risk_threats__threat__threat_library",
+            "risk_threats__threat__targets__component",
+            "risk_threats__threat__targets__flow__source_component",
+            "risk_threats__threat__targets__flow__dest_component",
+            "risk_threats__threat__targets__zone",
+            "risk_threats__threat__targets__boundary",
+        )
     )
 
     result = []
     for risk in risks:
         contributing_threats = []
-        for rt in risk.risk_threats.all():
-            if rt.component_threat:
-                threat = rt.component_threat
-                contributing_threats.append(
-                    {
-                        "type": "component",
-                        "threat_name": threat.threat_name
-                        or (
-                            threat.threat_library.name
-                            if threat.threat_library
-                            else None
-                        ),
-                        "status": threat.status,
-                    }
-                )
-            elif rt.flow_threat:
-                threat = rt.flow_threat
-                contributing_threats.append(
-                    {
-                        "type": "dataflow",
-                        "threat_name": threat.threat_name
-                        or (
-                            threat.threat_library.name
-                            if threat.threat_library
-                            else None
-                        ),
-                        "status": threat.status,
-                    }
-                )
+        for risk_threat in risk.risk_threats.all():
+            threat = risk_threat.threat
+            contributing_threats.append(
+                {
+                    "threat_id": threat.id,
+                    "display_number": threat.display_number,
+                    "threat_name": threat.threat_name
+                    or (threat.threat_library.name if threat.threat_library else None),
+                    "status": threat.status,
+                    "targets": _target_names(threat),
+                }
+            )
 
         result.append(
             {
                 "id": risk.id,
                 "name": risk.name,
                 "description": risk.description,
-                "inherent_score": risk.inherent_score,
-                "inherent_level": risk.inherent_level,
-                "residual_score": risk.residual_score,
-                "residual_level": risk.residual_level,
+                "status": risk.status,
+                "statement": risk.statement,
+                "exposure": derive_risk_status(risk),
+                "business_objectives": [
+                    link.business_objective.name
+                    for link in risk.business_objective_links.all()
+                ],
+                "domains": list(risk.domains or []),
+                "inherent": _rating(risk.inherent),
+                "residual": _rating(risk.residual),
+                "target": _rating(risk.target),
+                "responses": [
+                    {
+                        "id": response.id,
+                        "strategy": response.strategy,
+                        "status": response.status,
+                        "description": response.description,
+                        "priority": response.priority,
+                        "cost": response.cost,
+                        "owner_email": response.owner.email if response.owner else None,
+                        "target_date": response.target_date,
+                        "countermeasures": [
+                            link.countermeasure.display_number
+                            for link in response.countermeasure_links.all()
+                        ],
+                    }
+                    for response in risk.responses.all()
+                ],
                 "owner_email": risk.owner.email if risk.owner else None,
                 "contributing_threats": contributing_threats,
             }
@@ -846,27 +892,21 @@ def _build_compliance(threat_model, component_ids, dataflow_ids):
 
 def _build_summary_metrics(threat_analysis, countermeasure_summary, risks):
     """Build summary metrics for dashboard."""
-    # Count active threats
-    total_active_threats = sum(
-        len(threats) for threats in threat_analysis["component_threats"].values()
-    ) + sum(len(threats) for threats in threat_analysis["data_flow_threats"].values())
+    active_threats = threat_analysis["threats"]
+    total_active_threats = len(active_threats)
     total_triaged = len(threat_analysis["triaged_threats"])
 
-    # Count threats by status
     threat_status_counts = defaultdict(int)
-    for threats in threat_analysis["component_threats"].values():
-        for threat in threats:
-            threat_status_counts[threat["status"]] += 1
-    for threats in threat_analysis["data_flow_threats"].values():
-        for threat in threats:
-            threat_status_counts[threat["status"]] += 1
+    for threat in active_threats:
+        threat_status_counts[threat["status"]] += 1
 
     cm_breakdown = countermeasure_summary["status_breakdown"]
     total_cms = sum(cm_breakdown.values())
 
     risk_level_counts = defaultdict(int)
     for risk in risks:
-        risk_level_counts[risk["residual_level"]] += 1
+        rating = risk["residual"] or risk["inherent"]
+        risk_level_counts[rating["level"]] += 1
 
     return {
         "total_active_threats": total_active_threats,
@@ -876,7 +916,7 @@ def _build_summary_metrics(threat_analysis, countermeasure_summary, risks):
         "countermeasures_by_status": cm_breakdown,
         "total_gaps": len(countermeasure_summary["gaps"]),
         "total_waived": len(countermeasure_summary["waived"]),
-        "total_inherited": len(countermeasure_summary["inherited"]),
+        "total_unattached": len(countermeasure_summary["unattached"]),
         "total_risks": len(risks),
         "risks_by_level": dict(risk_level_counts),
     }
@@ -895,8 +935,8 @@ def build_report_data(threat_model):
     architecture = _build_architecture(threat_model, component_ids)
     data_assets = _build_data_assets(threat_model, component_ids, dataflow_ids)
     components = _build_components(component_ids)
-    data_flows = _build_data_flows(dataflow_ids)
-    threat_analysis = _build_threat_analysis(component_ids, dataflow_ids)
+    flows = _build_flows(dataflow_ids)
+    threat_analysis = _build_threat_analysis(threat_model)
     countermeasure_summary = _build_countermeasure_summary(threat_model)
     risks = _build_risks(threat_model)
     compliance = _build_compliance(threat_model, component_ids, dataflow_ids)
@@ -917,7 +957,7 @@ def build_report_data(threat_model):
         "architecture": architecture,
         "data_assets": data_assets,
         "components": components,
-        "data_flows": data_flows,
+        "flows": flows,
         "threat_analysis": threat_analysis,
         "countermeasure_summary": countermeasure_summary,
         "risks": risks,

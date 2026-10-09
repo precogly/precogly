@@ -9,9 +9,12 @@ import {
 import type { DiagramNode, DiagramEdge } from '@/features/dfd-editor/types'
 import { isDataFlowEdge } from '@/features/dfd-editor/types'
 import type { GuestThreat, GuestCountermeasure, GuestSystemContext, ThreatStatus } from '../types'
-import { GUEST_THREAT_STATUS_OPTIONS } from '../types'
-import { STRIDE_CONFIG } from '@/types/domain'
+import { GUEST_THREAT_STATUS_OPTIONS, GUEST_RATING_LEVELS, threatDisplayNumber, countermeasureDisplayNumber } from '../types'
+import { STRIDE_CONFIG, ASSUMPTION_TOPICS, FLOW_TYPES } from '@/types/domain'
 import type { STRIDECategory } from '@/types/domain'
+import { getAuthentication, getFlowType, isAuthenticated } from '@/features/dfd-editor/lib/canvas-defaults'
+import { targetLabel } from './guest-model'
+import { hiddenTargetsNote } from './guest-targets'
 import {
   CONTENT_WIDTH,
   h1,
@@ -55,7 +58,7 @@ function formatNodeType(type: string | undefined): string {
     case 'trustZone': return 'Trust Zone'
     case 'systemScope': return 'System Scope'
     case 'stickyNote': return 'Sticky Note'
-    default: return type ?? '—'
+    default: return type ?? '-'
   }
 }
 
@@ -72,18 +75,41 @@ function formatActorType(actorType: string): string {
   return ACTOR_TYPE_LABELS[actorType] ?? actorType
 }
 
-/** Resolve a target name from its ID by searching nodes and edges. */
-function resolveTargetName(targetId: string, nodes: DiagramNode[], edges: DiagramEdge[]): string {
-  const node = nodes.find((n) => n.id === targetId)
+/** The name of a node by its id. */
+function resolveNodeName(nodeId: string, nodes: DiagramNode[]): string {
+  const node = nodes.find((n) => n.id === nodeId)
   if (node) return (node.data as { label?: string }).label ?? node.id
-  const edge = edges.find((e) => e.id === targetId)
-  if (edge) return (edge.data as { label?: string })?.label ?? edge.id
-  return targetId
+  return nodeId
+}
+
+/** What a threat applies to: its targets, the whole system, and what the file names elsewhere. */
+function describeThreatTargets(threat: GuestThreat, nodes: DiagramNode[], edges: DiagramEdge[]): string {
+  const parts: string[] = []
+  if (threat.wholeSystem) parts.push('Whole system')
+  else if (threat.targets.length > 0) parts.push(threat.targets.map((target) => targetLabel(target, nodes, edges)).join(', '))
+  const hidden = hiddenTargetsNote(threat.hiddenTargetRefs, threat.hiddenBlueprintTargetCount)
+  if (hidden) parts.push(hidden)
+  return parts.join('; ') || '-'
+}
+
+/** What a countermeasure applies to; empty means the whole system. */
+function describeCountermeasureScope(countermeasure: GuestCountermeasure, nodes: DiagramNode[], edges: DiagramEdge[]): string {
+  if (countermeasure.targets.length === 0 && countermeasure.hiddenTargetRefs.length === 0) return 'Whole system'
+  const parts: string[] = []
+  if (countermeasure.targets.length > 0) parts.push(countermeasure.targets.map((target) => targetLabel(target, nodes, edges)).join(', '))
+  if (countermeasure.hiddenTargetRefs.length > 0) {
+    parts.push(`${countermeasure.hiddenTargetRefs.length} element${countermeasure.hiddenTargetRefs.length === 1 ? '' : 's'} not on the diagram`)
+  }
+  return parts.join('; ')
+}
+
+function formatLevel(level: GuestThreat['level']): string {
+  return GUEST_RATING_LEVELS.find((option) => option.value === level)?.label ?? capitalize(level)
 }
 
 /** Format a STRIDE category value to its display label. */
 function formatStrideCategory(category: STRIDECategory | undefined): string {
-  if (!category) return '—'
+  if (!category) return '-'
   return STRIDE_CONFIG[category]?.label ?? category
 }
 
@@ -209,11 +235,11 @@ function buildDataAssetsSection(systemContext: GuestSystemContext, sectionNum: n
       systemContext.dataAssets.map((asset) => [
         asset.name,
         capitalize(asset.classification),
-        asset.description || '—',
+        asset.description || '-',
         capitalize(asset.confidentiality),
         capitalize(asset.integrity),
         capitalize(asset.availability),
-        asset.dataSensitivity.length > 0 ? asset.dataSensitivity.join(', ') : '—',
+        asset.dataSensitivity.length > 0 ? asset.dataSensitivity.join(', ') : '-',
       ]),
     ),
     spacer(),
@@ -240,11 +266,11 @@ function buildAssumptionsSection(systemContext: GuestSystemContext, sectionNum: 
   children.push(
     buildTable(
       [4680, 1800, 2880],
-      ['Description', 'Validity', 'Topics'],
+      ['Description', 'Validity', 'Topic'],
       systemContext.assumptions.map((assumption) => [
         assumption.description,
         capitalize(assumption.validity),
-        assumption.topics.length > 0 ? assumption.topics.join(', ') : '—',
+        assumption.topic ? (ASSUMPTION_TOPICS.find((option) => option.value === assumption.topic)?.label ?? assumption.topic) : '-',
       ]),
     ),
     spacer(),
@@ -274,7 +300,7 @@ function buildOutOfScopeSection(systemContext: GuestSystemContext, sectionNum: n
       ['Item', 'Reason'],
       systemContext.outOfScopeItems.map((item) => [
         item.name,
-        item.reason || '—',
+        item.reason || '-',
       ]),
     ),
     spacer(),
@@ -290,7 +316,7 @@ function buildOutOfScopeSection(systemContext: GuestSystemContext, sectionNum: n
 function buildComponentInventorySection(data: GuestReportData, sectionNum: number): (Paragraph | Table)[] {
   const children: (Paragraph | Table)[] = [h1(`${sectionNum}. Component Inventory`), spacer()]
 
-  // Group nodes by type — exclude container types (trustZone, systemScope)
+  // Group nodes by type, leaving out the container types (trustZone, systemScope)
   const componentNodes = data.nodes.filter(
     (n) => n.type !== 'trustZone' && n.type !== 'systemScope',
   )
@@ -309,9 +335,9 @@ function buildComponentInventorySection(data: GuestReportData, sectionNum: numbe
             ? `${typeName}\n(${formatActorType(nodeData.actorType)})`
             : typeName
           return [
-            nodeData.label ?? '—',
+            nodeData.label ?? '-',
             displayType,
-            nodeData.description ?? '—',
+            nodeData.description ?? '-',
           ]
         }),
       ),
@@ -331,13 +357,26 @@ function buildComponentInventorySection(data: GuestReportData, sectionNum: numbe
       h2(`${sectionNum}.2 Data Flows`),
       spacer(),
       buildTable(
-        [3120, 3120, 3120],
-        ['Name', 'Source', 'Destination'],
+        [2400, 1560, 1920, 1920, 1560],
+        ['Name', 'Type', 'Source', 'Destination', 'Authentication'],
         dataFlows.map((edge) => {
           const edgeData = edge.data as { label?: string }
-          const sourceName = resolveTargetName(edge.source, data.nodes, data.edges)
-          const destName = resolveTargetName(edge.target, data.nodes, data.edges)
-          return [edgeData?.label ?? '—', sourceName, destName]
+          const sourceName = resolveNodeName(edge.source, data.nodes)
+          const destName = resolveNodeName(edge.target, data.nodes)
+          const flowType = getFlowType(edge.data)
+          const authentication = getAuthentication(edge.data)
+          const authenticationText = authentication.length === 0
+            ? 'Not recorded'
+            : isAuthenticated(authentication)
+              ? `Yes (${authentication.join(', ')})`
+              : 'No'
+          return [
+            edgeData?.label || `${sourceName} to ${destName}`,
+            FLOW_TYPES.find((option) => option.value === flowType)?.label ?? flowType,
+            sourceName,
+            destName,
+            authenticationText,
+          ]
         }),
       ),
       spacer(),
@@ -363,12 +402,12 @@ function buildThreatAnalysisSection(data: GuestReportData, sectionNum: number): 
   }
 
   // Summary stats
-  const severityCounts: Record<string, number> = { critical: 0, high: 0, medium: 0, low: 0 }
+  const levelCounts: Record<string, number> = { critical: 0, high: 0, medium: 0, low: 0, info: 0 }
   const strideCounts: Record<string, number> = {}
   const statusCounts: Record<string, number> = { open: 0, accept: 0, mitigate: 0, delegate: 0, eliminate: 0 }
 
   for (const threat of data.threats) {
-    severityCounts[threat.severity] = (severityCounts[threat.severity] ?? 0) + 1
+    levelCounts[threat.level] = (levelCounts[threat.level] ?? 0) + 1
     const threatStatus = threat.status || 'open'
     statusCounts[threatStatus] = (statusCounts[threatStatus] ?? 0) + 1
     if (threat.category) {
@@ -384,12 +423,13 @@ function buildThreatAnalysisSection(data: GuestReportData, sectionNum: number): 
     spacer(),
     buildTable(
       [4680, 4680],
-      ['Severity', 'Count'],
+      ['Level', 'Count'],
       [
-        ['Critical', String(severityCounts.critical)],
-        ['High', String(severityCounts.high)],
-        ['Medium', String(severityCounts.medium)],
-        ['Low', String(severityCounts.low)],
+        ['Critical', String(levelCounts.critical)],
+        ['High', String(levelCounts.high)],
+        ['Medium', String(levelCounts.medium)],
+        ['Low', String(levelCounts.low)],
+        ['Info', String(levelCounts.info)],
         ['Total', String(data.threats.length)],
       ],
     ),
@@ -433,16 +473,17 @@ function buildThreatAnalysisSection(data: GuestReportData, sectionNum: number): 
     h2(`${sectionNum}.${subSectionNum} Threat Details`),
     spacer(),
     buildTable(
-      [1800, 1440, 1200, 900, 900, 1560, 1560],
-      ['Threat Name', 'Target', 'STRIDE', 'Severity', 'Status', 'Rationale', 'Description'],
+      [720, 1560, 1440, 1080, 840, 840, 1440, 1440],
+      ['No.', 'Threat Name', 'Applies to', 'STRIDE', 'Level', 'Status', 'Rationale', 'Description'],
       data.threats.map((threat) => [
+        threatDisplayNumber(threat),
         threat.name,
-        resolveTargetName(threat.targetId, data.nodes, data.edges),
+        describeThreatTargets(threat, data.nodes, data.edges),
         formatStrideCategory(threat.category),
-        capitalize(threat.severity),
+        formatLevel(threat.level),
         formatThreatStatus(threat.status),
-        threat.decisionRationale || '—',
-        threat.description || '—',
+        threat.decisionRationale || '-',
+        threat.description || '-',
       ]),
     ),
     spacer(),
@@ -514,16 +555,21 @@ function buildCountermeasuresSection(data: GuestReportData, sectionNum: number):
     h2(`${sectionNum}.3 Countermeasure Details`),
     spacer(),
     buildTable(
-      [1800, 1560, 1200, 1800, 3000],
-      ['Countermeasure', 'Control Function', 'Control Nature', 'Associated Threat', 'Description'],
+      [720, 1560, 1320, 1080, 1560, 1320, 1800],
+      ['No.', 'Countermeasure', 'Control Function', 'Control Nature', 'Mitigates', 'Applies to', 'Description'],
       data.countermeasures.map((cm) => {
-        const associatedThreat = threatMap.get(cm.threatId)
+        const mitigated = cm.threatIds
+          .map((threatId) => threatMap.get(threatId))
+          .filter((threat): threat is GuestThreat => threat !== undefined)
+          .map((threat) => `${threatDisplayNumber(threat)} ${threat.name}`)
         return [
+          countermeasureDisplayNumber(cm),
           cm.name,
           cm.controlFunction.map(capitalize).join(', '),
           capitalize(cm.controlNature),
-          associatedThreat?.name ?? '—',
-          cm.description || '—',
+          mitigated.length > 0 ? mitigated.join('; ') : '-',
+          describeCountermeasureScope(cm, data.nodes, data.edges),
+          cm.description || '-',
         ]
       }),
     ),
@@ -542,16 +588,18 @@ function buildCoverageSummarySection(data: GuestReportData, sectionNum: number):
 
   if (data.threats.length === 0) {
     children.push(
-      para('No threats have been identified — coverage analysis is not applicable.', { italic: true }),
+      para('No threats have been identified. Coverage analysis is not applicable.', { italic: true }),
       spacer(),
     )
     return children
   }
 
-  // Count countermeasures per threat
+  // Count countermeasures per threat (a countermeasure may mitigate several)
   const countermeasuresByThreat = new Map<string, number>()
   for (const cm of data.countermeasures) {
-    countermeasuresByThreat.set(cm.threatId, (countermeasuresByThreat.get(cm.threatId) ?? 0) + 1)
+    for (const threatId of cm.threatIds) {
+      countermeasuresByThreat.set(threatId, (countermeasuresByThreat.get(threatId) ?? 0) + 1)
+    }
   }
 
   const rows = data.threats.map((threat) => {
@@ -566,8 +614,8 @@ function buildCoverageSummarySection(data: GuestReportData, sectionNum: number):
       coveredLabel = cmCount > 0 ? 'Yes' : 'No'
     }
     return [
-      threat.name,
-      capitalize(threat.severity),
+      `${threatDisplayNumber(threat)} ${threat.name}`,
+      formatLevel(threat.level),
       formatThreatStatus(threatStatus),
       String(cmCount),
       coveredLabel,
@@ -581,7 +629,7 @@ function buildCoverageSummarySection(data: GuestReportData, sectionNum: number):
   children.push(
     buildTable(
       [2400, 1200, 1200, 1800, 2760],
-      ['Threat Name', 'Severity', 'Status', '# Countermeasures', 'Covered?'],
+      ['Threat', 'Level', 'Status', '# Countermeasures', 'Covered?'],
       rows,
     ),
     spacer(),
@@ -589,12 +637,12 @@ function buildCoverageSummarySection(data: GuestReportData, sectionNum: number):
 
   if (mitigateThreats.length === 0) {
     children.push(
-      para('No threats are set to "Mitigate" status — countermeasure coverage analysis is not applicable.', { italic: true }),
+      para('No threats are set to "Mitigate" status. Countermeasure coverage analysis is not applicable.', { italic: true }),
       spacer(),
     )
   } else if (gapCount > 0) {
     children.push(
-      para(`${gapCount} threat${gapCount > 1 ? 's' : ''} with "Mitigate" status without countermeasures — review recommended.`, { bold: true }),
+      para(`${gapCount} threat${gapCount > 1 ? 's' : ''} with "Mitigate" status without countermeasures. Review recommended.`, { bold: true }),
       spacer(),
     )
   } else {

@@ -8,9 +8,17 @@ from .models import DFD, DFDTemplatesLibrary
 
 
 class DFDSerializer(serializers.ModelSerializer):
-    """Serializer for DFD model."""
+    """Serializer for DFD model.
+
+    `blueprint` is set by the view on create (from `blueprint_id`, or the
+    threat model's default blueprint when only `threat_model_id` is given) and
+    never changes afterwards. `threat_model` is derived for readers.
+    """
 
     updated_by_email = serializers.EmailField(source="updated_by.email", read_only=True)
+    threat_model = serializers.IntegerField(
+        source="blueprint.threat_model_id", read_only=True
+    )
 
     class Meta:
         model = DFD
@@ -18,6 +26,7 @@ class DFDSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "diagram_type",
+            "blueprint",
             "threat_model",
             "is_primary",
             "canvas_data",
@@ -27,7 +36,14 @@ class DFDSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "threat_model", "created_at", "updated_at", "updated_by_email"]
+        read_only_fields = [
+            "id",
+            "blueprint",
+            "threat_model",
+            "created_at",
+            "updated_at",
+            "updated_by_email",
+        ]
 
 
 class DFDListSerializer(serializers.ModelSerializer):
@@ -35,7 +51,7 @@ class DFDListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DFD
-        fields = ["id", "name", "diagram_type", "is_primary", "updated_at"]
+        fields = ["id", "name", "diagram_type", "blueprint", "is_primary", "updated_at"]
 
 
 class DFDTemplatesLibrarySerializer(serializers.ModelSerializer):
@@ -59,4 +75,10 @@ class DFDTemplatesLibrarySerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-        read_only_fields = ["id", "created_at", "updated_at", "source_pack_name", "source_pack_slug"]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "source_pack_name",
+            "source_pack_slug",
+        ]

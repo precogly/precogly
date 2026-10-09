@@ -1,3 +1,11 @@
+/**
+ * "Add threat" (plan 11.3 dialogs): a multi-target picker preset from the
+ * selection with "whole system" allowed, a level select with `info`, a
+ * business objectives picker once the model has one, and the actor. From
+ * the library (ranked by the AI owl when one component is the target) or
+ * written by hand.
+ */
+
 import { useEffect, useState } from 'react'
 import { Plus, Search, FileText, Library, Info, Loader2 } from 'lucide-react'
 import {
@@ -12,91 +20,92 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import { SEVERITY_COLORS } from './severity-utils'
+import { RATING_LEVEL_CLASSES } from '@/features/threat-models/components/rating'
 import { OwlMark } from '@/features/ai/components/OwlMark'
 import { OwlToggle } from '@/features/ai/components/OwlToggle'
 import { AiErrorState } from '@/features/ai/components/AiErrorState'
 import { useAiAvailability, useSuggestThreats, type ThreatSuggestion } from '@/features/ai/api/suggest'
 import {
   useThreatLibrary,
-  useComponentThreats,
-  useFlowThreats,
-  useCreateComponentThreat,
-  useCreateFlowThreat,
+  useThreats,
+  useCreateThreat,
   useCreateInstanceTaxonomyEntry,
+  useThreatPersonas,
+  type CreateThreatInput,
+  type TargetRef,
 } from '@/features/threat-models/api/threats'
 import { useTaxonomyEntries } from '@/features/libraries/api/libraries'
 import { TRIAGE_STATUSES, type TriageStatus } from '@/types/triage'
 import { formatTaxonomyEntryLabel } from '@/types/domain'
-
-const SEVERITY_OPTIONS = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'critical', label: 'Critical' },
-]
+import { RATING_LEVELS, type RatingLevel } from '@/types/risk'
+import { TargetPicker } from './TargetPicker'
+import { BusinessObjectivesPicker } from './BusinessObjectivesPicker'
+import { useHasBusinessObjectives } from './useHasBusinessObjectives'
+import { ActorPicker } from './ActorPicker'
+import { NO_ACTOR, type ActorValue } from './actor-utils'
 
 interface AddThreatDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  targetId: number // Component ID or DataFlow ID
-  targetType: 'component' | 'dataflow'
+  threatModelId: string | undefined
+  /** Preselected from the tree; empty with `initialWholeSystem` for the System row. */
+  initialTargets: TargetRef[]
+  initialWholeSystem?: boolean
+  /** The selection's name for the heading ("PLC", "System"). */
   targetName: string
-  threatModelId?: string
   onSuccess?: () => void
 }
 
 export function AddThreatDialog({
   open,
   onOpenChange,
-  targetId,
-  targetType,
-  targetName,
   threatModelId,
+  initialTargets,
+  initialWholeSystem = false,
+  targetName,
   onSuccess,
 }: AddThreatDialogProps) {
   const [activeTab, setActiveTab] = useState<'library' | 'custom'>('library')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedThreatId, setSelectedThreatId] = useState<number | null>(null)
-  const [selectedSeverity, setSelectedSeverity] = useState('medium')
+  const [selectedLevel, setSelectedLevel] = useState<RatingLevel>('medium')
+
+  // Shared by both tabs
+  const [targets, setTargets] = useState<TargetRef[]>(initialTargets)
+  const [wholeSystem, setWholeSystem] = useState(initialWholeSystem)
+  const [objectiveIds, setObjectiveIds] = useState<number[]>([])
+  const [actor, setActor] = useState<ActorValue>(NO_ACTOR)
 
   // Custom threat fields
   const [customName, setCustomName] = useState('')
   const [customDescription, setCustomDescription] = useState('')
-  const [customSeverity, setCustomSeverity] = useState('medium')
+  const [customLevel, setCustomLevel] = useState<RatingLevel>('medium')
   const [customTriageStatus, setCustomTriageStatus] = useState<TriageStatus>('open')
   const [customTaxonomyEntryId, setCustomTaxonomyEntryId] = useState<string>('none')
   const [showAllThreats, setShowAllThreats] = useState(false)
-  // Whether the list is the model's ranking rather than the raw library. This
-  // is a third state layered on the scope toggle rather than a fourth cell in a
-  // matrix: `candidate_library_threats` only ever ranks the component's own
-  // pool, so ranking and "show all" are mutually exclusive by construction.
+  // Whether the list is the model's ranking rather than the raw library. The
+  // ranker only ever ranks one component's own pool, so ranking and "show
+  // all" are mutually exclusive by construction.
   const [showRanked, setShowRanked] = useState(false)
 
-  // Ranked stays component-scoped so the pool on screen is the one the model
-  // was given; only "show all" drops the component filter.
-  const effectiveComponentId = (targetType === 'component' && !showAllThreats)
-    ? targetId
-    : undefined
+  // The library is scoped to a component when exactly one component is the
+  // target; any other target mix shows the whole library.
+  const singleComponentId = targets.length === 1 && targets[0].type === 'component' && !wholeSystem ? targets[0].id : null
+  const effectiveComponentId = singleComponentId !== null && !showAllThreats ? singleComponentId : undefined
 
   const { data: threatLibrary, isLoading } = useThreatLibrary(effectiveComponentId, threatModelId)
-  const createComponentThreat = useCreateComponentThreat()
-  const createFlowThreat = useCreateFlowThreat()
+  const createThreat = useCreateThreat()
   const createInstanceTaxonomyEntry = useCreateInstanceTaxonomyEntry()
   const { data: allTaxonomyEntries } = useTaxonomyEntries()
+  const { data: personas = [] } = useThreatPersonas(threatModelId)
+  const hasObjectives = useHasBusinessObjectives(threatModelId ?? '')
 
   const taxonomyEntriesByTaxonomy = allTaxonomyEntries
     ? Object.entries(
@@ -109,28 +118,23 @@ export function AddThreatDialog({
       )
     : []
 
-  // Ranking is component-only: the suggest endpoint takes a component id and
-  // has no dataflow equivalent, so dataflows never see the option at all.
-  const aiComponentId = targetType === 'component' ? targetId : null
-  const availability = useAiAvailability(aiComponentId)
+  // Ranking is component-only: the suggest endpoint answers other targets with
+  // an empty list, so the owl only shows for one component.
+  const availability = useAiAvailability(singleComponentId)
   const aiAvailable = availability.data?.available ?? false
   const suggest = useSuggestThreats()
 
-  // Threats the target already carries. Offering one again is a dead end — the
-  // backend rejects the duplicate — so they come out of the list entirely
-  // rather than sitting there waiting to fail.
-  //
-  // Triaged threats count as present, matching what the ranker does
-  // (`candidate_library_threats` excludes every instance, triaged or not).
-  // A triage decision shows up in compliance reporting,
-  // so the way back is to change the triage status, not a silent re-add.
-  const componentThreats = useComponentThreats(aiComponentId)
-  const flowThreats = useFlowThreats(targetType === 'dataflow' ? targetId : null)
+  // Threats the single target already carries come out of the list: the
+  // backend rejects the duplicate. Triaged threats count as present.
+  const singleTarget = targets.length === 1 && !wholeSystem ? targets[0] : null
+  const existingThreats = useThreats(
+    singleTarget ? { [singleTarget.type]: singleTarget.id } : {},
+    { enabled: open && singleTarget !== null }
+  )
   const alreadyAdded = new Set(
-    (targetType === 'component'
-      ? componentThreats.data?.map((t) => t.threatLibrary)
-      : flowThreats.data?.map((t) => t.threatLibrary)
-    )?.filter((id): id is number => id !== null) ?? []
+    singleTarget
+      ? (existingThreats.data?.map((threat) => threat.threatLibrary).filter((id): id is number => id !== null) ?? [])
+      : []
   )
 
   const matchesQuery = (name?: string | null, description?: string | null, taxonomy?: string[]) => {
@@ -138,7 +142,7 @@ export function AddThreatDialog({
     return (
       name?.toLowerCase().includes(query) ||
       description?.toLowerCase().includes(query) ||
-      (taxonomy?.some((t) => t.toLowerCase().includes(query)) ?? false)
+      (taxonomy?.some((entry) => entry.toLowerCase().includes(query)) ?? false)
     )
   }
 
@@ -146,173 +150,194 @@ export function AddThreatDialog({
 
   const filteredThreats = availableThreats.filter((threat) => {
     const query = searchQuery.toLowerCase()
-    const taxonomyMatch = threat.taxonomyEntries?.some(
-      (entry) => entry.title.toLowerCase().includes(query) || entry.externalId.toLowerCase().includes(query)
-    ) ?? false
-    return (
-      threat.name?.toLowerCase().includes(query) ||
-      threat.description?.toLowerCase().includes(query) ||
-      taxonomyMatch
-    )
+    const taxonomyMatch =
+      threat.taxonomyEntries?.some(
+        (entry) => entry.title.toLowerCase().includes(query) || entry.externalId.toLowerCase().includes(query)
+      ) ?? false
+    return threat.name?.toLowerCase().includes(query) || threat.description?.toLowerCase().includes(query) || taxonomyMatch
   })
 
-  const filteredSuggestions = suggest.data?.suggestions.filter((s) =>
-    matchesQuery(s.threatName, s.threatDescription, s.taxonomy)
-  ) ?? []
+  const filteredSuggestions =
+    suggest.data?.suggestions.filter((suggestion) =>
+      matchesQuery(suggestion.threatName, suggestion.threatDescription, suggestion.taxonomy)
+    ) ?? []
 
-  // The confirmation panel needs the selected threat's name whichever list
-  // produced it; only the name differs between the two shapes.
   const selectedThreatName = showRanked
-    ? suggest.data?.suggestions.find((s) => s.threatLibrary === selectedThreatId)?.threatName
-    : threatLibrary?.find((t) => t.id === selectedThreatId)?.name
+    ? suggest.data?.suggestions.find((suggestion) => suggestion.threatLibrary === selectedThreatId)?.threatName
+    : threatLibrary?.find((threat) => threat.id === selectedThreatId)?.name
 
-  // Both controls invalidate the selection — the same row may not exist in the
-  // next list, and a stale id would submit something the user can't see.
   const handleShowAllChange = (next: boolean) => {
     setShowAllThreats(next)
     setSelectedThreatId(null)
-    // Widening the scope leaves ranking with no pool it can describe, so it
-    // switches off rather than sitting stale over a list it didn't rank.
     if (next) setShowRanked(false)
   }
 
   const handleRankedChange = (next: boolean) => {
     setShowRanked(next)
     setSelectedThreatId(null)
-    // Spend an LLM call only on entering ranked mode, and only once per open —
-    // re-entering reuses the ranking already fetched.
-    if (next && aiComponentId !== null && !suggest.data && !suggest.isPending) {
-      suggest.mutate(aiComponentId)
+    if (next && singleComponentId !== null && !suggest.data && !suggest.isPending) {
+      suggest.mutate({ targetId: singleComponentId })
     }
   }
 
+  const targetsValid = wholeSystem || targets.length > 0
+
+  const sharedInput = (): Omit<CreateThreatInput, 'threatModel'> => ({
+    targets: wholeSystem ? [] : targets,
+    wholeSystem,
+    actorPersona: actor.actorPersona,
+    threatActorText: actor.actorPersona !== null ? '' : actor.threatActorText,
+    ...(hasObjectives && objectiveIds.length > 0 && { businessObjectiveIds: objectiveIds }),
+  })
+
   const handleAddFromLibrary = () => {
-    if (!selectedThreatId) return
-
-    const onMutationSuccess = () => {
-      onOpenChange(false)
-      resetForm()
-      onSuccess?.()
-    }
-
-    if (targetType === 'component') {
-      createComponentThreat.mutate(
-        { component: targetId, threatLibrary: selectedThreatId, inherentSeverity: selectedSeverity },
-        { onSuccess: onMutationSuccess }
-      )
-    } else {
-      createFlowThreat.mutate(
-        { dataFlow: targetId, threatLibrary: selectedThreatId, inherentSeverity: selectedSeverity },
-        { onSuccess: onMutationSuccess }
-      )
-    }
+    if (!selectedThreatId || !threatModelId || !targetsValid) return
+    createThreat.mutate(
+      {
+        threatModel: threatModelId,
+        ...sharedInput(),
+        threatLibrary: selectedThreatId,
+        ratingInputs: { level: selectedLevel },
+      },
+      {
+        onSuccess: () => {
+          onOpenChange(false)
+          resetForm()
+          onSuccess?.()
+        },
+      }
+    )
   }
 
   const handleAddCustom = () => {
-    if (!customName.trim()) return
-
-    const baseData = {
-      threatLibrary: null as null,
-      threatName: customName,
-      threatDescription: customDescription,
-      inherentSeverity: customSeverity,
-      triageStatus: customTriageStatus,
-      status: 'exposed',
-    }
+    if (!customName.trim() || !threatModelId || !targetsValid) return
     const taxonomyEntryIdNum = customTaxonomyEntryId !== 'none' ? Number(customTaxonomyEntryId) : null
-    const onMutationSuccess = (result: unknown) => {
-      const { id } = result as { id: number }
-      if (taxonomyEntryIdNum) {
-        const linkPayload = targetType === 'component'
-          ? { taxonomyEntry: taxonomyEntryIdNum, componentThreat: id }
-          : { taxonomyEntry: taxonomyEntryIdNum, flowThreat: id }
-        createInstanceTaxonomyEntry.mutate(linkPayload)
+    createThreat.mutate(
+      {
+        threatModel: threatModelId,
+        ...sharedInput(),
+        threatLibrary: null,
+        threatName: customName,
+        threatDescription: customDescription,
+        ratingInputs: { level: customLevel },
+        triageStatus: customTriageStatus,
+        status: 'exposed',
+      },
+      {
+        onSuccess: (created) => {
+          if (taxonomyEntryIdNum) {
+            createInstanceTaxonomyEntry.mutate({ taxonomyEntry: taxonomyEntryIdNum, threat: created.id })
+          }
+          onOpenChange(false)
+          resetForm()
+          onSuccess?.()
+        },
       }
-      onOpenChange(false)
-      resetForm()
-      onSuccess?.()
-    }
-
-    if (targetType === 'component') {
-      createComponentThreat.mutate(
-        { component: targetId, ...baseData },
-        { onSuccess: onMutationSuccess }
-      )
-    } else {
-      createFlowThreat.mutate(
-        { dataFlow: targetId, ...baseData },
-        { onSuccess: onMutationSuccess }
-      )
-    }
+    )
   }
 
   const resetForm = () => {
     setSearchQuery('')
     setSelectedThreatId(null)
-    setSelectedSeverity('medium')
+    setSelectedLevel('medium')
+    setTargets(initialTargets)
+    setWholeSystem(initialWholeSystem)
+    setObjectiveIds([])
+    setActor(NO_ACTOR)
     setCustomName('')
     setCustomDescription('')
-    setCustomSeverity('medium')
+    setCustomLevel('medium')
     setCustomTriageStatus('open')
     setCustomTaxonomyEntryId('none')
     setActiveTab('library')
     setShowAllThreats(false)
     setShowRanked(false)
-    // Drop the ranking too, so reopening on another component never shows the
-    // previous component's suggestions while its own request is in flight.
     suggest.reset()
   }
 
-  // Closing the dialog does not unmount it — both call sites re-render it in
-  // place with a new `targetId` — so without this every field survives a Cancel
-  // and reappears against whatever component is opened next. For the ranking
-  // that is not merely untidy: the suggestions stay on screen labelled "Ranked
-  // for this component", the `!suggest.data` guard suppresses the refetch that
-  // would correct them, and accepting one files another component's threat here.
-  //
-  // Resetting on open rather than on close keeps the fields populated through
-  // the closing animation instead of blanking them mid-fade. The cost is that
-  // reopening the same component re-ranks, spending a second metered call on a
-  // result we had — worth it to never show a ranking that isn't this
-  // component's.
+  // The dialog is re-rendered in place with a new selection, so the fields
+  // reset on open; resetting on close would blank them mid-fade.
   useEffect(() => {
     if (open) resetForm()
     // `resetForm` is redeclared every render; `open` is the real trigger.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
 
-  const isSubmitting = createComponentThreat.isPending || createFlowThreat.isPending
+  const isSubmitting = createThreat.isPending
+
+  const levelSelect = (id: string, value: RatingLevel, onChange: (level: RatingLevel) => void) => (
+    <Select value={value} onValueChange={(next) => onChange(next as RatingLevel)}>
+      <SelectTrigger id={id}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {RATING_LEVELS.map((entry) => (
+          <SelectItem key={entry.value} value={entry.value}>
+            {entry.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  )
+
+  const appliesToSection = threatModelId && (
+    <div className="space-y-2 rounded-md border p-3">
+      <Label>Applies to</Label>
+      <TargetPicker
+        threatModelId={threatModelId}
+        value={targets}
+        onChange={setTargets}
+        allowWholeSystem
+        wholeSystem={wholeSystem}
+        onWholeSystemChange={setWholeSystem}
+        idPrefix="add-threat"
+        emptyHint="Pick at least one target, or make it a whole-system threat."
+      />
+      <div className="grid grid-cols-2 gap-3 pt-1">
+        {hasObjectives && (
+          <div className="space-y-1">
+            <Label className="text-xs">Business objectives</Label>
+            <BusinessObjectivesPicker threatModelId={threatModelId} value={objectiveIds} onChange={setObjectiveIds} />
+          </div>
+        )}
+        <div className="space-y-1">
+          <Label className="text-xs">Actor</Label>
+          <ActorPicker threatModelId={threatModelId} personas={personas} value={actor} onChange={setActor} compact />
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Add Threat</DialogTitle>
+          <DialogTitle>Add threat</DialogTitle>
           <DialogDescription>
-            Add a threat to <span className="font-medium">{targetName}</span>
+            Add a threat on <span className="font-medium">{targetName}</span>. Change the targets below if needed.
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'library' | 'custom')}>
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'library' | 'custom')}>
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="library">From Library</TabsTrigger>
-            <TabsTrigger value="custom">Custom Threat</TabsTrigger>
+            <TabsTrigger value="library">From library</TabsTrigger>
+            <TabsTrigger value="custom">Custom threat</TabsTrigger>
           </TabsList>
 
           <TabsContent value="library" className="space-y-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search threats..."
+                placeholder="Search threats"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(event) => setSearchQuery(event.target.value)}
                 className="pl-9"
               />
             </div>
 
-            {targetType === 'component' && (
+            {singleComponentId !== null && (
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground min-w-0">
+                <div className="flex min-w-0 items-center gap-2 text-sm text-muted-foreground">
                   {showRanked ? <OwlMark className="h-4 w-4 shrink-0" /> : <Library className="h-4 w-4 shrink-0" />}
                   <span className="truncate">
                     {showRanked
@@ -322,23 +347,17 @@ export function AddThreatDialog({
                         : "Showing threats for this component's library"}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex shrink-0 items-center gap-2">
                   <OwlToggle
                     label="Rank"
                     tooltip={showRanked ? 'Show the unranked library' : 'Rank these threats by relevance'}
                     active={showRanked}
                     pending={suggest.isPending}
                     unavailable={!aiAvailable}
-                    blockedReason={
-                      showAllThreats ? 'Ranking covers this component’s library only' : null
-                    }
+                    blockedReason={showAllThreats ? "Ranking covers this component's library only" : null}
                     onChange={handleRankedChange}
                   />
-                  <Switch
-                    id="show-all-threats"
-                    checked={showAllThreats}
-                    onCheckedChange={handleShowAllChange}
-                  />
+                  <Switch id="show-all-threats" checked={showAllThreats} onCheckedChange={handleShowAllChange} />
                   <Label htmlFor="show-all-threats" className="text-sm">
                     Show all
                   </Label>
@@ -346,7 +365,7 @@ export function AddThreatDialog({
               </div>
             )}
 
-            <ScrollArea className="h-[300px] border rounded-md">
+            <ScrollArea className="h-[240px] rounded-md border">
               {showRanked ? (
                 <RankedList
                   pending={suggest.isPending}
@@ -358,35 +377,29 @@ export function AddThreatDialog({
                   selectedThreatId={selectedThreatId}
                   onSelect={(suggestion) => {
                     setSelectedThreatId(suggestion.threatLibrary)
-                    // Carry the model's severity through as the default so the
-                    // rationale the user just read matches what gets saved.
-                    setSelectedSeverity(suggestion.suggestedSeverity)
+                    setSelectedLevel(suggestion.suggestedSeverity)
                   }}
-                  onRetry={() => aiComponentId !== null && suggest.mutate(aiComponentId)}
+                  onRetry={() => singleComponentId !== null && suggest.mutate({ targetId: singleComponentId })}
                 />
               ) : isLoading ? (
-                <div className="p-4 text-center text-muted-foreground">Loading threats...</div>
+                <div className="p-4 text-center text-muted-foreground">Loading threats</div>
               ) : filteredThreats.length === 0 ? (
                 <div className="p-4 text-center text-muted-foreground">
                   {searchQuery
                     ? 'No threats match your search'
                     : threatLibrary && threatLibrary.length > 0
-                      // Distinguishing these two matters: "already added" means the
-                      // work is done, "none available" means look somewhere else.
                       ? `Every applicable threat is already on ${targetName}.`
-                      : 'No threats available in library'}
+                      : 'No threats available in the library'}
                 </div>
               ) : (
-                <div className="p-2 space-y-1">
+                <div className="space-y-1 p-2">
                   {filteredThreats.map((threat) => (
                     <button
                       key={threat.id}
                       onClick={() => setSelectedThreatId(threat.id)}
                       className={cn(
-                        'w-full text-left p-3 rounded-md transition-colors',
-                        selectedThreatId === threat.id
-                          ? 'bg-primary/10 border border-primary'
-                          : 'hover:bg-muted'
+                        'w-full rounded-md p-3 text-left transition-colors',
+                        selectedThreatId === threat.id ? 'border border-primary bg-primary/10' : 'hover:bg-muted'
                       )}
                     >
                       <div className="flex items-center gap-1.5">
@@ -394,15 +407,13 @@ export function AddThreatDialog({
                         {(threat.description || (threat.taxonomyEntries && threat.taxonomyEntries.length > 0)) && (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0 cursor-help" />
+                              <Info className="h-3.5 w-3.5 shrink-0 cursor-help text-muted-foreground" />
                             </TooltipTrigger>
                             <TooltipContent side="right" className="max-w-xs">
-                              {threat.description && (
-                                <p>{threat.description}</p>
-                              )}
+                              {threat.description && <p>{threat.description}</p>}
                               {threat.taxonomyEntries && threat.taxonomyEntries.length > 0 && (
                                 <p className="mt-1 opacity-75">
-                                  {threat.taxonomyEntries.map((e) => e.title).join(' · ')}
+                                  {threat.taxonomyEntries.map((entry) => entry.title).join(' · ')}
                                 </p>
                               )}
                             </TooltipContent>
@@ -416,40 +427,29 @@ export function AddThreatDialog({
             </ScrollArea>
 
             {selectedThreatName && (
-              <div className="space-y-3 p-3 bg-muted/50 rounded-md">
+              <div className="space-y-3 rounded-md bg-muted/50 p-3">
                 <div>
-                  <Label className="text-xs text-muted-foreground">Selected Threat</Label>
+                  <Label className="text-xs text-muted-foreground">Selected threat</Label>
                   <p className="font-medium">{selectedThreatName}</p>
                 </div>
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <Label htmlFor="library-severity">Severity</Label>
-                    <Select value={selectedSeverity} onValueChange={setSelectedSeverity}>
-                      <SelectTrigger id="library-severity">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SEVERITY_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="flex-1">
+                  <Label htmlFor="library-level">Level</Label>
+                  {levelSelect('library-level', selectedLevel, setSelectedLevel)}
                 </div>
               </div>
             )}
+
+            {appliesToSection}
           </TabsContent>
 
           <TabsContent value="custom" className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="custom-name">Threat Name *</Label>
+              <Label htmlFor="custom-name">Threat name *</Label>
               <Input
                 id="custom-name"
-                placeholder="Enter threat name..."
+                placeholder="Threat name"
                 value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
+                onChange={(event) => setCustomName(event.target.value)}
               />
             </div>
 
@@ -457,40 +457,28 @@ export function AddThreatDialog({
               <Label htmlFor="custom-description">Description</Label>
               <Textarea
                 id="custom-description"
-                placeholder="Describe the threat..."
+                placeholder="Describe the threat"
                 value={customDescription}
-                onChange={(e) => setCustomDescription(e.target.value)}
+                onChange={(event) => setCustomDescription(event.target.value)}
                 rows={3}
               />
             </div>
 
             <div className="flex gap-4">
               <div className="flex-1 space-y-2">
-                <Label htmlFor="custom-severity">Severity *</Label>
-                <Select value={customSeverity} onValueChange={setCustomSeverity}>
-                  <SelectTrigger id="custom-severity">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SEVERITY_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="custom-level">Level *</Label>
+                {levelSelect('custom-level', customLevel, setCustomLevel)}
               </div>
-
               <div className="flex-1 space-y-2">
                 <Label htmlFor="custom-triage-status">Status</Label>
-                <Select value={customTriageStatus} onValueChange={(v) => setCustomTriageStatus(v as TriageStatus)}>
+                <Select value={customTriageStatus} onValueChange={(value) => setCustomTriageStatus(value as TriageStatus)}>
                   <SelectTrigger id="custom-triage-status">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {TRIAGE_STATUSES.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
+                    {TRIAGE_STATUSES.map((entry) => (
+                      <SelectItem key={entry.value} value={entry.value}>
+                        {entry.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -500,14 +488,14 @@ export function AddThreatDialog({
 
             {taxonomyEntriesByTaxonomy.length > 0 && (
               <div className="space-y-2">
-                <Label htmlFor="custom-taxonomy">Taxonomy Category</Label>
+                <Label htmlFor="custom-taxonomy">Taxonomy category</Label>
                 <Select value={customTaxonomyEntryId} onValueChange={setCustomTaxonomyEntryId}>
                   <SelectTrigger id="custom-taxonomy">
                     <SelectValue placeholder="None" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">None</SelectItem>
-                    {taxonomyEntriesByTaxonomy.map(([taxonomyName, entries]) => (
+                    {taxonomyEntriesByTaxonomy.map(([taxonomyName, entries]) =>
                       entries.map((entry) => (
                         <SelectItem key={entry.id} value={String(entry.id)}>
                           {taxonomyEntriesByTaxonomy.length > 1
@@ -515,15 +503,17 @@ export function AddThreatDialog({
                             : formatTaxonomyEntryLabel(entry)}
                         </SelectItem>
                       ))
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
             )}
 
-            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-md text-sm text-muted-foreground">
+            {appliesToSection}
+
+            <div className="flex items-center gap-2 rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
               <FileText className="h-4 w-4 shrink-0" />
-              <p>Custom threats are not linked to the threat library and won't auto-generate countermeasures.</p>
+              <p>Custom threats are not linked to the threat library and get no generated countermeasures.</p>
             </div>
           </TabsContent>
         </Tabs>
@@ -533,20 +523,14 @@ export function AddThreatDialog({
             Cancel
           </Button>
           {activeTab === 'library' ? (
-            <Button
-              onClick={handleAddFromLibrary}
-              disabled={!selectedThreatId || isSubmitting}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Threat
+            <Button onClick={handleAddFromLibrary} disabled={!selectedThreatId || !targetsValid || isSubmitting}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add threat
             </Button>
           ) : (
-            <Button
-              onClick={handleAddCustom}
-              disabled={!customName.trim() || isSubmitting}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Custom Threat
+            <Button onClick={handleAddCustom} disabled={!customName.trim() || !targetsValid || isSubmitting}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add custom threat
             </Button>
           )}
         </DialogFooter>
@@ -556,13 +540,10 @@ export function AddThreatDialog({
 }
 
 /**
- * The ranked view of the same list: each row keeps the model's reasoning and
- * suggested severity next to the threat, so the user reviews a judgement rather
- * than an unexplained reordering.
- *
- * The pool here is narrower than the plain library list by design — the backend
- * excludes threats already on the component ("suggest gaps, not duplicates"), so
- * the counts legitimately differ between the two views.
+ * The ranked view of the same list: each row keeps the model's reasoning
+ * and suggested level next to the threat. The pool is narrower than the
+ * plain list by design: the backend excludes threats already on the
+ * component.
  */
 function RankedList({
   pending,
@@ -579,7 +560,6 @@ function RankedList({
   error: unknown
   suggestions: ThreatSuggestion[]
   hasResults: boolean
-  /** Whether the target already carries any threats — see the empty state below. */
   hasExistingThreats: boolean
   searchQuery: string
   selectedThreatId: number | null
@@ -590,68 +570,49 @@ function RankedList({
     return (
       <div className="flex items-center justify-center gap-2 p-4 py-12 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Ranking relevant threats…
+        Ranking relevant threats
       </div>
     )
   }
 
   if (error) {
-    return (
-      <AiErrorState
-        error={error}
-        fallbackMessage="Something went wrong ranking these threats."
-        onRetry={onRetry}
-      />
-    )
+    return <AiErrorState error={error} fallbackMessage="Something went wrong ranking these threats." onRetry={onRetry} />
   }
 
   if (!hasResults) return null
 
   if (suggestions.length === 0) {
-    // An empty ranking has two very different causes, and guessing wrong tells
-    // the user something untrue. If the component already carries threats, the
-    // pool really is exhausted. If it carries none, there was nothing to rank
-    // in the first place — a component with no library link grounds nothing,
-    // which is the usual reason — so say that instead of claiming the work is
-    // already done.
     return (
       <div className="p-4 py-10 text-center text-sm text-muted-foreground">
         {searchQuery
           ? 'No ranked threats match your search'
           : hasExistingThreats
-            ? 'Nothing left to suggest — every applicable threat is already on this component.'
-            : 'No suggestions for this component. It isn’t linked to a component library, so there’s nothing to ground suggestions in.'}
+            ? 'Nothing left to suggest: every applicable threat is already on this component.'
+            : 'No suggestions for this component. It is not linked to a component library, so there is nothing to ground suggestions in.'}
       </div>
     )
   }
 
   return (
-    <div className="p-2 space-y-1">
+    <div className="space-y-1 p-2">
       {suggestions.map((suggestion) => (
         <button
           key={suggestion.threatLibrary}
           onClick={() => onSelect(suggestion)}
           className={cn(
-            'w-full text-left p-3 rounded-md transition-colors',
-            selectedThreatId === suggestion.threatLibrary
-              ? 'bg-primary/10 border border-primary'
-              : 'hover:bg-muted'
+            'w-full rounded-md p-3 text-left transition-colors',
+            selectedThreatId === suggestion.threatLibrary ? 'border border-primary bg-primary/10' : 'hover:bg-muted'
           )}
         >
           <div className="flex items-center gap-1.5">
             <span className="font-medium">{suggestion.threatName}</span>
-            <Badge
-              variant="outline"
-              className={cn('shrink-0 text-[10px]', SEVERITY_COLORS[suggestion.suggestedSeverity])}
-            >
+            <Badge variant="outline" className={cn('shrink-0 text-[10px] capitalize', RATING_LEVEL_CLASSES[suggestion.suggestedSeverity])}>
               {suggestion.suggestedSeverity}
             </Badge>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">{suggestion.rationale}</p>
           {suggestion.source.packName && (
-            <p className="mt-1 text-[11px] text-muted-foreground/75">
-              from {suggestion.source.packName}
-            </p>
+            <p className="mt-1 text-[11px] text-muted-foreground/75">from {suggestion.source.packName}</p>
           )}
         </button>
       ))}

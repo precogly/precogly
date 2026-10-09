@@ -19,17 +19,15 @@ one through the normal create path.
 
 from __future__ import annotations
 
-import json
-
 from django.db.models import Q
 
 from apps.ai import resolve_provider_for_component
 from apps.ai.utils import extract_json_object
-from apps.threats.models import ComponentInstanceThreat, ComponentLibraryThreat
 from apps.threat_models.models import ThreatModelLibraryPack
+from apps.threats.models import ComponentLibraryThreat, InstanceThreat, Rating
 
 # Keep the prompt and the validation honest about which severities exist.
-VALID_SEVERITIES = {choice.value for choice in ComponentInstanceThreat.Severity}
+VALID_SEVERITIES = {choice.value for choice in Rating.Level}
 
 # A single model call is bounded by how many candidates we hand it. Real packs
 # rarely associate more than a few dozen threats with one component type, but we
@@ -43,7 +41,7 @@ def candidate_library_threats(component):
     """Library threats applicable to ``component`` that it doesn't already have.
 
     Mirrors the candidate selection in
-    ``apps.diagrams.services._generate_threats_for_component`` (component- or
+    ``apps.threats.services.generate_threats_for_component`` (component- or
     both-scoped threats, filtered to the threat model's connected packs) so the
     AI suggests from exactly the pool the deterministic generator would use.
     Threats already present on the component are excluded — we suggest gaps, not
@@ -62,20 +60,22 @@ def candidate_library_threats(component):
 
     # Restrict to packs connected to this threat model; always allow custom or
     # legacy threats (no source pack) through, matching the generator.
-    if component.threat_model_id:
+    if component.blueprint_id:
         connected_pack_ids = ThreatModelLibraryPack.objects.filter(
-            threat_model_id=component.threat_model_id
+            threat_model_id=component.blueprint.threat_model_id
         ).values_list("library_pack_id", flat=True)
         library_threats = library_threats.filter(
             Q(threat_library__source_pack_id__in=connected_pack_ids)
             | Q(threat_library__source_pack__isnull=True)
         )
 
-    already_present = ComponentInstanceThreat.objects.filter(
-        component=component
+    already_present = InstanceThreat.objects.filter(
+        targets__component=component
     ).values_list("threat_library_id", flat=True)
 
-    return library_threats.exclude(threat_library_id__in=already_present)[:MAX_CANDIDATES]
+    return library_threats.exclude(threat_library_id__in=already_present)[
+        :MAX_CANDIDATES
+    ]
 
 
 def suggest_component_threats(component, *, user=None) -> list[dict]:
@@ -124,11 +124,11 @@ def suggest_component_threats(component, *, user=None) -> list[dict]:
                 "threat_library": threat_library_id,
                 "threat_name": threat.name,
                 "threat_description": threat.description,
-                "default_severity": clt.default_severity,
+                "default_level": clt.default_level,
                 # Trust the model's severity only if it's a real choice;
                 # otherwise fall back to the pack's default.
                 "suggested_severity": _coerce_severity(
-                    selection.get("severity"), clt.default_severity
+                    selection.get("severity"), clt.default_level
                 ),
                 "rationale": _clean_rationale(selection.get("rationale")),
                 "taxonomy": _taxonomy_tags(threat),
@@ -199,7 +199,7 @@ def _describe_candidate(clt) -> str:
         description = description[:237] + "..."
     return (
         f"- id={clt.threat_library_id} | {threat.name} "
-        f"(default severity: {clt.default_severity}){tag_suffix}: {description}"
+        f"(default severity: {clt.default_level}){tag_suffix}: {description}"
     )
 
 

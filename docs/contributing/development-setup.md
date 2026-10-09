@@ -143,6 +143,18 @@ npm run build
 npm run lint
 ```
 
+Browser tests run with Playwright against the compose stack. The `chromium` project drives the guest editor and needs only the frontend; the `signed-in` project logs in with the seeded demo account (`frontend/e2e/global-setup.ts` fetches a token pair from the API and stores it as Playwright storage state), so the backend must be up and seeded. Specs live beside their feature under `__tests__/e2e/`; a signed-in spec is named `*.signed-in.spec.ts`.
+
+```bash
+docker compose up -d
+cd frontend
+npx playwright install chromium   # first run only
+npx playwright test               # both projects
+npx playwright test --project=signed-in
+```
+
+Set `E2E_API_URL`, `E2E_EMAIL` and `E2E_PASSWORD` to point the signed-in project at another backend or account. CI runs the same command in the `e2e` job.
+
 Frontend changes should include screenshots or a short screen recording in the pull request description.
 
 ## Backend Workflow

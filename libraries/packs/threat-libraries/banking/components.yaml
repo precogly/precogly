@@ -9,7 +9,7 @@ components:
 
   - slug: swift-gateway
     name: "SWIFT Gateway"
-    category: external
+    category: external_system_actor
     component_type: payment-network
     provider: generic
     description: "International payment messaging network"
@@ -44,7 +44,7 @@ components:
 
   - slug: mobile-app
     name: "Mobile Banking App"
-    category: external
+    category: process
     component_type: mobile-application
     provider: generic
     description: "Customer-facing mobile application"

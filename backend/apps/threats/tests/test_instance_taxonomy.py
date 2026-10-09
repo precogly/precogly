@@ -1,4 +1,4 @@
-"""Tests for InstanceThreatTaxonomyEntry model and viewset."""
+"""Tests for InstanceThreatTaxonomyEntry model and viewset, on the merged threat table."""
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
@@ -11,13 +11,13 @@ from apps.organizations.models import Organization, OrganizationMember
 from apps.systems.models import OrgsystemComponent
 from apps.threat_models.models import ThreatModel
 from apps.threats.models import (
-    ComponentInstanceThreat,
     ExternalTaxonomy,
     InstanceThreatTaxonomyEntry,
     TaxonomyEntry,
     ThreatLibrary,
     ThreatLibraryTaxonomyEntry,
 )
+from apps.threats.services import create_instance_threat
 
 User = get_user_model()
 
@@ -37,10 +37,10 @@ class InstanceTaxonomyTestCase(TestCase):
 
         cls.tm = ThreatModel.objects.create(name="Test TM", organization=cls.org)
         cls.component = OrgsystemComponent.objects.create(
-            threat_model=cls.tm, name="Test Component"
+            blueprint=cls.tm.default_blueprint, name="Test Component"
         )
-        cls.threat = ComponentInstanceThreat.objects.create(
-            component=cls.component, inherent_severity="high"
+        cls.threat = create_instance_threat(
+            cls.tm, targets=[cls.component], level="high"
         )
 
         cls.taxonomy = ExternalTaxonomy.objects.create(slug="stride", name="STRIDE")
@@ -58,41 +58,29 @@ class InstanceTaxonomyTestCase(TestCase):
 
 
 class ModelConstraintTests(InstanceTaxonomyTestCase):
-    """Test CheckConstraint and UniqueConstraint on InstanceThreatTaxonomyEntry."""
+    """UniqueConstraint on (taxonomy_entry, threat)."""
 
-    def test_create_with_component_threat_succeeds(self):
+    def test_create_with_threat_succeeds(self):
         entry = InstanceThreatTaxonomyEntry.objects.create(
-            taxonomy_entry=self.entry_tampering,
-            component_threat=self.threat,
+            taxonomy_entry=self.entry_tampering, threat=self.threat
         )
-        self.assertEqual(entry.component_threat, self.threat)
-        self.assertIsNone(entry.flow_threat)
+        self.assertEqual(entry.threat, self.threat)
 
-    def test_create_with_neither_fk_fails(self):
-        with self.assertRaises(IntegrityError):
-            InstanceThreatTaxonomyEntry.objects.create(
-                taxonomy_entry=self.entry_tampering,
-            )
-
-    def test_duplicate_taxonomy_entry_component_threat_fails(self):
+    def test_duplicate_taxonomy_entry_on_a_threat_fails(self):
         InstanceThreatTaxonomyEntry.objects.create(
-            taxonomy_entry=self.entry_tampering,
-            component_threat=self.threat,
+            taxonomy_entry=self.entry_tampering, threat=self.threat
         )
         with self.assertRaises(IntegrityError):
             InstanceThreatTaxonomyEntry.objects.create(
-                taxonomy_entry=self.entry_tampering,
-                component_threat=self.threat,
+                taxonomy_entry=self.entry_tampering, threat=self.threat
             )
 
     def test_different_entries_same_threat_succeeds(self):
         InstanceThreatTaxonomyEntry.objects.create(
-            taxonomy_entry=self.entry_tampering,
-            component_threat=self.threat,
+            taxonomy_entry=self.entry_tampering, threat=self.threat
         )
         entry2 = InstanceThreatTaxonomyEntry.objects.create(
-            taxonomy_entry=self.entry_spoofing,
-            component_threat=self.threat,
+            taxonomy_entry=self.entry_spoofing, threat=self.threat
         )
         self.assertIsNotNone(entry2.pk)
 
@@ -108,10 +96,7 @@ class APITests(InstanceTaxonomyTestCase):
     def test_create_entry(self):
         response = self.client.post(
             "/api/threat-taxonomy-entries/",
-            {
-                "taxonomyEntry": self.entry_tampering.pk,
-                "componentThreat": self.threat.pk,
-            },
+            {"taxonomyEntry": self.entry_tampering.pk, "threat": self.threat.pk},
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -120,15 +105,31 @@ class APITests(InstanceTaxonomyTestCase):
         self.assertEqual(data["externalId"], "tampering")
         self.assertEqual(data["title"], "Tampering")
 
-    def test_list_filtered_by_component_threat(self):
+    def test_create_entry_marks_a_generated_threat_as_edited(self):
+        generated = create_instance_threat(
+            self.tm,
+            targets=[self.component],
+            level="low",
+            auto_generated=True,
+        )
+        response = self.client.post(
+            "/api/threat-taxonomy-entries/",
+            {"taxonomyEntry": self.entry_tampering.pk, "threat": generated.pk},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        generated.refresh_from_db()
+        self.assertFalse(generated.auto_generated)
+
+    def test_list_filtered_by_threat(self):
         InstanceThreatTaxonomyEntry.objects.create(
-            taxonomy_entry=self.entry_tampering, component_threat=self.threat
+            taxonomy_entry=self.entry_tampering, threat=self.threat
         )
         InstanceThreatTaxonomyEntry.objects.create(
-            taxonomy_entry=self.entry_spoofing, component_threat=self.threat
+            taxonomy_entry=self.entry_spoofing, threat=self.threat
         )
         response = self.client.get(
-            f"/api/threat-taxonomy-entries/?component_threat={self.threat.pk}"
+            f"/api/threat-taxonomy-entries/?threat={self.threat.pk}"
         )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
@@ -137,7 +138,7 @@ class APITests(InstanceTaxonomyTestCase):
 
     def test_delete_entry(self):
         entry = InstanceThreatTaxonomyEntry.objects.create(
-            taxonomy_entry=self.entry_tampering, component_threat=self.threat
+            taxonomy_entry=self.entry_tampering, threat=self.threat
         )
         response = self.client.delete(f"/api/threat-taxonomy-entries/{entry.pk}/")
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -147,19 +148,16 @@ class APITests(InstanceTaxonomyTestCase):
 
     def test_duplicate_returns_400(self):
         InstanceThreatTaxonomyEntry.objects.create(
-            taxonomy_entry=self.entry_tampering, component_threat=self.threat
+            taxonomy_entry=self.entry_tampering, threat=self.threat
         )
         response = self.client.post(
             "/api/threat-taxonomy-entries/",
-            {
-                "taxonomyEntry": self.entry_tampering.pk,
-                "componentThreat": self.threat.pk,
-            },
+            {"taxonomyEntry": self.entry_tampering.pk, "threat": self.threat.pk},
             format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_validation_requires_exactly_one_fk(self):
+    def test_validation_requires_a_threat(self):
         response = self.client.post(
             "/api/threat-taxonomy-entries/",
             {"taxonomyEntry": self.entry_tampering.pk},
@@ -177,7 +175,7 @@ class APITests(InstanceTaxonomyTestCase):
         )
 
         entry = InstanceThreatTaxonomyEntry.objects.create(
-            taxonomy_entry=self.entry_tampering, component_threat=self.threat
+            taxonomy_entry=self.entry_tampering, threat=self.threat
         )
 
         other_client = APIClient()
@@ -189,7 +187,7 @@ class APITests(InstanceTaxonomyTestCase):
 
 
 class MergeLogicTests(InstanceTaxonomyTestCase):
-    """Test that library + instance taxonomy entries merge correctly in views."""
+    """Library and instance taxonomy entries merge in the threat payload."""
 
     @classmethod
     def setUpTestData(cls):
@@ -197,14 +195,14 @@ class MergeLogicTests(InstanceTaxonomyTestCase):
         cls.library = ThreatLibrary.objects.create(
             name="SQL Injection", description="SQL injection threat"
         )
-        cls.threat_with_library = ComponentInstanceThreat.objects.create(
-            component=cls.component,
+        cls.threat_with_library = create_instance_threat(
+            cls.tm,
+            targets=[cls.component],
             threat_library=cls.library,
-            inherent_severity="high",
+            level="high",
         )
         ThreatLibraryTaxonomyEntry.objects.create(
-            threat_library=cls.library,
-            taxonomy_entry=cls.entry_tampering,
+            threat_library=cls.library, taxonomy_entry=cls.entry_tampering
         )
 
     def setUp(self):
@@ -212,44 +210,40 @@ class MergeLogicTests(InstanceTaxonomyTestCase):
         token = str(RefreshToken.for_user(self.user).access_token)
         self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {token}")
 
+    def _entries(self, threat):
+        response = self.client.get(f"/api/threats/{threat.pk}/")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        return {
+            (e["taxonomySlug"], e["externalId"]): e["source"]
+            for e in response.json()["taxonomyEntries"]
+        }
+
     def test_instance_entry_adds_to_library_entries(self):
         InstanceThreatTaxonomyEntry.objects.create(
-            taxonomy_entry=self.entry_capec_66,
-            component_threat=self.threat_with_library,
+            taxonomy_entry=self.entry_capec_66, threat=self.threat_with_library
         )
-        entries = InstanceThreatTaxonomyEntry.objects.filter(
-            component_threat=self.threat_with_library
+        self.assertEqual(
+            self._entries(self.threat_with_library),
+            {("stride", "tampering"): "library", ("capec", "66"): "instance"},
         )
-        self.assertEqual(entries.count(), 1)
-        library_entries = ThreatLibraryTaxonomyEntry.objects.filter(
-            threat_library=self.library
-        )
-        self.assertEqual(library_entries.count(), 1)
 
     def test_instance_override_deduplicates_by_taxonomy_and_external_id(self):
         InstanceThreatTaxonomyEntry.objects.create(
-            taxonomy_entry=self.entry_tampering,
-            component_threat=self.threat_with_library,
+            taxonomy_entry=self.entry_tampering, threat=self.threat_with_library
         )
-        instance_count = InstanceThreatTaxonomyEntry.objects.filter(
-            component_threat=self.threat_with_library
-        ).count()
-        library_count = ThreatLibraryTaxonomyEntry.objects.filter(
-            threat_library=self.library
-        ).count()
-        self.assertEqual(instance_count, 1)
-        self.assertEqual(library_count, 1)
+        self.assertEqual(
+            self._entries(self.threat_with_library),
+            {("stride", "tampering"): "library"},
+        )
 
     def test_custom_threat_only_has_instance_entries(self):
-        custom_threat = ComponentInstanceThreat.objects.create(
-            component=self.component, inherent_severity="medium"
+        custom_threat = create_instance_threat(
+            self.tm, targets=[self.component], level="medium"
         )
         InstanceThreatTaxonomyEntry.objects.create(
-            taxonomy_entry=self.entry_spoofing,
-            component_threat=custom_threat,
+            taxonomy_entry=self.entry_spoofing, threat=custom_threat
         )
-        entries = InstanceThreatTaxonomyEntry.objects.filter(
-            component_threat=custom_threat
-        )
-        self.assertEqual(entries.count(), 1)
         self.assertIsNone(custom_threat.threat_library)
+        self.assertEqual(
+            self._entries(custom_threat), {("stride", "spoofing"): "instance"}
+        )

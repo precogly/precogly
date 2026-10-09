@@ -1,39 +1,34 @@
-import { useState } from 'react'
+/**
+ * The Risk Register tab (plan 11.4): a paginated table or a board grouped by
+ * the six lifecycle statuses, a detail panel for the selected risk, bulk
+ * status and owner updates, and the model's scoring method.
+ *
+ * The pieces live under `./risk/`: the detail panel (statement, exposure,
+ * domains, objectives, threats, ratings, responses), the add dialog, the
+ * threat picker and the pure helpers.
+ */
+
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import {
+  CheckSquare,
+  ChevronRight,
+  LayoutGrid,
+  Loader2,
   Plus,
   RefreshCw,
-  Trash2,
-  ChevronRight,
   Search,
-  Loader2,
-  LayoutGrid,
-  Table2,
-  CheckSquare,
   Square,
+  Table2,
+  Trash2,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Checkbox } from '@/components/ui/checkbox'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,14 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import {
   Pagination,
   PaginationContent,
@@ -60,32 +48,41 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination'
 import {
-  useRisks,
-  useRisk,
-  useCreateRisk,
-  useUpdateRisk,
+  DEFAULT_RISK_PAGE_SIZE,
+  RISK_PAGE_SIZES,
+  useBulkUpdateRisks,
   useDeleteRisk,
   useRecalculateRisk,
+  useRisks,
   useScoringMethods,
-  useBulkUpdateRisks,
-  RISK_PAGE_SIZES,
-  DEFAULT_RISK_PAGE_SIZE,
+  useUpdateRisk,
+  type RiskListFilters,
 } from '@/features/threat-models/api/risks'
-import type {
-  Risk,
-  RiskLevel,
-  RiskResponse,
-  ScoringMethodKey,
-  CreateRiskInput,
-  ScoringMethod,
-} from '@/types/risk'
+import { RatingBadge } from '@/features/threat-models/components/rating'
 import type { ComponentThreat } from '@/features/dfd-editor/types/threat-analysis'
-import { isActiveThreat } from '@/types/triage'
+import {
+  RATING_LEVELS,
+  RISK_STATUSES,
+  type Risk,
+  type RiskStatus,
+  type ScoringMethod,
+  type ScoringMethodKey,
+} from '@/types/risk'
 import { useWorkspace } from '@/contexts/WorkspaceContext'
 import { useOrganizationMembers } from '@/features/organization/api/organizations'
+import { AddRiskDialog } from './risk/AddRiskDialog'
+import { RiskDetailPanel, RiskExposureBadge, RiskStatusBadge } from './risk/RiskDetailPanel'
+import type { OwnerOption } from './risk/RiskResponsesTable'
+import {
+  METHODOLOGY_GUARD_MESSAGE,
+  RISK_BOARD_COLUMNS,
+  apiErrorMessage,
+  groupRisksByStatus,
+} from './risk/risk-utils'
 
 interface RiskAnalysisTabProps {
   threatModelId: string
+  /** The model's threats from the analysis payload; the threat picker and the countermeasure labels read them. */
   componentThreats: ComponentThreat[]
   riskScoringMethod: ScoringMethodKey
   onScoringMethodChange: (method: ScoringMethodKey) => void
@@ -93,510 +90,12 @@ interface RiskAnalysisTabProps {
 
 type ViewMode = 'table' | 'kanban'
 
-const KANBAN_COLUMNS: { response: RiskResponse | null; label: string; color: string }[] = [
-  { response: null, label: 'Unresponded', color: 'border-gray-300 bg-gray-50' },
-  { response: 'mitigate', label: 'Mitigate', color: 'border-blue-300 bg-blue-50' },
-  { response: 'transfer', label: 'Transfer', color: 'border-yellow-300 bg-yellow-50' },
-  { response: 'accept', label: 'Accept', color: 'border-purple-300 bg-purple-50' },
-  { response: 'avoid', label: 'Avoid', color: 'border-green-300 bg-green-50' },
-]
+const ANY_VALUE = '_any'
 
-const LEVEL_COLORS: Record<RiskLevel, string> = {
-  critical: 'bg-red-100 text-red-800 border-red-200',
-  high: 'bg-orange-100 text-orange-800 border-orange-200',
-  medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  low: 'bg-green-100 text-green-800 border-green-200',
-}
-
-const RESPONSE_COLORS: Record<string, string> = {
-  accept: 'bg-purple-100 text-purple-800 border-purple-200',
-  mitigate: 'bg-blue-100 text-blue-800 border-blue-200',
-  transfer: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  avoid: 'bg-green-100 text-green-800 border-green-200',
-}
-
-const RESPONSE_LABELS: Record<string, string> = {
-  accept: 'Accept',
-  mitigate: 'Mitigate',
-  transfer: 'Transfer',
-  avoid: 'Avoid',
-}
-
-function LevelBadge({ level }: { level: RiskLevel | null }) {
-  if (!level) return <span className="text-muted-foreground text-sm">--</span>
-  return (
-    <Badge variant="outline" className={LEVEL_COLORS[level]}>
-      {level}
-    </Badge>
-  )
-}
-
-function ResponseBadge({ response }: { response: RiskResponse | null }) {
-  if (!response) {
-    return <span className="text-muted-foreground text-sm">—</span>
-  }
-  return (
-    <Badge variant="outline" className={RESPONSE_COLORS[response]}>
-      {RESPONSE_LABELS[response]}
-    </Badge>
-  )
-}
-
-function ScoreDisplay({ score, level }: { score: number | null; level: RiskLevel | null }) {
-  if (score === null) return <span className="text-muted-foreground">--</span>
-  return (
-    <div className="flex items-center gap-2">
-      <span className="font-mono text-sm font-medium">{score}</span>
-      <LevelBadge level={level} />
-    </div>
-  )
-}
-
-// ─── Scoring metadata form ────────────────────────────────────────────────────
-
-function ScoringMetadataForm({
-  method,
-  metadata,
-  onChange,
-}: {
-  method: ScoringMethod | undefined
-  metadata: Record<string, unknown>
-  onChange: (metadata: Record<string, unknown>) => void
-}) {
-  if (!method) return null
-  return (
-    <div className="space-y-3">
-      {Object.entries(method.metadataSchema).map(([fieldKey, fieldSchema]) => {
-        const requiredIndicator = fieldSchema.required ? <span className="text-destructive ml-0.5">*</span> : null
-        if (fieldSchema.type === 'enum' && fieldSchema.values) {
-          return (
-            <div key={fieldKey} className="space-y-1">
-              <Label className="capitalize">{fieldKey.replace(/_/g, ' ')}{requiredIndicator}</Label>
-              <Select
-                value={(metadata[fieldKey] as string) || ''}
-                onValueChange={(value) => onChange({ ...metadata, [fieldKey]: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder={`Select ${fieldKey.replace(/_/g, ' ')}`} />
-                </SelectTrigger>
-                <SelectContent>
-                  {fieldSchema.values.map((value) => (
-                    <SelectItem key={value} value={value}>
-                      <span className="capitalize">{value.replace(/_/g, ' ')}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )
-        }
-        if (fieldSchema.type === 'text') {
-          return (
-            <div key={fieldKey} className="space-y-1">
-              <Label className="capitalize">{fieldKey.replace(/_/g, ' ')}{requiredIndicator}</Label>
-              <Textarea
-                value={(metadata[fieldKey] as string) || ''}
-                onChange={(e) => onChange({ ...metadata, [fieldKey]: e.target.value })}
-                rows={2}
-              />
-            </div>
-          )
-        }
-        if (fieldSchema.type === 'number') {
-          return (
-            <div key={fieldKey} className="space-y-1">
-              <Label className="capitalize">{fieldKey.replace(/_/g, ' ')}{requiredIndicator}</Label>
-              <Input
-                type="number"
-                value={(metadata[fieldKey] as number) ?? ''}
-                onChange={(e) =>
-                  onChange({ ...metadata, [fieldKey]: e.target.value ? Number(e.target.value) : undefined })
-                }
-                min={fieldSchema.min}
-                max={fieldSchema.max}
-              />
-            </div>
-          )
-        }
-        return null
-      })}
-    </div>
-  )
-}
-
-// ─── Threat picker ────────────────────────────────────────────────────────────
-
-function ThreatPicker({
-  componentThreats,
-  selectedComponentThreatIds,
-  selectedFlowThreatIds,
-  onToggle,
-}: {
-  componentThreats: ComponentThreat[]
-  selectedComponentThreatIds: number[]
-  selectedFlowThreatIds: number[]
-  onToggle: (backendId: number, threatType: 'component' | 'dataflow') => void
-}) {
-  const [pickerOpen, setPickerOpen] = useState(false)
-  const [filter, setFilter] = useState('')
-
-  const activeThreats = componentThreats.filter((t) => isActiveThreat(t.triageStatus) && t.backendThreatId)
-  const selectedCount = selectedComponentThreatIds.length + selectedFlowThreatIds.length
-
-  if (activeThreats.length === 0) {
-    return <p className="text-sm text-muted-foreground py-2">No threats available to link.</p>
-  }
-
-  const filteredThreats = filter
-    ? activeThreats.filter((t) =>
-        (t.threatName || '').toLowerCase().includes(filter.toLowerCase())
-      )
-    : activeThreats
-
-  return (
-    <>
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full justify-between"
-        onClick={() => setPickerOpen(true)}
-      >
-        <span>
-          {selectedCount > 0
-            ? `${selectedCount} threat${selectedCount === 1 ? '' : 's'} selected`
-            : 'Select threats...'}
-        </span>
-        <ChevronRight className="h-4 w-4" />
-      </Button>
-      <Dialog open={pickerOpen} onOpenChange={(open) => { setPickerOpen(open); if (!open) setFilter('') }}>
-        <DialogContent className="max-w-lg max-h-[80vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Link Threats</DialogTitle>
-            <DialogDescription>
-              Select threats to associate with this risk. {selectedCount > 0 && `${selectedCount} selected.`}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="relative">
-            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              placeholder="Filter threats..."
-              className="h-8 pl-7 text-sm"
-            />
-          </div>
-          <div className="flex-1 overflow-y-auto border rounded-md min-h-0">
-            {filteredThreats.length === 0 ? (
-              <p className="text-sm text-muted-foreground px-3 py-2">No matching threats.</p>
-            ) : (
-              filteredThreats.map((threat) => {
-                const isComponent = threat.threatType !== 'dataflow'
-                const selectedIds = isComponent ? selectedComponentThreatIds : selectedFlowThreatIds
-                const isSelected = selectedIds.includes(threat.backendThreatId!)
-                return (
-                  <label
-                    key={threat.id}
-                    className="flex items-center gap-2 px-3 py-2 hover:bg-muted/50 cursor-pointer border-b last:border-b-0"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => onToggle(threat.backendThreatId!, threat.threatType as 'component' | 'dataflow')}
-                      className="rounded"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <span className="text-sm truncate block">
-                        {threat.threatName || `Threat #${threat.backendThreatId}`}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {isComponent
-                          ? `Component${threat.componentName ? `: ${threat.componentName}` : ''}`
-                          : `Flow${threat.dataflowLabel ? `: ${threat.dataflowLabel}` : ''}`}
-                      </span>
-                    </div>
-                  </label>
-                )
-              })
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPickerOpen(false)}>Done</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  )
-}
-
-// ─── Add Risk dialog ──────────────────────────────────────────────────────────
-
-function AddRiskDialog({
-  open,
-  onOpenChange,
-  threatModelId,
-  componentThreats,
-  scoringMethod,
-  activeScoringMethod,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  threatModelId: string
-  componentThreats: ComponentThreat[]
-  scoringMethod: ScoringMethodKey
-  activeScoringMethod: ScoringMethod | undefined
-}) {
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [riskResponse, setRiskResponse] = useState<RiskResponse | null>(null)
-  const [owner, setOwner] = useState<number | null>(null)
-  const [scoringMetadata, setScoringMetadata] = useState<Record<string, unknown>>({})
-  const [inherentScore, setInherentScore] = useState<number | ''>('')
-  const [selectedComponentThreatIds, setSelectedComponentThreatIds] = useState<number[]>([])
-  const [selectedFlowThreatIds, setSelectedFlowThreatIds] = useState<number[]>([])
-
-  const createRisk = useCreateRisk(threatModelId)
-  const { currentOrganization } = useWorkspace()
-  const { data: orgMembers = [] } = useOrganizationMembers(currentOrganization?.id ?? 0)
-  const isCustom = scoringMethod === 'custom' || !activeScoringMethod?.available
-
-  const handleToggleThreat = (backendId: number, threatType: 'component' | 'dataflow') => {
-    if (threatType === 'component') {
-      setSelectedComponentThreatIds((prev) =>
-        prev.includes(backendId) ? prev.filter((id) => id !== backendId) : [...prev, backendId]
-      )
-    } else {
-      setSelectedFlowThreatIds((prev) =>
-        prev.includes(backendId) ? prev.filter((id) => id !== backendId) : [...prev, backendId]
-      )
-    }
-  }
-
-  const resetForm = () => {
-    setName('')
-    setDescription('')
-    setRiskResponse(null)
-    setOwner(null)
-    setScoringMetadata({})
-    setInherentScore('')
-    setSelectedComponentThreatIds([])
-    setSelectedFlowThreatIds([])
-  }
-
-  const handleSubmit = () => {
-    const input: CreateRiskInput = {
-      name,
-      description,
-      scoringMetadata,
-      response: riskResponse,
-      owner,
-      componentThreatIds: selectedComponentThreatIds,
-      flowThreatIds: selectedFlowThreatIds,
-    }
-    if (isCustom && inherentScore !== '') input.inherentScore = Number(inherentScore)
-    createRisk.mutate(input, {
-      onSuccess: () => { onOpenChange(false); resetForm() },
-      onError: (error) => {
-        let message = 'Failed to create risk.'
-        if (error instanceof Error && 'data' in error && error.data && typeof error.data === 'object') {
-          const data = error.data as Record<string, unknown>
-          const fieldMessages = Object.values(data)
-            .map((v) => (Array.isArray(v) ? v.join(', ') : String(v)))
-          if (fieldMessages.length) message = fieldMessages.join(' ')
-        }
-        toast.error(message)
-      },
-    })
-  }
-
-  const hasRequiredMetadata = isCustom
-    ? inherentScore !== ''
-    : !activeScoringMethod || Object.entries(activeScoringMethod.metadataSchema)
-        .filter(([, field]) => field.required)
-        .every(([key]) => {
-          const value = scoringMetadata[key]
-          return value !== undefined && value !== null && value !== ''
-        })
-
-  const canSubmit = !!name.trim() && hasRequiredMetadata
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Add Risk</DialogTitle>
-          <DialogDescription>
-            Define a new risk and optionally link it to existing threats.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="space-y-1">
-            <Label>Name<span className="text-destructive ml-0.5">*</span></Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g., Data Breach via API Exploitation" />
-          </div>
-          <div className="space-y-1">
-            <Label>Description</Label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label>Response</Label>
-              <Select value={riskResponse ?? '_none'} onValueChange={(v) => setRiskResponse(v === '_none' ? null : v as RiskResponse)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select response…" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">None</SelectItem>
-                  {Object.entries(RESPONSE_LABELS).map(([val, label]) => (
-                    <SelectItem key={val} value={val}>{label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>Owner</Label>
-              <Select value={owner?.toString() ?? '_none'} onValueChange={(v) => setOwner(v === '_none' ? null : Number(v))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select owner…" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">No owner</SelectItem>
-                  {orgMembers.map((member) => (
-                    <SelectItem key={member.user} value={member.user.toString()}>
-                      {member.userEmail}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          {isCustom ? (
-            <div className="space-y-1">
-              <Label>Inherent Score (0–100)<span className="text-destructive ml-0.5">*</span></Label>
-              <Input type="number" min={0} max={100} value={inherentScore} onChange={(e) => setInherentScore(e.target.value ? Number(e.target.value) : '')} />
-            </div>
-          ) : (
-            <ScoringMetadataForm method={activeScoringMethod} metadata={scoringMetadata} onChange={setScoringMetadata} />
-          )}
-          <div className="space-y-1">
-            <Label>Link Threats (optional)</Label>
-            <ThreatPicker
-              componentThreats={componentThreats}
-              selectedComponentThreatIds={selectedComponentThreatIds}
-              selectedFlowThreatIds={selectedFlowThreatIds}
-              onToggle={handleToggleThreat}
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={!canSubmit || createRisk.isPending}>
-            {createRisk.isPending && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-            Create Risk
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-// ─── Risk detail panel ────────────────────────────────────────────────────────
-
-function RiskDetailPanel({
-  risk,
-  threatModelId,
-  onClose,
-}: {
-  risk: Risk
-  threatModelId: string
-  onClose: () => void
-}) {
-  const { data: riskDetail } = useRisk(threatModelId, risk.id)
-  const displayRisk = riskDetail ?? risk
-  const updateRisk = useUpdateRisk(threatModelId)
-  const { data: scoringMethods } = useScoringMethods()
-  const scoringMethodLabel =
-    scoringMethods?.find((m) => m.key === displayRisk.scoringMethod)?.label ??
-    displayRisk.scoringMethod.replace(/_/g, ' ')
-
-  const handleResponseChange = (newResponse: string) => {
-    updateRisk.mutate({ riskId: risk.id, data: { response: newResponse as RiskResponse } })
-  }
-
-  return (
-    <Card className="border-l-2 border-l-primary">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{displayRisk.name}</CardTitle>
-          <Button variant="ghost" size="sm" onClick={onClose}>&times;</Button>
-        </div>
-        {displayRisk.description && (
-          <p className="text-sm text-muted-foreground">{displayRisk.description}</p>
-        )}
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Inherent Risk</p>
-            <ScoreDisplay score={displayRisk.inherentScore} level={displayRisk.inherentLevel} />
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-1">Residual Risk</p>
-            <ScoreDisplay score={displayRisk.residualScore} level={displayRisk.residualLevel} />
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">Response</p>
-          <div className="flex items-center gap-2">
-            <Select value={displayRisk.response ?? '_none'} onValueChange={(v) => handleResponseChange(v === '_none' ? '' : v)}>
-              <SelectTrigger className="h-8 w-[160px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_none">Unresponded</SelectItem>
-                {Object.entries(RESPONSE_LABELS).map(([val, label]) => (
-                  <SelectItem key={val} value={val}>{label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {displayRisk.ownerEmail && (
-          <div>
-            <p className="text-xs text-muted-foreground">Owner</p>
-            <p className="text-sm">{displayRisk.ownerEmail}</p>
-          </div>
-        )}
-
-        {displayRisk.threats && displayRisk.threats.length > 0 && (
-          <div>
-            <p className="text-xs text-muted-foreground mb-2">Linked Threats ({displayRisk.threats.length})</p>
-            <div className="space-y-1">
-              {displayRisk.threats.map((threat) => (
-                <div key={threat.riskThreatId} className="flex items-center justify-between text-sm border rounded px-2 py-1">
-                  <span className="truncate flex-1">{threat.threatName || `Threat #${threat.threatId}`}</span>
-                  <div className="flex items-center gap-1.5 ml-2">
-                    <Badge variant="outline" className="text-xs">{threat.threatType}</Badge>
-                    <Badge variant="outline" className={
-                      threat.status === 'mitigated' ? 'bg-green-50 text-green-700' :
-                      threat.status === 'accepted' ? 'bg-blue-50 text-blue-700' :
-                      'bg-red-50 text-red-700'
-                    }>{threat.status}</Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div className="text-xs text-muted-foreground pt-2 border-t">
-          <p>Method: {scoringMethodLabel}</p>
-          <p>Created: {new Date(displayRisk.createdAt).toLocaleDateString()}</p>
-        </div>
-      </CardContent>
-    </Card>
-  )
+function scaleFor(risk: Risk, field: 'inherent' | 'residual', scoringMethods: ScoringMethod[] | undefined) {
+  const rating = risk[field]
+  if (!rating) return null
+  return scoringMethods?.find((method) => method.key === rating.methodology)?.scoreScale ?? null
 }
 
 // ─── Kanban board ─────────────────────────────────────────────────────────────
@@ -616,6 +115,7 @@ function KanbanCard({
     <div
       className={`bg-white border rounded-lg p-3 shadow-sm cursor-pointer hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-primary' : ''}`}
       onClick={onSelect}
+      data-testid="risk-card"
     >
       <div className="flex items-start justify-between gap-2 mb-2">
         <span className="text-sm font-medium leading-tight">{risk.name}</span>
@@ -623,17 +123,20 @@ function KanbanCard({
           variant="ghost"
           size="sm"
           className="h-5 w-5 p-0 shrink-0"
-          onClick={(e) => { e.stopPropagation(); onDelete() }}
+          aria-label={`Delete ${risk.name}`}
+          onClick={(event) => {
+            event.stopPropagation()
+            onDelete()
+          }}
         >
           <Trash2 className="h-3 w-3 text-muted-foreground" />
         </Button>
       </div>
       <div className="flex items-center gap-1.5 flex-wrap">
-        <LevelBadge level={risk.inherentLevel} />
+        <RatingBadge rating={risk.inherent} size="sm" />
+        <RiskExposureBadge exposure={risk.exposure} />
       </div>
-      {risk.ownerEmail && (
-        <p className="text-xs text-muted-foreground mt-1 truncate">{risk.ownerEmail}</p>
-      )}
+      {risk.ownerEmail && <p className="text-xs text-muted-foreground mt-1 truncate">{risk.ownerEmail}</p>}
     </div>
   )
 }
@@ -652,34 +155,43 @@ function KanbanBoard({
   threatModelId: string
 }) {
   const updateRisk = useUpdateRisk(threatModelId)
+  const grouped = useMemo(() => groupRisksByStatus(risks), [risks])
 
-  const handleDrop = (e: React.DragEvent, targetResponse: RiskResponse | null) => {
-    e.preventDefault()
-    const riskId = Number(e.dataTransfer.getData('riskId'))
-    if (riskId) updateRisk.mutate({ riskId, data: { response: targetResponse } })
+  const handleDrop = (event: React.DragEvent, targetStatus: RiskStatus) => {
+    event.preventDefault()
+    const riskId = Number(event.dataTransfer.getData('riskId'))
+    const risk = risks.find((entry) => entry.id === riskId)
+    if (!risk || risk.status === targetStatus) return
+    updateRisk.mutate(
+      { riskId, data: { status: targetStatus } },
+      { onError: (error) => toast.error(apiErrorMessage(error, 'Failed to move the risk.')) }
+    )
   }
 
   return (
-    <div className="grid grid-cols-5 items-start gap-4">
-      {KANBAN_COLUMNS.map((col) => {
-        const colRisks = risks.filter((r) => r.response === col.response)
+    <div className="grid grid-cols-6 items-start gap-4" data-testid="risk-board">
+      {RISK_BOARD_COLUMNS.map((column) => {
+        const columnRisks = grouped[column.status]
         return (
           <div
-            key={col.response ?? '_none'}
-            className={`rounded-lg border-2 ${col.color} p-3`}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => handleDrop(e, col.response)}
+            key={column.status}
+            className={`rounded-lg border-2 ${column.className} p-3`}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => handleDrop(event, column.status)}
+            data-testid={`risk-column-${column.status}`}
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold">{col.label}</span>
-              <Badge variant="secondary" className="text-xs">{colRisks.length}</Badge>
+              <span className="text-sm font-semibold">{column.label}</span>
+              <Badge variant="secondary" className="text-xs">
+                {columnRisks.length}
+              </Badge>
             </div>
             <div className="space-y-2">
-              {colRisks.map((risk) => (
+              {columnRisks.map((risk) => (
                 <div
                   key={risk.id}
                   draggable
-                  onDragStart={(e) => e.dataTransfer.setData('riskId', String(risk.id))}
+                  onDragStart={(event) => event.dataTransfer.setData('riskId', String(risk.id))}
                 >
                   <KanbanCard
                     risk={risk}
@@ -689,7 +201,7 @@ function KanbanBoard({
                   />
                 </div>
               ))}
-              {colRisks.length === 0 && (
+              {columnRisks.length === 0 && (
                 <div className="border border-dashed rounded-md py-4 text-xs text-muted-foreground text-center">
                   Drop here
                 </div>
@@ -704,53 +216,91 @@ function KanbanBoard({
 
 // ─── Bulk action bar ──────────────────────────────────────────────────────────
 
+type BulkField = 'status' | 'owner'
+
 function BulkActionBar({
   selectedIds,
   threatModelId,
+  owners,
   onClear,
   isPaginated,
 }: {
   selectedIds: number[]
   threatModelId: string
+  owners: OwnerOption[]
   onClear: () => void
   /** Select-all ticks the loaded rows, which is every row only when the register
       fits on one page. Past that the label has to say so. */
   isPaginated: boolean
 }) {
   const bulkUpdate = useBulkUpdateRisks(threatModelId)
-  const [bulkResponse, setBulkResponse] = useState<RiskResponse | ''>('')
+  const [field, setField] = useState<BulkField>('status')
+  const [bulkStatus, setBulkStatus] = useState<RiskStatus | ''>('')
+  const [bulkOwner, setBulkOwner] = useState<string>('')
+
+  const canApply = field === 'status' ? Boolean(bulkStatus) : Boolean(bulkOwner)
 
   const handleApply = () => {
-    if (!bulkResponse) return
-    bulkUpdate.mutate(
-      {
-        riskIds: selectedIds,
-        response: bulkResponse,
-      },
-      { onSuccess: onClear }
-    )
+    if (!canApply) return
+    const data =
+      field === 'status'
+        ? { riskIds: selectedIds, status: bulkStatus as RiskStatus }
+        : { riskIds: selectedIds, owner: bulkOwner === '_none' ? null : Number(bulkOwner) }
+    bulkUpdate.mutate(data, {
+      onSuccess: onClear,
+      onError: (error) => toast.error(apiErrorMessage(error, 'Bulk update failed.')),
+    })
   }
 
   return (
-    <div className="flex items-center gap-3 p-3 bg-muted/60 border rounded-lg">
+    <div className="flex items-center gap-3 p-3 bg-muted/60 border rounded-lg flex-wrap" data-testid="risk-bulk-bar">
       <span className="text-sm font-medium">
         {selectedIds.length} selected{isPaginated && ' on this page'}
       </span>
-      <Select value={bulkResponse} onValueChange={(v) => setBulkResponse(v as RiskResponse)}>
-        <SelectTrigger className="h-8 w-[150px]">
-          <SelectValue placeholder="Set response…" />
+      <Select value={field} onValueChange={(value) => setField(value as BulkField)}>
+        <SelectTrigger className="h-8 w-[120px]" aria-label="Bulk field">
+          <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {Object.entries(RESPONSE_LABELS).map(([val, label]) => (
-            <SelectItem key={val} value={val}>{label}</SelectItem>
-          ))}
+          <SelectItem value="status">Set status</SelectItem>
+          <SelectItem value="owner">Set owner</SelectItem>
         </SelectContent>
       </Select>
-      <Button size="sm" onClick={handleApply} disabled={!bulkResponse || bulkUpdate.isPending}>
+      {field === 'status' ? (
+        <Select value={bulkStatus} onValueChange={(value) => setBulkStatus(value as RiskStatus)}>
+          <SelectTrigger className="h-8 w-[150px]" aria-label="Bulk status">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            {RISK_STATUSES.map((entry) => (
+              <SelectItem key={entry.value} value={entry.value}>
+                {entry.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <Select value={bulkOwner} onValueChange={setBulkOwner}>
+          <SelectTrigger className="h-8 w-[200px]" aria-label="Bulk owner">
+            <SelectValue placeholder="Owner" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_none">No owner</SelectItem>
+            {owners.map((owner) => (
+              <SelectItem key={owner.userId} value={String(owner.userId)}>
+                {owner.email}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
+      <Button size="sm" onClick={handleApply} disabled={!canApply || bulkUpdate.isPending}>
         {bulkUpdate.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null}
         Apply
       </Button>
-      <Button size="sm" variant="ghost" onClick={onClear}>Clear</Button>
+      <Button size="sm" variant="ghost" onClick={onClear}>
+        Clear
+      </Button>
     </div>
   )
 }
@@ -761,6 +311,7 @@ function TableView({
   risks,
   selectedRiskId,
   selectedIds,
+  scoringMethods,
   onSelectRisk,
   onToggleSelect,
   onToggleSelectAll,
@@ -771,6 +322,7 @@ function TableView({
   risks: Risk[]
   selectedRiskId: number | null
   selectedIds: number[]
+  scoringMethods: ScoringMethod[] | undefined
   onSelectRisk: (id: number) => void
   onToggleSelect: (id: number) => void
   onToggleSelectAll: () => void
@@ -781,24 +333,26 @@ function TableView({
   const allSelected = risks.length > 0 && selectedIds.length === risks.length
 
   return (
-    <div className="border rounded-lg">
+    <div className="border rounded-lg" data-testid="risk-table">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead className="w-[40px]">
-              <button onClick={onToggleSelectAll} className="flex items-center">
-                {allSelected
-                  ? <CheckSquare className="h-4 w-4 text-primary" />
-                  : <Square className="h-4 w-4 text-muted-foreground" />
-                }
+              <button onClick={onToggleSelectAll} className="flex items-center" aria-label="Select all on this page">
+                {allSelected ? (
+                  <CheckSquare className="h-4 w-4 text-primary" />
+                ) : (
+                  <Square className="h-4 w-4 text-muted-foreground" />
+                )}
               </button>
             </TableHead>
             <TableHead>Name</TableHead>
-            <TableHead className="w-[140px]">Inherent</TableHead>
-            <TableHead className="w-[140px]">Residual</TableHead>
-            <TableHead className="w-[120px]">Response</TableHead>
+            <TableHead className="w-[130px]">Inherent</TableHead>
+            <TableHead className="w-[130px]">Residual</TableHead>
+            <TableHead className="w-[110px]">Status</TableHead>
+            <TableHead className="w-[110px]">Exposure</TableHead>
             <TableHead className="w-[140px]">Owner</TableHead>
-            <TableHead className="w-[80px]">Threats</TableHead>
+            <TableHead className="w-[70px]">Threats</TableHead>
             <TableHead className="w-[100px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -808,11 +362,13 @@ function TableView({
               key={risk.id}
               className={`cursor-pointer ${selectedRiskId === risk.id ? 'bg-muted/50' : ''}`}
               onClick={() => onSelectRisk(risk.id)}
+              data-testid="risk-row"
             >
-              <TableCell onClick={(e) => e.stopPropagation()}>
+              <TableCell onClick={(event) => event.stopPropagation()}>
                 <Checkbox
                   checked={selectedIds.includes(risk.id)}
                   onCheckedChange={() => onToggleSelect(risk.id)}
+                  aria-label={`Select ${risk.name}`}
                 />
               </TableCell>
               <TableCell>
@@ -822,20 +378,19 @@ function TableView({
                 </div>
               </TableCell>
               <TableCell>
-                <ScoreDisplay score={risk.inherentScore} level={risk.inherentLevel} />
+                <RatingBadge rating={risk.inherent} scoreScale={scaleFor(risk, 'inherent', scoringMethods)} />
               </TableCell>
               <TableCell>
-                <ScoreDisplay score={risk.residualScore} level={risk.residualLevel} />
+                <RatingBadge rating={risk.residual} scoreScale={scaleFor(risk, 'residual', scoringMethods)} />
               </TableCell>
               <TableCell>
-                <ResponseBadge response={risk.response} />
+                <RiskStatusBadge status={risk.status} />
               </TableCell>
-              <TableCell className="text-sm text-muted-foreground truncate">
-                {risk.ownerEmail ?? '—'}
+              <TableCell>
+                <RiskExposureBadge exposure={risk.exposure} />
               </TableCell>
-              <TableCell className="text-center text-sm text-muted-foreground">
-                {risk.threatCount}
-              </TableCell>
+              <TableCell className="text-sm text-muted-foreground truncate">{risk.ownerEmail ?? '-'}</TableCell>
+              <TableCell className="text-center text-sm text-muted-foreground">{risk.threatCount ?? 0}</TableCell>
               <TableCell className="whitespace-nowrap">
                 <Button
                   variant="ghost"
@@ -843,17 +398,23 @@ function TableView({
                   title="Recalculate residual risk"
                   aria-label={`Recalculate residual risk for ${risk.name}`}
                   disabled={recalculatingRiskId === risk.id}
-                  onClick={(e) => {
-                    e.stopPropagation()
+                  onClick={(event) => {
+                    event.stopPropagation()
                     onRecalculateRisk(risk.id)
                   }}
                 >
-                  <RefreshCw className={`h-3.5 w-3.5 text-muted-foreground ${recalculatingRiskId === risk.id ? 'animate-spin' : ''}`} />
+                  <RefreshCw
+                    className={`h-3.5 w-3.5 text-muted-foreground ${recalculatingRiskId === risk.id ? 'animate-spin' : ''}`}
+                  />
                 </Button>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={(e) => { e.stopPropagation(); onDeleteRisk(risk.id) }}
+                  aria-label={`Delete ${risk.name}`}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onDeleteRisk(risk.id)
+                  }}
                 >
                   <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
                 </Button>
@@ -903,13 +464,15 @@ function RegisterPagination({
     <div className="flex items-center justify-between gap-3 flex-wrap">
       <div className="flex items-center gap-2">
         <Label className="text-sm text-muted-foreground whitespace-nowrap">Per page:</Label>
-        <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
-          <SelectTrigger className="h-8 w-[80px]">
+        <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
+          <SelectTrigger className="h-8 w-[80px]" aria-label="Rows per page">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {RISK_PAGE_SIZES.map((size) => (
-              <SelectItem key={size} value={String(size)}>{size}</SelectItem>
+              <SelectItem key={size} value={String(size)}>
+                {size}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -919,7 +482,10 @@ function RegisterPagination({
           <PaginationItem>
             <PaginationPrevious
               href="#"
-              onClick={(e) => { e.preventDefault(); onPageChange(page - 1) }}
+              onClick={(event) => {
+                event.preventDefault()
+                onPageChange(page - 1)
+              }}
               {...boundaryProps(page <= 1)}
             />
           </PaginationItem>
@@ -931,12 +497,76 @@ function RegisterPagination({
           <PaginationItem>
             <PaginationNext
               href="#"
-              onClick={(e) => { e.preventDefault(); onPageChange(page + 1) }}
+              onClick={(event) => {
+                event.preventDefault()
+                onPageChange(page + 1)
+              }}
               {...boundaryProps(page >= pageCount)}
             />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
+    </div>
+  )
+}
+
+// ─── Filters ──────────────────────────────────────────────────────────────────
+
+function RegisterFilters({
+  filters,
+  searchDraft,
+  onSearchDraftChange,
+  onFiltersChange,
+}: {
+  filters: RiskListFilters
+  searchDraft: string
+  onSearchDraftChange: (value: string) => void
+  onFiltersChange: (next: RiskListFilters) => void
+}) {
+  return (
+    <div className="flex items-center gap-2 flex-wrap" data-testid="risk-filters">
+      <div className="relative">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <Input
+          value={searchDraft}
+          onChange={(event) => onSearchDraftChange(event.target.value)}
+          placeholder="Search risks"
+          className="h-8 pl-7 text-sm w-[220px]"
+          aria-label="Search risks"
+        />
+      </div>
+      <Select
+        value={filters.status ?? ANY_VALUE}
+        onValueChange={(value) => onFiltersChange({ ...filters, status: value === ANY_VALUE ? undefined : (value as RiskStatus) })}
+      >
+        <SelectTrigger className="h-8 w-[150px]" aria-label="Filter by status">
+          <SelectValue placeholder="Any status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ANY_VALUE}>Any status</SelectItem>
+          {RISK_STATUSES.map((entry) => (
+            <SelectItem key={entry.value} value={entry.value}>
+              {entry.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={filters.inherentLevel ?? ANY_VALUE}
+        onValueChange={(value) => onFiltersChange({ ...filters, inherentLevel: value === ANY_VALUE ? undefined : value })}
+      >
+        <SelectTrigger className="h-8 w-[160px]" aria-label="Filter by inherent level">
+          <SelectValue placeholder="Any inherent level" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ANY_VALUE}>Any inherent level</SelectItem>
+          {RATING_LEVELS.map((entry) => (
+            <SelectItem key={entry.value} value={entry.value}>
+              {entry.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   )
 }
@@ -956,23 +586,44 @@ export function RiskAnalysisTab({
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState<number>(DEFAULT_RISK_PAGE_SIZE)
+  const [filters, setFilters] = useState<RiskListFilters>({})
+  const [searchDraft, setSearchDraft] = useState('')
 
-  const { data: riskPage, isLoading } = useRisks(threatModelId, { page, pageSize })
+  // The search box writes the filter after a short pause, so each keystroke
+  // does not fetch a page.
+  useEffect(() => {
+    const handle = window.setTimeout(() => {
+      setFilters((previous) => {
+        const nextSearch = searchDraft.trim() || undefined
+        return previous.search === nextSearch ? previous : { ...previous, search: nextSearch }
+      })
+    }, 300)
+    return () => window.clearTimeout(handle)
+  }, [searchDraft])
+
+  const { data: riskPage, isLoading } = useRisks(threatModelId, { page, pageSize, ...filters })
   const { data: scoringMethods } = useScoringMethods()
   const deleteRisk = useDeleteRisk(threatModelId)
   const recalculateRisk = useRecalculateRisk(threatModelId)
+  const { currentOrganization } = useWorkspace()
+  const { data: organizationMembers = [] } = useOrganizationMembers(currentOrganization?.id ?? 0)
+  const owners: OwnerOption[] = useMemo(
+    () => organizationMembers.map((member) => ({ userId: member.user, email: member.userEmail })),
+    [organizationMembers]
+  )
 
-  // `risks` is one page; `totalRisks` is the register. Everything the user can
-  // act on — select, bulk-update, drag between board columns — is scoped to the
-  // page, because that is all the client has.
+  // `risks` is one page; `totalRisks` is the register (as filtered). Everything
+  // the user can act on, select, bulk-update, drag between board columns, is
+  // scoped to the page, because that is all the client has.
   const risks = riskPage?.results
   const totalRisks = riskPage?.count ?? 0
   const pageCount = Math.max(1, Math.ceil(totalRisks / pageSize))
   const firstRowNumber = (page - 1) * pageSize + 1
   const lastRowNumber = firstRowNumber + (risks?.length ?? 0) - 1
+  const hasFilters = Boolean(filters.search || filters.status || filters.inherentLevel)
 
-  const selectedRisk = risks?.find((r) => r.id === selectedRiskId)
-  const activeScoringMethod = scoringMethods?.find((m) => m.key === riskScoringMethod)
+  const selectedRisk = risks?.find((risk) => risk.id === selectedRiskId)
+  const activeScoringMethod = scoringMethods?.find((method) => method.key === riskScoringMethod)
 
   // Selection can only refer to rows that are loaded, so leaving the page drops
   // it rather than silently carrying ids the user can no longer see.
@@ -987,28 +638,48 @@ export function RiskAnalysisTab({
     goToPage(1)
   }
 
+  const changeFilters = (next: RiskListFilters) => {
+    setFilters(next)
+    goToPage(1)
+  }
+
+  // The backend refuses a method change once the model has risks (the
+  // methodology guard, #31 comment 2.1). The parent's mutation does not
+  // surface that error, so the guard is applied here before the call, on the
+  // register count the tab has (a filtered empty page lets the call through
+  // and the backend still refuses it).
+  const handleScoringMethodChange = (method: ScoringMethodKey) => {
+    if (method === riskScoringMethod) return
+    if (totalRisks > 0) {
+      toast.error(METHODOLOGY_GUARD_MESSAGE)
+      return
+    }
+    onScoringMethodChange(method)
+  }
+
   const handleDelete = () => {
     if (deleteRiskId === null) return
     deleteRisk.mutate(deleteRiskId, {
       onSuccess: () => {
         setDeleteRiskId(null)
         if (selectedRiskId === deleteRiskId) setSelectedRiskId(null)
-        setSelectedIds((prev) => prev.filter((id) => id !== deleteRiskId))
+        setSelectedIds((previous) => previous.filter((id) => id !== deleteRiskId))
         // Deleting a page's last row leaves `page` past the end. DRF answers an
         // out-of-range page with a 404 rather than an empty one, so step back
         // before the refetch asks for it.
         if (page > 1 && risks?.length === 1) goToPage(page - 1)
       },
+      onError: (error) => toast.error(apiErrorMessage(error, 'Failed to delete the risk.')),
     })
   }
 
   const handleToggleSelect = (id: number) => {
-    setSelectedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])
+    setSelectedIds((previous) => (previous.includes(id) ? previous.filter((entry) => entry !== id) : [...previous, id]))
   }
 
   const handleToggleSelectAll = () => {
     if (!risks) return
-    setSelectedIds(selectedIds.length === risks.length ? [] : risks.map((r) => r.id))
+    setSelectedIds(selectedIds.length === risks.length ? [] : risks.map((risk) => risk.id))
   }
 
   if (isLoading) {
@@ -1019,6 +690,18 @@ export function RiskAnalysisTab({
     )
   }
 
+  const detailPanel = selectedRisk ? (
+    <RiskDetailPanel
+      threatModelId={threatModelId}
+      risk={selectedRisk}
+      componentThreats={componentThreats}
+      owners={owners}
+      scoringMethod={activeScoringMethod}
+      scoringMethods={scoringMethods}
+      onClose={() => setSelectedRiskId(null)}
+    />
+  ) : null
+
   return (
     <div className="p-6 space-y-4">
       {/* Header */}
@@ -1027,21 +710,23 @@ export function RiskAnalysisTab({
           <h2 className="text-lg font-semibold">Risk Register</h2>
           <p className="text-sm text-muted-foreground">
             {totalRisks} risk{totalRisks !== 1 ? 's' : ''}
-            {pageCount > 1 && ` — showing ${firstRowNumber}–${lastRowNumber}`}
+            {hasFilters && ' matching'}
+            {pageCount > 1 && `, showing ${firstRowNumber} to ${lastRowNumber}`}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Scoring method */}
           <div className="flex items-center gap-2">
             <Label className="text-sm text-muted-foreground whitespace-nowrap">Scoring:</Label>
-            <Select value={riskScoringMethod} onValueChange={(v) => onScoringMethodChange(v as ScoringMethodKey)}>
-              <SelectTrigger className="w-[220px]">
+            <Select value={riskScoringMethod} onValueChange={(value) => handleScoringMethodChange(value as ScoringMethodKey)}>
+              <SelectTrigger className="w-[220px]" aria-label="Scoring method">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {(scoringMethods ?? []).map((method) => (
                   <SelectItem key={method.key} value={method.key} disabled={!method.available}>
-                    {method.label}{!method.available && ' (Coming Soon)'}
+                    {method.label}
+                    {!method.available && ' (coming soon)'}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -1053,6 +738,8 @@ export function RiskAnalysisTab({
               variant={viewMode === 'table' ? 'default' : 'ghost'}
               size="sm"
               className="rounded-none"
+              aria-label="Table view"
+              aria-pressed={viewMode === 'table'}
               onClick={() => setViewMode('table')}
             >
               <Table2 className="h-4 w-4" />
@@ -1061,6 +748,8 @@ export function RiskAnalysisTab({
               variant={viewMode === 'kanban' ? 'default' : 'ghost'}
               size="sm"
               className="rounded-none"
+              aria-label="Board view"
+              aria-pressed={viewMode === 'kanban'}
               onClick={() => setViewMode('kanban')}
             >
               <LayoutGrid className="h-4 w-4" />
@@ -1073,22 +762,30 @@ export function RiskAnalysisTab({
         </div>
       </div>
 
+      <RegisterFilters
+        filters={filters}
+        searchDraft={searchDraft}
+        onSearchDraftChange={setSearchDraft}
+        onFiltersChange={changeFilters}
+      />
+
       {/* Bulk action bar */}
       {selectedIds.length > 0 && viewMode === 'table' && (
         <BulkActionBar
           selectedIds={selectedIds}
           threatModelId={threatModelId}
+          owners={owners}
           onClear={() => setSelectedIds([])}
           isPaginated={pageCount > 1}
         />
       )}
 
-      {/* An empty column does not mean no risks carry that response — they may
+      {/* An empty column does not mean no risks carry that status; they may
           be on another page. Nothing on the board itself shows that. */}
       {viewMode === 'kanban' && pageCount > 1 && (
         <p className="text-sm text-muted-foreground">
-          Board shows risks {firstRowNumber}–{lastRowNumber} of {totalRisks}. Column counts
-          are for this page — raise the page size to see more of the register at once.
+          Board shows risks {firstRowNumber} to {lastRowNumber} of {totalRisks}. Column counts are for this
+          page; raise the page size to see more of the register at once.
         </p>
       )}
 
@@ -1096,93 +793,97 @@ export function RiskAnalysisTab({
       {!risks || risks.length === 0 ? (
         <Card className="p-12 text-center">
           <p className="text-muted-foreground mb-4">
-            No risks defined yet. Add a risk manually to get started.
+            {hasFilters ? 'No risks match these filters.' : 'No risks defined yet. Add a risk manually to get started.'}
           </p>
           <div className="flex items-center justify-center gap-3">
-            <Button onClick={() => setAddDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Risk
-            </Button>
+            {hasFilters ? (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setSearchDraft('')
+                  changeFilters({})
+                }}
+              >
+                Clear filters
+              </Button>
+            ) : (
+              <Button onClick={() => setAddDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Risk
+              </Button>
+            )}
           </div>
         </Card>
       ) : (
         <>
-        <div className="flex gap-6">
-          {/* Main content */}
-          <div className={`flex-1 min-w-0 ${selectedRisk && viewMode === 'table' ? 'max-w-[60%]' : ''}`}>
-            {viewMode === 'table' ? (
-              <TableView
-                risks={risks}
-                selectedRiskId={selectedRiskId}
-                selectedIds={selectedIds}
-                onSelectRisk={setSelectedRiskId}
-                onToggleSelect={handleToggleSelect}
-                onToggleSelectAll={handleToggleSelectAll}
-                onDeleteRisk={setDeleteRiskId}
-                onRecalculateRisk={(riskId) => recalculateRisk.mutate(riskId)}
-                recalculatingRiskId={recalculateRisk.isPending ? recalculateRisk.variables ?? null : null}
-              />
-            ) : (
-              <KanbanBoard
-                risks={risks}
-                selectedRiskId={selectedRiskId}
-                onSelectRisk={setSelectedRiskId}
-                onDeleteRisk={setDeleteRiskId}
-                threatModelId={threatModelId}
-              />
-            )}
+          <div className="flex gap-6">
+            {/* Main content */}
+            <div className={`flex-1 min-w-0 ${selectedRisk && viewMode === 'table' ? 'max-w-[55%]' : ''}`}>
+              {viewMode === 'table' ? (
+                <TableView
+                  risks={risks}
+                  selectedRiskId={selectedRiskId}
+                  selectedIds={selectedIds}
+                  scoringMethods={scoringMethods}
+                  onSelectRisk={setSelectedRiskId}
+                  onToggleSelect={handleToggleSelect}
+                  onToggleSelectAll={handleToggleSelectAll}
+                  onDeleteRisk={setDeleteRiskId}
+                  onRecalculateRisk={(riskId) =>
+                    recalculateRisk.mutate(riskId, {
+                      onError: (error) => toast.error(apiErrorMessage(error, 'Failed to recalculate the residual rating.')),
+                    })
+                  }
+                  recalculatingRiskId={recalculateRisk.isPending ? (recalculateRisk.variables ?? null) : null}
+                />
+              ) : (
+                <KanbanBoard
+                  risks={risks}
+                  selectedRiskId={selectedRiskId}
+                  onSelectRisk={setSelectedRiskId}
+                  onDeleteRisk={setDeleteRiskId}
+                  threatModelId={threatModelId}
+                />
+              )}
+            </div>
+
+            {/* Detail panel (table view only) */}
+            {detailPanel && viewMode === 'table' && <div className="w-[45%] shrink-0">{detailPanel}</div>}
           </div>
 
-          {/* Detail panel (table view only) */}
-          {selectedRisk && viewMode === 'table' && (
-            <div className="w-[40%] shrink-0">
-              <RiskDetailPanel
-                risk={selectedRisk}
-                threatModelId={threatModelId}
-                onClose={() => setSelectedRiskId(null)}
-              />
-            </div>
+          {/* Kept visible at one page too, once the size has been changed, so the
+              control that got the user there can also take them back. */}
+          {(pageCount > 1 || pageSize !== DEFAULT_RISK_PAGE_SIZE) && (
+            <RegisterPagination
+              page={page}
+              pageCount={pageCount}
+              pageSize={pageSize}
+              onPageChange={goToPage}
+              onPageSizeChange={changePageSize}
+            />
           )}
-        </div>
-
-        {/* Kept visible at one page too, once the size has been changed, so the
-            control that got the user there can also take them back. */}
-        {(pageCount > 1 || pageSize !== DEFAULT_RISK_PAGE_SIZE) && (
-          <RegisterPagination
-            page={page}
-            pageCount={pageCount}
-            pageSize={pageSize}
-            onPageChange={goToPage}
-            onPageSizeChange={changePageSize}
-          />
-        )}
         </>
       )}
 
-      {/* Detail panel for kanban (below board) */}
-      {selectedRisk && viewMode === 'kanban' && (
-        <RiskDetailPanel
-          risk={selectedRisk}
-          threatModelId={threatModelId}
-          onClose={() => setSelectedRiskId(null)}
-        />
-      )}
+      {/* Detail panel for the board (below it) */}
+      {detailPanel && viewMode === 'kanban' && detailPanel}
 
       <AddRiskDialog
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         threatModelId={threatModelId}
         componentThreats={componentThreats}
-        scoringMethod={riskScoringMethod}
-        activeScoringMethod={activeScoringMethod}
+        owners={owners}
+        scoringMethodKey={riskScoringMethod}
+        scoringMethod={activeScoringMethod}
       />
 
       <AlertDialog open={deleteRiskId !== null} onOpenChange={(open) => !open && setDeleteRiskId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Risk</AlertDialogTitle>
+            <AlertDialogTitle>Delete risk</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this risk and unlink all associated threats. This cannot be undone.
+              This permanently deletes the risk, its responses and its threat links. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -19,6 +19,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.organizations.models import Organization, OrganizationMember
 from apps.systems.models import ComponentLibrary, OrgsystemComponent
+from apps.threat_models.models import ThreatModel
 from apps.threats.models import ComponentLibraryThreat, ThreatLibrary
 
 User = get_user_model()
@@ -42,8 +43,11 @@ class ThreatLibraryComponentScopingTests(TestCase):
         gateway_library = ComponentLibrary.objects.create(
             name="API Gateway", category=ComponentLibrary.Category.PROCESS
         )
+        threat_model = ThreatModel.objects.create(name="Payments", organization=cls.org)
         cls.component = OrgsystemComponent.objects.create(
-            component_library=gateway_library, name="Payments API Gateway"
+            blueprint=threat_model.default_blueprint,
+            component_library=gateway_library,
+            name="Payments API Gateway",
         )
 
         cls.own_threat = ThreatLibrary.objects.create(name="Unauthorized API Access")

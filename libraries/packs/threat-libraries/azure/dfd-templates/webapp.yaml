@@ -34,7 +34,8 @@ canvas_data:
       style: { width: 650, height: 360 }
       data:
         label: "Azure VNet"
-        zoneType: "privateSecured"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "Azure Virtual Network"
 
     # Azure Services (nested inside tb-azure)

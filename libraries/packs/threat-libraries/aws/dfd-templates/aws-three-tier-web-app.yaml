@@ -32,7 +32,8 @@ canvas_data:
       style: { width: 280, height: 350 }
       data:
         label: "Public Edge"
-        zoneType: "zoneInternet"
+        zoneType: "trust"
+        trustLevel: 0
 
     - id: "tz-dmz"
       type: "trustZone"
@@ -41,7 +42,8 @@ canvas_data:
       style: { width: 280, height: 300 }
       data:
         label: "Public Subnet"
-        zoneType: "zoneDmz"
+        zoneType: "trust"
+        trustLevel: 25
 
     - id: "tz-app"
       type: "trustZone"
@@ -50,7 +52,8 @@ canvas_data:
       style: { width: 280, height: 300 }
       data:
         label: "Private Subnet: App Tier"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-data"
       type: "trustZone"
@@ -59,7 +62,8 @@ canvas_data:
       style: { width: 590, height: 360 }
       data:
         label: "Private Subnet: Data Tier"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     - id: "tz-mgmt"
       type: "trustZone"
@@ -68,7 +72,8 @@ canvas_data:
       style: { width: 280, height: 300 }
       data:
         label: "Management"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     # ---- Processes: Public Edge ----
     - id: "process-cloudfront"
@@ -175,7 +180,6 @@ canvas_data:
         label: "HTTPS request"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false
 
     # CloudFront → WAF
     - id: "edge-cloudfront-to-waf"
@@ -186,7 +190,6 @@ canvas_data:
         label: "Forwarded request"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false
 
     # WAF → ELB
     - id: "edge-waf-to-elb"
@@ -197,7 +200,6 @@ canvas_data:
         label: "Filtered request"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false
 
     # ELB → EC2
     - id: "edge-elb-to-ec2"
@@ -208,7 +210,6 @@ canvas_data:
         label: "Load-balanced request"
         protocol: "HTTP"
         encrypted: false
-        authenticated: false
 
     # EC2 → ELB (response)
     - id: "edge-ec2-to-elb"
@@ -219,7 +220,6 @@ canvas_data:
         label: "Application response"
         protocol: "HTTP"
         encrypted: false
-        authenticated: false
 
     # EC2 → RDS
     - id: "edge-ec2-to-rds"
@@ -230,7 +230,7 @@ canvas_data:
         label: "SQL queries"
         protocol: "SQL"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     # EC2 → S3
     - id: "edge-ec2-to-s3"
@@ -241,7 +241,7 @@ canvas_data:
         label: "Static asset read/write"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # S3 → CloudFront (static delivery)
     - id: "edge-s3-to-cloudfront"
@@ -252,7 +252,7 @@ canvas_data:
         label: "Static asset delivery"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # CloudFront → User (response)
     - id: "edge-cloudfront-to-user"
@@ -263,7 +263,6 @@ canvas_data:
         label: "HTTPS response"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false
 
     # EC2 → IAM (role assumption)
     - id: "edge-ec2-to-iam"
@@ -274,7 +273,7 @@ canvas_data:
         label: "Instance profile credentials"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # CloudTrail audit logging
     - id: "edge-ec2-to-cloudtrail"
@@ -285,4 +284,4 @@ canvas_data:
         label: "API call audit"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]

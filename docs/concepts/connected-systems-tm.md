@@ -1,78 +1,73 @@
-# Connected Systems and Threat Models
+# Systems and Related Threat Models
 
-Every threat model can link to two types of external resources: **systems** (organizational assets you are analyzing) and **other threat models** (related analyses). Both are managed from the relationship cards on the Overview tab.
+A threat model is about one system. It can also draw other systems on its diagrams and link to other threat models. Three things are involved: the **primary system**, **system assets** in the blueprints, and **related models**. All three are managed from the Overview tab.
 
 ![Relationship cards on the Overview tab showing Systems, Connected Threat Models, and Team Members](../assets/images/connected-overview-cards.png)
 
-## Connected Systems
+## Primary system
 
-A connected system answers the question: **"What am I analyzing?"**
+The primary system answers the question: **"What am I analyzing?"**
 
-Systems represent organizational assets registered in your system inventory (applications, services, platforms). Linking a system to a threat model establishes scope: it declares which systems this analysis covers.
+It is one system from your organization's inventory, chosen in the model's details. The list ends with **Create new system**, which takes a name, owner, criticality, and lifecycle state without leaving the page. A model with no primary system is fine: it still works and still exports, and the export is then named after the model.
 
-### How it works
+The primary system becomes the subject of the exported document (`metadata.component`), with its criticality and lifecycle state. On import, Precogly links a system of the same name when one exists in the organization, and creates one only when the file says the exporting model had a primary system.
 
-1. Open a threat model and navigate to the **Overview** tab.
-2. On the **Systems** relationship card, click **Manage**.
-3. Search for and add systems from your organization's inventory.
+## System assets
 
-![Manage Connected Systems modal showing connected systems and the searchable Add Systems list](../assets/images/connected-manage-systems.png)
+A **System Scope** node on a DFD stands for a system or subsystem the diagram touches. Saving the diagram turns it into a component of kind `system` (or `subsystem` when drawn inside another scope box) in the blueprint. Components drawn inside the box belong to it.
 
-### Where systems come from
+![A System Scope node on the DFD canvas](../assets/images/connected-dfd-system-scope.png)
 
-Systems appear in the "Add Systems" list when they exist as `Orgsystem` records in your organization. There are two ways a system gets created:
+The scope node's panel has an optional **Linked inventory system**. Pick one to say "this box stands for that system in the inventory". Drawing or deleting a scope box never creates or deletes inventory rows; it only links to one. The model page lists the system assets of all blueprints under the primary system.
 
-1. **Manually.** An admin creates a system in the system inventory.
-2. **Automatically from DFD System Scope nodes.** When you place a System Scope node on a data flow diagram and save, Precogly automatically creates a corresponding system record in the inventory and connects it to the threat model. For example, the sample threat model's DFD includes a System Scope node labeled "AWS Serverless System", which creates a system record that is auto-connected to that threat model and also available for other threat models in the same organization.
+The per-component "System" select is gone. A component's system is the scope box that encloses it.
 
-![A System Scope node on the DFD canvas that auto-creates an Orgsystem record](../assets/images/connected-dfd-system-scope.png)
+## Related models
 
-This means your system inventory grows organically as teams build DFDs. Every System Scope node placed on any DFD becomes a reusable system that other threat models can reference.
-
-### Side effects
-
-Connecting a system has a functional consequence beyond metadata:
-
-- **Component auto-assignment.** When you create a new component inside a threat model that has exactly one connected system, that component is automatically assigned to that system. This saves manual assignment when a threat model is scoped to a single system.
-- If multiple systems are connected, auto-assignment does not occur and components must be assigned manually.
-
-### When to use
-
-- You are threat-modeling a specific application, service, or platform
-- You want components created in this model to inherit a system assignment
-- You want to track which systems have threat models (for coverage reporting)
-
-## Connected Threat Models
-
-A connected threat model answers the question: **"What else is related?"**
-
-This is an informational cross-reference between analyses. It has no functional side effects. It simply helps teams navigate between related work.
-
-### How it works
+A related model answers the question: **"What else is related?"**
 
 1. Open a threat model and navigate to the **Overview** tab.
 2. On the **Threat Models** relationship card, click **Manage**.
-3. Search for and add other threat models from your organization.
+3. Choose a relationship type, pick a model from your organization, and click **Add**.
 
-![Manage Connected Threat Models modal showing connected models and the searchable Add Models list](../assets/images/connected-manage-models.png)
+![Manage related threat models modal](../assets/images/connected-manage-models.png)
 
 ### Relationship types
 
-The underlying data model supports typed relationships (depends on, subsystem of, related to, superseded by). Currently the UI uses **related to** for all connections.
+Each link has a type, worded from this model's side:
+
+| Type | Meaning | Rules |
+| ---- | ------- | ----- |
+| **depends on** | This system relies on the other | May form a loop; two systems can depend on each other |
+| **is a subsystem of** | This system is part of the other | Must not form a loop |
+| **is related to** | An informational cross-reference (the default) | Stored once per pair; adding it from the other side returns the existing link |
+| **is superseded by** | The other model replaces this one | Must not form a loop |
+
+A model cannot be linked to itself. The model page lists links in both directions, so a model that is the target of "is a subsystem of" shows the other model as containing it.
+
+Related models have no effect on threats or counts. They are exported as system assets carrying a BOM-Link to the other model's serial number and version; "depends on" and "is a subsystem of" are also written as blueprint relationships. On import, a BOM-Link is resolved to a model in your organization when one carries that serial number, and the import warns when it cannot be resolved or when two models carry it.
 
 ### When to use
 
 - A threat model covers a subsystem of a larger model
-- Two models share trust boundaries or data flows
+- Two models share boundaries or flows
 - A newer model supersedes an older one
-- Teams want to discover related analyses during review
+- A third-party provider has its own model that your system depends on
+
+## The Systems page
+
+**Settings > Systems** lists the organization's inventory with each system's owner, criticality, which models use it as their primary system, and how many system assets link to it. Create, edit, and delete systems here.
+
+A system that is some model's primary system cannot be deleted on its own; the page names the models, and you give each one another primary system first. Deleting a system that is only linked from system assets unlinks those assets and deletes nothing inside the models.
+
+The inventory view of which systems have a threat model is: systems that are some model's primary system, plus systems linked from a system asset.
 
 ## Comparison
 
-| Aspect | Connected Systems | Connected Threat Models |
-|--------|-------------------|------------------------|
-| Purpose | Define analysis scope | Cross-reference related work |
-| Links to | Organizational systems (inventory) | Other threat models |
-| Side effects | Component auto-assignment | None |
-| Directionality | Undirected (simple association) | Directed (source references target) |
-| Self-reference | Allowed | Prevented |
+| Aspect | Primary system | System assets | Related models |
+|--------|----------------|---------------|----------------|
+| Purpose | Define what the model is about | Show other systems on the diagram | Cross-reference related work |
+| Links to | One inventory system | An inventory system, optionally | Other threat models |
+| Effect on threats | None | Components inside the box belong to it | None |
+| Direction | Not applicable | Not applicable | Directed, with a type |
+| Self-reference | Not applicable | Not applicable | Prevented |

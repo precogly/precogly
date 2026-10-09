@@ -42,7 +42,8 @@ canvas_data:
       style: { width: 220, height: 180 }
       data:
         label: "Edge Zone"
-        zoneType: "dmz"
+        zoneType: "trust"
+        trustLevel: 25
         technology: "Azure Front Door"
 
     # Trust boundary - AKS Cluster (inside sb-azure)
@@ -53,7 +54,8 @@ canvas_data:
       style: { width: 450, height: 400 }
       data:
         label: "AKS Cluster"
-        zoneType: "privateSecured"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "Azure Kubernetes Service"
 
     # Trust boundary - Data Zone (inside sb-azure)
@@ -64,7 +66,8 @@ canvas_data:
       style: { width: 260, height: 420 }
       data:
         label: "Data Zone"
-        zoneType: "privateSecured"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "Azure Private Link"
 
     # Edge services (inside tb-edge)
@@ -174,7 +177,7 @@ canvas_data:
         label: "API Requests"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     # APIM to AKS
     - id: "edge-apim-ingress"
@@ -280,7 +283,7 @@ canvas_data:
         label: "Fetch Secrets"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["oauth2"]
 
     # Admin and monitoring
     - id: "edge-admin-monitor"
@@ -291,7 +294,7 @@ canvas_data:
         label: "View Logs/Metrics"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["oidc"]
 
     - id: "edge-ingress-monitor"
       source: "process-ingress"

@@ -89,8 +89,8 @@ export function DeleteThreatModelDialog({
                   {preview.componentsToDelete > 0 && (
                     <li>{preview.componentsToDelete} component{preview.componentsToDelete !== 1 ? 's' : ''}</li>
                   )}
-                  {preview.dataflowsToDelete > 0 && (
-                    <li>{preview.dataflowsToDelete} data flow{preview.dataflowsToDelete !== 1 ? 's' : ''}</li>
+                  {preview.flowsToDelete > 0 && (
+                    <li>{preview.flowsToDelete} data flow{preview.flowsToDelete !== 1 ? 's' : ''}</li>
                   )}
                   {preview.threatsToDelete > 0 && (
                     <li>{preview.threatsToDelete} threat{preview.threatsToDelete !== 1 ? 's' : ''}</li>
@@ -98,8 +98,9 @@ export function DeleteThreatModelDialog({
                   {preview.countermeasuresToDelete > 0 && (
                     <li>{preview.countermeasuresToDelete} countermeasure{preview.countermeasuresToDelete !== 1 ? 's' : ''}</li>
                   )}
-                  <li>System connections</li>
-                  <li>Threat model relationships</li>
+                  <li>Blueprints, zones, boundaries, data assets and assumptions</li>
+                  <li>Business objectives, use cases and the review state</li>
+                  <li>Relationships to other models</li>
                 </ul>
               </div>
             </div>

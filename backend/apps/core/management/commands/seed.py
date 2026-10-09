@@ -2,8 +2,8 @@
 Seed the database with demo data for new contributors.
 
 Creates a superuser, demo organization, imports library packs,
-and creates sample threat models with DFD templates. Fills the first sample
-model's Risk Register.
+and creates sample threat models with DFD templates (two AWS models and one
+OT model). Fills the first sample model's Risk Register.
 
 Also creates a second organization and a member who is not on the security team, so
 that the demo database can exhibit multi-tenancy. See _create_second_org for why that
@@ -17,6 +17,7 @@ Usage:
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
+from apps.diagrams.canvas import normalize_canvas
 from apps.diagrams.models import DFD, DFDTemplatesLibrary
 from apps.diagrams.services import sync_dfd_nodes_to_components
 from apps.organizations.models import (
@@ -28,8 +29,7 @@ from apps.organizations.models import (
 from apps.packs.models import LibraryPack
 from apps.packs.services import get_libraries_path, import_pack_from_path, validate_pack
 from apps.threat_models.models import ThreatModel, ThreatModelLibraryPack
-from apps.threats.models import Risk
-from apps.threats.services import calculate_inherent_score
+from apps.threats.services import create_risk, create_risk_response
 
 User = get_user_model()
 
@@ -58,6 +58,7 @@ TAXONOMY_PACKS = [
     "taxonomies/owasp-llm-top-10",
     "taxonomies/owasp-agentic-top-10",
     "taxonomies/owasp-mcp-top-10",
+    "taxonomies/mitre-attack-ics",
 ]
 
 STANDARD_PACKS = [
@@ -68,11 +69,13 @@ STANDARD_PACKS = [
     "standards/owasp-asvs",
     "standards/owasp-aisvs",
     "standards/pci-dss",
+    "standards/iec-62443",
 ]
 
 FULL_PACKS = [
     "threat-libraries/ai",
     "threat-libraries/aws",
+    "threat-libraries/ot-ics",
 ]
 
 SAMPLE_THREAT_MODELS = [
@@ -87,6 +90,17 @@ SAMPLE_THREAT_MODELS = [
         "description": "A sample RAG app with Bedrock Agents, Knowledge Bases, and OpenSearch Serverless.",
         "template_slug": "aws/aws-rag-genai",
         "criticality": "HIGH",
+    },
+    # An OT model, so the sample data has network zones, signal and control
+    # flows, device components and a boundary (plan F35).
+    {
+        "name": "Sample LNG Process Control",
+        "description": (
+            "A sample LNG facility control system with SCADA, DCS, a safety "
+            "system and field devices across Purdue network zones."
+        ),
+        "template_slug": "ot-ics/lng-process-control",
+        "criticality": "CRITICAL",
     },
 ]
 
@@ -103,9 +117,19 @@ SECOND_ORG_THREAT_MODELS = [
 
 # Risks for the Risk Register, on the first sample threat model.
 #
-# Scores are not written here. `calculate_inherent_score` derives them from these
-# pairs the same way the application does, so demo risks cannot drift from what
-# the scoring engine would produce.
+# Ratings are not written here. `create_risk` rates these pairs with the model's
+# 5x5 matrix engine the same way the application does, so demo risks cannot
+# drift from what the engine would produce.
+# The old `response` column became a status and one RiskResponse row
+# (section 4.7): mitigate is the spec's reduce.
+SAMPLE_RISK_RESPONSES = {
+    None: ("identified", None),
+    "mitigate": ("assessed", "reduce"),
+    "transfer": ("transferred", "transfer"),
+    "avoid": ("assessed", "avoid"),
+    "accept": ("accepted", "accept"),
+}
+
 SAMPLE_RISKS = {
     None: [
         ("Unauthenticated internal Lambda invoke URL", "certain", "severe"),
@@ -231,9 +255,9 @@ class Command(BaseCommand):
     ):
         """Give the user a role in the organization and on one of its teams.
 
-        Both rows may already exist — the post_save signal creates the organization
+        Both rows may already exist, the post_save signal creates the organization
         membership for new users, and an earlier seed may have created either with a
-        different role — so the role is asserted rather than assumed. Defaults to the
+        different role, so the role is asserted rather than assumed. Defaults to the
         team lead on the security team, which is what the demo superuser wants.
         """
         membership, _ = OrganizationMember.objects.get_or_create(
@@ -304,7 +328,7 @@ class Command(BaseCommand):
         # Undo the auto-enrolment in the demo organization that create_personal_workspace
         # performs for every new user. Left in place, this account is a genuine member of
         # both organizations, so a listing returning both organizations' rows is correct
-        # behaviour rather than a leak — and the two stop being distinguishable, which is
+        # behaviour rather than a leak, and the two stop being distinguishable, which is
         # the whole thing this account exists to distinguish.
         OrganizationMember.objects.filter(user=user).exclude(organization=org).delete()
         TeamMembership.objects.filter(user=user).exclude(team=team).delete()
@@ -339,7 +363,7 @@ class Command(BaseCommand):
                         self.style.WARNING(f"  Warning: {warning.message}")
                     )
                 self.stdout.write(
-                    self.style.WARNING(f"Skipped: {pack_slug} — validation failed")
+                    self.style.WARNING(f"Skipped: {pack_slug}, validation failed")
                 )
                 continue
 
@@ -353,7 +377,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(f"Imported: {pack_slug}"))
             else:
                 self.stdout.write(
-                    self.style.WARNING(f"Skipped: {pack_slug} — {result.message}")
+                    self.style.WARNING(f"Skipped: {pack_slug}, {result.message}")
                 )
 
     def _create_sample_threat_models(self, org, team, user, samples):
@@ -412,17 +436,18 @@ class Command(BaseCommand):
                 ignore_conflicts=True,
             )
 
+            blueprint = threat_model.default_blueprint
             dfd = DFD.objects.create(
                 name="Data Flow Diagram 1",
                 diagram_type=template.diagram_type,
-                threat_model=threat_model,
+                blueprint=blueprint,
                 template_library=template,
-                canvas_data=template.canvas_data,
+                canvas_data=normalize_canvas(template.canvas_data),
                 is_primary=True,
                 updated_by=user,
             )
 
-            sync_result = sync_dfd_nodes_to_components(dfd, threat_model)
+            sync_result = sync_dfd_nodes_to_components(dfd, blueprint)
             components_count = sync_result.get("created_count", 0)
             threats_count = sync_result.get("threats_generated", 0)
 
@@ -439,7 +464,7 @@ class Command(BaseCommand):
         Keyed on whether that model already has risks, not on whether this run
         created it. `_create_sample_threat_models` skips a model that exists, so
         a step hung off model creation would never run on a database that has
-        been seeded before — which is every database that needs this.
+        been seeded before, which is every database that needs this.
         """
         threat_model = ThreatModel.objects.filter(
             name=SAMPLE_THREAT_MODELS[0]["name"], organization=org
@@ -462,28 +487,23 @@ class Command(BaseCommand):
 
         risks = []
         for response, entries in SAMPLE_RISKS.items():
+            status, strategy = SAMPLE_RISK_RESPONSES[response]
             for name, likelihood, impact in entries:
-                scoring_metadata = {"likelihood": likelihood, "impact": impact}
-                score, level = calculate_inherent_score(
-                    threat_model.risk_scoring_method, scoring_metadata
-                )
                 position = len(risks)
-                risks.append(
-                    Risk(
-                        threat_model=threat_model,
-                        name=name,
-                        scoring_metadata=scoring_metadata,
-                        inherent_score=score,
-                        inherent_level=level,
-                        response=response,
-                        # Leave every third risk unowned. An owner column filled
-                        # on every row never renders its empty state.
-                        owner=owner if position % 3 else None,
-                        assigned_to=assignee if position % 4 == 0 else None,
-                    )
+                risk = create_risk(
+                    threat_model,
+                    rating_inputs={"likelihood": likelihood, "impact": impact},
+                    name=name,
+                    status=status,
+                    # Leave every third risk unowned. An owner column filled
+                    # on every row never renders its empty state.
+                    owner=owner if position % 3 else None,
+                    assigned_to=assignee if position % 4 == 0 else None,
                 )
+                if strategy:
+                    create_risk_response(risk, strategy=strategy)
+                risks.append(risk)
 
-        Risk.objects.bulk_create(risks)
         self.stdout.write(
             self.style.SUCCESS(f"Created {len(risks)} risks on {threat_model.name}")
         )

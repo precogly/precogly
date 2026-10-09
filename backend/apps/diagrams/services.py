@@ -3,28 +3,35 @@ Services for diagrams app - DFD node synchronization and threat generation.
 """
 
 from django.db import transaction
-from django.db.models import Q
 
+from apps.systems.crossing import (
+    ASSET_TYPES,
+    BOUNDARY_TYPES,
+    FLOW_TYPES,
+    UNSPECIFIED,
+    ZONE_TYPES,
+    clean_type_list,
+    is_data_like,
+    session_management_from_canvas,
+)
 from apps.systems.models import (
+    Boundary,
     ComponentLibrary,
-    DataFlow,
+    Flow,
     Orgsystem,
     OrgsystemComponent,
-    TrustBoundary,
-    TrustZone,
+    Zone,
 )
-from apps.threat_models.models import ThreatModelOrgsystem
-from apps.threats.models import (
-    ComponentInstanceThreat,
-    ComponentLibraryThreat,
-    CountermeasureThreatLink,
-    DataFlowInstanceThreat,
-    InstanceCountermeasure,
-    Risk,
-    RiskThreat,
-    build_taxonomy_snapshot,
+from apps.threats.models import Risk
+from apps.threats.services import (
+    countermeasures_losing_scope,
+    ensure_generated_threats,
+    recalculate_residual,
+    remove_threats_that_stopped_applying,
+    risk_ids_citing_targets,
 )
-from apps.threats.services import recalculate_risk
+
+from .canvas import normalize_canvas
 
 ANALYZABLE_NODE_TYPES = ("process", "datastore", "humanActor", "systemActor")
 
@@ -34,16 +41,15 @@ def _extract_backend_ids_from_canvas(canvas_data):
     Extract all backend record IDs stored in canvas_data nodes and edges.
 
     Returns a dict of sets:
-        component_ids, dataflow_ids, trust_zone_ids, orgsystem_ids, trust_boundary_ids
+        component_ids, dataflow_ids, zone_ids, boundary_ids
     """
     nodes = canvas_data.get("nodes", [])
     edges = canvas_data.get("edges", [])
 
     component_ids = set()
-    trust_zone_ids = set()
-    orgsystem_ids = set()
+    zone_ids = set()
     dataflow_ids = set()
-    trust_boundary_ids = set()
+    boundary_ids = set()
 
     for node in nodes:
         node_data = node.get("data", {})
@@ -56,11 +62,12 @@ def _extract_backend_ids_from_canvas(canvas_data):
         elif node_type == "trustZone":
             zid = node_data.get("trust_zone_id")
             if zid is not None:
-                trust_zone_ids.add(zid)
+                zone_ids.add(zid)
         elif node_type == "systemScope":
-            sid = node_data.get("orgsystem_id")
-            if sid is not None:
-                orgsystem_ids.add(sid)
+            # A scope node is a system asset: a component row (F20).
+            cid = node_data.get("component_id")
+            if cid is not None:
+                component_ids.add(cid)
 
     for edge in edges:
         edge_data = edge.get("data", {})
@@ -73,24 +80,25 @@ def _extract_backend_ids_from_canvas(canvas_data):
         elif edge_type == "trustBoundary":
             bid = edge_data.get("trust_boundary_id")
             if bid is not None:
-                trust_boundary_ids.add(bid)
+                boundary_ids.add(bid)
 
     return {
         "component_ids": component_ids,
         "dataflow_ids": dataflow_ids,
-        "trust_zone_ids": trust_zone_ids,
-        "orgsystem_ids": orgsystem_ids,
-        "trust_boundary_ids": trust_boundary_ids,
+        "zone_ids": zone_ids,
+        "boundary_ids": boundary_ids,
     }
 
 
-def _cleanup_orphaned_records(old_canvas_data, new_canvas_data, threat_model):
+def _cleanup_orphaned_records(old_canvas_data, new_canvas_data, blueprint):
     """
     Delete backend records whose canvas nodes/edges were removed between saves.
 
     Compares old_canvas_data (before save) with new_canvas_data (after save) to
     find backend IDs that disappeared, then deletes those records. Deletion order
-    respects FK constraints: boundaries -> dataflows -> components -> zones -> systems.
+    respects FK constraints: boundaries -> flows -> components -> zones -> systems.
+    Every delete is scoped to the blueprint: the ids come from caller-supplied
+    canvas data, and an id from another blueprint must not reach its row.
 
     Analysis-only components (created via Threat Analysis UI, not from canvas) are
     never in canvas_data and are therefore never affected.
@@ -98,95 +106,175 @@ def _cleanup_orphaned_records(old_canvas_data, new_canvas_data, threat_model):
     old_ids = _extract_backend_ids_from_canvas(old_canvas_data)
     new_ids = _extract_backend_ids_from_canvas(new_canvas_data)
 
-    orphaned_boundary_ids = (
-        old_ids["trust_boundary_ids"] - new_ids["trust_boundary_ids"]
-    )
-    orphaned_dataflow_ids = old_ids["dataflow_ids"] - new_ids["dataflow_ids"]
+    orphaned_boundary_ids = old_ids["boundary_ids"] - new_ids["boundary_ids"]
+    orphaned_flow_ids = old_ids["dataflow_ids"] - new_ids["dataflow_ids"]
     orphaned_component_ids = old_ids["component_ids"] - new_ids["component_ids"]
-    orphaned_zone_ids = old_ids["trust_zone_ids"] - new_ids["trust_zone_ids"]
-    orphaned_system_ids = old_ids["orgsystem_ids"] - new_ids["orgsystem_ids"]
+    orphaned_zone_ids = old_ids["zone_ids"] - new_ids["zone_ids"]
 
     has_orphans = (
         orphaned_boundary_ids
-        or orphaned_dataflow_ids
+        or orphaned_flow_ids
         or orphaned_component_ids
         or orphaned_zone_ids
-        or orphaned_system_ids
     )
     if not has_orphans:
-        return
+        return None
 
-    deleted_counts = {}
+    # Controls scoped only to rows about to go keep their status and links
+    # but read as "applies to the whole system" afterwards; the editor is
+    # told (plan section 4.3).
+    warnings = [
+        f"{countermeasure.display_number} no longer has a scope and now applies "
+        "to the whole system"
+        for countermeasure in countermeasures_losing_scope(
+            component_ids=orphaned_component_ids,
+            flow_ids=orphaned_flow_ids,
+            zone_ids=orphaned_zone_ids,
+            boundary_ids=orphaned_boundary_ids,
+        )
+    ]
+    deleted_counts = {"warnings": warnings}
 
-    # 1. Trust boundaries (FK zone_a/zone_b -> CASCADE, delete before zones)
+    # 1. Boundaries (FK zone_a/zone_b -> CASCADE, delete before zones)
     if orphaned_boundary_ids:
-        count, _ = TrustBoundary.objects.filter(id__in=orphaned_boundary_ids).delete()
-        deleted_counts["trust_boundaries"] = count
+        count, _ = Boundary.objects.filter(
+            id__in=orphaned_boundary_ids, blueprint=blueprint
+        ).delete()
+        deleted_counts["boundaries"] = count
 
-    # 2. DataFlows (FK source/dest component -> CASCADE, delete before components)
-    if orphaned_dataflow_ids:
-        # Capture affected risk IDs before CASCADE wipes RiskThreat links
-        affected_risk_ids = list(
-            RiskThreat.objects.filter(
-                flow_threat__data_flow_id__in=orphaned_dataflow_ids
-            )
-            .values_list("risk_id", flat=True)
-            .distinct()
+    # The risks citing threats on the rows about to go lose those links with the
+    # cascade, so their ids are captured first and recalculated after.
+    affected_risk_ids = set()
+    if orphaned_flow_ids or orphaned_component_ids:
+        affected_risk_ids = risk_ids_citing_targets(
+            component_ids=orphaned_component_ids, flow_ids=orphaned_flow_ids
         )
 
-        count, _ = DataFlow.objects.filter(id__in=orphaned_dataflow_ids).delete()
-        deleted_counts["dataflows"] = count
+    # 2. Flows (FK source/dest component -> CASCADE, delete before components)
+    if orphaned_flow_ids:
+        count, _ = Flow.objects.filter(
+            id__in=orphaned_flow_ids, blueprint=blueprint
+        ).delete()
+        deleted_counts["flows"] = count
 
-        # Recalculate risks that lost threat links
-        for risk in Risk.objects.filter(id__in=affected_risk_ids):
-            recalculate_risk(risk)
-
-    # 3. Components (CASCADE -> ComponentInstanceThreat -> ComponentInstanceCountermeasure)
-    # Scope to this threat model to prevent cross-model deletion from corrupted canvas data
+    # 3. Components (CASCADE -> targets -> the deletion rule removes scenarios
+    #    that lost their only target)
     if orphaned_component_ids:
-        # Capture affected risk IDs before CASCADE wipes RiskThreat links
-        affected_risk_ids = list(
-            RiskThreat.objects.filter(
-                Q(component_threat__component_id__in=orphaned_component_ids)
-                | Q(
-                    flow_threat__data_flow__source_component_id__in=orphaned_component_ids
-                )
-                | Q(
-                    flow_threat__data_flow__dest_component_id__in=orphaned_component_ids
-                )
-            )
-            .values_list("risk_id", flat=True)
-            .distinct()
-        )
-
         count, _ = OrgsystemComponent.objects.filter(
             id__in=orphaned_component_ids,
-            threat_model=threat_model,
+            blueprint=blueprint,
         ).delete()
         deleted_counts["components"] = count
 
-        # Recalculate risks that lost threat links
-        for risk in Risk.objects.filter(id__in=affected_risk_ids):
-            recalculate_risk(risk)
+    for risk in Risk.objects.filter(id__in=affected_risk_ids).select_related(
+        "inherent"
+    ):
+        recalculate_residual(risk)
 
-    # 4. Trust zones
+    # 4. Zones
     if orphaned_zone_ids:
-        count, _ = TrustZone.objects.filter(id__in=orphaned_zone_ids).delete()
-        deleted_counts["trust_zones"] = count
-
-    # 5. Orgsystems and their ThreatModelOrgsystem links
-    if orphaned_system_ids:
-        ThreatModelOrgsystem.objects.filter(
-            threat_model=threat_model,
-            orgsystem_id__in=orphaned_system_ids,
+        count, _ = Zone.objects.filter(
+            id__in=orphaned_zone_ids, blueprint=blueprint
         ).delete()
-        count, _ = Orgsystem.objects.filter(id__in=orphaned_system_ids).delete()
-        deleted_counts["orgsystems"] = count
+        deleted_counts["zones"] = count
 
     return deleted_counts
 
 
-def sync_dfd_nodes_to_components(dfd, threat_model, old_canvas_data=None):
+def _component_fields_from_node(node_type, node_data):
+    """The editor-owned component fields a canvas node carries."""
+    return {
+        "description": node_data.get("description", ""),
+        "actor_type": (
+            node_data.get("actor_type", "")
+            if node_type == "humanActor"
+            else node_data.get("system_type", "")
+            if node_type == "systemActor"
+            else ""
+        ),
+        "data_store_type": node_data.get("data_store_type", "")
+        if node_type == "datastore"
+        else "",
+        "data_sensitivity_level": node_data.get("data_sensitivity", "")
+        if node_type in ("process", "datastore")
+        else "",
+    }
+
+
+def _library_copy_fields(component_library):
+    """Fields a component copies from its library row (M16)."""
+    if component_library is None:
+        return {}
+    return {
+        "component_type": component_library.component_type,
+        "provider": component_library.provider,
+        "kind": component_library.kind,
+    }
+
+
+def _kind_from_node(node_data, component, component_library, previous_library):
+    """The component's kind after a save (M16).
+
+    A kind the canvas names wins. Otherwise a library change copies the new
+    library's kind, except when the user set the kind by hand (it differs from
+    the old library's); then it stays.
+    """
+    named = node_data.get("kind")
+    if named in ASSET_TYPES:
+        return named
+    if component is None:
+        return component_library.kind if component_library else ""
+    old_library_kind = previous_library.kind if previous_library else ""
+    user_set = bool(component.kind) and component.kind != old_library_kind
+    if user_set:
+        return component.kind
+    if component_library is not None and component_library.kind:
+        return component_library.kind
+    return component.kind
+
+
+def crosses_a_boundary(flow, boundaries, zone_parents) -> bool:
+    """True when a boundary's two zones hold the flow's ends on opposite sides
+    (each end inside one zone's subtree) (H19)."""
+
+    def ancestors(zone_id):
+        seen = []
+        while zone_id is not None and zone_id not in seen:
+            seen.append(zone_id)
+            zone_id = zone_parents.get(zone_id)
+        return set(seen)
+
+    source_zones = ancestors(flow.source_component.zone_id)
+    dest_zones = ancestors(flow.dest_component.zone_id)
+    if not source_zones or not dest_zones:
+        return False
+    for zone_a_id, zone_b_id in boundaries:
+        if (zone_a_id in source_zones and zone_b_id in dest_zones) or (
+            zone_b_id in source_zones and zone_a_id in dest_zones
+        ):
+            return True
+    return False
+
+
+def update_crosses_boundary(blueprint) -> None:
+    """Recompute ``crosses_boundary`` for every flow of the blueprint."""
+    boundaries = list(blueprint.boundaries.values_list("zone_a_id", "zone_b_id"))
+    zone_parents = dict(blueprint.zones.values_list("id", "parent_id"))
+    for flow in blueprint.flows.select_related("source_component", "dest_component"):
+        crosses = crosses_a_boundary(flow, boundaries, zone_parents)
+        if flow.crosses_boundary != crosses:
+            Flow.objects.filter(pk=flow.pk).update(crosses_boundary=crosses)
+
+
+NODE_TYPE_TO_CATEGORY = {
+    "process": "process",
+    "datastore": "datastore",
+    "humanActor": "external_human_actor",
+    "systemActor": "external_system_actor",
+}
+
+
+def sync_dfd_nodes_to_components(dfd, blueprint, old_canvas_data=None):
     """
     Sync DFD canvas nodes and edges to backend records.
 
@@ -196,21 +284,33 @@ def sync_dfd_nodes_to_components(dfd, threat_model, old_canvas_data=None):
     3. Creates or updates OrgsystemComponent records for each
     4. Links to ComponentLibrary based on technology if available
     5. Stores the component_id back in the node data
-    6. Auto-generates threats for new components
-    7. Syncs edges to DataFlow records
-    8. Auto-generates threats for new data flows
+    6. Generates library threats for new components and for components whose
+       library changed (never on an ordinary save, plan section 4.1)
+    7. Syncs edges to Flow records, generating threats for new flows and for
+       flows whose ends changed (M7)
 
-    Note: Components are created with orgsystem=None. Users can optionally
-    assign components to systems via the node edit panel if the threat model
-    has linked systems.
+    A technology change updates the component in place (L6): it keeps its row,
+    its flows, its data asset links and its edited threats, gets the new
+    library's fields, and the generation rules add what now applies and drop
+    the untouched generated threats that no longer do.
+
+    Every row this creates belongs to ``blueprint``, and every canvas id it
+    looks up is scoped to that blueprint, so a canvas that names another
+    blueprint's row cannot read or write it.
 
     Args:
         dfd: The DFD instance being saved
-        threat_model: The associated ThreatModel instance
+        blueprint: The Blueprint the DFD visualises
         old_canvas_data: Canvas data from before this save (used to detect
             deleted nodes/edges and clean up orphaned backend records)
     """
-    canvas_data = dfd.canvas_data or {}
+    # Every reader below expects snake_case keys. A canvas copied from a pack
+    # template (seed, template insert) arrives in camelCase; normalising here,
+    # and writing the result back onto the DFD, means the id writers further
+    # down and the next save all see one shape.
+    canvas_data = normalize_canvas(dfd.canvas_data)
+    dfd.canvas_data = canvas_data
+    old_canvas_data = normalize_canvas(old_canvas_data) if old_canvas_data else None
     nodes = canvas_data.get("nodes", [])
     edges = canvas_data.get("edges", [])
 
@@ -226,17 +326,19 @@ def sync_dfd_nodes_to_components(dfd, threat_model, old_canvas_data=None):
         "zones_created": 0,
         "boundaries_synced": 0,
         "boundaries_created": 0,
+        "warnings": [],
     }
 
     if not nodes:
         # Even with no nodes, we must clean up records from the old canvas
         if old_canvas_data:
             with transaction.atomic():
-                _cleanup_orphaned_records(old_canvas_data, canvas_data, threat_model)
+                cleanup = _cleanup_orphaned_records(
+                    old_canvas_data, canvas_data, blueprint
+                )
+                empty_result["warnings"] = (cleanup or {}).get("warnings", [])
         return empty_result
 
-    # Filter to analyzable nodes (process, datastore, humanActor, systemActor)
-    # All of these can have associated threats and participate in data flows
     analyzable_nodes = [
         node for node in nodes if node.get("type") in ANALYZABLE_NODE_TYPES
     ]
@@ -245,203 +347,100 @@ def sync_dfd_nodes_to_components(dfd, threat_model, old_canvas_data=None):
     created_count = 0
     threats_generated = 0
     node_component_map = {}
-    all_synced_components = []
+    # (component, library_changed): what the generation rules run on
+    components_to_generate = []
 
     with transaction.atomic():
         # Sync trust zone nodes first (zones must exist before component assignment)
-        zone_result = _sync_nodes_to_trust_zones(dfd, nodes, threat_model)
+        zone_result = _sync_nodes_to_zones(dfd, nodes, blueprint)
         node_zone_map = zone_result["node_zone_map"]
 
-        # Sync system scope nodes to Orgsystem records
-        system_result = _sync_nodes_to_orgsystems(dfd, nodes, threat_model)
+        # Sync system scope nodes to system assets (components of kind system)
+        node_lookup = {node.get("id"): node for node in nodes}
+        system_result = _sync_scope_nodes_to_system_components(
+            dfd, nodes, blueprint, node_lookup
+        )
         node_system_map = system_result["node_system_map"]
+        # Scope nodes nested in scope nodes: the inner one's parent is the outer.
+        for node in nodes:
+            if node.get("type") != "systemScope":
+                continue
+            parent = node_lookup.get(node.get("parent_id"))
+            parent_system_id = (
+                node_system_map.get(parent.get("id")) if parent is not None else None
+            )
+            OrgsystemComponent.objects.filter(id=node_system_map[node["id"]]).update(
+                parent_component_id=parent_system_id
+            )
 
         for node in analyzable_nodes:
             node_id = node.get("id")
             node_data = node.get("data", {})
             node_type = node.get("type")
-
-            # Get component name from node
             label = node_data.get("label", f"Unnamed {node_type}")
-
-            # Check if this node already has a component_id stored
-            existing_component_id = node_data.get("component_id")
+            category = NODE_TYPE_TO_CATEGORY.get(node_type, "process")
+            fields = _component_fields_from_node(node_type, node_data)
 
             # Find matching ComponentLibrary - try multiple sources
             component_library = None
-
-            # 1. Try component_library_id first (already resolved reference)
             component_library_id = node_data.get("component_library_id")
             if component_library_id:
                 component_library = ComponentLibrary.objects.filter(
                     id=component_library_id
                 ).first()
-
-            # 2. Try component_ref (slug reference from template)
             if not component_library:
                 component_ref = node_data.get("component_ref")
                 if component_ref:
                     component_library = ComponentLibrary.objects.filter(
                         slug=component_ref
                     ).first()
-
-            # 3. Try technology field (legacy/manual assignment)
             if not component_library:
                 technology = node_data.get("technology", "")
                 component_library = _find_component_library(technology, node_type)
+            new_library_id = component_library.id if component_library else None
 
-            # For actors without component_library, still create component records
-            # so they can participate in data flows and have threats generated
-            # Map node types to ComponentLibrary.Category choices
-            node_type_to_category = {
-                "process": "process",
-                "datastore": "datastore",
-                "humanActor": "external_human_actor",
-                "systemActor": "external_system_actor",
-            }
-
-            # Get category for the component
-            category = node_type_to_category.get(node_type, "process")
-
+            component = None
+            existing_component_id = node_data.get("component_id")
             if existing_component_id:
-                # Update existing component
-                try:
-                    component = OrgsystemComponent.objects.get(id=existing_component_id)
+                component = OrgsystemComponent.objects.filter(
+                    id=existing_component_id, blueprint=blueprint
+                ).first()
 
-                    # Detect library change BEFORE any mutation to the component
-                    old_library_id = component.component_library_id
-                    new_library_id = component_library.id if component_library else None
-                    library_changed = old_library_id != new_library_id
-
-                    if library_changed and old_library_id is not None:
-                        # Technology changed (or cleared). Delete the old component
-                        # and create a fresh one. CASCADE handles cleanup of:
-                        #   - ComponentInstanceThreat (+ countermeasures, tests,
-                        #     compliance mappings, risk links)
-                        #   - DataFlow records (+ flow threats, flow countermeasures,
-                        #     flow tests, flow compliance mappings, flow risk links)
-                        #   - ComponentDataAsset records
-                        #   - PentestFinding matches (SET_NULL)
-
-                        # Capture affected risk IDs before CASCADE wipes RiskThreat links
-                        affected_risk_ids = list(
-                            RiskThreat.objects.filter(
-                                Q(component_threat__component=component)
-                                | Q(flow_threat__data_flow__source_component=component)
-                                | Q(flow_threat__data_flow__dest_component=component)
-                            )
-                            .values_list("risk_id", flat=True)
-                            .distinct()
-                        )
-
-                        component.delete()
-
-                        # Recalculate risks that lost threat links
-                        for risk in Risk.objects.filter(id__in=affected_risk_ids):
-                            recalculate_risk(risk)
-
-                        # Create replacement component with new library
-                        component = OrgsystemComponent.objects.create(
-                            name=label,
-                            orgsystem=None,
-                            threat_model=threat_model,
-                            component_library=component_library,
-                            category=category,
-                            description=node_data.get("description", ""),
-                            actor_type=(
-                                node_data.get("actor_type", "")
-                                if node_type == "humanActor"
-                                else node_data.get("system_type", "")
-                                if node_type == "systemActor"
-                                else ""
-                            ),
-                            data_store_type=node_data.get("data_store_type", "")
-                            if node_type == "datastore"
-                            else "",
-                            data_sensitivity_level=node_data.get("data_sensitivity", "")
-                            if node_type in ("process", "datastore")
-                            else "",
-                        )
-                        created_count += 1
-                        all_synced_components.append(component)
-                    else:
-                        # No library change (or first assignment): update in place
-                        component.name = label
-                        component.component_library = component_library
-                        component.category = category
-                        component.description = node_data.get("description", "")
-                        if node_type == "humanActor":
-                            component.actor_type = node_data.get("actor_type", "")
-                        elif node_type == "systemActor":
-                            component.actor_type = node_data.get("system_type", "")
-                        if node_type == "datastore":
-                            component.data_store_type = node_data.get(
-                                "data_store_type", ""
-                            )
-                        if node_type in ("process", "datastore"):
-                            component.data_sensitivity_level = node_data.get(
-                                "data_sensitivity", ""
-                            )
-                        # NOTE: Don't overwrite orgsystem - preserve user's system assignment
-                        # Backfill threat_model if not set (for components created before this link existed)
-                        if component.threat_model_id is None:
-                            component.threat_model = threat_model
-                        component.save()
-                        synced_count += 1
-                        all_synced_components.append(component)
-
-                except OrgsystemComponent.DoesNotExist:
-                    # Component was deleted, create new one
-                    component = OrgsystemComponent.objects.create(
-                        name=label,
-                        orgsystem=None,  # No automatic system assignment
-                        threat_model=threat_model,
-                        component_library=component_library,
-                        category=category,
-                        description=node_data.get("description", ""),
-                        actor_type=(
-                            node_data.get("actor_type", "")
-                            if node_type == "humanActor"
-                            else node_data.get("system_type", "")
-                            if node_type == "systemActor"
-                            else ""
-                        ),
-                        data_store_type=node_data.get("data_store_type", "")
-                        if node_type == "datastore"
-                        else "",
-                        data_sensitivity_level=node_data.get("data_sensitivity", "")
-                        if node_type in ("process", "datastore")
-                        else "",
-                    )
-                    created_count += 1
-                    all_synced_components.append(component)
-            else:
-                # Create new component with no system assigned
-                # component_library may be None for actors without technology
+            if component is None:
+                copied = _library_copy_fields(component_library)
+                copied["kind"] = _kind_from_node(
+                    node_data, None, component_library, None
+                )
                 component = OrgsystemComponent.objects.create(
                     name=label,
-                    orgsystem=None,  # No automatic system assignment
-                    threat_model=threat_model,
+                    blueprint=blueprint,
                     component_library=component_library,
                     category=category,
-                    description=node_data.get("description", ""),
-                    actor_type=(
-                        node_data.get("actor_type", "")
-                        if node_type == "humanActor"
-                        else node_data.get("system_type", "")
-                        if node_type == "systemActor"
-                        else ""
-                    ),
-                    data_store_type=node_data.get("data_store_type", "")
-                    if node_type == "datastore"
-                    else "",
-                    data_sensitivity_level=node_data.get("data_sensitivity", "")
-                    if node_type in ("process", "datastore")
-                    else "",
+                    **fields,
+                    **copied,
                 )
                 created_count += 1
-                all_synced_components.append(component)
                 synced_count += 1
+                components_to_generate.append((component, False))
+            else:
+                library_changed = component.component_library_id != new_library_id
+                previous_library = component.component_library
+                kind = _kind_from_node(
+                    node_data, component, component_library, previous_library
+                )
+                component.name = label
+                component.component_library = component_library
+                component.category = category
+                for key, value in fields.items():
+                    setattr(component, key, value)
+                if library_changed:
+                    for key, value in _library_copy_fields(component_library).items():
+                        setattr(component, key, value)
+                component.kind = kind
+                component.save()
+                synced_count += 1
+                if library_changed:
+                    components_to_generate.append((component, True))
 
             node_component_map[node_id] = component.id
 
@@ -452,7 +451,6 @@ def sync_dfd_nodes_to_components(dfd, threat_model, old_canvas_data=None):
         # by walking each node's parentId ancestry chain.
         # With process container hierarchy (D1), a node's direct parentId
         # may point to a process (not a trust zone), so we must walk up.
-        node_lookup = {node.get("id"): node for node in nodes}
 
         for node in analyzable_nodes:
             node_id = node.get("id")
@@ -502,33 +500,42 @@ def sync_dfd_nodes_to_components(dfd, threat_model, old_canvas_data=None):
                 ancestor_node = node_lookup.get(walk_id)
                 walk_id = ancestor_node.get("parent_id") if ancestor_node else None
 
+            # A component drawn inside a scope node gets that system asset as
+            # its parent when it has no process parent (section 4.9).
             OrgsystemComponent.objects.filter(id=component_id).update(
-                trust_zone_id=zone_id,
-                orgsystem_id=system_id,
-                parent_component_id=parent_component_db_id,
+                zone_id=zone_id,
+                parent_component_id=parent_component_db_id or system_id,
             )
 
-        # Auto-generate threats for all synced components (idempotent via get_or_create)
-        for component in all_synced_components:
-            if component.component_library:
-                generated = _generate_threats_for_component(component)
-                threats_generated += generated
+        # Generation runs only on its triggers: a new component, or one whose
+        # library changed. An ordinary save generates nothing, so a generated
+        # threat the user deleted stays deleted.
+        for component, library_changed in components_to_generate:
+            component.refresh_from_db()
+            if library_changed:
+                remove_threats_that_stopped_applying(component)
+            if component.component_library_id:
+                threats_generated += ensure_generated_threats(component)
 
-        # Sync edges to DataFlow records and generate flow threats
-        flow_result = _sync_edges_to_dataflows(dfd, edges, node_component_map)
+        # Sync edges to Flow records and generate flow threats
+        flow_result = _sync_edges_to_flows(dfd, edges, node_component_map, blueprint)
 
-        # Sync trust boundary edges to TrustBoundary DB records
-        boundary_result = _sync_edges_to_trust_boundaries(
-            dfd, edges, node_zone_map, threat_model
+        # Sync trust boundary edges to Boundary DB records
+        boundary_result = _sync_edges_to_boundaries(
+            dfd, edges, node_zone_map, blueprint
         )
+        update_crosses_boundary(blueprint)
 
         # Clean up orphaned records (nodes/edges removed since last save)
+        warnings = []
         if old_canvas_data:
-            _cleanup_orphaned_records(
-                old_canvas_data, dfd.canvas_data or {}, threat_model
+            cleanup = _cleanup_orphaned_records(
+                old_canvas_data, dfd.canvas_data or {}, blueprint
             )
+            warnings = (cleanup or {}).get("warnings", [])
 
     return {
+        "warnings": warnings,
         "synced_count": synced_count,
         "created_count": created_count,
         "threats_generated": threats_generated,
@@ -604,218 +611,65 @@ def _update_canvas_with_component_ids(dfd, node_component_map):
         dfd.save(update_fields=["canvas_data"])
 
 
-def _generate_countermeasures_for_threat(threat_instance):
+def _authentication_from_edge(edge_data) -> list:
+    """The flow's authentication list from the canvas.
+
+    ``authentication`` is the list; the retired boolean ``authenticated``
+    (the editor still sends it until step 15) maps to ``[unspecified]`` or an
+    empty list (I9).
     """
-    Generate countermeasures for a threat based on applicable countermeasures.
-
-    Works for both ComponentInstanceThreat and DataFlowInstanceThreat.
-
-    Args:
-        threat_instance: ComponentInstanceThreat or DataFlowInstanceThreat instance
-
-    Returns:
-        Number of countermeasures created
-    """
-    from apps.compliance.models import CountermeasureLibraryStandard
-    from apps.threats.models import (
-        CountermeasureLibrary,
-        InstanceCountermeasureStandard,
-    )
-
-    is_component_threat = isinstance(threat_instance, ComponentInstanceThreat)
-
-    # Find countermeasures that apply to this threat's library
-    applicable_countermeasures = CountermeasureLibrary.objects.filter(
-        applicable_threats=threat_instance.threat_library,
-    )
-
-    # Resolve threat_model_id
-    if is_component_threat:
-        threat_model_id = (
-            threat_instance.component.threat_model_id
-            if threat_instance.component
-            else None
-        )
-    else:
-        data_flow = threat_instance.data_flow
-        threat_model_id = None
-        if hasattr(data_flow, "source_component") and data_flow.source_component:
-            threat_model_id = data_flow.source_component.threat_model_id
-        if (
-            not threat_model_id
-            and hasattr(data_flow, "dest_component")
-            and data_flow.dest_component
-        ):
-            threat_model_id = data_flow.dest_component.threat_model_id
-
-    if not threat_model_id:
-        return 0
-
-    # Filter by connected packs.
-    # Allow countermeasures with no source_pack (custom/legacy) to always pass through.
-    from apps.threat_models.models import ThreatModel, ThreatModelLibraryPack
-
-    connected_pack_ids = ThreatModelLibraryPack.objects.filter(
-        threat_model_id=threat_model_id
-    ).values_list("library_pack_id", flat=True)
-    applicable_countermeasures = applicable_countermeasures.filter(
-        Q(source_pack_id__in=connected_pack_ids) | Q(source_pack__isnull=True)
-    )
-
-    threat_model = ThreatModel.objects.get(id=threat_model_id)
-
-    created_count = 0
-    has_platform_countermeasure = False
-    for countermeasure_library in applicable_countermeasures:
-        countermeasure_status = countermeasure_library.default_status
-        # Find or create the countermeasure instance scoped to the threat model
-        cm_instance, created = InstanceCountermeasure.objects.get_or_create(
-            threat_model=threat_model,
-            countermeasure_library=countermeasure_library,
-            defaults={
-                "status": countermeasure_status,
-                "countermeasure_name": countermeasure_library.name
-                if countermeasure_library
-                else "",
-                "countermeasure_description": countermeasure_library.description
-                if countermeasure_library
-                else "",
-                "control_functions": countermeasure_library.control_functions
-                if countermeasure_library
-                else [],
-                "control_nature": countermeasure_library.control_nature
-                if countermeasure_library
-                else "",
-            },
-        )
-        # Always create the junction link (idempotent via unique constraint)
-        link_kwargs = {"countermeasure": cm_instance}
-        if is_component_threat:
-            link_kwargs["component_threat"] = threat_instance
-        else:
-            link_kwargs["flow_threat"] = threat_instance
-        _link_created = CountermeasureThreatLink.objects.get_or_create(**link_kwargs)[1]
-        if created or _link_created:
-            created_count += 1
-            if countermeasure_status == "platform":
-                has_platform_countermeasure = True
-            # Propagate library-level compliance mappings to instance level (#29)
-            # NAVE PATCH (precogly/precogly#338): exclude orphaned mappings
-            # (requirement=None, left behind by a renamed/typo'd
-            # section_code on reimport instead of being CASCADE-deleted --
-            # see apps/compliance/models.py). Without this, `ls.requirement
-            # .section_code` etc. below would raise AttributeError on the
-            # first orphaned row, and there's nothing meaningful to
-            # propagate to the instance level for one anyway.
-            library_standards = (
-                CountermeasureLibraryStandard.objects.filter(
-                    countermeasure_library=countermeasure_library,
-                )
-                .exclude(requirement__isnull=True)
-                .select_related("requirement", "requirement__framework")
+    if "authentication" in edge_data:
+        try:
+            return clean_type_list(
+                edge_data.get("authentication"), field="authentication"
             )
-            if library_standards.exists():
-                InstanceCountermeasureStandard.objects.bulk_create(
-                    [
-                        InstanceCountermeasureStandard(
-                            countermeasure=cm_instance,
-                            requirement=ls.requirement,
-                            sufficiency=ls.sufficiency,
-                            section_code=ls.requirement.section_code,
-                            framework_name=ls.requirement.framework.name,
-                            requirement_description=ls.requirement.description,
-                        )
-                        for ls in library_standards
-                    ],
-                    ignore_conflicts=True,
-                )
-
-    # Recalculate threat status if any platform countermeasures were created
-    if has_platform_countermeasure:
-        from apps.threats.services import recalculate_threat_status
-
-        recalculate_threat_status(threat_instance)
-
-    return created_count
+        except ValueError:
+            return []
+    if edge_data.get("authenticated"):
+        return [UNSPECIFIED]
+    return []
 
 
-def _generate_threats_for_component(component):
+def _flow_fields_from_edge(edge_data) -> dict:
+    flow_type = edge_data.get("flow_type") or "data"
+    if flow_type not in FLOW_TYPES:
+        flow_type = "data"
+    data_like = is_data_like(flow_type)
+    port = edge_data.get("port")
+    try:
+        port = int(port) if port not in (None, "") else None
+    except (TypeError, ValueError):
+        port = None
+    return {
+        "label": edge_data.get("label", ""),
+        "flow_type": flow_type,
+        # Protocol, port and encryption mean nothing on a signal or energy flow.
+        "protocol": edge_data.get("protocol", "") if data_like else "",
+        "port": port if data_like else None,
+        "encrypted": bool(edge_data.get("encrypted", False)) if data_like else False,
+        "authentication": _authentication_from_edge(edge_data),
+        "description": edge_data.get("description", ""),
+        "has_sensitive_data": edge_data.get("has_sensitive_data", False),
+        "data_classification": edge_data.get("data_classification", []),
+    }
+
+
+def _sync_edges_to_flows(dfd, edges, node_component_map, blueprint):
     """
-    Generate threats for a component based on its library type.
+    Sync DFD edges to Flow records and generate threats.
 
-    Returns the number of threats created.
-    """
-    if not component.component_library:
-        return 0
-
-    # Get threats linked to this component's library type
-    # Only include threats that apply to components (not flow-only threats)
-    library_threats = ComponentLibraryThreat.objects.filter(
-        component_library=component.component_library,
-        applies_to__in=[
-            ComponentLibraryThreat.AppliesTo.COMPONENT,
-            ComponentLibraryThreat.AppliesTo.BOTH,
-        ],
-    ).select_related("threat_library")
-
-    # Filter by connected packs if component has a threat model.
-    # Allow threats with no source_pack (custom/legacy) to always pass through.
-    if component.threat_model_id:
-        from apps.threat_models.models import ThreatModelLibraryPack
-
-        connected_pack_ids = ThreatModelLibraryPack.objects.filter(
-            threat_model_id=component.threat_model_id
-        ).values_list("library_pack_id", flat=True)
-        library_threats = library_threats.filter(
-            Q(threat_library__source_pack_id__in=connected_pack_ids)
-            | Q(threat_library__source_pack__isnull=True)
-        )
-
-    created_count = 0
-
-    for lib_threat in library_threats:
-        threat_lib = lib_threat.threat_library
-        threat_instance, created = ComponentInstanceThreat.objects.get_or_create(
-            component=component,
-            threat_library=threat_lib,
-            defaults={
-                "inherent_severity": lib_threat.default_severity,
-                "status": ComponentInstanceThreat.Status.EXPOSED,
-                # Copy metadata for self-sufficiency if library is later removed
-                "threat_name": threat_lib.name if threat_lib else "",
-                "threat_description": threat_lib.description if threat_lib else "",
-                "taxonomy_snapshot": build_taxonomy_snapshot(threat_lib),
-            },
-        )
-        if created:
-            created_count += 1
-            # Auto-generate countermeasures for this new threat
-            _generate_countermeasures_for_threat(threat_instance)
-
-    return created_count
-
-
-def _sync_edges_to_dataflows(dfd, edges, node_component_map):
-    """
-    Sync DFD edges to DataFlow records and generate threats.
-
-    Only creates DataFlow records for edges where BOTH source and dest
-    nodes have been synced to components (i.e., have technologies assigned).
-
-    Args:
-        dfd: The DFD instance
-        edges: List of edges from canvas_data
-        node_component_map: Mapping of node_id -> component_id
+    Only creates Flow records for edges where BOTH source and dest nodes have
+    been synced to components. Threats are generated for new flows and for
+    flows whose ends changed (M7); an ordinary save generates nothing.
 
     Returns:
         dict with synced_count, created_count, threats_generated
     """
-
     synced_count = 0
     created_count = 0
     threats_generated = 0
-    all_synced_flows = []
-    edge_dataflow_map = {}
+    flows_to_generate = []  # (flow, ends_changed)
+    edge_flow_map = {}
 
     for edge in edges:
         # Only sync dataFlow edges — skip trust boundaries and other edge types
@@ -830,82 +684,53 @@ def _sync_edges_to_dataflows(dfd, edges, node_component_map):
         # Skip edges where either endpoint doesn't have a component
         source_component_id = node_component_map.get(source_node_id)
         target_component_id = node_component_map.get(target_node_id)
-
         if not source_component_id or not target_component_id:
             continue
 
-        # Get edge properties
-        label = edge_data.get("label", "")
-        protocol = edge_data.get("protocol", "")
-        encrypted = edge_data.get("encrypted", False)
-        authenticated = edge_data.get("authenticated", False)
-        description = edge_data.get("description", "")
-        has_sensitive_data = edge_data.get("has_sensitive_data", False)
-        data_classification = edge_data.get("data_classification", [])
+        fields = _flow_fields_from_edge(edge_data)
 
-        # Check if this edge already has a dataflow_id stored
-        existing_dataflow_id = edge_data.get("dataflow_id")
+        flow = None
+        existing_flow_id = edge_data.get("dataflow_id")
+        if existing_flow_id:
+            flow = Flow.objects.filter(id=existing_flow_id, blueprint=blueprint).first()
 
-        if existing_dataflow_id:
-            # Update existing DataFlow
-            try:
-                dataflow = DataFlow.objects.get(id=existing_dataflow_id)
-                dataflow.label = label
-                dataflow.protocol = protocol
-                dataflow.encrypted = encrypted
-                dataflow.authenticated = authenticated
-                dataflow.description = description
-                dataflow.has_sensitive_data = has_sensitive_data
-                dataflow.data_classification = data_classification
-                dataflow.source_component_id = source_component_id
-                dataflow.dest_component_id = target_component_id
-                dataflow.save()
-                synced_count += 1
-                all_synced_flows.append(dataflow)
-            except DataFlow.DoesNotExist:
-                # DataFlow was deleted, create new one
-                dataflow = DataFlow.objects.create(
-                    source_component_id=source_component_id,
-                    dest_component_id=target_component_id,
-                    label=label,
-                    edge_id=edge_id,
-                    protocol=protocol,
-                    encrypted=encrypted,
-                    authenticated=authenticated,
-                    description=description,
-                    has_sensitive_data=has_sensitive_data,
-                    data_classification=data_classification,
-                )
-                created_count += 1
-                synced_count += 1
-                all_synced_flows.append(dataflow)
-        else:
-            # Create new DataFlow
-            dataflow = DataFlow.objects.create(
+        if flow is None:
+            flow = Flow.objects.create(
+                blueprint=blueprint,
                 source_component_id=source_component_id,
                 dest_component_id=target_component_id,
-                label=label,
                 edge_id=edge_id,
-                protocol=protocol,
-                encrypted=encrypted,
-                authenticated=authenticated,
-                description=description,
-                has_sensitive_data=has_sensitive_data,
-                data_classification=data_classification,
+                **fields,
             )
             created_count += 1
-            all_synced_flows.append(dataflow)
             synced_count += 1
+            flows_to_generate.append((flow, False))
+        else:
+            ends_changed = (
+                flow.source_component_id != source_component_id
+                or flow.dest_component_id != target_component_id
+                or flow.flow_type != fields["flow_type"]
+            )
+            for key, value in fields.items():
+                setattr(flow, key, value)
+            flow.source_component_id = source_component_id
+            flow.dest_component_id = target_component_id
+            flow.edge_id = edge_id
+            flow.save()
+            synced_count += 1
+            if ends_changed:
+                flows_to_generate.append((flow, True))
 
-        edge_dataflow_map[edge_id] = dataflow.id
+        edge_flow_map[edge_id] = flow.id
 
     # Update canvas_data with dataflow_ids
-    _update_canvas_with_dataflow_ids(dfd, edge_dataflow_map)
+    _update_canvas_with_dataflow_ids(dfd, edge_flow_map)
 
-    # Generate threats for all synced data flows (idempotent via get_or_create)
-    for dataflow in all_synced_flows:
-        generated = _generate_threats_for_dataflow(dataflow)
-        threats_generated += generated
+    for flow, ends_changed in flows_to_generate:
+        flow.refresh_from_db()
+        if ends_changed:
+            remove_threats_that_stopped_applying(flow)
+        threats_generated += ensure_generated_threats(flow)
 
     return {
         "synced_count": synced_count,
@@ -937,156 +762,70 @@ def _update_canvas_with_dataflow_ids(dfd, edge_dataflow_map):
         dfd.save(update_fields=["canvas_data"])
 
 
-def _generate_threats_for_dataflow(dataflow):
-    """
-    Generate threats for a data flow based on connected components.
-
-    For data flows, we look at threats associated with EITHER endpoint's
-    component library where applies_to is "flow" or "both".
-
-    Returns the number of threats created.
-    """
-    source_component = dataflow.source_component
-    dest_component = dataflow.dest_component
-
-    # Collect component libraries from both endpoints
-    component_libraries = []
-    if source_component and source_component.component_library:
-        component_libraries.append(source_component.component_library)
-    if dest_component and dest_component.component_library:
-        component_libraries.append(dest_component.component_library)
-
-    created_count = 0
-    seen_threat_ids = set()
-
-    # If we have component libraries, get threats specific to those components
-    if component_libraries:
-        # Get threats that apply to data flows for these component types
-        library_threats = (
-            ComponentLibraryThreat.objects.filter(
-                component_library__in=component_libraries,
-                applies_to__in=[
-                    ComponentLibraryThreat.AppliesTo.FLOW,
-                    ComponentLibraryThreat.AppliesTo.BOTH,
-                ],
-            )
-            .select_related("threat_library")
-            .distinct()
-        )
-
-        # Filter by connected packs if dataflow has a threat model.
-        # Allow threats with no source_pack (custom/legacy) to always pass through.
-        threat_model_id = getattr(source_component, "threat_model_id", None) or getattr(
-            dest_component, "threat_model_id", None
-        )
-        if threat_model_id:
-            from apps.threat_models.models import ThreatModelLibraryPack
-
-            connected_pack_ids = ThreatModelLibraryPack.objects.filter(
-                threat_model_id=threat_model_id
-            ).values_list("library_pack_id", flat=True)
-            library_threats = library_threats.filter(
-                Q(threat_library__source_pack_id__in=connected_pack_ids)
-                | Q(threat_library__source_pack__isnull=True)
-            )
-
-        for lib_threat in library_threats:
-            # Avoid duplicate threats if both endpoints have the same threat
-            if lib_threat.threat_library_id in seen_threat_ids:
-                continue
-            seen_threat_ids.add(lib_threat.threat_library_id)
-
-            threat_lib = lib_threat.threat_library
-            threat_instance, created = DataFlowInstanceThreat.objects.get_or_create(
-                data_flow=dataflow,
-                threat_library=threat_lib,
-                defaults={
-                    "inherent_severity": lib_threat.default_severity,
-                    "status": DataFlowInstanceThreat.Status.EXPOSED,
-                    # Copy metadata for self-sufficiency if library is later removed
-                    "threat_name": threat_lib.name if threat_lib else "",
-                    "threat_description": threat_lib.description if threat_lib else "",
-                    "taxonomy_snapshot": build_taxonomy_snapshot(threat_lib),
-                },
-            )
-            if created:
-                created_count += 1
-                # Auto-generate countermeasures for this new threat
-                _generate_countermeasures_for_threat(threat_instance)
-
-    return created_count
-
-
-def _sync_nodes_to_trust_zones(dfd, nodes, threat_model):
-    """Sync trust zone canvas nodes to TrustZone DB records."""
-    trust_zone_nodes = [node for node in nodes if node.get("type") == "trustZone"]
+def _sync_nodes_to_zones(dfd, nodes, blueprint):
+    """Sync trust zone canvas nodes to Zone DB records."""
+    zone_nodes = [node for node in nodes if node.get("type") == "trustZone"]
 
     synced_count = 0
     created_count = 0
-    node_zone_map = {}  # canvas node_id -> TrustZone DB id
+    node_zone_map = {}  # canvas node_id -> Zone DB id
 
-    # `trust_zone_id` below is caller-supplied canvas data, so the lookup is scoped
-    # to the diagram's own organization. Unscoped it renamed and reclassified another
-    # tenant's zone — precogly/precogly#406. Taken from the threat model rather than
-    # `dfd.threat_model`, which is nullable.
-    org_id = threat_model.organization_id
-
-    for node in trust_zone_nodes:
+    # `zone_id` below is caller-supplied canvas data, so the lookup is scoped
+    # to the diagram's own blueprint. Unscoped it renamed and reclassified another
+    # tenant's zone — precogly/precogly#406.
+    for node in zone_nodes:
         node_id = node.get("id")
         node_data = node.get("data", {})
 
         # snake_case — parser already converted from frontend camelCase
         label = node_data.get("label", "Unnamed Zone")
-        trust_level = node_data.get("trust_level", 75)
+        # No value means not set (F13); no fallback level.
+        trust_level = _trust_level_from_canvas(node_data.get("trust_level"))
         description = node_data.get("description", "")
+        zone_type = node_data.get("zone_type") or "trust"
+        if zone_type not in ZONE_TYPES:
+            zone_type = "trust"
+        fields = {
+            "name": label,
+            "zone_type": zone_type,
+            "trust_level": trust_level,
+            "description": description,
+        }
 
-        existing_trust_zone_id = node_data.get("trust_zone_id")
+        existing_zone_id = node_data.get("trust_zone_id")
 
-        if existing_trust_zone_id:
+        if existing_zone_id:
             try:
-                trust_zone = TrustZone.objects.get(
-                    id=existing_trust_zone_id, organization_id=org_id
-                )
-                trust_zone.name = label
-                trust_zone.trust_level = trust_level
-                trust_zone.description = description
-                trust_zone.save()
+                zone = Zone.objects.get(id=existing_zone_id, blueprint=blueprint)
+                for key, value in fields.items():
+                    setattr(zone, key, value)
+                zone.save()
                 synced_count += 1
-            except TrustZone.DoesNotExist:
-                trust_zone = TrustZone.objects.create(
-                    organization_id=org_id,
-                    name=label,
-                    trust_level=trust_level,
-                    description=description,
-                )
+            except Zone.DoesNotExist:
+                zone = Zone.objects.create(blueprint=blueprint, **fields)
                 created_count += 1
         else:
-            trust_zone = TrustZone.objects.create(
-                organization_id=org_id,
-                name=label,
-                trust_level=trust_level,
-                description=description,
-            )
+            zone = Zone.objects.create(blueprint=blueprint, **fields)
             created_count += 1
             synced_count += 1
 
-        node_zone_map[node_id] = trust_zone.id
+        node_zone_map[node_id] = zone.id
 
     # Second pass: set parent relationships for nested zones
-    for node in trust_zone_nodes:
+    for node in zone_nodes:
         node_id = node.get("id")
         parent_node_id = node.get("parent_id")  # React Flow parentId → snake_case
         if parent_node_id and parent_node_id in node_zone_map:
-            TrustZone.objects.filter(id=node_zone_map[node_id]).update(
+            Zone.objects.filter(id=node_zone_map[node_id]).update(
                 parent_id=node_zone_map[parent_node_id]
             )
         elif node_id in node_zone_map:
             # Clear parent if zone was un-nested on canvas
-            TrustZone.objects.filter(id=node_zone_map[node_id]).exclude(
+            Zone.objects.filter(id=node_zone_map[node_id]).exclude(
                 parent__isnull=True
             ).update(parent=None)
 
-    _update_canvas_with_trust_zone_ids(dfd, node_zone_map)
+    _update_canvas_with_zone_ids(dfd, node_zone_map)
 
     return {
         "synced_count": synced_count,
@@ -1095,8 +834,8 @@ def _sync_nodes_to_trust_zones(dfd, nodes, threat_model):
     }
 
 
-def _update_canvas_with_trust_zone_ids(dfd, node_zone_map):
-    """Update DFD canvas_data with trust_zone_ids for synced zone nodes."""
+def _update_canvas_with_zone_ids(dfd, node_zone_map):
+    """Update DFD canvas_data with zone_ids for synced zone nodes."""
     if not node_zone_map:
         return
 
@@ -1118,63 +857,63 @@ def _update_canvas_with_trust_zone_ids(dfd, node_zone_map):
         dfd.save(update_fields=["canvas_data"])
 
 
-def _sync_nodes_to_orgsystems(dfd, nodes, threat_model):
-    """Sync system scope canvas nodes to Orgsystem DB records."""
-    system_scope_nodes = [node for node in nodes if node.get("type") == "systemScope"]
+def _sync_scope_nodes_to_system_components(dfd, nodes, blueprint, node_lookup):
+    """A ``systemScope`` node is a system asset: an ``OrgsystemComponent`` with
+    ``kind`` system, or subsystem when drawn inside another scope (F20). The
+    panel's own choice (``kind`` of system or subsystem on the node) wins over
+    the nesting rule when it is set.
 
-    synced_count = 0
+    Its optional ``orgsystem_id`` links the asset to an inventory row of the
+    same organization that the user picked; sync never creates or deletes
+    ``Orgsystem`` rows. Returns ``{node id: component id}``.
+    """
+    scope_nodes = [node for node in nodes if node.get("type") == "systemScope"]
+    organization_id = blueprint.threat_model.organization_id
+    node_system_map = {}
     created_count = 0
-    node_system_map = {}  # canvas node_id -> Orgsystem DB id
-
-    # Derive organization from the threat model
-    organization = threat_model.organization if threat_model else None
-
-    for node in system_scope_nodes:
+    synced_count = 0
+    for node in scope_nodes:
         node_id = node.get("id")
         node_data = node.get("data", {})
-
-        label = node_data.get("label", "Unnamed System")
-        owner = node_data.get("owner", "")
-        description = node_data.get("description", "")
-
-        existing_orgsystem_id = node_data.get("orgsystem_id")
-
-        if existing_orgsystem_id:
-            try:
-                orgsystem = Orgsystem.objects.get(id=existing_orgsystem_id)
-                orgsystem.name = label
-                orgsystem.owner = owner
-                orgsystem.description = description
-                orgsystem.save()
-                synced_count += 1
-            except Orgsystem.DoesNotExist:
-                orgsystem = Orgsystem.objects.create(
-                    name=label,
-                    owner=owner,
-                    description=description,
-                    organization=organization,
-                )
-                created_count += 1
+        parent = node_lookup.get(node.get("parent_id"))
+        chosen_kind = node_data.get("kind")
+        if chosen_kind in ("system", "subsystem"):
+            kind = chosen_kind
         else:
-            orgsystem = Orgsystem.objects.create(
-                name=label,
-                owner=owner,
-                description=description,
-                organization=organization,
+            kind = (
+                "subsystem"
+                if parent is not None and parent.get("type") == "systemScope"
+                else "system"
             )
+        orgsystem = None
+        orgsystem_id = node_data.get("orgsystem_id")
+        if orgsystem_id:
+            orgsystem = Orgsystem.objects.filter(
+                id=orgsystem_id, organization_id=organization_id
+            ).first()
+        fields = {
+            "name": node_data.get("label", "Unnamed System"),
+            "description": node_data.get("description", ""),
+            "category": "process",
+            "kind": kind,
+            "orgsystem": orgsystem,
+        }
+        component = None
+        existing_id = node_data.get("component_id")
+        if existing_id:
+            component = OrgsystemComponent.objects.filter(
+                id=existing_id, blueprint=blueprint
+            ).first()
+        if component is None:
+            component = OrgsystemComponent.objects.create(blueprint=blueprint, **fields)
             created_count += 1
-            synced_count += 1
-
-        node_system_map[node_id] = orgsystem.id
-
-        # Auto-connect the system to the threat model
-        if threat_model:
-            ThreatModelOrgsystem.objects.get_or_create(
-                threat_model=threat_model, orgsystem=orgsystem
-            )
-
-    _update_canvas_with_orgsystem_ids(dfd, node_system_map)
-
+        else:
+            for key, value in fields.items():
+                setattr(component, key, value)
+            component.save()
+        synced_count += 1
+        node_system_map[node_id] = component.id
+    _update_canvas_with_component_ids(dfd, node_system_map)
     return {
         "synced_count": synced_count,
         "created_count": created_count,
@@ -1182,39 +921,65 @@ def _sync_nodes_to_orgsystems(dfd, nodes, threat_model):
     }
 
 
-def _update_canvas_with_orgsystem_ids(dfd, node_system_map):
-    """Update DFD canvas_data with orgsystem_ids for synced system scope nodes."""
-    if not node_system_map:
-        return
-
-    canvas_data = dfd.canvas_data or {}
-    nodes = canvas_data.get("nodes", [])
-
-    updated = False
-    for node in nodes:
-        node_id = node.get("id")
-        if node_id in node_system_map:
-            if "data" not in node:
-                node["data"] = {}
-            if node["data"].get("orgsystem_id") != node_system_map[node_id]:
-                node["data"]["orgsystem_id"] = node_system_map[node_id]
-                updated = True
-
-    if updated:
-        dfd.canvas_data = canvas_data
-        dfd.save(update_fields=["canvas_data"])
+# The boundary panel's controls, stored in `format_metadata` until step 6 gives
+# them real fields. Sync owns exactly these keys: it writes every one on each
+# save (a key missing from the canvas means the user cleared it) and touches no
+# other key, so what an import kept beside them survives (M5, N1).
+def _trust_level_from_canvas(raw):
+    if raw is None or raw == "":
+        return None
+    try:
+        level = int(raw)
+    except (TypeError, ValueError):
+        return None
+    return max(0, min(100, level))
 
 
-def _sync_edges_to_trust_boundaries(dfd, edges, node_zone_map, threat_model):
-    """Sync trust boundary edges to TrustBoundary DB records."""
+def _boundary_fields_from_edge(edge_data, existing_session):
+    """The boundary fields sync owns, read from the canvas (M5, N1).
+
+    A missing key means cleared, which is how the editor clears a value. The
+    two session timeouts, protocols and data transformation have no control
+    and are left alone.
+    """
+    boundary_type = edge_data.get("boundary_type") or "trust"
+    if boundary_type not in BOUNDARY_TYPES:
+        boundary_type = "trust"
+    try:
+        authentication = clean_type_list(
+            edge_data.get("authentication_methods"), field="authentication"
+        )
+    except ValueError:
+        authentication = []
+    try:
+        authorization = clean_type_list(
+            edge_data.get("access_control_methods"), field="authorization"
+        )
+    except ValueError:
+        authorization = []
+    return {
+        "label": edge_data.get("label", ""),
+        "boundary_type": boundary_type,
+        "authentication": authentication,
+        "authorization": authorization,
+        "data_validation": bool(edge_data.get("data_validation", False)),
+        "logging": bool(edge_data.get("logging", False)),
+        "monitoring": bool(edge_data.get("monitoring", False)),
+        "rate_limit": str(edge_data.get("rate_limit") or "")[:255],
+        "session_management": session_management_from_canvas(
+            existing_session, edge_data
+        ),
+    }
+
+
+def _sync_edges_to_boundaries(dfd, edges, node_zone_map, blueprint):
+    """Sync trust boundary edges to Boundary DB records."""
     synced_count = 0
     created_count = 0
     edge_boundary_map = {}
 
-    # Same reason as `_sync_nodes_to_trust_zones`: `trust_boundary_id` arrives in the
+    # Same reason as `_sync_nodes_to_zones`: `boundary_id` arrives in the
     # canvas payload, so the lookup is scoped rather than taken on trust.
-    org_id = threat_model.organization_id
-
     for edge in edges:
         if edge.get("type") != "trustBoundary":
             continue
@@ -1229,70 +994,43 @@ def _sync_edges_to_trust_boundaries(dfd, edges, node_zone_map, threat_model):
         if not zone_a_id or not zone_b_id:
             continue
 
-        label = edge_data.get("label", "")
-
-        # Extract security metadata into format_metadata dict
-        # Keys are already snake_case (parser converted from frontend camelCase)
-        metadata_keys = [
-            "access_control_methods",
-            "authentication_methods",
-            "access_token_expires",
-            "access_token_ttl",
-            "has_refresh_token",
-            "refresh_token_expires",
-            "refresh_token_ttl",
-            "can_user_logout",
-            "can_system_logout",
-        ]
-        format_metadata = {
-            key: edge_data[key] for key in metadata_keys if key in edge_data
-        }
-
         existing_boundary_id = edge_data.get("trust_boundary_id")
-
+        boundary = None
         if existing_boundary_id:
-            try:
-                boundary = TrustBoundary.objects.get(
-                    id=existing_boundary_id, organization_id=org_id
-                )
-                boundary.zone_a_id = zone_a_id
-                boundary.zone_b_id = zone_b_id
-                boundary.label = label
-                boundary.edge_id = edge_id
-                boundary.format_metadata = format_metadata
-                boundary.save()
-                synced_count += 1
-            except TrustBoundary.DoesNotExist:
-                boundary = TrustBoundary.objects.create(
-                    organization_id=org_id,
-                    zone_a_id=zone_a_id,
-                    zone_b_id=zone_b_id,
-                    label=label,
-                    edge_id=edge_id,
-                    format_metadata=format_metadata,
-                )
-                created_count += 1
+            boundary = Boundary.objects.filter(
+                id=existing_boundary_id, blueprint=blueprint
+            ).first()
+
+        if boundary is not None:
+            fields = _boundary_fields_from_edge(edge_data, boundary.session_management)
+            boundary.zone_a_id = zone_a_id
+            boundary.zone_b_id = zone_b_id
+            boundary.edge_id = edge_id
+            for key, value in fields.items():
+                setattr(boundary, key, value)
+            boundary.save()
+            synced_count += 1
         else:
-            boundary = TrustBoundary.objects.create(
-                organization_id=org_id,
+            boundary = Boundary.objects.create(
+                blueprint=blueprint,
                 zone_a_id=zone_a_id,
                 zone_b_id=zone_b_id,
-                label=label,
                 edge_id=edge_id,
-                format_metadata=format_metadata,
+                **_boundary_fields_from_edge(edge_data, {}),
             )
             created_count += 1
-            synced_count += 1
+            if not existing_boundary_id:
+                synced_count += 1
 
         edge_boundary_map[edge_id] = boundary.id
 
-    _update_canvas_with_trust_boundary_ids(dfd, edge_boundary_map)
+    _update_canvas_with_boundary_ids(dfd, edge_boundary_map)
 
     return {"synced_count": synced_count, "created_count": created_count}
 
 
-def _update_canvas_with_trust_boundary_ids(dfd, edge_boundary_map):
-    """Update DFD canvas_data with trust_boundary_ids for synced boundary edges."""
+def _update_canvas_with_boundary_ids(dfd, edge_boundary_map):
+    """Update DFD canvas_data with boundary_ids for synced boundary edges."""
     if not edge_boundary_map:
         return
 

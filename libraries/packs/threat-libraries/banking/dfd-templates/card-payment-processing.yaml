@@ -50,7 +50,8 @@ canvas_data:
       style: { width: 340, height: 380 }
       data:
         label: "Cardholder Data Environment"
-        zoneType: "privateSecured"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "PCI-DSS Zone"
 
     # Trust boundary - Payment Processing
@@ -61,7 +62,8 @@ canvas_data:
       style: { width: 280, height: 380 }
       data:
         label: "Payment Processing Zone"
-        zoneType: "privateSecured"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "Internal Secured"
 
     # Trust boundary - HSM Zone
@@ -72,7 +74,8 @@ canvas_data:
       style: { width: 230, height: 200 }
       data:
         label: "HSM Zone"
-        zoneType: "internal"
+        zoneType: "trust"
+        trustLevel: 50
         technology: "Hardware Security"
 
     # Trust boundary - Settlement
@@ -83,7 +86,8 @@ canvas_data:
       style: { width: 230, height: 150 }
       data:
         label: "Settlement Zone"
-        zoneType: "privateSecured"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "Batch Processing"
 
     # CDE Components

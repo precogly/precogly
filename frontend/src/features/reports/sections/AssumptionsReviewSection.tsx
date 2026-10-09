@@ -1,6 +1,8 @@
 import { Badge } from '@/components/ui/badge'
-import type { ReportScope } from '@/features/reports/types/report'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import type { ReportAssumption, ReportScope } from '@/features/reports/types/report'
 import type { SectionDepth } from '../reportConfig'
+import { ASSUMPTION_VALIDITY_COLORS, assumptionTopicLabel, assumptionValidityLabel, formatReportDate } from '../utils/labels'
 import { ReportSection } from '../ReportSection'
 
 interface AssumptionsReviewSectionProps {
@@ -8,55 +10,61 @@ interface AssumptionsReviewSectionProps {
   depth: SectionDepth
 }
 
-const VALIDITY_COLORS: Record<string, string> = {
-  confirmed: 'bg-green-100 text-green-700',
-  unconfirmed: 'bg-yellow-100 text-yellow-700',
-  rejected: 'bg-red-100 text-red-700',
+/** The assumptions that still need a reviewer's attention: anything not verified. */
+function flaggedAssumptions(assumptions: readonly ReportAssumption[]): ReportAssumption[] {
+  return assumptions.filter((assumption) => assumption.validity !== 'verified')
 }
 
 export function AssumptionsReviewSection({ scope, depth }: AssumptionsReviewSectionProps) {
-  const assumptions = scope.assumptions
+  const assumptions = depth === 'flagged' ? flaggedAssumptions(scope.assumptions) : scope.assumptions
 
-  // For 'flagged' depth, only show unconfirmed and rejected
-  const filteredAssumptions = depth === 'flagged'
-    ? assumptions.filter((a) => a.validity !== 'confirmed')
-    : assumptions
-
-  if (filteredAssumptions.length === 0) {
+  if (assumptions.length === 0) {
     return (
       <ReportSection title="Assumptions Review">
         <p className="text-sm text-muted-foreground">
-          {depth === 'flagged'
-            ? 'All assumptions confirmed.'
-            : 'No assumptions defined.'}
+          {depth === 'flagged' ? 'All assumptions verified.' : 'No assumptions defined.'}
         </p>
       </ReportSection>
     )
   }
 
   return (
-    <ReportSection title={`Assumptions Review (${filteredAssumptions.length})`}>
-      <div className="space-y-3">
-        {filteredAssumptions.map((assumption) => (
-          <div key={assumption.id} className="border rounded p-3 space-y-2">
-            <div className="flex items-start gap-2">
-              <Badge className={VALIDITY_COLORS[assumption.validity] || ''}>
-                {assumption.validity}
-              </Badge>
-              <p className="text-sm">{assumption.description}</p>
-            </div>
-            {assumption.topics.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {assumption.topics.map((topic) => (
-                  <Badge key={topic} variant="outline" className="text-xs">
-                    {topic}
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+    <ReportSection title={`Assumptions Review (${assumptions.length})`}>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Validity</TableHead>
+            <TableHead>Assumption</TableHead>
+            <TableHead>Topic</TableHead>
+            <TableHead>Owner</TableHead>
+            <TableHead>Validation</TableHead>
+            <TableHead>Components</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {assumptions.map((assumption) => (
+            <TableRow key={assumption.id}>
+              <TableCell className="align-top">
+                <Badge className={ASSUMPTION_VALIDITY_COLORS[assumption.validity] || ''}>
+                  {assumptionValidityLabel(assumption.validity)}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-sm align-top">
+                {assumption.description}
+                {assumption.impact && (
+                  <div className="text-xs text-muted-foreground mt-0.5">Impact if invalid: {assumption.impact}</div>
+                )}
+              </TableCell>
+              <TableCell className="align-top">{assumptionTopicLabel(assumption.topic)}</TableCell>
+              <TableCell className="text-sm align-top">{assumption.owner}</TableCell>
+              <TableCell className="text-xs text-muted-foreground align-top">
+                {[assumption.validationMethod, formatReportDate(assumption.validationDate)].filter(Boolean).join(', ')}
+              </TableCell>
+              <TableCell className="text-xs align-top">{assumption.components.join(', ')}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </ReportSection>
   )
 }

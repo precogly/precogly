@@ -11,9 +11,11 @@ import { Button } from '@/components/ui/button'
 import { Loader2, BarChart3, Code, Shield, FileText, Download, ChevronDown } from 'lucide-react'
 import { useReport } from '@/features/reports/api/reports'
 import type { ReportType, ReportData } from '@/features/reports/types/report'
-import { getSectionsForType } from './reportConfig'
+import { getSectionsForType, type SectionDepth } from './reportConfig'
 import { ExecutiveSummary } from './sections/ExecutiveSummary'
 import { ScopeSection } from './sections/ScopeSection'
+import { ReviewSection } from './sections/ReviewSection'
+import { BusinessObjectivesSection } from './sections/BusinessObjectivesSection'
 import { ArchitectureSection } from './sections/ArchitectureSection'
 import { DataAssetsSection } from './sections/DataAssetsSection'
 import { ComponentInventory } from './sections/ComponentInventory'
@@ -32,6 +34,7 @@ import {
   exportThreatsCSV,
   exportCountermeasuresCSV,
   exportRisksCSV,
+  exportAssumptionsCSV,
   exportComplianceCSV,
 } from './utils/csvExport'
 import { exportWordDoc } from './utils/wordExport'
@@ -73,45 +76,51 @@ const REPORT_TYPES: Array<{
   },
 ]
 
-function renderSection(sectionId: string, depth: string, data: ReportData) {
+function renderSection(sectionId: string, depth: SectionDepth, data: ReportData) {
   switch (sectionId) {
     case 'executiveSummary':
       return <ExecutiveSummary data={data} />
+    case 'review':
+      return <ReviewSection metadata={data.metadata} assumptions={data.scope.assumptions} depth={depth} />
     case 'scope':
-      return <ScopeSection scope={data.scope} depth={depth as any} />
+      return <ScopeSection scope={data.scope} depth={depth} metadata={data.metadata} />
+    case 'businessObjectives':
+      return <BusinessObjectivesSection objectives={data.scope.businessObjectives} depth={depth} />
     case 'architecture':
       return <ArchitectureSection architecture={data.architecture} />
     case 'dataAssets':
-      return <DataAssetsSection dataAssets={data.dataAssets} depth={depth as any} />
+      return <DataAssetsSection dataAssets={data.dataAssets} depth={depth} />
     case 'components':
-      return <ComponentInventory components={data.components} dataFlows={data.dataFlows} />
+      return <ComponentInventory components={data.components} dataFlows={data.flows} />
     case 'strideSummary':
-      return <StrideSummary threatAnalysis={data.threatAnalysis} />
+      return <StrideSummary threatAnalysis={data.threatAnalysis} methodologies={data.metadata.methodologies} />
     case 'threatDetail':
       return <ThreatAnalysisSection threatAnalysis={data.threatAnalysis} />
     case 'triagedThreats':
       return <TriagedThreatsSection triagedThreats={data.threatAnalysis.triagedThreats} />
     case 'countermeasureStatus':
+    case 'countermeasureDetail':
     case 'gaps':
     case 'waived':
-    case 'inherited':
+    case 'unattached':
       return (
         <CountermeasureSection
           summary={data.countermeasureSummary}
-          depth={depth as any}
+          depth={depth}
           sectionId={sectionId}
+          threats={data.threatAnalysis.threats}
         />
       )
     case 'risks':
-      return <RiskSection risks={data.risks} depth={depth as any} />
+      return <RiskSection risks={data.risks} depth={depth} />
     case 'compliance':
-      return <ComplianceSection compliance={data.compliance} depth={depth as any} />
+      return <ComplianceSection compliance={data.compliance} depth={depth} />
     case 'crossFrameworkMappings':
       return <CrossFrameworkMappingsSection compliance={data.compliance} />
     case 'assumptions':
-      return <AssumptionsReviewSection scope={data.scope} depth={depth as any} />
+      return <AssumptionsReviewSection scope={data.scope} depth={depth} />
     case 'findings':
-      return <FindingsSection data={data} depth={depth as any} />
+      return <FindingsSection data={data} depth={depth} />
     case 'progressChecklist':
       return <ProgressChecklistSection progressChecklist={data.progressChecklist} completionStatus={data.completionStatus} />
     default:
@@ -124,7 +133,7 @@ export function ReportView({ threatModelId }: ReportViewProps) {
   const [isExportingWord, setIsExportingWord] = useState(false)
   const dfdViewerRefs = useRef<Record<string, ReadOnlyDFDViewerHandle | null>>({})
   const { data, isLoading, error } = useReport(threatModelId)
-  const sections = getSectionsForType(reportType)
+  const sections = getSectionsForType(reportType, { methodologies: data?.metadata.methodologies ?? [] })
 
   const handleWordExport = async (reportData: ReportData) => {
     setIsExportingWord(true)
@@ -200,7 +209,7 @@ export function ReportView({ threatModelId }: ReportViewProps) {
           <div className="space-y-4 max-w-5xl mx-auto">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold">{data.metadata.name}</h2>
+                <h2 className="text-lg font-semibold" data-testid="report-title">{data.metadata.name}</h2>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-sm text-muted-foreground">
                     {REPORT_TYPES.find((rt) => rt.type === reportType)?.label} Report
@@ -224,6 +233,9 @@ export function ReportView({ threatModelId }: ReportViewProps) {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => exportRisksCSV(data, data.metadata.name)}>
                     Risks
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportAssumptionsCSV(data, data.metadata.name)}>
+                    Assumptions
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => exportComplianceCSV(data, data.metadata.name)}>
                     Compliance Coverage

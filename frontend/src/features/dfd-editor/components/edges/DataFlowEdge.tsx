@@ -12,6 +12,15 @@ import { cn } from '@/lib/utils'
 import { DATA_SENSITIVITY_TAG_CONFIG, type DataSensitivityTag } from '@/types/domain'
 import type { DataFlowEdgeData } from '../../types'
 import { getZoneColorConfig } from '../../types'
+import { getAuthentication, getFlowType, isAuthenticated } from '../../lib/canvas-defaults'
+import {
+  FLOW_TYPE_STYLES,
+  flowTypeShortLabel,
+  isFlowTypeVisible,
+  showsFlowTypeChip,
+} from '../../lib/flow-visibility'
+import { getTrustLevel } from '../../lib/zone-trust-level'
+import { useDFDNotation } from '../../context/DFDNotationContext'
 
 type DataFlowEdgeType = Edge<DataFlowEdgeData, 'dataFlow'>
 
@@ -28,6 +37,10 @@ export const DataFlowEdge = memo(function DataFlowEdge({
   animated,
 }: EdgeProps<DataFlowEdgeType>) {
   const { setEdges } = useReactFlow()
+  const { visibleFlowTypes } = useDFDNotation()
+  const flowType = getFlowType(data)
+  const flowTypeStyle = FLOW_TYPE_STYLES[flowType]
+  const flowIsAuthenticated = isAuthenticated(getAuthentication(data))
   const [editValue, setEditValue] = useState(data?.label || '')
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const originalLabelRef = useRef(data?.label || '')
@@ -94,6 +107,14 @@ export const DataFlowEdge = memo(function DataFlowEdge({
 
   const isNewlyInserted = data?.isNewlyInserted
 
+  // The flow type filter (the "physical view", plan F22): a flow whose type
+  // is unticked is not drawn. It stays in the canvas data untouched.
+  if (!isFlowTypeVisible(flowType, visibleFlowTypes)) return null
+
+  // Data flows keep the short animated dash; every other type has its own
+  // pattern so a signal or control flow is told apart without the chip.
+  const strokeDasharray = flowTypeStyle.strokeDasharray ?? (animated ? '5' : '0')
+
   return (
     <>
       <BaseEdge
@@ -106,8 +127,8 @@ export const DataFlowEdge = memo(function DataFlowEdge({
           animated && 'react-flow__edge-animated'
         )}
         style={{
-          strokeWidth: selected ? 2.5 : 2,
-          strokeDasharray: animated ? 5 : 0,
+          strokeWidth: selected ? flowTypeStyle.strokeWidth + 0.5 : flowTypeStyle.strokeWidth,
+          strokeDasharray,
           filter: isNewlyInserted ? 'drop-shadow(0 0 3px rgb(34 197 94))' : undefined,
         }}
         markerEnd={selected ? 'url(#arrow-selected)' : 'url(#arrow)'}
@@ -135,7 +156,7 @@ export const DataFlowEdge = memo(function DataFlowEdge({
                 ref={inputRef}
                 value={editValue}
                 rows={1}
-                placeholder="Data flow label"
+                placeholder="Flow label"
                 onChange={(event) => {
                   setEditValue(event.target.value)
                   event.target.style.height = 'auto'
@@ -169,6 +190,20 @@ export const DataFlowEdge = memo(function DataFlowEdge({
             )
           )}
 
+          {/* Flow type chip: every type except data */}
+          {showsFlowTypeChip(flowType) && (
+            <div
+              className={cn(
+                'px-1.5 py-px rounded text-[10px] uppercase tracking-wide border whitespace-nowrap',
+                flowTypeStyle.chipClassName
+              )}
+              title={`${flowTypeShortLabel(flowType)} flow`}
+              data-testid="flow-type-chip"
+            >
+              {flowTypeShortLabel(flowType)}
+            </div>
+          )}
+
           {/* Protocol badge */}
           {data?.protocol && (
             <div className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700 border border-blue-200 whitespace-nowrap flex items-center gap-1">
@@ -193,7 +228,7 @@ export const DataFlowEdge = memo(function DataFlowEdge({
           )}
 
           {/* Security indicators */}
-          {(data?.encrypted !== undefined || data?.authenticated) && (
+          {(data?.encrypted !== undefined || flowIsAuthenticated) && (
             <div className="flex items-center gap-1">
               {data?.encrypted !== undefined && (
                 <div
@@ -212,7 +247,7 @@ export const DataFlowEdge = memo(function DataFlowEdge({
                   )}
                 </div>
               )}
-              {data?.authenticated && (
+              {flowIsAuthenticated && (
                 <div
                   className="p-1 rounded bg-green-100 text-green-700"
                   title="Authenticated"
@@ -232,7 +267,11 @@ export const DataFlowEdge = memo(function DataFlowEdge({
                 borderColor: getZoneColorConfig(data.crossesZoneColor).borderColor,
                 color: getZoneColorConfig(data.crossesZoneColor).borderColor,
               }}
-              title={`Crosses ${data.crossesZoneLabel || 'zone'} (TL: ${data.crossesZoneTrustLevel ?? 75})`}
+              title={(() => {
+                const crossedLevel = getTrustLevel({ trustLevel: data.crossesZoneTrustLevel })
+                const levelText = crossedLevel === null ? '' : ` (TL: ${crossedLevel})`
+                return `Crosses ${data.crossesZoneLabel || 'zone'}${levelText}`
+              })()}
             >
               <Shield className="h-3 w-3" />
               <span className="font-medium">{data.crossesZoneLabel || 'Zone'}</span>

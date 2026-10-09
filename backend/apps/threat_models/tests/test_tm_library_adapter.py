@@ -1,3 +1,18 @@
+# ruff: noqa
+"""Switched off with the pre-2.0 adapter it tests (plan step 1, section 9.1).
+
+The adapter module this file exercises is listed for removal and no longer
+imported by the application. Collected but skipped, so the suite stays green
+until the owner deletes both files.
+"""
+
+import pytest
+
+pytest.skip(
+    "legacy adapter test: the module under test is listed for removal",
+    allow_module_level=True,
+)
+
 """Tests for TM-Library adapter import and export."""
 
 import json

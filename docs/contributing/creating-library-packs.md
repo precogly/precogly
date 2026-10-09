@@ -150,7 +150,7 @@ countermeasures:
 The `aws` pack demonstrates several important patterns:
 
 - **Threat-per-component granularity**: Each threat targets a specific component (e.g., `s3-public-exposure` for S3) rather than being generic. This ensures threats are actionable.
-- **Cross-component countermeasure sharing**: A countermeasure like `lambda-input-validation` can appear in multiple threat mappings, enabling [zone protections](../concepts/zone-protections.md).
+- **Cross-component countermeasure sharing**: A countermeasure like `lambda-input-validation` can appear in multiple threat mappings, so one control can be linked to several threats and scoped to a zone or boundary (see [Platform Controls](../concepts/platform-controls.md)).
 - **Platform countermeasures**: Some controls use `default_status: platform` to indicate infrastructure-level controls managed by the security team. See [Platform Controls](../concepts/platform-controls.md).
 - **Multiple taxonomy mappings**: Each threat maps to STRIDE, CWE, CAPEC, and ATT&CK, giving users rich classification data.
 

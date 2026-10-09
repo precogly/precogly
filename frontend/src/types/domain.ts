@@ -190,6 +190,503 @@ export const TRUST_ZONE_PRESET_NAMES: { value: TrustZonePresetName; label: strin
   { value: 'partner', label: 'Partner Network', description: 'Semi-trusted partner or third-party network' },
 ]
 
+// ---------------------------------------------------------------------------
+// CycloneDX TM-BOM value lists, mirrored from the backend (issues #583/#584).
+// Each list names the backend file it copies. The backend is the source of
+// truth; change it there first.
+// ---------------------------------------------------------------------------
+
+export interface LabeledValue<T extends string> {
+  value: T
+  label: string
+}
+
+// backend/apps/systems/crossing.py ZONE_TYPES
+export type ZoneType =
+  | 'availability'
+  | 'compliance'
+  | 'data'
+  | 'deployment'
+  | 'functional'
+  | 'geographic'
+  | 'logical'
+  | 'network'
+  | 'organizational'
+  | 'physical'
+  | 'process'
+  | 'tenant'
+  | 'trust'
+
+export const ZONE_TYPES: LabeledValue<ZoneType>[] = [
+  { value: 'trust', label: 'Trust zone' },
+  { value: 'network', label: 'Network zone' },
+  { value: 'availability', label: 'Availability zone' },
+  { value: 'compliance', label: 'Compliance zone' },
+  { value: 'data', label: 'Data zone' },
+  { value: 'deployment', label: 'Deployment zone' },
+  { value: 'functional', label: 'Functional zone' },
+  { value: 'geographic', label: 'Geographic zone' },
+  { value: 'logical', label: 'Logical zone' },
+  { value: 'organizational', label: 'Organizational zone' },
+  { value: 'physical', label: 'Physical zone' },
+  { value: 'process', label: 'Process zone' },
+  { value: 'tenant', label: 'Tenant zone' },
+]
+export const DEFAULT_ZONE_TYPE: ZoneType = 'trust'
+/** Zone types that carry a trust level (plan 11.11: trust and network zones). */
+export const ZONE_TYPES_WITH_TRUST_LEVEL: ZoneType[] = ['trust', 'network']
+
+// backend/apps/systems/crossing.py BOUNDARY_TYPES
+export type BoundaryType =
+  | 'data'
+  | 'functional'
+  | 'network'
+  | 'organizational'
+  | 'physical'
+  | 'process'
+  | 'trust'
+
+export const BOUNDARY_TYPES: LabeledValue<BoundaryType>[] = [
+  { value: 'trust', label: 'Trust boundary' },
+  { value: 'network', label: 'Network boundary' },
+  { value: 'data', label: 'Data boundary' },
+  { value: 'functional', label: 'Functional boundary' },
+  { value: 'organizational', label: 'Organizational boundary' },
+  { value: 'physical', label: 'Physical boundary' },
+  { value: 'process', label: 'Process boundary' },
+]
+export const DEFAULT_BOUNDARY_TYPE: BoundaryType = 'trust'
+
+// backend/apps/systems/crossing.py FLOW_TYPES and DATA_LIKE_FLOW_TYPES
+export type FlowType =
+  | 'control'
+  | 'data'
+  | 'energy'
+  | 'event'
+  | 'financial'
+  | 'message'
+  | 'physical'
+  | 'process'
+  | 'signal'
+
+export const FLOW_TYPES: LabeledValue<FlowType>[] = [
+  { value: 'data', label: 'Data flow' },
+  { value: 'message', label: 'Message flow' },
+  { value: 'event', label: 'Event flow' },
+  { value: 'control', label: 'Control flow' },
+  { value: 'process', label: 'Process flow' },
+  { value: 'signal', label: 'Signal flow' },
+  { value: 'financial', label: 'Financial flow' },
+  { value: 'energy', label: 'Energy flow' },
+  { value: 'physical', label: 'Physical flow' },
+]
+export const DEFAULT_FLOW_TYPE: FlowType = 'data'
+/** Flow types that carry protocol, port and encryption (plan 11.11). */
+export const DATA_LIKE_FLOW_TYPES: FlowType[] = ['data', 'message', 'event']
+
+export function isDataLikeFlowType(flowType: FlowType): boolean {
+  return DATA_LIKE_FLOW_TYPES.includes(flowType)
+}
+
+// backend/apps/systems/crossing.py ASSET_TYPES (the spec asset types; a
+// component's "kind"). CATEGORY_TO_KIND gives the default per DFD category.
+export type ComponentKind =
+  | 'actor'
+  | 'agent'
+  | 'api'
+  | 'broker'
+  | 'cache'
+  | 'component'
+  | 'container'
+  | 'data'
+  | 'data-store'
+  | 'device'
+  | 'endpoint'
+  | 'function'
+  | 'gateway'
+  | 'infrastructure'
+  | 'interface'
+  | 'model'
+  | 'module'
+  | 'network'
+  | 'process'
+  | 'queue'
+  | 'resource'
+  | 'service'
+  | 'stream'
+  | 'subsystem'
+  | 'system'
+  | 'tool'
+
+export const COMPONENT_KINDS: LabeledValue<ComponentKind>[] = [
+  { value: 'actor', label: 'Actor' },
+  { value: 'agent', label: 'Agent' },
+  { value: 'api', label: 'API' },
+  { value: 'broker', label: 'Broker' },
+  { value: 'cache', label: 'Cache' },
+  { value: 'component', label: 'Component' },
+  { value: 'container', label: 'Container' },
+  { value: 'data', label: 'Data' },
+  { value: 'data-store', label: 'Data store' },
+  { value: 'device', label: 'Device' },
+  { value: 'endpoint', label: 'Endpoint' },
+  { value: 'function', label: 'Function' },
+  { value: 'gateway', label: 'Gateway' },
+  { value: 'infrastructure', label: 'Infrastructure' },
+  { value: 'interface', label: 'Interface' },
+  { value: 'model', label: 'Model' },
+  { value: 'module', label: 'Module' },
+  { value: 'network', label: 'Network' },
+  { value: 'process', label: 'Process' },
+  { value: 'queue', label: 'Queue' },
+  { value: 'resource', label: 'Resource' },
+  { value: 'service', label: 'Service' },
+  { value: 'stream', label: 'Stream' },
+  { value: 'subsystem', label: 'Subsystem' },
+  { value: 'system', label: 'System' },
+  { value: 'tool', label: 'Tool' },
+]
+export const DEFAULT_COMPONENT_KIND: ComponentKind = 'component'
+
+/** backend/apps/systems/crossing.py CATEGORY_TO_KIND, by backend category. */
+export const CATEGORY_TO_KIND: Record<string, ComponentKind> = {
+  process: 'process',
+  datastore: 'data-store',
+  external_human_actor: 'actor',
+  external_system_actor: 'actor',
+}
+
+// backend/apps/systems/crossing.py AUTHENTICATION_TYPES plus UNSPECIFIED (our
+// own placeholder: authenticated, method not recorded, I9).
+export type AuthenticationType =
+  | 'api-key'
+  | 'basic'
+  | 'bearer'
+  | 'biometric'
+  | 'certificate'
+  | 'digest'
+  | 'eap'
+  | 'fido2'
+  | 'form'
+  | 'hmac'
+  | 'jwt'
+  | 'kerberos'
+  | 'ldap'
+  | 'magic-link'
+  | 'mtls'
+  | 'none'
+  | 'ntlm'
+  | 'oauth1'
+  | 'oauth2'
+  | 'oidc'
+  | 'pin'
+  | 'psk'
+  | 'push'
+  | 'radius'
+  | 'saml'
+  | 'scram'
+  | 'session-cookie'
+  | 'ssh'
+  | 'totp'
+  | 'unspecified'
+
+export const UNSPECIFIED_AUTHENTICATION: AuthenticationType = 'unspecified'
+export const NO_AUTHENTICATION: AuthenticationType = 'none'
+
+/** The spec list with the common methods first, as the pickers show it. */
+export const AUTHENTICATION_TYPES: LabeledValue<AuthenticationType>[] = [
+  { value: 'none', label: 'None' },
+  { value: 'unspecified', label: 'Method not specified' },
+  { value: 'oauth2', label: 'OAuth 2.0' },
+  { value: 'oidc', label: 'OpenID Connect' },
+  { value: 'saml', label: 'SAML' },
+  { value: 'jwt', label: 'JWT' },
+  { value: 'bearer', label: 'Bearer token' },
+  { value: 'api-key', label: 'API key' },
+  { value: 'session-cookie', label: 'Session cookie' },
+  { value: 'form', label: 'Form login' },
+  { value: 'basic', label: 'HTTP basic' },
+  { value: 'mtls', label: 'Mutual TLS' },
+  { value: 'certificate', label: 'Certificate' },
+  { value: 'totp', label: 'TOTP' },
+  { value: 'fido2', label: 'FIDO2' },
+  { value: 'biometric', label: 'Biometric' },
+  { value: 'push', label: 'Push notification' },
+  { value: 'pin', label: 'PIN' },
+  { value: 'magic-link', label: 'Magic link' },
+  { value: 'kerberos', label: 'Kerberos' },
+  { value: 'ldap', label: 'LDAP' },
+  { value: 'ntlm', label: 'NTLM' },
+  { value: 'radius', label: 'RADIUS' },
+  { value: 'eap', label: 'EAP' },
+  { value: 'digest', label: 'HTTP digest' },
+  { value: 'hmac', label: 'HMAC' },
+  { value: 'oauth1', label: 'OAuth 1.0' },
+  { value: 'psk', label: 'Pre-shared key' },
+  { value: 'scram', label: 'SCRAM' },
+  { value: 'ssh', label: 'SSH' },
+]
+
+// backend/apps/systems/crossing.py AUTHORIZATION_TYPES
+export type AuthorizationType =
+  | 'abac'
+  | 'acl'
+  | 'capability'
+  | 'dac'
+  | 'mac'
+  | 'none'
+  | 'pbac'
+  | 'radac'
+  | 'rbac'
+  | 'rebac'
+
+export const AUTHORIZATION_TYPES: LabeledValue<AuthorizationType>[] = [
+  { value: 'none', label: 'None' },
+  { value: 'rbac', label: 'RBAC' },
+  { value: 'abac', label: 'ABAC' },
+  { value: 'acl', label: 'ACL' },
+  { value: 'mac', label: 'MAC' },
+  { value: 'dac', label: 'DAC' },
+  { value: 'pbac', label: 'PBAC' },
+  { value: 'rebac', label: 'ReBAC' },
+  { value: 'radac', label: 'RAdAC' },
+  { value: 'capability', label: 'Capability' },
+]
+
+// backend/apps/threats/serializers.py RISK_DOMAINS
+export type RiskDomain =
+  | 'security'
+  | 'privacy'
+  | 'operational'
+  | 'financial'
+  | 'compliance'
+  | 'strategic'
+  | 'reputational'
+  | 'safety'
+  | 'environmental'
+  | 'supply-chain'
+  | 'technical'
+  | 'project'
+  | 'ethical'
+  | 'societal'
+  | 'human-rights'
+  | 'health'
+  | 'legal'
+
+export const RISK_DOMAINS: LabeledValue<RiskDomain>[] = [
+  { value: 'security', label: 'Security' },
+  { value: 'privacy', label: 'Privacy' },
+  { value: 'safety', label: 'Safety' },
+  { value: 'operational', label: 'Operational' },
+  { value: 'financial', label: 'Financial' },
+  { value: 'compliance', label: 'Compliance' },
+  { value: 'legal', label: 'Legal' },
+  { value: 'strategic', label: 'Strategic' },
+  { value: 'reputational', label: 'Reputational' },
+  { value: 'environmental', label: 'Environmental' },
+  { value: 'supply-chain', label: 'Supply chain' },
+  { value: 'technical', label: 'Technical' },
+  { value: 'project', label: 'Project' },
+  { value: 'ethical', label: 'Ethical' },
+  { value: 'societal', label: 'Societal' },
+  { value: 'human-rights', label: 'Human rights' },
+  { value: 'health', label: 'Health' },
+]
+
+// backend/apps/threats/serializers.py IMPACT_CATEGORIES
+export type ImpactCategory =
+  | 'confidentiality'
+  | 'integrity'
+  | 'availability'
+  | 'financial'
+  | 'reputation'
+  | 'regulatory'
+  | 'safety'
+  | 'privacy'
+  | 'operational'
+  | 'strategic'
+  | 'bias'
+  | 'discrimination'
+  | 'fairness'
+  | 'human-rights'
+  | 'environmental'
+  | 'societal'
+  | 'psychological'
+  | 'physical'
+  | 'health'
+
+export const IMPACT_CATEGORIES: LabeledValue<ImpactCategory>[] = [
+  { value: 'confidentiality', label: 'Confidentiality' },
+  { value: 'integrity', label: 'Integrity' },
+  { value: 'availability', label: 'Availability' },
+  { value: 'financial', label: 'Financial' },
+  { value: 'reputation', label: 'Reputation' },
+  { value: 'regulatory', label: 'Regulatory' },
+  { value: 'safety', label: 'Safety' },
+  { value: 'privacy', label: 'Privacy' },
+  { value: 'operational', label: 'Operational' },
+  { value: 'strategic', label: 'Strategic' },
+  { value: 'bias', label: 'Bias' },
+  { value: 'discrimination', label: 'Discrimination' },
+  { value: 'fairness', label: 'Fairness' },
+  { value: 'human-rights', label: 'Human rights' },
+  { value: 'environmental', label: 'Environmental' },
+  { value: 'societal', label: 'Societal' },
+  { value: 'psychological', label: 'Psychological' },
+  { value: 'physical', label: 'Physical' },
+  { value: 'health', label: 'Health' },
+]
+
+// backend/apps/threat_models/models.py METHODOLOGIES (custom names are also
+// accepted by the API, so a model's list is typed as string[]).
+export type Methodology =
+  | 'STRIDE'
+  | 'LINDDUN'
+  | 'PASTA'
+  | 'MAESTRO'
+  | 'OWASP'
+  | 'TRIKE'
+  | 'VAST'
+  | 'ATFAA'
+  | 'attack-tree'
+
+export const METHODOLOGIES: LabeledValue<Methodology>[] = [
+  { value: 'STRIDE', label: 'STRIDE' },
+  { value: 'LINDDUN', label: 'LINDDUN' },
+  { value: 'PASTA', label: 'PASTA' },
+  { value: 'MAESTRO', label: 'MAESTRO' },
+  { value: 'OWASP', label: 'OWASP' },
+  { value: 'TRIKE', label: 'TRIKE' },
+  { value: 'VAST', label: 'VAST' },
+  { value: 'ATFAA', label: 'ATFAA' },
+  { value: 'attack-tree', label: 'Attack tree' },
+]
+export const DEFAULT_METHODOLOGIES: Methodology[] = ['STRIDE']
+
+// backend/apps/threat_models/models.py LIFECYCLE_PHASES
+export type LifecyclePhase =
+  | 'design'
+  | 'pre-build'
+  | 'build'
+  | 'post-build'
+  | 'operations'
+  | 'discovery'
+  | 'decommission'
+
+export const LIFECYCLE_PHASES: LabeledValue<LifecyclePhase>[] = [
+  { value: 'design', label: 'Design' },
+  { value: 'pre-build', label: 'Pre-build' },
+  { value: 'build', label: 'Build' },
+  { value: 'post-build', label: 'Post-build' },
+  { value: 'operations', label: 'Operations' },
+  { value: 'discovery', label: 'Discovery' },
+  { value: 'decommission', label: 'Decommission' },
+]
+
+/** Review frequency presets as ISO 8601 durations (ThreatModel.review_frequency). */
+export const REVIEW_FREQUENCY_PRESETS: LabeledValue<string>[] = [
+  { value: 'P1M', label: 'Monthly' },
+  { value: 'P3M', label: 'Quarterly' },
+  { value: 'P6M', label: 'Half-yearly' },
+  { value: 'P1Y', label: 'Yearly' },
+]
+
+// backend/apps/threat_models/models.py ASSUMPTION_TOPICS and Assumption.Validity
+export type AssumptionTopic =
+  | 'availability'
+  | 'business'
+  | 'compliance'
+  | 'operational'
+  | 'performance'
+  | 'security'
+  | 'technical'
+
+export const ASSUMPTION_TOPICS: LabeledValue<AssumptionTopic>[] = [
+  { value: 'security', label: 'Security' },
+  { value: 'technical', label: 'Technical' },
+  { value: 'business', label: 'Business' },
+  { value: 'compliance', label: 'Compliance' },
+  { value: 'operational', label: 'Operational' },
+  { value: 'availability', label: 'Availability' },
+  { value: 'performance', label: 'Performance' },
+]
+
+export type AssumptionValidity = 'unverified' | 'verified' | 'invalid' | 'unknown'
+
+export const ASSUMPTION_VALIDITY: LabeledValue<AssumptionValidity>[] = [
+  { value: 'unverified', label: 'Unverified' },
+  { value: 'verified', label: 'Verified' },
+  { value: 'invalid', label: 'Invalid' },
+  { value: 'unknown', label: 'Unknown' },
+]
+
+// backend/apps/threat_models/models.py BusinessObjective.Criticality
+export type BusinessObjectiveCriticality = 'minimal' | 'low' | 'moderate' | 'high' | 'critical'
+
+export const BUSINESS_OBJECTIVE_CRITICALITIES: LabeledValue<BusinessObjectiveCriticality>[] = [
+  { value: 'minimal', label: 'Minimal' },
+  { value: 'low', label: 'Low' },
+  { value: 'moderate', label: 'Moderate' },
+  { value: 'high', label: 'High' },
+  { value: 'critical', label: 'Critical' },
+]
+
+// backend/apps/threat_models/models.py MODEL_TYPES (Blueprint.model_types)
+export type ModelType =
+  | 'architecture'
+  | 'behavioral'
+  | 'conceptual'
+  | 'data-flow'
+  | 'deployment'
+  | 'logical'
+  | 'network'
+  | 'operational'
+  | 'physical'
+  | 'process'
+
+export const MODEL_TYPES: LabeledValue<ModelType>[] = [
+  { value: 'data-flow', label: 'Data flow' },
+  { value: 'architecture', label: 'Architecture' },
+  { value: 'behavioral', label: 'Behavioral' },
+  { value: 'conceptual', label: 'Conceptual' },
+  { value: 'deployment', label: 'Deployment' },
+  { value: 'logical', label: 'Logical' },
+  { value: 'network', label: 'Network' },
+  { value: 'operational', label: 'Operational' },
+  { value: 'physical', label: 'Physical' },
+  { value: 'process', label: 'Process' },
+]
+
+// backend/apps/threat_models/models.py ThreatModelRelationship.RelationType,
+// worded from this model's side (plan J15).
+export type RelationType = 'depends_on' | 'subsystem_of' | 'related_to' | 'superseded_by'
+
+export const RELATION_TYPES: LabeledValue<RelationType>[] = [
+  { value: 'related_to', label: 'is related to' },
+  { value: 'depends_on', label: 'depends on' },
+  { value: 'subsystem_of', label: 'is a subsystem of' },
+  { value: 'superseded_by', label: 'is superseded by' },
+]
+export const DEFAULT_RELATION_TYPE: RelationType = 'related_to'
+
+// backend/apps/threats/models.py ThreatIntent and ThreatAccessLevel
+export type ThreatIntent = 'accidental' | 'opportunistic' | 'targeted' | 'persistent'
+export const THREAT_INTENTS: LabeledValue<ThreatIntent>[] = [
+  { value: 'accidental', label: 'Accidental' },
+  { value: 'opportunistic', label: 'Opportunistic' },
+  { value: 'targeted', label: 'Targeted' },
+  { value: 'persistent', label: 'Persistent' },
+]
+
+export type ThreatAccessLevel = 'none' | 'external' | 'internal' | 'privileged' | 'physical'
+export const THREAT_ACCESS_LEVELS: LabeledValue<ThreatAccessLevel>[] = [
+  { value: 'none', label: 'None' },
+  { value: 'external', label: 'External' },
+  { value: 'internal', label: 'Internal' },
+  { value: 'privileged', label: 'Privileged' },
+  { value: 'physical', label: 'Physical' },
+]
+
 // Template Categories (freeform — labels for known slugs, auto-format for unknown)
 export type TemplateCategory = string
 

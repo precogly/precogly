@@ -7,34 +7,29 @@ import {
 } from '@xyflow/react'
 import { Lock, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { BOUNDARY_TYPES } from '@/types/domain'
+import { isAuthenticated, requiresAuthorization } from '@/lib/authentication'
 import type { TrustBoundaryEdgeData } from '../../types'
+import { getBoundaryType } from '../../lib/canvas-defaults'
 
 type TrustBoundaryEdgeType = Edge<TrustBoundaryEdgeData, 'trustBoundary'>
 
 /**
- * Determine security posture color based on configured auth & access control.
- * - Red: no auth and no access control configured
- * - Amber: either auth or access control configured (partial)
- * - Green: both auth and access control configured
+ * Determine security posture color based on the crossing requirements.
+ * - Red: neither authentication nor authorization recorded
+ * - Amber: one of the two recorded (partial)
+ * - Green: both recorded
  */
-function getSecurityColor(data?: TrustBoundaryEdgeData): string {
-  const hasAuth =
-    data?.authenticationMethods &&
-    data.authenticationMethods.length > 0 &&
-    !data.authenticationMethods.every((m) => m === 'none')
-  const hasAccessControl =
-    data?.accessControlMethods &&
-    data.accessControlMethods.length > 0 &&
-    !data.accessControlMethods.every((m) => m === 'none')
-
-  if (hasAuth && hasAccessControl) return '#22c55e'
-  if (hasAuth || hasAccessControl) return '#f59e0b'
+function getSecurityColor(hasAuthentication: boolean, hasAuthorization: boolean): string {
+  if (hasAuthentication && hasAuthorization) return '#22c55e'
+  if (hasAuthentication || hasAuthorization) return '#f59e0b'
   return '#ef4444'
 }
 
 /**
- * Trust Boundary Edge — renders as a vertical or horizontal dividing line
- * in the gap between two trust zones, like a fence/wall separating them.
+ * Boundary edge: a dividing line drawn in the gap between two zones, like a
+ * fence between them. The label carries the boundary type ("Network
+ * boundary") next to the user's label (plan 11.2).
  */
 export const TrustBoundaryEdge = memo(function TrustBoundaryEdge({
   id,
@@ -45,7 +40,12 @@ export const TrustBoundaryEdge = memo(function TrustBoundaryEdge({
   data,
   selected,
 }: EdgeProps<TrustBoundaryEdgeType>) {
-  const color = getSecurityColor(data)
+  const hasAuthentication = isAuthenticated(data?.authenticationMethods)
+  const hasAuthorization = requiresAuthorization(data?.accessControlMethods)
+  const color = getSecurityColor(hasAuthentication, hasAuthorization)
+  const boundaryType = getBoundaryType(data)
+  const boundaryTypeLabel =
+    BOUNDARY_TYPES.find((entry) => entry.value === boundaryType)?.label ?? 'Boundary'
 
   const dx = targetX - sourceX
   const dy = targetY - sourceY
@@ -59,7 +59,7 @@ export const TrustBoundaryEdge = memo(function TrustBoundaryEdge({
   let labelY: number
 
   if (isHorizontalGap) {
-    // Zones are side-by-side — draw a VERTICAL dividing line in the gap
+    // Zones are side by side: draw a vertical dividing line in the gap
     const midX = (sourceX + targetX) / 2
     const minY = Math.min(sourceY, targetY) - extension
     const maxY = Math.max(sourceY, targetY) + extension
@@ -67,7 +67,7 @@ export const TrustBoundaryEdge = memo(function TrustBoundaryEdge({
     labelX = midX
     labelY = (sourceY + targetY) / 2 - extension - 20
   } else {
-    // Zones are stacked — draw a HORIZONTAL dividing line in the gap
+    // Zones are stacked: draw a horizontal dividing line in the gap
     const midY = (sourceY + targetY) / 2
     const minX = Math.min(sourceX, targetX) - extension
     const maxX = Math.max(sourceX, targetX) + extension
@@ -75,15 +75,6 @@ export const TrustBoundaryEdge = memo(function TrustBoundaryEdge({
     labelX = (sourceX + targetX) / 2
     labelY = midY - 20
   }
-
-  const hasAuth =
-    data?.authenticationMethods &&
-    data.authenticationMethods.length > 0 &&
-    !data.authenticationMethods.every((m) => m === 'none')
-  const hasAccessControl =
-    data?.accessControlMethods &&
-    data.accessControlMethods.length > 0 &&
-    !data.accessControlMethods.every((m) => m === 'none')
 
   return (
     <>
@@ -116,35 +107,42 @@ export const TrustBoundaryEdge = memo(function TrustBoundaryEdge({
           }}
         >
           {/* Security badge icons */}
-          {hasAuth && (
+          {hasAuthentication && (
             <div
               className="p-1 rounded"
               style={{ backgroundColor: `${color}20`, color }}
-              title="Authentication configured"
+              title="Authentication required"
             >
               <Lock className="h-3 w-3" />
             </div>
           )}
-          {hasAccessControl && (
+          {hasAuthorization && (
             <div
               className="p-1 rounded"
               style={{ backgroundColor: `${color}20`, color }}
-              title="Access control configured"
+              title="Authorization required"
             >
               <ShieldCheck className="h-3 w-3" />
             </div>
           )}
 
-          {/* Label or "no security" indicator */}
+          {/* Boundary type, then the label when there is one */}
           <div
-            className="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap border"
+            className="px-2 py-0.5 rounded text-xs font-medium whitespace-nowrap border flex items-center gap-1.5"
             style={{
               backgroundColor: `${color}15`,
               borderColor: color,
               color,
             }}
+            data-testid="boundary-label"
           >
-            {data?.label || 'Trust Boundary'}
+            <span
+              className="text-[10px] uppercase tracking-wide opacity-80"
+              data-testid="boundary-type-label"
+            >
+              {boundaryTypeLabel}
+            </span>
+            {data?.label && <span>{data.label}</span>}
           </div>
         </div>
       </EdgeLabelRenderer>

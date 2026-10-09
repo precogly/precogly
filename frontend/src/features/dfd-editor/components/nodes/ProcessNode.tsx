@@ -145,7 +145,7 @@ export const ProcessNode = memo(function ProcessNode({
               </div>
             )}
             {/* Data sensitivity badge at bottom-left */}
-            {data.dataSensitivity && (
+            {data.dataSensitivity && DATA_SENSITIVITY_CONFIG[data.dataSensitivity] && (
               <div
                 className="absolute bottom-1 left-3 text-xs px-1.5 py-0.5 rounded"
                 style={{
@@ -167,7 +167,7 @@ export const ProcessNode = memo(function ProcessNode({
               className="font-medium text-xs text-gray-900 text-center break-words max-w-[80px] mt-1"
               inputClassName="max-w-[80px] text-xs text-gray-900 text-center"
             />
-            {data.dataSensitivity && (
+            {data.dataSensitivity && DATA_SENSITIVITY_CONFIG[data.dataSensitivity] && (
               <span
                 className="text-[10px] px-1 rounded mt-0.5"
                 style={{
@@ -194,7 +194,7 @@ export const ProcessNode = memo(function ProcessNode({
                 {technologyDisplayName}
               </span>
             )}
-            {data.dataSensitivity && (
+            {data.dataSensitivity && DATA_SENSITIVITY_CONFIG[data.dataSensitivity] && (
               <span
                 className="text-[10px] truncate max-w-[90%] px-1 rounded"
                 style={{
@@ -225,7 +225,7 @@ export const ProcessNode = memo(function ProcessNode({
                 )}
               </div>
             </div>
-            {data.dataSensitivity && (
+            {data.dataSensitivity && DATA_SENSITIVITY_CONFIG[data.dataSensitivity] && (
               <div
                 className="mt-1 text-xs px-1.5 py-0.5 rounded text-center truncate"
                 style={{

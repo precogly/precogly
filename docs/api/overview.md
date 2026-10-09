@@ -19,7 +19,7 @@ http://localhost:8000/api/
   "threatModel": {
     "id": 1,
     "name": "Payment Gateway",
-    "riskScoringMethod": "tm_library",
+    "riskScoringMethod": "qualitative-matrix",
     "createdAt": "2026-01-15T10:30:00Z"
   }
 }
@@ -163,21 +163,41 @@ map of the public resources and custom actions.
 | `GET` | `/api/threat-models/{id}/threats/` | Aggregated threat analysis |
 | `GET` | `/api/threat-models/{id}/report/` | Full report data |
 | `GET` | `/api/threat-models/{id}/delete_preview/` | Preview cascade before deletion |
-| `GET` | `/api/threat-models/{id}/zone_protections/` | Analyze zone protection suggestions |
-| `POST` | `/api/threat-models/{id}/apply_zone_protections/` | Apply zone protection inheritance |
-| `POST` | `/api/threat-models/{id}/add_system/` | Link an existing system |
-| `POST` | `/api/threat-models/{id}/remove_system/` | Unlink a system |
-| `POST` | `/api/threat-models/{id}/add_referenced_model/` | Add model relationship |
-| `POST` | `/api/threat-models/{id}/remove_referenced_model/` | Remove model relationship |
+| `POST` | `/api/threat-models/{id}/add_referenced_model/` | Add a model relationship (`referenced_model_id`, `relation_type`: `depends_on`, `subsystem_of`, `related_to`, `superseded_by`) |
+| `POST` | `/api/threat-models/{id}/remove_referenced_model/` | Remove a model relationship (same fields) |
+| `POST` | `/api/threat-models/{id}/generate-threats/` | Add every missing library threat across all blueprints; returns `{created, targets}` |
+| `GET` | `/api/threat-models/{id}/review/` | Review and approval state: `approval_state` (`none`, `approved`, `changed`, `review_due`), reviewer, approver, dates, validity fields, the source document's review block |
+| `POST` | `/api/threat-models/{id}/mark-reviewed/` | Record the caller as reviewer |
+| `POST` | `/api/threat-models/{id}/approve/` | Approve the model and store its content digest (Security Team only) |
+| `POST` | `/api/threat-models/{id}/revoke-approval/` | Revoke the approval (Security Team only) |
 | `POST` | `/api/threat-models/{id}/add_pack/` | Attach a library pack |
 | `POST` | `/api/threat-models/{id}/remove_pack/` | Detach a library pack |
 | `GET` | `/api/threat-models/{id}/countermeasures-in-use/` | List countermeasures active in the model |
 | `GET` | `/api/threat-models/{id}/compliance_drift/` | Compare instance mappings with their library sources |
 | `POST` | `/api/threat-models/{id}/refresh_compliance/` | Refresh instance compliance mappings from libraries |
-| `POST` | `/api/threat-models/import/tm-library/` | Import from TM-Library JSON |
-| `GET` | `/api/threat-models/{id}/export/tm-library/` | Export as TM-Library JSON |
-| `POST` | `/api/threat-models/import/cyclonedx/` | Import from CycloneDX 2.0 TM-BOM JSON |
-| `GET` | `/api/threat-models/{id}/export/cyclonedx/` | Export as CycloneDX 2.0 TM-BOM JSON |
+| `POST` | `/api/threat-models/import/cyclonedx/` | Import a CycloneDX 2.0 TM-BOM file (multipart `file` or a JSON body); returns the new model and a summary with counts and warnings |
+| `GET` | `/api/threat-models/{id}/export/cyclonedx/` | Export as CycloneDX 2.0 TM-BOM JSON (the only export format) |
+
+The threat model detail carries `primary_system`, `primary_system_name`, `methodologies`, `lifecycle_phase`, `valid_from`, `valid_until`, `review_frequency`, read-only `approved_at`, `serial_number` and `version`, `blueprints`, and `related_models` (each with `relation_type`, `direction`, and the other model). `risk_scoring_method` is one of `qualitative-matrix`, `owasp-risk-rating`, `fair`, `mozilla-rra`; it cannot change while the model has risks.
+
+**Blueprints** (nested under threat model):
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET/POST` | `/api/threat-models/{id}/blueprints/` | List or create blueprints (`name`, `description`, `model_types`, `scope_description`) |
+| `GET/PUT/PATCH/DELETE` | `/api/threat-models/{id}/blueprints/{id}/` | Retrieve, update, or delete; the last blueprint cannot be deleted |
+| `GET` | `/api/threat-models/{id}/blueprints/{id}/delete_preview/` | What a delete removes: counts per row type, threats deleted, threats that lose targets |
+
+**Assumptions, business objectives, use cases** (nested under threat model):
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET/POST` | `/api/threat-models/{id}/assumptions/` | List or create (`description`, `topic`, `validity`, `impact`, `owner`, `owner_name`, `validation_method`, `validation_date`, `component_ids`; `blueprint` defaults to the model's first). Filters: `blueprint`, `validity`, `topic` |
+| `GET/PUT/PATCH/DELETE` | `/api/threat-models/{id}/assumptions/{id}/` | Retrieve, update, or delete |
+| `GET/POST` | `/api/threat-models/{id}/business-objectives/` | List or create (`name`, `description`, `criticality`, `owner`, `owner_name`); each carries threat and risk counts |
+| `GET/PUT/PATCH/DELETE` | `/api/threat-models/{id}/business-objectives/{id}/` | Retrieve, update, or delete |
+| `GET` | `/api/threat-models/{id}/use-cases/` | List use cases that arrived with an import (read-only) |
+| `GET/DELETE` | `/api/threat-models/{id}/use-cases/{id}/` | Retrieve or delete |
 
 **Reference images** (nested under threat model):
 
@@ -194,6 +214,8 @@ map of the public resources and custom actions.
 | `GET/POST` | `/api/threat-models/{id}/out-of-scope-items/` | List or create |
 | `GET/PUT/PATCH/DELETE` | `/api/threat-models/{id}/out-of-scope-items/{id}/` | Retrieve, update, or delete |
 
+Out-of-scope items take an optional `blueprint` and default to the model's first.
+
 ### Diagrams
 
 | Method | Endpoint | Description |
@@ -201,9 +223,9 @@ map of the public resources and custom actions.
 | `GET` | `/api/diagrams/` | List DFDs |
 | `POST` | `/api/diagrams/` | Create DFD |
 | `GET` | `/api/diagrams/{id}/` | Retrieve DFD with canvas data |
-| `PUT/PATCH` | `/api/diagrams/{id}/` | Update DFD (triggers component sync for primary DFDs) |
+| `PUT/PATCH` | `/api/diagrams/{id}/` | Update DFD (triggers sync for the blueprint's primary DFD; the response carries `sync_warnings` when a control lost its last target) |
 | `DELETE` | `/api/diagrams/{id}/` | Delete DFD |
-| `POST` | `/api/diagrams/create_for_threat_model/` | Create DFD from template for a threat model |
+| `POST` | `/api/diagrams/create_for_threat_model/` | Create DFD from template for a threat model (`blueprint_id` or `threat_model_id`) |
 | `GET` | `/api/diagrams/ai-availability/` | Check whether AI diagram generation is configured |
 | `POST` | `/api/diagrams/analyze-image/` | Analyze an uploaded architecture image |
 | `POST` | `/api/diagrams/generate-dfd/` | Generate DFD canvas data from an analyzed image |
@@ -221,34 +243,35 @@ map of the public resources and custom actions.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET/POST` | `/api/systems/` | List or create systems |
-| `GET/PUT/PATCH/DELETE` | `/api/systems/{id}/` | System CRUD |
-| `GET/POST` | `/api/components/` | List or create components |
+| `GET/POST` | `/api/systems/` | List or create systems; each carries `primary_model_count` and `linked_component_count` |
+| `GET/PUT/PATCH/DELETE` | `/api/systems/{id}/` | System CRUD; the detail lists `primary_models`. Deleting a system that is some model's primary system returns `409` naming the models |
+| `GET/POST` | `/api/components/` | List or create components (`blueprint`, `zone`, `kind`, read-only `effective_kind`). Filters: `threat_model`, `blueprint`, `kind` |
 | `GET/PUT/PATCH/DELETE` | `/api/components/{id}/` | Component CRUD |
-| `PATCH` | `/api/components/{id}/assign_system/` | Assign component to a system |
 | `POST` | `/api/components/{id}/generate_threats/` | Generate threats from component library |
 | `GET/POST` | `/api/component-library/` | Browse or create library components |
 | `GET/PUT/PATCH/DELETE` | `/api/component-library/{id}/` | Library component CRUD |
 
-### Trust zones and boundaries
+### Zones and boundaries
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET/POST` | `/api/trust-zones/` | List or create trust zones |
-| `GET/PUT/PATCH/DELETE` | `/api/trust-zones/{id}/` | Trust zone CRUD |
-| `GET/POST` | `/api/trust-boundaries/` | List or create trust boundaries |
-| `GET/PUT/PATCH/DELETE` | `/api/trust-boundaries/{id}/` | Trust boundary CRUD |
+| `GET/POST` | `/api/zones/` | List or create zones (`blueprint`, `zone_type`, `trust_level` 0 to 100 or null, `parent`). Filters: `threat_model`, `blueprint`, `zone_type` |
+| `GET/PUT/PATCH/DELETE` | `/api/zones/{id}/` | Zone CRUD |
+| `GET/POST` | `/api/boundaries/` | List or create boundaries (`blueprint`, `zone_a`, `zone_b`, `boundary_type`, `authentication` and `authorization` lists, `data_validation`, `data_transformation`, `logging`, `monitoring`, `rate_limit`, `protocols`, `session_management`; read-only `requires_authentication`, `requires_authorization`). Filters: `threat_model`, `blueprint`, `boundary_type` |
+| `GET/PUT/PATCH/DELETE` | `/api/boundaries/{id}/` | Boundary CRUD |
+
+A list that holds `none` beside other values is rejected with `400`.
 
 ### Data assets and flows
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET/POST` | `/api/data-assets/` | List or create data assets |
+| `GET/POST` | `/api/data-assets/` | List or create data assets (`blueprint`) |
 | `GET/PUT/PATCH/DELETE` | `/api/data-assets/{id}/` | Data asset CRUD |
-| `GET/POST` | `/api/data-flows/` | List or create data flows |
-| `GET/PUT/PATCH/DELETE` | `/api/data-flows/{id}/` | Data flow CRUD |
+| `GET/POST` | `/api/flows/` | List or create flows (`blueprint` defaults to the source component's; `flow_type`, `authentication` and `authorization` lists; read-only `requires_authentication`, `crosses_boundary`). Filters: `threat_model`, `blueprint`, `flow_type`, `crosses_boundary` |
+| `GET/PUT/PATCH/DELETE` | `/api/flows/{id}/` | Flow CRUD |
 | `GET/POST` | `/api/component-data-assets/` | Link data assets to components |
-| `GET/POST` | `/api/data-flow-assets/` | Link data assets to data flows |
+| `GET/POST` | `/api/flow-assets/` | Link data assets to flows (`flow`) |
 | `GET/POST` | `/api/integrations/` | List or create integration sources |
 | `GET/PUT/PATCH/DELETE` | `/api/integrations/{id}/` | Integration source CRUD |
 
@@ -259,19 +282,16 @@ map of the public resources and custom actions.
 | `GET/POST` | `/api/threat-library/` | Browse or create library threats |
 | `GET/PUT/PATCH/DELETE` | `/api/threat-library/{id}/` | Library threat CRUD |
 | `GET/POST` | `/api/component-library-threats/` | Map library threats to library components |
-| `GET/POST` | `/api/component-threats/` | List or create component instance threats |
-| `GET/PUT/PATCH/DELETE` | `/api/component-threats/{id}/` | Instance threat CRUD |
-| `GET` | `/api/component-threats/{id}/suggested_countermeasures/` | Countermeasure suggestions from library |
-| `POST` | `/api/component-threats/{id}/apply_countermeasure/` | Apply a library countermeasure |
-| `POST` | `/api/component-threats/{id}/recalculate_status/` | Recalculate threat status |
-| `POST` | `/api/component-threats/reorder/` | Reorder component threats |
-| `GET` | `/api/component-threats/ai_availability/` | Check AI suggestion availability |
-| `POST` | `/api/component-threats/suggest/` | Get AI-ranked threat suggestions |
-| `GET/POST` | `/api/flow-threats/` | List or create data flow instance threats |
-| `GET/PUT/PATCH/DELETE` | `/api/flow-threats/{id}/` | Flow threat CRUD |
-| `POST` | `/api/flow-threats/{id}/apply_countermeasure/` | Apply countermeasure to flow threat |
-| `POST` | `/api/flow-threats/{id}/recalculate_status/` | Recalculate flow threat status |
-| `POST` | `/api/flow-threats/reorder/` | Reorder data flow threats |
+| `GET/POST` | `/api/threats/` | List or create threats. One table for every scenario: `number` and `display_number` (`T7`, read-only), `whole_system`, `targets` (read as `[{type, id, name, blueprint_id}]`, written as `[{type, id}]` with `type` in `component`, `flow`, `zone`, `boundary`), `rating` (read) and `rating_inputs` (write), `actor_persona` or `threat_actor_text` (never both), `business_objective_ids`, `auto_generated` (read-only). Filters: `threat_model`, `threat_library`, `status`, `triage_status`, `rating__level`, `number`, `whole_system`, `component`, `flow`, `zone`, `boundary`, `blueprint`; `search` matches the name or `T7` |
+| `GET/PUT/PATCH/DELETE` | `/api/threats/{id}/` | Threat CRUD |
+| `GET` | `/api/threats/{id}/suggested_countermeasures/` | Countermeasure suggestions from library |
+| `POST` | `/api/threats/{id}/apply_countermeasure/` | Apply a library countermeasure |
+| `POST` | `/api/threats/{id}/recalculate_status/` | Recalculate threat status |
+| `POST` | `/api/threats/{id}/set_targets/` | Replace the target list; an empty list needs `whole_system: true` |
+| `POST` | `/api/threats/reorder/` | Reorder threats (optional `target_type` and `target_id` for a per-target order) |
+| `GET` | `/api/threats/ai_availability/` | Check AI suggestion availability |
+| `POST` | `/api/threats/suggest/` | Get AI-ranked threat suggestions (`target_type`, `target_id`) |
+| `GET` | `/api/threat-taxonomy-entries/` | Taxonomy entries on threats; filter `threat` |
 
 ### Countermeasures
 
@@ -279,11 +299,12 @@ map of the public resources and custom actions.
 |--------|----------|-------------|
 | `GET/POST` | `/api/countermeasure-library/` | Browse or create library countermeasures |
 | `GET/PUT/PATCH/DELETE` | `/api/countermeasure-library/{id}/` | Library countermeasure CRUD |
-| `GET/POST` | `/api/countermeasures/` | List or create unified countermeasure instances |
-| `GET/PUT/PATCH/DELETE` | `/api/countermeasures/{id}/` | Countermeasure instance CRUD |
-| `POST` | `/api/countermeasures/{id}/link/` | Link a countermeasure to another component or flow threat |
-| `POST` | `/api/countermeasures/{id}/unlink/` | Unlink a countermeasure from a threat |
-| `POST` | `/api/countermeasures/reorder/` | Reorder countermeasures within a threat |
+| `GET/POST` | `/api/countermeasures/` | List or create countermeasures: `number` and `display_number` (`C3`), `targets` (scope, same shape as on threats; empty means the whole system), `implemented_by` (component ids), `implemented_by_party`, `source`, `days_overdue`, `auto_generated`. Filters include `number` and `overdue=true`. Setting or removing `platform` status needs the Security Team role (`403` otherwise) |
+| `GET/PUT/PATCH/DELETE` | `/api/countermeasures/{id}/` | Countermeasure CRUD |
+| `POST` | `/api/countermeasures/{id}/set_targets/` | Replace the scope |
+| `POST` | `/api/countermeasures/{id}/link/` | Link a countermeasure to a threat (`threat_id`) |
+| `POST` | `/api/countermeasures/{id}/unlink/` | Unlink a countermeasure from a threat (`threat_id`) |
+| `POST` | `/api/countermeasures/reorder/` | Reorder countermeasures within a threat (`threat_id`) |
 | `GET/POST` | `/api/countermeasure-comments/` | List or create countermeasure history entries |
 | `GET/PUT/PATCH/DELETE` | `/api/countermeasure-comments/{id}/` | Countermeasure comment CRUD |
 | `GET/POST` | `/api/verification-tests/` | List or create verification tests |
@@ -314,13 +335,17 @@ map of the public resources and custom actions.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET/POST` | `/api/threat-models/{id}/risks/` | List or create risks for a threat model |
+| `GET/POST` | `/api/threat-models/{id}/risks/` | List or create risks: `status`, `statement`, read-only `exposure`, `domains`, `business_objective_ids`, `threat_ids`, `rating_inputs` (required on create), read-only `inherent`, `residual`, `target`, nested `responses`. Filters: `status`, `inherent__level`, `residual__level`; ordering by `inherent_rank`, `residual_rank`, scores |
 | `GET/PUT/PATCH/DELETE` | `/api/threat-models/{id}/risks/{id}/` | Risk CRUD |
-| `POST` | `/api/threat-models/{id}/risks/{id}/recalculate/` | Recalculate risk scores |
-| `POST` | `/api/threat-models/{id}/risks/{id}/add-threats/` | Link threats to a risk |
-| `POST` | `/api/threat-models/{id}/risks/{id}/remove-threats/` | Unlink threats from a risk |
-| `POST` | `/api/threat-models/{id}/risks/bulk-update/` | Bulk update risk response or owner |
-| `GET` | `/api/scoring-methods/` | List available risk scoring methods |
+| `POST` | `/api/threat-models/{id}/risks/{id}/recalculate/` | Recalculate the residual rating |
+| `POST` | `/api/threat-models/{id}/risks/{id}/add-threats/` | Link threats to a risk (`threat_ids`) |
+| `POST` | `/api/threat-models/{id}/risks/{id}/remove-threats/` | Unlink threats from a risk (`threat_ids`) |
+| `POST` | `/api/threat-models/{id}/risks/bulk-update/` | Bulk update risk `status` or `owner` |
+| `GET/POST` | `/api/threat-models/{id}/risks/{id}/responses/` | List or create responses (`strategy`, `description`, `status`, `effectiveness`, `cost`, `priority`, `owner`, `target_date`, `countermeasure_ids`) |
+| `GET/PUT/PATCH/DELETE` | `/api/threat-models/{id}/risks/{id}/responses/{id}/` | Response CRUD |
+| `GET` | `/api/scoring-methods/` | List risk scoring methods (`key`, `label`, `description`, `input_schema`, `score_scale`, `available`) |
+
+Ratings are read as nested objects (`methodology`, `level`, `score`, `likelihood`, `impact`, `rationale`) and written through `rating_inputs`: a `level` alone, the qualitative matrix's likelihood and impact, or the OWASP factors, plus optional impact categories and quantification.
 
 ### Threat personas and sources
 
@@ -397,6 +422,38 @@ map of the public resources and custom actions.
 | `POST` | `/api/ai-providers/{id}/test-connection/` | Test an AI provider connection |
 | `GET` | `/api/ai-usage/summary/` | Organization AI usage summary |
 
+## Changes in this release
+
+Paths and fields renamed or removed by the TM-BOM alignment:
+
+| Removed or renamed | Replacement |
+|---|---|
+| `/api/component-threats/`, `/api/flow-threats/` | `/api/threats/` |
+| `/api/component-threats/suggest/`, `/ai_availability/` | `/api/threats/suggest/`, `/api/threats/ai_availability/` |
+| `/api/trust-zones/` | `/api/zones/` |
+| `/api/trust-boundaries/` | `/api/boundaries/` |
+| `/api/data-flows/`, `/api/data-flow-assets/` | `/api/flows/`, `/api/flow-assets/` |
+| `/api/threat-models/{id}/zone_protections/`, `/apply_zone_protections/` | Removed |
+| `/api/threat-models/{id}/add_system/`, `/remove_system/`, `system_ids` | `primary_system` on the model |
+| `/api/components/{id}/assign_system/` | Removed; a component's system is its enclosing system asset |
+| `/api/threat-models/import/tm-library/`, `/export/tm-library/` | Removed; CycloneDX TM-BOM is the one format |
+| `threat_type` on countermeasure `link`, `unlink`, `reorder` | `threat_id` only |
+| `component_threat_ids`, `flow_threat_ids` on risk actions | `threat_ids` |
+| `?component_threat=`, `?flow_threat=` on taxonomy entries | `?threat=` |
+| Risk `response`, bulk update of `response` | Risk `status`; `/risks/{id}/responses/` |
+| Threat `inherent_severity`, `residual_severity`, `severity_scoring_metadata` | `rating`, `rating_inputs` |
+| Risk score and level columns, `scoring_metadata` | `inherent`, `residual`, `target`, `rating_inputs` |
+| Model `scope_locked`, `scope_locked_at`, `assumptions` | The review endpoints; `/assumptions/` |
+| Countermeasure `is_inherited`, `inherited_from_*` | `targets`, `implemented_by`, `implemented_by_party`, `source` |
+| Report keys `component_threats`, `data_flow_threats`, `trust_zones`, `trust_boundaries`, `data_flows`, `inherited`, `total_inherited` | `threats`, `zones`, `boundaries`, `flows`; `unattached` and `total_unattached` are new |
+| `risk_scoring_method` values `tm_library`, `owasp_rr`, `mozilla_rra`, `custom` | `qualitative-matrix`, `owasp-risk-rating`, `fair`, `mozilla-rra` |
+| Flow `authenticated` (boolean) | `authentication` and `authorization` lists |
+| Boundary `authentication`, `authorization`, `rate_limiting` (booleans) | `authentication` and `authorization` lists, `rate_limit` text |
+| `format_metadata` writable | Read-only everywhere |
+| Persona links on threats | `actor_persona` on the threat |
+
+Every row of a threat model's structure (components, zones, boundaries, flows, data assets, diagrams, assumptions, out-of-scope items) now carries a `blueprint`; `?threat_model=` and `?blueprint=` narrow the lists.
+
 ## Error responses
 
 The API returns standard HTTP status codes:
@@ -408,6 +465,7 @@ The API returns standard HTTP status codes:
 | `403` | Insufficient permissions for this action. |
 | `404` | Resource not found. |
 | `405` | Method not allowed. |
+| `409` | Conflict. Deleting a system that is a model's primary system returns the models that use it. |
 
 Validation error example:
 

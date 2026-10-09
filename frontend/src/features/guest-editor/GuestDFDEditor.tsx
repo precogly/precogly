@@ -18,8 +18,8 @@ import { CanvasOverlays } from '@/features/dfd-editor/components/CanvasOverlays'
 import { ExportImageDialog } from '@/features/dfd-editor/components/ExportImageDialog'
 import { ComponentPanel } from '@/features/dfd-editor/components/panels/ComponentPanel'
 import { GuestNodeEditPanel } from './components/GuestNodeEditPanel'
-import { EdgeEditPanel } from '@/features/dfd-editor/components/panels/EdgeEditPanel'
-import { TrustBoundaryEdgeEditPanel } from '@/features/dfd-editor/components/panels/TrustBoundaryEdgeEditPanel'
+import { GuestEdgeEditPanel } from './components/GuestEdgeEditPanel'
+import { GuestTrustBoundaryEdgeEditPanel } from './components/GuestTrustBoundaryEdgeEditPanel'
 import { DFDNotationProvider } from '@/features/dfd-editor/context/DFDNotationContext'
 import { useParentRelationships } from '@/features/dfd-editor/hooks/useParentRelationships'
 import { useKeyboardShortcuts } from '@/features/dfd-editor/hooks/useKeyboardShortcuts'
@@ -34,8 +34,8 @@ import type {
 } from '@/features/dfd-editor/types'
 import { useCreateNode, useHandleDrop } from '@/features/dfd-editor/hooks/useCreateNode'
 import { NOTATION_NODE_SIZES } from '@/features/dfd-editor/types/notation'
-import { nodeSupportsComponentThreats } from '@/features/dfd-editor/types/diagram'
 import { GuestThreatSection } from './components/GuestThreatSection'
+import { targetTypeForNode } from './lib/guest-model'
 import { guestNodeTypes, guestEdgeTypes } from './components/GuestNodeWrapper'
 import { useGuestEditor } from './context/GuestEditorContext'
 import type { GuestDiagramOutletContext } from './GuestLayout'
@@ -296,10 +296,11 @@ function GuestDFDEditorContent() {
         targetHandle: connection.targetHandle,
         type: 'dataFlow',
         animated: true,
+        // A new flow is a data flow with no authentication recorded (plan 4.6).
         data: {
           label: '',
           encrypted: false,
-          authenticated: false,
+          authentication: [],
         },
       }
       setEdges((eds) => addEdge(newEdge, eds) as DiagramEdge[])
@@ -351,13 +352,8 @@ function GuestDFDEditorContent() {
         .map((edge) => edge.id),
     ])
 
-    if (guestEditor) {
-      for (const targetId of deletedTargetIds) {
-        for (const threat of guestEditor.getThreatsForTarget(targetId)) {
-          guestEditor.removeThreat(threat.id)
-        }
-      }
-    }
+    // The deletion rule (H9): a threat that loses its last target goes with it.
+    guestEditor?.removeDiagramElements(deletedTargetIds)
 
     const boundaryIds = selectedNodes
       .filter((node) => node.type === 'trustZone' || node.type === 'systemScope')
@@ -421,12 +417,6 @@ function GuestDFDEditorContent() {
   })
 
   const fitViewOptions = useMemo(() => ({ maxZoom: 0.75 }), [])
-
-  // Determine guest threat target type for the selected node
-  const getNodeTargetType = (node: DiagramNode): 'component' | 'systemScope' => {
-    if (node.type === 'systemScope') return 'systemScope'
-    return 'component'
-  }
 
   return (
     <>
@@ -501,32 +491,26 @@ function GuestDFDEditorContent() {
           <GuestNodeEditPanel
             node={currentSelectedNode}
             onClose={() => setSelectedNode(null)}
-            renderExtra={
-              nodeSupportsComponentThreats(currentSelectedNode.type) ? (
+            renderExtra={(() => {
+              // Zones take threats too (plan 11.9); notes and tables do not.
+              const targetType = targetTypeForNode(currentSelectedNode)
+              return targetType ? (
                 <GuestThreatSection
-                  targetId={currentSelectedNode.id}
-                  targetType={getNodeTargetType(currentSelectedNode)}
+                  target={{ id: currentSelectedNode.id, type: targetType }}
                   targetName={currentSelectedNode.data.label || currentSelectedNode.type || 'Node'}
                 />
               ) : undefined
-            }
+            })()}
           />
         )}
         {currentSelectedEdge?.type === 'dataFlow' && (
-          <EdgeEditPanel
+          <GuestEdgeEditPanel
             edge={currentSelectedEdge as DataFlowEdge}
             onClose={() => setSelectedEdge(null)}
-            renderExtra={
-              <GuestThreatSection
-                targetId={currentSelectedEdge.id}
-                targetType="dataflow"
-                targetName={currentSelectedEdge.data?.label || 'Data Flow'}
-              />
-            }
           />
         )}
         {currentSelectedEdge?.type === 'trustBoundary' && (
-          <TrustBoundaryEdgeEditPanel
+          <GuestTrustBoundaryEdgeEditPanel
             edge={currentSelectedEdge as TrustBoundaryEdge}
             onClose={() => setSelectedEdge(null)}
           />

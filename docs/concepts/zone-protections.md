@@ -1,5 +1,8 @@
 # Zone Protections
 
+!!! warning "Replaced"
+    Zone protections were removed. Zones and boundaries are now described in [Zones and Boundaries](zones-and-boundaries.md), and a countermeasure's scope in [Platform Controls](platform-controls.md). This page is kept for history only.
+
 Trust zones model security perimeters in your architecture. Zone protections let Precogly recognize when outer defenses (like an API Gateway in the DMZ) already protect inner components, so you don't have to track the same countermeasure twice.
 
 ## Trust zones in the DFD editor

@@ -3,6 +3,7 @@ components:
   - id: neural-headset
     name: Neural Signal Headset
     category: external_system_actor
+    kind: device
     type: EEG/ECoG Sensor Array
     provider: generic
     description: |
@@ -36,6 +37,7 @@ components:
   - id: stim-controller
     name: Stimulation Controller
     category: process
+    kind: device
     type: Neurostimulation Module
     provider: generic
     description: |

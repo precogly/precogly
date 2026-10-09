@@ -136,3 +136,45 @@ guessing.
   also the only write, the only one that can damage data, and the only one blocked on a
   backend change. Building it after the read tools means its response shaping is the
   sixth of its kind rather than the first.
+
+## Redesign on the new model (2026-10-08)
+
+The schema alignment work (precogly/precogly#583, #584) changed what the planned tools
+would read, so tools 3 to 6 and the follow-ups are redesigned before they are built.
+Nothing new is built in that work; the four existing tools only changed shape:
+
+- `list_threat_models` rows carry `methodologies`, `lifecycle_phase`, `approved_at` (the
+  date, never the approval state, which a listing does not compute), `primary_system_name`,
+  `serial_number`, `version` and `blueprint_count`; `risk_scoring_method` is one of
+  `qualitative-matrix`, `owasp-risk-rating`, `fair`, `mozilla-rra`.
+- `search_component_library` rows carry `kind` (the CycloneDX asset type) and the tool
+  takes a `kind` filter matched against the effective kind.
+- `search_countermeasure_library` matches the description too; the "name only" caveat
+  is gone with the serializer gap that caused it.
+
+What the planned tools become:
+
+- `get_threat_model_threats`: one threat table. Each threat is a scenario with a `number`
+  (`T7` on screen), a `targets` list (component, flow, zone or boundary refs, or
+  whole-system), a rating (`methodology`, `level`, `score`, likelihood and impact), triage
+  fields and the linked countermeasures by number. Takes an optional `blueprint` id, since
+  a model may hold several blueprints. The two old lists (component threats, flow threats)
+  do not exist any more.
+- Countermeasure status updates: by countermeasure `number` (`C3`) or id, with `status` and
+  the scope (`applies_to` targets, `implemented_by` components and party). Setting
+  `platform` needs the Security Team role, enforced in the service the tool would call.
+- `export_threat_model`: one format, CycloneDX 2.0 TM-BOM, from
+  `GET /api/threat-models/{id}/export/cyclonedx/`. The TM-Library format is retired.
+- `import_threat_model`: `POST` of a TM-BOM document; the answer is the new model's id
+  and the import summary with its `warnings` list, which is where everything the file
+  held that Precogly could not store is named.
+- `get_threat_model`: planned on `build_report_data`, which the same work rewrote. The
+  report now carries threats with targets and numbers, zones, boundaries, flows, ratings,
+  assumptions as rows, business objectives and the review block, and it still embeds
+  `canvas_data` per diagram, so the projection question from the section above stands.
+- `generate_threats`: the model-level `POST /api/threat-models/{id}/generate-threats/`
+  action exists for the UI; the tool would call it and return `{created, targets}`.
+
+Any new per-model tool on the stdio transport keeps the count-and-total pattern:
+`HTTPReader` reads one page of twenty and cannot ask for another, so a listing answers
+with `total` beside the rows.

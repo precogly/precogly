@@ -67,7 +67,8 @@ canvas_data:
       style: { width: 220, height: 400 }
       data:
         label: "Ingestion Zone"
-        zoneType: "dmz"
+        zoneType: "trust"
+        trustLevel: 25
         technology: "Event Hub Namespace"
 
     # Trust boundary - Processing (inside sb-azure)
@@ -78,7 +79,8 @@ canvas_data:
       style: { width: 280, height: 480 }
       data:
         label: "Processing Zone"
-        zoneType: "privateSecured"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "Azure VNet Integration"
 
     # Trust boundary - Storage (inside sb-azure)
@@ -89,7 +91,8 @@ canvas_data:
       style: { width: 250, height: 480 }
       data:
         label: "Storage Zone"
-        zoneType: "privateSecured"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "Private Endpoints"
 
     # Ingestion components (inside tb-ingestion)
@@ -331,7 +334,7 @@ canvas_data:
         label: "View Reports"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["oidc"]
 
     - id: "edge-ml-curated"
       source: "datastore-datalake-curated"
@@ -351,7 +354,7 @@ canvas_data:
         label: "Fetch Secrets"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["oauth2"]
 
     - id: "edge-datafactory-keyvault"
       source: "process-datafactory-ingest"
@@ -361,4 +364,4 @@ canvas_data:
         label: "Fetch Secrets"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["oauth2"]

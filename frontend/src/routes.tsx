@@ -21,6 +21,7 @@ import {
   MemberManagement,
   TeamManagement,
   BusinessUnitsSettings,
+  SystemsSettings,
   AIProviderSettings,
 } from '@/pages'
 import { lazy, Suspense } from 'react'
@@ -100,6 +101,7 @@ export const router = createBrowserRouter([
           { path: 'members', element: <MemberManagement /> },
           { path: 'teams', element: <TeamManagement /> },
           { path: 'business-units', element: <BusinessUnitsSettings /> },
+          { path: 'systems', element: <SystemsSettings /> },
           { path: 'ai-providers', element: <AIProviderSettings /> },
         ],
       },

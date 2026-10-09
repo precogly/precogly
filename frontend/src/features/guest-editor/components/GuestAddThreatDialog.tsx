@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Plus, Check, AlertTriangle } from 'lucide-react'
 import {
   Dialog,
@@ -30,72 +30,61 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useGuestEditor } from '../context/GuestEditorContext'
-import type { GuestThreat, ThreatStatus } from '../types'
-import { GUEST_THREAT_STATUS_OPTIONS, RATIONALE_REQUIRED_STATUSES } from '../types'
+import type { GuestRatingLevel, GuestTargetRef, GuestThreat, ThreatStatus } from '../types'
+import { GUEST_RATING_LEVELS, GUEST_THREAT_STATUS_OPTIONS, RATIONALE_REQUIRED_STATUSES, threatDisplayNumber } from '../types'
 import { STRIDE_CATEGORIES, type STRIDECategory } from '@/types/domain'
-
-const SEVERITY_OPTIONS = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'critical', label: 'Critical' },
-]
+import { GuestTargetPicker } from './GuestTargetPicker'
+import { hiddenTargetsNote } from '../lib/guest-targets'
 
 interface GuestThreatDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  targetId: string
-  targetType: GuestThreat['targetType']
-  targetName: string
+  /** The element the dialog was opened from; preselected for a new threat. */
+  initialTarget?: GuestTargetRef | null
+  /** Opened from the whole-system entry: a new threat starts as whole system. */
+  initialWholeSystem?: boolean
+  targetName?: string
   /** When provided, the dialog operates in edit mode */
   editThreat?: GuestThreat
 }
 
-export function GuestThreatDialog({
-  open,
+export function GuestThreatDialog(props: GuestThreatDialogProps) {
+  const { open, onOpenChange } = props
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {/* The form mounts with the dialog, so its state starts fresh on every open. */}
+      {open && <GuestThreatDialogForm {...props} />}
+    </Dialog>
+  )
+}
+
+function GuestThreatDialogForm({
   onOpenChange,
-  targetId,
-  targetType,
+  initialTarget,
+  initialWholeSystem = false,
   targetName,
   editThreat,
 }: GuestThreatDialogProps) {
   const guestEditor = useGuestEditor()
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [severity, setSeverity] = useState<GuestThreat['severity']>('medium')
-  const [category, setCategory] = useState('')
-  const [status, setStatus] = useState<ThreatStatus>('open')
-  const [decisionRationale, setDecisionRationale] = useState('')
+  const [name, setName] = useState(editThreat?.name ?? '')
+  const [description, setDescription] = useState(editThreat?.description ?? '')
+  const [level, setLevel] = useState<GuestRatingLevel>(editThreat?.level ?? 'medium')
+  const [category, setCategory] = useState(editThreat?.category ?? '')
+  const [status, setStatus] = useState<ThreatStatus>(editThreat?.status ?? 'open')
+  const [decisionRationale, setDecisionRationale] = useState(editThreat?.decisionRationale ?? '')
+  const [targets, setTargets] = useState<GuestTargetRef[]>(editThreat ? editThreat.targets : initialTarget ? [initialTarget] : [])
+  const [wholeSystem, setWholeSystem] = useState(editThreat ? editThreat.wholeSystem : initialWholeSystem)
 
   const [confirmMessage, setConfirmMessage] = useState<string | null>(null)
 
   const isEditMode = !!editThreat
   const rationaleRequired = RATIONALE_REQUIRED_STATUSES.includes(status)
   const showRationaleWarning = rationaleRequired && !decisionRationale.trim()
-
-  // Pre-fill fields when editing or reset when adding
-  useEffect(() => {
-    if (open) {
-      if (editThreat) {
-        setName(editThreat.name)
-        setDescription(editThreat.description)
-        setSeverity(editThreat.severity)
-        setCategory(editThreat.category || '')
-        setStatus(editThreat.status || 'open')
-        setDecisionRationale(editThreat.decisionRationale || '')
-      } else {
-        setName('')
-        setDescription('')
-        setSeverity('medium')
-        setCategory('')
-        setStatus('open')
-        setDecisionRationale('')
-      }
-    }
-  }, [open, editThreat])
+  const hiddenRefs = editThreat?.hiddenTargetRefs ?? []
+  const hasTargets = wholeSystem || targets.length > 0 || hiddenRefs.length > 0
 
   const handleSubmit = () => {
-    if (!name.trim() || !guestEditor) return
+    if (!name.trim() || !guestEditor || !hasTargets) return
 
     // If rationale is required but empty, show confirmation dialog
     if (showRationaleWarning) {
@@ -125,40 +114,46 @@ export function GuestThreatDialog({
   }
 
   const commitThreat = () => {
-    if (!name.trim() || !guestEditor) return
+    if (!name.trim() || !guestEditor || !hasTargets) return
 
     if (isEditMode) {
       guestEditor.updateThreat(editThreat.id, {
         name: name.trim(),
         description: description.trim(),
-        severity,
+        level,
         category: (category as STRIDECategory) || undefined,
         status,
         decisionRationale: decisionRationale.trim() || undefined,
+        targets: wholeSystem ? [] : targets,
+        wholeSystem,
       })
     } else {
-      guestEditor.addThreat(
-        targetId,
-        targetType,
-        name.trim(),
-        description.trim(),
-        severity,
-        (category as STRIDECategory) || undefined,
+      guestEditor.addThreat({
+        name: name.trim(),
+        description: description.trim(),
+        level,
+        category: (category as STRIDECategory) || undefined,
         status,
-        decisionRationale.trim() || undefined
-      )
+        decisionRationale: decisionRationale.trim() || undefined,
+        targets: wholeSystem ? [] : targets,
+        wholeSystem,
+      })
     }
     onOpenChange(false)
   }
 
+  const subtitle = isEditMode
+    ? `Editing ${threatDisplayNumber(editThreat)}`
+    : targetName
+      ? `Add a threat to ${targetName}`
+      : 'Add a threat'
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+    <>
+      <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditMode ? 'Edit Threat' : 'Add Threat'}</DialogTitle>
-          <DialogDescription>
-            {isEditMode ? `Editing threat on ${targetName}` : `Add a threat to ${targetName}`}
-          </DialogDescription>
+          <DialogDescription>{subtitle}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -187,13 +182,30 @@ export function GuestThreatDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="threat-severity">Severity *</Label>
-            <Select value={severity} onValueChange={(v) => setSeverity(v as GuestThreat['severity'])}>
-              <SelectTrigger id="threat-severity">
+            <Label>Applies to *</Label>
+            <GuestTargetPicker
+              nodes={guestEditor?.nodes ?? []}
+              edges={guestEditor?.edges ?? []}
+              selected={targets}
+              onChange={setTargets}
+              wholeSystem={wholeSystem}
+              onWholeSystemChange={setWholeSystem}
+              hiddenNote={editThreat ? hiddenTargetsNote(hiddenRefs, editThreat.hiddenBlueprintTargetCount) : null}
+              idPrefix="threat-target"
+            />
+            {!hasTargets && (
+              <p className="text-xs text-amber-600">Pick at least one element, or mark the threat as whole system.</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="threat-level">Level *</Label>
+            <Select value={level} onValueChange={(v) => setLevel(v as GuestRatingLevel)}>
+              <SelectTrigger id="threat-level">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {SEVERITY_OPTIONS.map((opt) => (
+                {GUEST_RATING_LEVELS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     {opt.label}
                   </SelectItem>
@@ -267,7 +279,7 @@ export function GuestThreatDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!name.trim()}>
+          <Button onClick={handleSubmit} disabled={!name.trim() || !hasTargets}>
             {isEditMode ? (
               <>
                 <Check className="h-4 w-4 mr-2" />
@@ -301,6 +313,6 @@ export function GuestThreatDialog({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Dialog>
+    </>
   )
 }

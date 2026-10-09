@@ -9,10 +9,13 @@ mappings:
         applies_to: component
       - threat: ot-protocol-mitm
         applies_to: flow
+        flow_types: [data, message, control]
       - threat: ot-unencrypted-traffic
         applies_to: flow
+        flow_types: [data, message, control]
       - threat: ot-command-replay
         applies_to: flow
+        flow_types: [data, message, control]
 
   - component: rtu
     threats:
@@ -22,10 +25,13 @@ mappings:
         applies_to: component
       - threat: ot-protocol-mitm
         applies_to: flow
+        flow_types: [data, message, control]
       - threat: ot-unencrypted-traffic
         applies_to: flow
+        flow_types: [data, message, control]
       - threat: ot-command-replay
         applies_to: flow
+        flow_types: [data, message, control]
 
   - component: scada-server
     threats:
@@ -37,8 +43,10 @@ mappings:
         applies_to: component
       - threat: ot-protocol-mitm
         applies_to: flow
+        flow_types: [data, message, control]
       - threat: ot-unencrypted-traffic
         applies_to: flow
+        flow_types: [data, message, control]
 
   - component: hmi
     threats:
@@ -48,6 +56,7 @@ mappings:
         applies_to: component
       - threat: ot-unencrypted-traffic
         applies_to: flow
+        flow_types: [data, message, control]
 
   - component: historian
     threats:
@@ -57,6 +66,7 @@ mappings:
         applies_to: component
       - threat: ot-unencrypted-traffic
         applies_to: flow
+        flow_types: [data, message, control]
 
   - component: dcs-controller
     threats:
@@ -66,10 +76,13 @@ mappings:
         applies_to: component
       - threat: ot-protocol-mitm
         applies_to: flow
+        flow_types: [data, message, control]
       - threat: ot-unencrypted-traffic
         applies_to: flow
+        flow_types: [data, message, control]
       - threat: ot-command-replay
         applies_to: flow
+        flow_types: [data, message, control]
 
   - component: engineering-workstation
     threats:
@@ -79,6 +92,7 @@ mappings:
         applies_to: component
       - threat: it-ot-lateral-movement
         applies_to: flow
+        flow_types: [data, message]
 
   - component: sis
     threats:
@@ -88,6 +102,7 @@ mappings:
         applies_to: component
       - threat: ot-protocol-mitm
         applies_to: flow
+        flow_types: [data, message, control]
 
   - component: industrial-firewall
     threats:
@@ -97,6 +112,7 @@ mappings:
         applies_to: component
       - threat: it-ot-lateral-movement
         applies_to: flow
+        flow_types: [data, message]
 
   - component: opc-ua-gateway
     threats:
@@ -104,8 +120,10 @@ mappings:
         applies_to: component
       - threat: opcua-data-interception
         applies_to: both
+        flow_types: [data, message, event]
       - threat: it-ot-lateral-movement
         applies_to: flow
+        flow_types: [data, message]
 
   - component: field-sensor
     threats:
@@ -115,12 +133,15 @@ mappings:
         applies_to: component
       - threat: ot-unencrypted-traffic
         applies_to: flow
+        flow_types: [data, message, signal]
 
   - component: actuator
     threats:
       - threat: rtu-spoofed-commands
         applies_to: flow
+        flow_types: [control, signal]
       - threat: sensor-physical-tampering
         applies_to: component
       - threat: ot-command-replay
         applies_to: flow
+        flow_types: [control, signal]

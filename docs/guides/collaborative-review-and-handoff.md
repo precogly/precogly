@@ -40,7 +40,8 @@ The system owner and architect verify:
 - Context and scope describe the system being reviewed.
 - Components represent meaningful processing, storage, and actor boundaries.
 - Data flows have clear labels, direction, and protection properties.
-- Trust zones reflect changes in trust level or administrative control.
+- Zones have the right type, and trust levels are set where they mean something.
+- Boundaries record what a crossing requires: authentication, authorization, and the rest.
 - Sensitive data assets are placed on every relevant component and flow.
 
 The primary DFD is the analysis source of truth. Use secondary DFDs for alternate views or
@@ -50,12 +51,13 @@ reference material, but do not assume that a secondary diagram feeds threat anal
 
 Security reviewers inspect the generated or library-provided threats and confirm:
 
-- Threats are applicable to the component or flow where they appear.
-- Severity and threat-actor context reflect the actual environment.
-- Dismissed threats have a reason that another reviewer can understand.
+- Threats are applicable to every target they list: component, flow, zone, boundary, or the whole system.
+- Ratings and threat-actor context reflect the actual environment.
+- Triaged-out threats have a rationale that another reviewer can understand.
 - Countermeasures are relevant to the specific threat and location.
 - Owners, priorities, due dates, tickets, and evidence are current.
-- Shared controls are reviewed at every threat they mitigate.
+- Shared controls are reviewed at every threat they mitigate, and their scope (Applies to) is right.
+- Controls not linked to any threat are either linked or deleted.
 
 ![Threat analysis overview](../assets/images/threat-analysis-overview.png)
 
@@ -64,20 +66,20 @@ Security reviewers inspect the generated or library-provided threats and confirm
 Risk owners and approvers review:
 
 - The business impact of important threats.
-- Inherent and residual risk scores.
-- Whether each risk is accepted, mitigated, transferred, or awaiting a decision.
-- The owner and due date for open actions.
-- Assumptions, exclusions, and any compensating controls.
+- Inherent, residual, and target ratings, and the risk statement.
+- The risk's status (identified, assessed, mitigated, accepted, transferred, retired) and its responses.
+- The owner and target date for each response.
+- Assumptions and their validity, exclusions, and any compensating controls.
 
 Record decisions in the model while the evidence and architecture context are available.
 Avoid keeping the final decision only in chat or a separate spreadsheet.
 
 ## Review changes safely
 
-Before making a large review change, export a structured copy of the model. TM-Library JSON
-is useful for Precogly-to-Precogly backups and version control; CycloneDX 2.0 is useful
-when another tool or BOM workflow consumes the model. Keep the export associated with the
-release or review date.
+Before making a large review change, export a copy of the model as CycloneDX TM-BOM. It
+serves as a backup, a version-control snapshot, and the file another tool reads. Keep the
+export associated with the release or review date; its serial number and version identify
+it.
 
 When a reviewer changes a DFD, threat, or control, save the model and allow the workspace
 to refresh before starting another major edit. After a review session, check the report and
@@ -119,8 +121,8 @@ and imported into the signed-in workspace before it becomes the team's authorita
 
 During handoff, compare the imported model with the original guest view:
 
-- Confirm the DFD nodes, flows, and trust zones are present.
-- Confirm threats and countermeasures are attached to the intended targets.
+- Confirm the DFD nodes, flows, zones, and boundaries are present.
+- Confirm threats and countermeasures are attached to the intended targets and kept their numbers.
 - Review imported statuses and warnings.
 - Recheck owners, compliance mappings, risks, and assumptions.
 
@@ -134,7 +136,7 @@ Open **Pentests > Scope** after the security pass. The scope is derived from the
 threat model and gives testers a shared view of:
 
 - In-scope and out-of-scope boundaries.
-- Components and trust zones.
+- Components, zones, and boundaries.
 - Data assets and sensitive flows.
 - Threat-based test cases and priorities.
 - Existing countermeasures and known gaps.
@@ -165,26 +167,47 @@ Before distributing the report, verify:
 - Scope, assumptions, and exclusions are visible.
 - The DFD reflects the reviewed architecture.
 - Threats and controls are attached to the correct components and flows.
-- Risk responses and residual scores have been approved.
+- Risk responses and residual ratings have been reviewed.
+- The review and approval section shows the expected state.
 - Compliance mappings reflect the current framework selection.
 - The report date and reviewer context are recorded externally if required by policy.
 
 Use CSV when a recipient needs structured threats, controls, risks, or compliance data. Use
-the Word report for an offline review package. Retain the JSON or CycloneDX export alongside
-the report when a future reviewer must compare the model with the delivered evidence.
+the Word report for an offline review package. Retain the CycloneDX export alongside the
+report when a future reviewer must compare the model with the delivered evidence.
 
 ![Report export menu](../assets/images/report-export-menu.png)
+
+## Review and approve the model
+
+The **Review** card on the model page records who reviewed and who approved the model.
+
+1. A reviewer clicks **Mark reviewed**. The card shows the reviewer and the date.
+2. A **Security Team** member clicks **Approve**. The sign-off view first lists what is still open: assumptions that are not verified, and risks still in the Identified status. It informs; it does not block. **Approve anyway** records the approval with the approver and the date.
+3. **Revoke** withdraws the approval.
+
+Under Advanced, the card takes the lifecycle phase, the validity period (**Valid from** and **Valid until**), and the **Review frequency** (monthly, quarterly, half-yearly, yearly, or an ISO 8601 duration such as `P18M`). When the validity period has passed, the card shows **Review due**.
+
+### What "Changed since approval" means
+
+When a model is approved, Precogly stores a digest of its content: components, flows, zones, boundaries, data assets, threats with their targets and ratings, countermeasures, risks, assumptions, objectives, and the rest of what the model owns. Whenever the current content differs from that digest, the card shows **Changed since approval**. Moving nodes on the diagram, comments, and reordering lists are not content and do not count. A change that is later undone makes the approval valid again, because the content is the same as what was approved.
+
+Nothing records who made the change or when; the card only says that the content differs. The report carries the same state.
+
+There is no scope lock any more. Approval is the record; editing stays possible, and the badge tells you the approval no longer matches.
+
+An approval that came with an imported file is shown as history ("approved in the source document"). The imported model starts unapproved.
 
 ## Close the review
 
 At the end of the review, make one final pass through the model and record:
 
 - The review date and release or environment assessed.
-- Reviewers and approvers.
+- Reviewers and approvers, through the Review card.
 - Open gaps and their owners.
-- Accepted or waived exposures and their rationale.
+- Accepted or waived exposures and their rationale, and each risk's status.
 - The next reassessment trigger, such as a release, major architecture change, or control
-  expiry.
+  expiry, as the validity period and review frequency.
 
 Then retain the final report and structured export according to the organization's evidence
 retention policy. The model should make the current security decision understandable to a

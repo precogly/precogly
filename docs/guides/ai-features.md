@@ -7,7 +7,7 @@ Precogly can connect an organization to an OpenAI-compatible model endpoint. AI 
 | Feature | What it does | What is saved |
 | --- | --- | --- |
 | AI Threat Suggestions | Ranks applicable threats from the component's installed library packs and explains why they may apply. | Nothing is saved until you select a suggestion and add it through the normal threat workflow. |
-| AI-powered DFD generation | Reads an architecture image, extracts components, data flows, and trust zones, then proposes a diagram layout. | When generation succeeds, the generated nodes and edges are inserted into the editor for review and adjustment. |
+| AI-powered DFD generation | Reads an architecture image, extracts components, flows, and zones, then proposes a diagram layout. | When generation succeeds, the generated nodes and edges are inserted into the editor for review and adjustment. |
 | AI Usage reporting | Shows organization-level token and cost totals, trends, and breakdowns by feature, model, and user. | Usage records are aggregated from completed AI calls. |
 
 AI suggestions are grounded in the threat library already available to the component. The suggestion model chooses from that candidate list; it does not create arbitrary threat records.
@@ -88,12 +88,12 @@ The **Generate** action in the DFD toolbar uses a vision-capable model to turn a
 
 1. Select **Generate** in the DFD toolbar.
 2. Upload an architecture image and enter the application name and description.
-3. Review the extracted components, data flows, trust zones, and clarifying questions.
+3. Review the extracted components, flows, zones, and clarifying questions.
 4. Answer any questions that provide useful context.
 5. Select **Generate DFD**.
 6. Review and adjust the generated layout in the editor after generation completes.
 
-The model must support image inputs for the analysis step. The generated diagram is a starting point and should be reviewed for missing components, incorrect relationships, and trust-boundary placement.
+The model must support image inputs for the analysis step. The generated diagram is a starting point and should be reviewed for missing components, incorrect relationships, and zone and boundary placement.
 
 ## AI Usage reporting
 

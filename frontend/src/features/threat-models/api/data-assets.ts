@@ -11,6 +11,9 @@ export interface DataAsset {
   availability: string
   complianceTags: string[]
   dataSensitivity: string[]
+  /** The blueprint the asset belongs to (plan J8). */
+  blueprint: number
+  /** Read-only; derived from the blueprint. */
   threatModel: number | null
   formatMetadata: Record<string, unknown>
   createdAt: string
@@ -30,14 +33,15 @@ export function useDataAssets(threatModelId: string | undefined) {
   })
 }
 
+/** `blueprint` is required by the backend (DataAssetSerializer); `threatModel` is read-only there. */
 export function useCreateDataAsset() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: Partial<DataAsset>) =>
+    mutationFn: (data: Partial<DataAsset> & { blueprint: number }) =>
       api.post<DataAsset>('/data-assets/', data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['data-assets', String(variables.threatModel)] })
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['data-assets'] })
     },
   })
 }

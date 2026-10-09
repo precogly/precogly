@@ -41,7 +41,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { DFDNotationStyle } from '@/features/dfd-editor/types/notation'
 import { useGuestEditor } from '../context/GuestEditorContext'
-import { serializeGuestToCycloneDx, deserializeCycloneDxToGuest } from '../lib/cyclonedx-guest'
+import { buildGuestDocument, deserializeCycloneDxToGuest, type DeserializedFile } from '../lib/cyclonedx-guest'
 import {
   supportsFileSystemAccess,
   pickFileToSave,
@@ -62,7 +62,8 @@ interface GuestEditorHeaderProps {
   onTitleChange: (title: string) => void
   hasUnsavedChanges: boolean
   onMarkSaved: () => void
-  onLoadFromFile: (data: { title: string; nodes: import('@/features/dfd-editor/types').DiagramNode[]; edges: import('@/features/dfd-editor/types').DiagramEdge[]; notationStyle?: DFDNotationStyle; systemContext?: import('../types').GuestSystemContext }) => void
+  onLoadFromFile: (loaded: DeserializedFile) => void
+  /** Undefined when the file did not record a notation; the select then shows the default. */
   notationStyle?: DFDNotationStyle
   onNotationChange?: (notation: DFDNotationStyle) => void
   onCaptureImage: () => Promise<Uint8Array | null>
@@ -158,77 +159,93 @@ export function GuestEditorHeader({
     [handleTitleSave]
   )
 
-  // --- Serialize current state to CycloneDX JSON ---
-  const serializeContent = useCallback(() => {
-    if (!guestEditor) return ''
-    const threats = guestEditor.getAllThreats()
-    const countermeasures = guestEditor.getAllCountermeasures()
-    const systemContext = guestEditor.getSystemContext()
-    return serializeGuestToCycloneDx(
+  // --- Build the CycloneDX document from the current state ---
+  // The version rises when the content changed since the last save or open
+  // (I4); `markSaved` records the written version and digest once the file
+  // is on disk.
+  const buildContent = useCallback(() => {
+    if (!guestEditor) return null
+    const result = buildGuestDocument({
       title,
-      guestEditor.nodes,
-      guestEditor.edges,
-      threats,
-      countermeasures,
+      nodes: guestEditor.nodes,
+      edges: guestEditor.edges,
+      threats: guestEditor.getAllThreats(),
+      countermeasures: guestEditor.getAllCountermeasures(),
+      systemContext: guestEditor.getSystemContext(),
       notationStyle,
-      systemContext
-    )
+      documentState: guestEditor.documentState,
+    })
+    for (const warning of result.warnings) {
+      toast.warning(warning)
+    }
+    return result
   }, [title, guestEditor, notationStyle])
+
+  const recordSaved = useCallback(
+    (result: { version: number; digest: string }) => {
+      guestEditor?.markSaved(result.version, result.digest)
+      onMarkSaved()
+    },
+    [guestEditor, onMarkSaved]
+  )
 
   // --- Save handler ---
   const handleSave = useCallback(async () => {
     if (!guestEditor) return
-    const content = serializeContent()
+    const result = buildContent()
+    if (!result) return
+    const content = result.json
 
     if (supportsFileSystemAccess()) {
       if (fileHandle) {
         // Silent save to existing handle
         try {
           await writeToHandle(fileHandle, content)
-          onMarkSaved()
+          recordSaved(result)
         } catch {
-          // Handle might be stale (file deleted externally) — clear and re-prompt
+          // The handle might be stale (file deleted externally): clear and prompt again
           onFileHandleClear()
           try {
             const newHandle = await pickFileToSave(`${titleToFilename(title)}.cdx.json`)
             await writeToHandle(newHandle, content)
             onFileHandleChange(newHandle)
-            onMarkSaved()
+            recordSaved(result)
           } catch (innerError) {
-            // User cancelled — silently ignore AbortError
+            // User cancelled: ignore the AbortError
             if (innerError instanceof DOMException && innerError.name === 'AbortError') return
           }
         }
       } else {
-        // No handle yet — prompt for location
+        // No handle yet: prompt for a location
         try {
           const newHandle = await pickFileToSave(`${titleToFilename(title)}.cdx.json`)
           await writeToHandle(newHandle, content)
           onFileHandleChange(newHandle)
-          onMarkSaved()
+          recordSaved(result)
         } catch (error) {
           if (error instanceof DOMException && error.name === 'AbortError') return
         }
       }
     } else {
-      // Fallback: show filename dialog
+      // Fallback: show the filename dialog
       setSaveFilename(titleToFilename(title))
       setShowSaveDialog(true)
       setTimeout(() => filenameInputRef.current?.select(), 0)
     }
-  }, [guestEditor, serializeContent, fileHandle, title, onMarkSaved, onFileHandleChange, onFileHandleClear])
+  }, [guestEditor, buildContent, recordSaved, fileHandle, title, onFileHandleChange, onFileHandleClear])
 
   // --- Save As handler (always prompts for new location) ---
   const handleSaveAs = useCallback(async () => {
     if (!guestEditor) return
-    const content = serializeContent()
+    const result = buildContent()
+    if (!result) return
 
     if (supportsFileSystemAccess()) {
       try {
         const newHandle = await pickFileToSave(`${titleToFilename(title)}.cdx.json`)
-        await writeToHandle(newHandle, content)
+        await writeToHandle(newHandle, result.json)
         onFileHandleChange(newHandle)
-        onMarkSaved()
+        recordSaved(result)
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') return
       }
@@ -237,16 +254,17 @@ export function GuestEditorHeader({
       setShowSaveDialog(true)
       setTimeout(() => filenameInputRef.current?.select(), 0)
     }
-  }, [guestEditor, serializeContent, title, onMarkSaved, onFileHandleChange])
+  }, [guestEditor, buildContent, recordSaved, title, onFileHandleChange])
 
   // --- Fallback save dialog confirm ---
   const handleConfirmSave = useCallback(() => {
-    const content = serializeContent()
+    const result = buildContent()
+    if (!result) return
     const filename = saveFilename.trim() || titleToFilename(title)
-    downloadAsFallback(filename, content)
-    onMarkSaved()
+    downloadAsFallback(filename, result.json)
+    recordSaved(result)
     setShowSaveDialog(false)
-  }, [saveFilename, title, serializeContent, onMarkSaved])
+  }, [saveFilename, title, buildContent, recordSaved])
 
   // --- Open handler ---
   const handleOpen = useCallback(async () => {
@@ -262,21 +280,8 @@ export function GuestEditorHeader({
         content = await openFileViaInput()
       }
 
-      const data = deserializeCycloneDxToGuest(content)
-      onLoadFromFile({
-        title: data.title,
-        nodes: data.nodes,
-        edges: data.edges,
-        notationStyle: data.notationStyle,
-        systemContext: data.systemContext,
-      })
-      if (guestEditor) {
-        guestEditor.loadThreats(data.threats)
-        guestEditor.loadCountermeasures(data.countermeasures)
-        if (data.systemContext) {
-          guestEditor.loadSystemContext(data.systemContext)
-        }
-      }
+      const loaded = deserializeCycloneDxToGuest(content)
+      onLoadFromFile(loaded)
 
       if (handle) {
         onFileHandleChange(handle)
@@ -284,14 +289,14 @@ export function GuestEditorHeader({
         onFileHandleClear()
       }
     } catch (error) {
-      // User cancelled or AbortError — silently ignore
+      // User cancelled or AbortError: ignore
       if (error instanceof DOMException && error.name === 'AbortError') return
       // Show error for invalid files
       if (error instanceof Error && error.message) {
         toast.error(error.message, { duration: Infinity })
       }
     }
-  }, [onLoadFromFile, guestEditor, onFileHandleChange, onFileHandleClear])
+  }, [onLoadFromFile, onFileHandleChange, onFileHandleClear])
 
   // --- Ctrl+S / Cmd+S keyboard shortcut ---
   useEffect(() => {
@@ -425,10 +430,10 @@ export function GuestEditorHeader({
             </div>
           )}
 
-          {onNotationChange && notationStyle && (
+          {onNotationChange && (
             <div className="hidden xl:block">
               <Select
-                value={notationStyle}
+                value={notationStyle ?? 'yourdon'}
                 onValueChange={(value) => onNotationChange(value as DFDNotationStyle)}
               >
                 <SelectTrigger className="h-8 w-[140px] text-xs">
@@ -499,10 +504,10 @@ export function GuestEditorHeader({
                   <DropdownMenuSeparator />
                 </>
               )}
-              {onNotationChange && notationStyle && (
+              {onNotationChange && (
                 <>
                   <DropdownMenuLabel className="text-xs text-muted-foreground">Notation</DropdownMenuLabel>
-                  <DropdownMenuRadioGroup value={notationStyle} onValueChange={(value) => onNotationChange(value as DFDNotationStyle)}>
+                  <DropdownMenuRadioGroup value={notationStyle ?? 'yourdon'} onValueChange={(value) => onNotationChange(value as DFDNotationStyle)}>
                     <DropdownMenuRadioItem value="dfd3">DFD3</DropdownMenuRadioItem>
                     <DropdownMenuRadioItem value="yourdon">Yourdon</DropdownMenuRadioItem>
                   </DropdownMenuRadioGroup>

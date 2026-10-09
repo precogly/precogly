@@ -1,16 +1,16 @@
 from django.contrib import admin
 
 from .models import (
+    Boundary,
     ComponentDataAsset,
     ComponentLibrary,
     DataAsset,
-    DataFlow,
-    DataFlowAsset,
+    Flow,
+    FlowAsset,
     IntegrationSource,
     Orgsystem,
     OrgsystemComponent,
-    TrustBoundary,
-    TrustZone,
+    Zone,
 )
 
 
@@ -28,37 +28,43 @@ class IntegrationSourceAdmin(admin.ModelAdmin):
     search_fields = ["name"]
 
 
-@admin.register(TrustZone)
-class TrustZoneAdmin(admin.ModelAdmin):
-    list_display = ["name", "trust_level", "parent"]
-    list_filter = ["trust_level"]
+@admin.register(Zone)
+class ZoneAdmin(admin.ModelAdmin):
+    list_display = ["name", "blueprint", "zone_type", "trust_level", "parent"]
+    list_filter = ["zone_type"]
     search_fields = ["name"]
 
 
-@admin.register(TrustBoundary)
-class TrustBoundaryAdmin(admin.ModelAdmin):
-    list_display = ["label", "zone_a", "zone_b"]
-    list_filter = ["zone_a", "zone_b"]
+@admin.register(Boundary)
+class BoundaryAdmin(admin.ModelAdmin):
+    list_display = ["label", "blueprint", "zone_a", "zone_b"]
+    list_filter = ["blueprint"]
     search_fields = ["label"]
 
 
 @admin.register(ComponentLibrary)
 class ComponentLibraryAdmin(admin.ModelAdmin):
-    list_display = ["name", "category", "component_type", "provider"]
-    list_filter = ["category", "provider"]
+    list_display = ["name", "category", "kind", "component_type", "provider"]
+    list_filter = ["category", "kind", "provider"]
     search_fields = ["name", "component_type"]
 
 
 @admin.register(OrgsystemComponent)
 class OrgsystemComponentAdmin(admin.ModelAdmin):
-    list_display = ["name", "orgsystem", "component_library", "trust_zone"]
-    list_filter = ["orgsystem", "trust_zone"]
+    list_display = ["name", "blueprint", "orgsystem", "component_library", "zone"]
+    list_filter = ["blueprint", "orgsystem"]
     search_fields = ["name"]
 
 
 @admin.register(DataAsset)
 class DataAssetAdmin(admin.ModelAdmin):
-    list_display = ["name", "classification", "confidentiality", "integrity", "availability"]
+    list_display = [
+        "name",
+        "classification",
+        "confidentiality",
+        "integrity",
+        "availability",
+    ]
     list_filter = ["classification", "confidentiality"]
     search_fields = ["name"]
 
@@ -69,13 +75,18 @@ class ComponentDataAssetAdmin(admin.ModelAdmin):
     list_filter = ["data_state"]
 
 
-@admin.register(DataFlow)
-class DataFlowAdmin(admin.ModelAdmin):
-    list_display = ["source_component", "dest_component", "protocol", "crosses_trust_zone"]
-    list_filter = ["crosses_trust_zone", "protocol"]
+@admin.register(Flow)
+class FlowAdmin(admin.ModelAdmin):
+    list_display = [
+        "source_component",
+        "dest_component",
+        "protocol",
+        "crosses_boundary",
+    ]
+    list_filter = ["flow_type", "crosses_boundary", "protocol"]
 
 
-@admin.register(DataFlowAsset)
-class DataFlowAssetAdmin(admin.ModelAdmin):
-    list_display = ["data_flow", "data_asset", "protection_method"]
+@admin.register(FlowAsset)
+class FlowAssetAdmin(admin.ModelAdmin):
+    list_display = ["flow", "data_asset", "protection_method"]
     list_filter = ["protection_method"]

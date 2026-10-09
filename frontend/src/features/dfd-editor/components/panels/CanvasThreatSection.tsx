@@ -29,22 +29,17 @@ import { Checkbox } from '@/components/ui/checkbox'
 import {
   deriveThreatStatus,
   THREAT_STATUS_CONFIG,
+  threatTargetsCanvasId,
 } from '../../types/threat-analysis'
+import { RatingBadge } from '@/features/threat-models/components/rating'
 import type { ComponentThreat, CountermeasureStatus } from '../../types/threat-analysis'
 import { isActiveThreat } from '@/types/triage'
 import { CONTROL_FUNCTIONS, CONTROL_NATURES } from '@/types/controls'
 
-const SEVERITY_COLORS: Record<string, string> = {
-  low: 'bg-blue-100 text-blue-800',
-  medium: 'bg-yellow-100 text-yellow-800',
-  high: 'bg-orange-100 text-orange-800',
-  critical: 'bg-red-100 text-red-800',
-}
-
 interface CanvasThreatSectionProps {
   threatModelId: string | undefined
   canvasId: string
-  targetType: 'component' | 'dataflow'
+  targetType: 'component' | 'flow' | 'zone' | 'boundary'
   targetName: string
   backendId: number | undefined
 }
@@ -94,9 +89,9 @@ export function CanvasThreatSection({
 
   const { data: threatData } = useThreatModelThreats(threatModelId)
 
-  const threats: ComponentThreat[] = threatData?.componentThreats
-    ? threatData.componentThreats.filter(
-        (t) => t.componentId === canvasId && isActiveThreat(t.triageStatus)
+  const threats: ComponentThreat[] = threatData?.analysisThreats
+    ? threatData.analysisThreats.filter(
+        (t) => threatTargetsCanvasId(t, canvasId) && isActiveThreat(t.triageStatus)
       )
     : []
 
@@ -148,6 +143,9 @@ export function CanvasThreatSection({
                         className="flex flex-col gap-1.5 p-2 rounded-md border bg-card text-sm"
                       >
                         <span className="text-sm font-medium leading-snug">
+                          <span className="mr-1.5 inline-flex rounded border border-slate-300 bg-slate-50 px-1 font-mono text-[10px] text-slate-700">
+                            {threat.displayNumber}
+                          </span>
                           {threat.threatName || 'Unnamed threat'}
                         </span>
                         {threat.threatDescription && (
@@ -156,17 +154,7 @@ export function CanvasThreatSection({
                           </p>
                         )}
                         <div className="flex flex-wrap items-center gap-1">
-                          {threat.inherentSeverity && (
-                            <Badge
-                              variant="secondary"
-                              className={cn(
-                                'text-xs',
-                                SEVERITY_COLORS[threat.inherentSeverity] || ''
-                              )}
-                            >
-                              {threat.inherentSeverity}
-                            </Badge>
-                          )}
+                          <RatingBadge rating={threat.rating} size="sm" />
                           <Badge
                             variant="secondary"
                             className={cn('text-xs', statusConfig.bgColor)}
@@ -256,8 +244,7 @@ export function CanvasThreatSection({
               <AddThreatDialog
                 open={showAddDialog}
                 onOpenChange={setShowAddDialog}
-                targetId={backendId}
-                targetType={targetType}
+                initialTargets={[{ type: targetType, id: backendId }]}
                 targetName={targetName}
                 threatModelId={threatModelId}
               />
@@ -266,7 +253,6 @@ export function CanvasThreatSection({
                   open={countermeasureThreat !== null}
                   onOpenChange={(open) => { if (!open) setCountermeasureThreat(null) }}
                   threatId={countermeasureThreat.backendThreatId}
-                  threatType={targetType}
                   threatName={countermeasureThreat.threatName || 'Unnamed threat'}
                   threatLibraryId={countermeasureThreat.threatId.startsWith('lib-') ? Number(countermeasureThreat.threatId.slice(4)) : null}
                   threatModelId={threatModelId}

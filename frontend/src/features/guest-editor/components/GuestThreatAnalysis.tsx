@@ -12,8 +12,11 @@ import {
   Trash2,
   Pencil,
   Shield,
+  ShieldCheck,
   AlertTriangle,
   Info,
+  Globe,
+  List,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -35,18 +38,18 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useGuestEditor } from '../context/GuestEditorContext'
 import { GuestThreatDialog } from './GuestAddThreatDialog'
 import { GuestCountermeasureDialog } from './GuestCountermeasureDialog'
-import type { GuestThreat, GuestCountermeasure } from '../types'
-import { STATUS_COLORS, getThreatWarning, GUEST_THREAT_STATUS_OPTIONS } from '../types'
+import type { GuestThreat, GuestCountermeasure, GuestTargetRef, ControlFunction, ControlNature } from '../types'
+import {
+  LEVEL_COLORS,
+  STATUS_COLORS,
+  getThreatWarning,
+  GUEST_THREAT_STATUS_OPTIONS,
+  threatDisplayNumber,
+  countermeasureDisplayNumber,
+} from '../types'
 import { STRIDE_CONFIG } from '@/types/domain'
-
-const SEVERITY_COLORS: Record<GuestThreat['severity'], string> = {
-  low: 'bg-blue-100 text-blue-800',
-  medium: 'bg-yellow-100 text-yellow-800',
-  high: 'bg-orange-100 text-orange-800',
-  critical: 'bg-red-100 text-red-800',
-}
-
-import type { ControlFunction, ControlNature } from '../types'
+import { targetLabel } from '../lib/guest-model'
+import { hiddenTargetsNote, targetOptions } from '../lib/guest-targets'
 
 const CONTROL_FUNCTION_COLORS: Record<ControlFunction, string> = {
   preventive: 'bg-green-100 text-green-800',
@@ -57,39 +60,50 @@ const CONTROL_FUNCTION_COLORS: Record<ControlFunction, string> = {
   compensating: 'bg-amber-100 text-amber-800',
 }
 
-const CONTROL_NATURE_COLORS: Record<ControlNature, string> = {
+const CONTROL_NATURE_COLORS: Record<ControlNature | '', string> = {
+  '': 'bg-muted text-muted-foreground',
   technical: 'bg-sky-100 text-sky-800',
   administrative: 'bg-rose-100 text-rose-800',
   physical: 'bg-stone-100 text-stone-800',
 }
 
-const CONTROL_NATURE_LABELS: Record<ControlNature, string> = {
+const CONTROL_NATURE_LABELS: Record<ControlNature | '', string> = {
+  '': 'Nature not set',
   technical: 'Technical',
   administrative: 'Admin/Procedural',
   physical: 'Physical',
 }
 
-const NODE_TYPE_ICON: Record<string, typeof Cog> = {
+const GROUP_ICONS: Record<string, typeof Cog> = {
   process: Cog,
   datastore: Database,
   humanActor: User,
   systemActor: Building2,
   systemScope: Box,
+  flow: ArrowRight,
+  zone: Shield,
+  boundary: ShieldCheck,
 }
 
-const NODE_TYPE_LABELS: Record<string, string> = {
+const GROUP_LABELS: Record<string, string> = {
   process: 'Processes',
   datastore: 'Data Stores',
   humanActor: 'Human Actors',
   systemActor: 'System Actors',
   systemScope: 'System Scope',
+  flow: 'Flows',
+  zone: 'Zones',
+  boundary: 'Boundaries',
 }
 
-type ThreatSortField = 'status' | 'severity' | 'name'
+const GROUP_ORDER = ['process', 'datastore', 'humanActor', 'systemActor', 'systemScope', 'flow', 'zone', 'boundary']
+
+type ThreatSortField = 'number' | 'status' | 'level' | 'name'
 
 const SORT_OPTIONS: { value: ThreatSortField; label: string }[] = [
+  { value: 'number', label: 'Number' },
   { value: 'status', label: 'Status' },
-  { value: 'severity', label: 'Severity' },
+  { value: 'level', label: 'Level' },
   { value: 'name', label: 'Name' },
 ]
 
@@ -97,131 +111,81 @@ const STATUS_SORT_ORDER: Record<string, number> = {
   open: 0, mitigate: 1, accept: 2, delegate: 3, eliminate: 4,
 }
 
-const SEVERITY_SORT_ORDER: Record<string, number> = {
-  critical: 0, high: 1, medium: 2, low: 3,
+const LEVEL_SORT_ORDER: Record<string, number> = {
+  critical: 0, high: 1, medium: 2, low: 3, info: 4,
 }
 
-interface ComponentItem {
-  id: string
-  label: string
-  type: string
-  targetType: GuestThreat['targetType']
-}
+/** What the left column lists: a diagram element, the whole system, or every threat. */
+type Selection =
+  | { kind: 'all' }
+  | { kind: 'wholeSystem' }
+  | { kind: 'element'; target: GuestTargetRef; label: string }
 
 export function GuestThreatAnalysis() {
   const navigate = useNavigate()
   const guestEditor = useGuestEditor()
 
-  const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null)
+  const [selection, setSelection] = useState<Selection>({ kind: 'all' })
   const [selectedThreatId, setSelectedThreatId] = useState<string | null>(null)
-  const [sortField, setSortField] = useState<ThreatSortField>('status')
+  const [sortField, setSortField] = useState<ThreatSortField>('number')
 
-  // Threat dialog state
   const [showThreatDialog, setShowThreatDialog] = useState(false)
   const [editingThreat, setEditingThreat] = useState<GuestThreat | undefined>(undefined)
 
-  // Countermeasure dialog state
   const [showCountermeasureDialog, setShowCountermeasureDialog] = useState(false)
-  const [editingCountermeasure, setEditingCountermeasure] = useState<
-    GuestCountermeasure | undefined
-  >(undefined)
+  const [editingCountermeasure, setEditingCountermeasure] = useState<GuestCountermeasure | undefined>(undefined)
 
-  if (!guestEditor) return null
+  const nodes = useMemo(() => guestEditor?.nodes ?? [], [guestEditor])
+  const edges = useMemo(() => guestEditor?.edges ?? [], [guestEditor])
+  const allThreats = useMemo(() => guestEditor?.getAllThreats() ?? [], [guestEditor])
 
-  const { nodes, edges } = guestEditor
-
-  // Build component list grouped by type
-  const componentsByType = useMemo(() => {
-    const groups: Record<string, ComponentItem[]> = {}
-
-    for (const node of nodes) {
-      if (node.type === 'trustZone') continue
-      const nodeType = node.type || 'process'
-      if (!groups[nodeType]) groups[nodeType] = []
-      groups[nodeType].push({
-        id: node.id,
-        label: node.data.label || nodeType,
-        type: nodeType,
-        targetType: nodeType === 'systemScope' ? 'systemScope' : 'component',
-      })
+  const groups = useMemo(() => {
+    const byGroup = new Map<string, { target: GuestTargetRef; label: string }[]>()
+    for (const option of targetOptions(nodes, edges)) {
+      const node = option.ref.type === 'component' || option.ref.type === 'zone' ? nodes.find((candidate) => candidate.id === option.ref.id) : undefined
+      const group = option.ref.type === 'component' ? (node?.type ?? 'process') : option.ref.type
+      const list = byGroup.get(group) ?? []
+      list.push({ target: option.ref, label: option.label })
+      byGroup.set(group, list)
     }
+    return GROUP_ORDER.filter((group) => byGroup.has(group)).map((group) => [group, byGroup.get(group)!] as const)
+  }, [nodes, edges])
 
-    return groups
-  }, [nodes])
+  const threatsForSelection = useMemo(() => {
+    if (!guestEditor) return []
+    if (selection.kind === 'all') return allThreats
+    if (selection.kind === 'wholeSystem') return guestEditor.getWholeSystemThreats()
+    return guestEditor.getThreatsForTarget(selection.target.id)
+  }, [guestEditor, selection, allThreats])
 
-  // Data flows from edges — derive label from connected nodes when unnamed
-  const nodeLabels = useMemo(() => {
-    const map = new Map<string, string>()
-    for (const node of nodes) map.set(node.id, node.data.label || node.id)
-    return map
-  }, [nodes])
-
-  const dataFlows = useMemo(
-    () =>
-      edges
-        .filter((e) => e.type === 'dataFlow')
-        .map((e) => {
-          const explicitLabel = e.data?.label as string | undefined
-          const label = explicitLabel
-            || `${nodeLabels.get(e.source) ?? '?'} → ${nodeLabels.get(e.target) ?? '?'}`
-          return {
-            id: e.id,
-            label,
-            type: 'dataFlow' as const,
-            targetType: 'dataflow' as const,
-          }
-        }),
-    [edges, nodeLabels]
-  )
-
-  // Find selected component info
-  const selectedComponent = useMemo(() => {
-    if (!selectedComponentId) return null
-    for (const items of Object.values(componentsByType)) {
-      const found = items.find((i) => i.id === selectedComponentId)
-      if (found) return found
-    }
-    return dataFlows.find((f) => f.id === selectedComponentId) || null
-  }, [selectedComponentId, componentsByType, dataFlows])
-
-  // Threats for selected component
-  const threatsForSelected = selectedComponentId
-    ? guestEditor.getThreatsForTarget(selectedComponentId)
-    : []
-
-  // Sorted threats for display
   const sortedThreats = useMemo(() => {
-    const sorted = [...threatsForSelected]
+    const sorted = [...threatsForSelection]
     sorted.sort((a, b) => {
       switch (sortField) {
+        case 'number':
+          return a.number - b.number
         case 'status':
           return (STATUS_SORT_ORDER[a.status] ?? 99) - (STATUS_SORT_ORDER[b.status] ?? 99)
-        case 'severity':
-          return (SEVERITY_SORT_ORDER[a.severity] ?? 99) - (SEVERITY_SORT_ORDER[b.severity] ?? 99)
+        case 'level':
+          return (LEVEL_SORT_ORDER[a.level] ?? 99) - (LEVEL_SORT_ORDER[b.level] ?? 99)
         case 'name':
           return a.name.localeCompare(b.name)
       }
     })
     return sorted
-  }, [threatsForSelected, sortField])
+  }, [threatsForSelection, sortField])
 
-  // Find selected threat
-  const selectedThreat = selectedThreatId
-    ? threatsForSelected.find((t) => t.id === selectedThreatId) || null
-    : null
+  if (!guestEditor) return null
 
-  // Countermeasures for selected threat
-  const countermeasuresForThreat = selectedThreatId
-    ? guestEditor.getCountermeasuresForThreat(selectedThreatId)
-    : []
+  const selectedThreat = selectedThreatId ? allThreats.find((t) => t.id === selectedThreatId) ?? null : null
+  const countermeasuresForThreat = selectedThreatId ? guestEditor.getCountermeasuresForThreat(selectedThreatId) : []
+  const wholeSystemCount = guestEditor.getWholeSystemThreats().length
 
-  const handleSelectComponent = (componentId: string) => {
-    setSelectedComponentId(componentId)
+  const selectionLabel = selection.kind === 'all' ? 'All threats' : selection.kind === 'wholeSystem' ? 'Whole system' : selection.label
+
+  const handleSelect = (next: Selection) => {
+    setSelection(next)
     setSelectedThreatId(null)
-  }
-
-  const handleSelectThreat = (threatId: string) => {
-    setSelectedThreatId(threatId)
   }
 
   const handleAddThreat = () => {
@@ -236,9 +200,7 @@ export function GuestThreatAnalysis() {
 
   const handleDeleteThreat = (threatId: string) => {
     guestEditor.removeThreat(threatId)
-    if (selectedThreatId === threatId) {
-      setSelectedThreatId(null)
-    }
+    if (selectedThreatId === threatId) setSelectedThreatId(null)
   }
 
   const handleAddCountermeasure = () => {
@@ -251,9 +213,30 @@ export function GuestThreatAnalysis() {
     setShowCountermeasureDialog(true)
   }
 
-  const handleDeleteCountermeasure = (countermeasureId: string) => {
-    guestEditor.removeCountermeasure(countermeasureId)
+  const describeTargets = (threat: GuestThreat): string => {
+    const parts: string[] = []
+    if (threat.wholeSystem) parts.push('whole system')
+    else if (threat.targets.length > 0) parts.push(threat.targets.map((target) => targetLabel(target, nodes, edges)).join(', '))
+    const hidden = hiddenTargetsNote(threat.hiddenTargetRefs, threat.hiddenBlueprintTargetCount)
+    if (hidden) parts.push(hidden)
+    return parts.join('; ')
   }
+
+  const describeScope = (countermeasure: GuestCountermeasure): string => {
+    const parts: string[] = []
+    if (countermeasure.targets.length === 0 && countermeasure.hiddenTargetRefs.length === 0) return 'whole system'
+    if (countermeasure.targets.length > 0) parts.push(countermeasure.targets.map((target) => targetLabel(target, nodes, edges)).join(', '))
+    if (countermeasure.hiddenTargetRefs.length > 0) {
+      parts.push(`${countermeasure.hiddenTargetRefs.length} element${countermeasure.hiddenTargetRefs.length === 1 ? '' : 's'} not on the diagram`)
+    }
+    return parts.join('; ')
+  }
+
+  const listButtonClass = (active: boolean) =>
+    cn(
+      'w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-md text-sm text-left hover:bg-muted/50',
+      active && 'bg-muted'
+    )
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
@@ -275,45 +258,48 @@ export function GuestThreatAnalysis() {
       {/* 3-column layout */}
       <div className="min-h-0 flex-1 overflow-hidden h-full">
         <ResizablePanelGroup orientation="horizontal">
-          {/* Column 1: Components & Zones */}
+          {/* Column 1: elements */}
           <ResizablePanel defaultSize="25%" minSize="15%" maxSize="35%">
             <div className="h-full flex flex-col border-r">
               <div className="px-3 py-2 border-b bg-muted/20">
                 <h3 className="text-sm font-medium">Components</h3>
                 <p className="text-xs text-muted-foreground">
-                  {nodes.filter((n) => n.type !== 'trustZone').length} components,{' '}
-                  {dataFlows.length} flows
+                  {groups.reduce((sum, [, items]) => sum + items.length, 0)} elements, {allThreats.length} threat{allThreats.length !== 1 ? 's' : ''}
                 </p>
               </div>
               <ScrollArea className="flex-1">
                 <div className="p-2 space-y-3">
-                  {Object.entries(componentsByType).map(([nodeType, items]) => {
-                    const Icon = NODE_TYPE_ICON[nodeType] || Cog
-                    const groupLabel = NODE_TYPE_LABELS[nodeType] || nodeType
+                  <div className="space-y-0.5">
+                    <button onClick={() => handleSelect({ kind: 'all' })} className={listButtonClass(selection.kind === 'all')} data-testid="guest-all-threats">
+                      <span className="flex items-center gap-1.5 truncate"><List className="h-3.5 w-3.5 text-muted-foreground" />All threats</span>
+                      {allThreats.length > 0 && <Badge variant="secondary" className="h-5 px-1.5 text-xs shrink-0">{allThreats.length}</Badge>}
+                    </button>
+                    <button onClick={() => handleSelect({ kind: 'wholeSystem' })} className={listButtonClass(selection.kind === 'wholeSystem')} data-testid="guest-whole-system">
+                      <span className="flex items-center gap-1.5 truncate"><Globe className="h-3.5 w-3.5 text-muted-foreground" />Whole system</span>
+                      {wholeSystemCount > 0 && <Badge variant="secondary" className="h-5 px-1.5 text-xs shrink-0">{wholeSystemCount}</Badge>}
+                    </button>
+                  </div>
+                  {groups.map(([group, items]) => {
+                    const Icon = GROUP_ICONS[group] || Cog
                     return (
-                      <div key={nodeType}>
+                      <div key={group}>
                         <div className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                           <Icon className="h-3 w-3" />
-                          {groupLabel}
+                          {GROUP_LABELS[group] || group}
                         </div>
                         <div className="space-y-0.5">
                           {items.map((item) => {
-                            const threatCount = guestEditor.getThreatCount(item.id)
+                            const threatCount = guestEditor.getThreatCount(item.target.id)
+                            const active = selection.kind === 'element' && selection.target.id === item.target.id
                             return (
                               <button
-                                key={item.id}
-                                onClick={() => handleSelectComponent(item.id)}
-                                className={cn(
-                                  'w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-md text-sm text-left hover:bg-muted/50',
-                                  selectedComponentId === item.id && 'bg-muted'
-                                )}
+                                key={item.target.id}
+                                onClick={() => handleSelect({ kind: 'element', target: item.target, label: item.label })}
+                                className={listButtonClass(active)}
                               >
                                 <span className="truncate">{item.label}</span>
                                 {threatCount > 0 && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="h-5 px-1.5 text-xs shrink-0"
-                                  >
+                                  <Badge variant="secondary" className="h-5 px-1.5 text-xs shrink-0">
                                     {threatCount}
                                   </Badge>
                                 )}
@@ -325,48 +311,11 @@ export function GuestThreatAnalysis() {
                     )
                   })}
 
-                  {/* Data Flows section */}
-                  {dataFlows.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        <ArrowRight className="h-3 w-3" />
-                        Data Flows
-                      </div>
-                      <div className="space-y-0.5">
-                        {dataFlows.map((flow) => {
-                          const threatCount = guestEditor.getThreatCount(flow.id)
-                          return (
-                            <button
-                              key={flow.id}
-                              onClick={() => handleSelectComponent(flow.id)}
-                              className={cn(
-                                'w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-md text-sm text-left hover:bg-muted/50',
-                                selectedComponentId === flow.id && 'bg-muted'
-                              )}
-                            >
-                              <span className="truncate">{flow.label}</span>
-                              {threatCount > 0 && (
-                                <Badge
-                                  variant="secondary"
-                                  className="h-5 px-1.5 text-xs shrink-0"
-                                >
-                                  {threatCount}
-                                </Badge>
-                              )}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
+                  {groups.length === 0 && (
+                    <p className="text-xs text-muted-foreground px-2 py-4 text-center">
+                      No components in the diagram yet. Add components on the canvas first.
+                    </p>
                   )}
-
-                  {Object.keys(componentsByType).length === 0 &&
-                    dataFlows.length === 0 && (
-                      <p className="text-xs text-muted-foreground px-2 py-4 text-center">
-                        No components in the diagram yet. Add components on the
-                        canvas first.
-                      </p>
-                    )}
                 </div>
               </ScrollArea>
             </div>
@@ -374,150 +323,134 @@ export function GuestThreatAnalysis() {
 
           <ResizableHandle withHandle />
 
-          {/* Column 2: Threats for selected component */}
+          {/* Column 2: threats for the selection */}
           <ResizablePanel defaultSize="35%" minSize="20%" maxSize="55%">
             <div className="h-full flex flex-col border-r">
               <div className="px-3 py-2 border-b bg-muted/20 flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-medium">
-                    {selectedComponent
-                      ? `Threats — ${selectedComponent.label}`
-                      : 'Threats'}
-                  </h3>
-                  {selectedComponent && (
-                    <p className="text-xs text-muted-foreground">
-                      {threatsForSelected.length} threat
-                      {threatsForSelected.length !== 1 ? 's' : ''}
-                    </p>
-                  )}
+                  <h3 className="text-sm font-medium">Threats: {selectionLabel}</h3>
+                  <p className="text-xs text-muted-foreground">
+                    {threatsForSelection.length} threat{threatsForSelection.length !== 1 ? 's' : ''}
+                  </p>
                 </div>
-                {selectedComponent && (
-                  <div className="flex items-center gap-1.5">
-                    {threatsForSelected.length > 1 && (
-                      <Select value={sortField} onValueChange={(v) => setSortField(v as ThreatSortField)}>
-                        <SelectTrigger className="h-7 w-[110px] text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {SORT_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              Sort: {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                    <Button size="sm" variant="outline" onClick={handleAddThreat} className="gap-1">
-                      <Plus className="h-3 w-3" />
-                      Add
-                    </Button>
-                  </div>
-                )}
+                <div className="flex items-center gap-1.5">
+                  {threatsForSelection.length > 1 && (
+                    <Select value={sortField} onValueChange={(v) => setSortField(v as ThreatSortField)}>
+                      <SelectTrigger className="h-7 w-[120px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SORT_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            Sort: {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <Button size="sm" variant="outline" onClick={handleAddThreat} className="gap-1" data-testid="guest-add-threat">
+                    <Plus className="h-3 w-3" />
+                    Add
+                  </Button>
+                </div>
               </div>
               <ScrollArea className="flex-1">
                 <div className="p-2">
-                  {!selectedComponent ? (
+                  {threatsForSelection.length === 0 ? (
                     <p className="text-xs text-muted-foreground px-2 py-4 text-center">
-                      Select a component to view its threats.
-                    </p>
-                  ) : threatsForSelected.length === 0 ? (
-                    <p className="text-xs text-muted-foreground px-2 py-4 text-center">
-                      No threats for this component. Click "Add" to create one.
+                      No threats here yet. Click &ldquo;Add&rdquo; to create one.
                     </p>
                   ) : (
                     <div className="space-y-1">
                       {sortedThreats.map((threat) => {
-                        const countermeasureCount =
-                          guestEditor.getCountermeasureCount(threat.id)
+                        const countermeasureCount = guestEditor.getCountermeasureCount(threat.id)
                         const warning = getThreatWarning(threat, countermeasureCount)
                         return (
                           <div
                             key={threat.id}
                             role="button"
                             tabIndex={0}
-                            onClick={() => handleSelectThreat(threat.id)}
-                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectThreat(threat.id) } }}
+                            onClick={() => setSelectedThreatId(threat.id)}
+                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedThreatId(threat.id) } }}
                             className={cn(
-                              'w-full flex items-center justify-between gap-2 p-2 rounded-md text-sm text-left hover:bg-muted/50 cursor-pointer group',
+                              'w-full flex flex-col gap-1 p-2 rounded-md text-sm text-left hover:bg-muted/50 cursor-pointer group',
                               selectedThreatId === threat.id && 'bg-muted'
                             )}
+                            data-testid="guest-threat-row"
                           >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <Badge
-                                variant="secondary"
-                                className={cn(
-                                  'shrink-0 text-xs capitalize',
-                                  STATUS_COLORS[threat.status]
-                                )}
-                              >
-                                {threat.status}
-                              </Badge>
-                              <Badge
-                                variant="secondary"
-                                className={cn(
-                                  'shrink-0 text-xs',
-                                  SEVERITY_COLORS[threat.severity]
-                                )}
-                              >
-                                {threat.severity}
-                              </Badge>
-                              {threat.category && STRIDE_CONFIG[threat.category] && (
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Badge variant="outline" className="shrink-0 font-mono text-xs">{threatDisplayNumber(threat)}</Badge>
                                 <Badge
-                                  variant="outline"
-                                  className="shrink-0 text-xs border"
-                                  style={{
-                                    color: STRIDE_CONFIG[threat.category].color,
-                                    borderColor: STRIDE_CONFIG[threat.category].color,
+                                  variant="secondary"
+                                  className={cn('shrink-0 text-xs capitalize', STATUS_COLORS[threat.status])}
+                                >
+                                  {threat.status}
+                                </Badge>
+                                <Badge
+                                  variant="secondary"
+                                  className={cn('shrink-0 text-xs capitalize', LEVEL_COLORS[threat.level])}
+                                >
+                                  {threat.level}
+                                </Badge>
+                                {threat.category && STRIDE_CONFIG[threat.category] && (
+                                  <Badge
+                                    variant="outline"
+                                    className="shrink-0 text-xs border"
+                                    style={{
+                                      color: STRIDE_CONFIG[threat.category].color,
+                                      borderColor: STRIDE_CONFIG[threat.category].color,
+                                    }}
+                                  >
+                                    {STRIDE_CONFIG[threat.category].label}
+                                  </Badge>
+                                )}
+                                <span className="truncate">{threat.name}</span>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                {warning && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top">
+                                      <p className="text-xs">{warning}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )}
+                                {countermeasureCount > 0 && (
+                                  <Badge variant="outline" className="h-5 px-1.5 text-xs gap-0.5">
+                                    <Shield className="h-2.5 w-2.5" />
+                                    {countermeasureCount}
+                                  </Badge>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 touch:opacity-100"
+                                  aria-label={`Edit ${threatDisplayNumber(threat)}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleEditThreat(threat)
                                   }}
                                 >
-                                  {STRIDE_CONFIG[threat.category].label}
-                                </Badge>
-                              )}
-                              <span className="truncate">{threat.name}</span>
-                            </div>
-                            <div className="flex items-center gap-1 shrink-0">
-                              {warning && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top">
-                                    <p className="text-xs">{warning}</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              )}
-                              {countermeasureCount > 0 && (
-                                <Badge
-                                  variant="outline"
-                                  className="h-5 px-1.5 text-xs gap-0.5"
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 touch:opacity-100 text-muted-foreground hover:text-red-600"
+                                  aria-label={`Delete ${threatDisplayNumber(threat)}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleDeleteThreat(threat.id)
+                                  }}
                                 >
-                                  <Shield className="h-2.5 w-2.5" />
-                                  {countermeasureCount}
-                                </Badge>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 touch:opacity-100"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleEditThreat(threat)
-                                }}
-                              >
-                                <Pencil className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 touch:opacity-100 text-muted-foreground hover:text-red-600"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleDeleteThreat(threat.id)
-                                }}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </div>
+                            <p className="text-xs text-muted-foreground pl-0.5">On: {describeTargets(threat) || 'nothing'}</p>
                           </div>
                         )
                       })}
@@ -530,14 +463,14 @@ export function GuestThreatAnalysis() {
 
           <ResizableHandle withHandle />
 
-          {/* Column 3: Countermeasures for selected threat */}
+          {/* Column 3: countermeasures for the selected threat */}
           <ResizablePanel defaultSize="40%" minSize="20%">
             <div className="h-full flex flex-col">
               <div className="px-3 py-2 border-b bg-muted/20 flex items-center justify-between">
                 <div>
                   <h3 className="text-sm font-medium">
                     {selectedThreat
-                      ? `Countermeasures — ${selectedThreat.name}`
+                      ? `Countermeasures: ${threatDisplayNumber(selectedThreat)} ${selectedThreat.name}`
                       : 'Countermeasures'}
                   </h3>
                   {selectedThreat && (
@@ -553,6 +486,7 @@ export function GuestThreatAnalysis() {
                     variant="outline"
                     onClick={handleAddCountermeasure}
                     className="gap-1"
+                    data-testid="guest-add-countermeasure"
                   >
                     <Plus className="h-3 w-3" />
                     Add
@@ -565,7 +499,7 @@ export function GuestThreatAnalysis() {
                     <div className="flex items-start gap-2 p-2 mb-2 rounded-md bg-muted/50 border text-xs text-muted-foreground">
                       <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                       <span>
-                        This threat&apos;s status is &ldquo;{GUEST_THREAT_STATUS_OPTIONS.find((o) => o.value === selectedThreat.status)?.label ?? selectedThreat.status}&rdquo; — countermeasures are optional.
+                        This threat&apos;s status is &ldquo;{GUEST_THREAT_STATUS_OPTIONS.find((o) => o.value === selectedThreat.status)?.label ?? selectedThreat.status}&rdquo;. Countermeasures are optional.
                       </span>
                     </div>
                   )}
@@ -579,70 +513,76 @@ export function GuestThreatAnalysis() {
                     </p>
                   ) : (
                     <div className="space-y-1">
-                      {countermeasuresForThreat.map((countermeasure) => (
-                        <div
-                          key={countermeasure.id}
-                          className="flex items-center justify-between gap-2 p-2 rounded-md border bg-card text-sm group"
-                        >
-                          <div className="flex items-start gap-2 min-w-0">
-                            <div className="flex flex-wrap gap-1 shrink-0 pt-0.5">
-                              {countermeasure.controlFunction.map((fn) => (
-                                <Badge
-                                  key={fn}
-                                  variant="secondary"
-                                  className={cn(
-                                    'text-xs capitalize',
-                                    CONTROL_FUNCTION_COLORS[fn]
+                      {countermeasuresForThreat.map((countermeasure) => {
+                        const otherThreats = countermeasure.threatIds
+                          .filter((threatId) => threatId !== selectedThreat.id)
+                          .map((threatId) => allThreats.find((candidate) => candidate.id === threatId))
+                          .filter((candidate): candidate is GuestThreat => candidate !== undefined)
+                        return (
+                          <div
+                            key={countermeasure.id}
+                            className="flex flex-col gap-1 p-2 rounded-md border bg-card text-sm group"
+                            data-testid="guest-countermeasure-row"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-start gap-2 min-w-0">
+                                <Badge variant="outline" className="shrink-0 font-mono text-xs mt-0.5">{countermeasureDisplayNumber(countermeasure)}</Badge>
+                                <div className="flex flex-wrap gap-1 shrink-0 pt-0.5">
+                                  {countermeasure.controlFunction.map((fn) => (
+                                    <Badge
+                                      key={fn}
+                                      variant="secondary"
+                                      className={cn('text-xs capitalize', CONTROL_FUNCTION_COLORS[fn])}
+                                    >
+                                      {fn}
+                                    </Badge>
+                                  ))}
+                                  <Badge
+                                    variant="outline"
+                                    className={cn('text-xs', CONTROL_NATURE_COLORS[countermeasure.controlNature])}
+                                  >
+                                    {CONTROL_NATURE_LABELS[countermeasure.controlNature]}
+                                  </Badge>
+                                </div>
+                                <div className="min-w-0">
+                                  <span className="truncate block">{countermeasure.name}</span>
+                                  {countermeasure.description && (
+                                    <span className="text-xs text-muted-foreground truncate block">
+                                      {countermeasure.description}
+                                    </span>
                                   )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 touch:opacity-100"
+                                  aria-label={`Edit ${countermeasureDisplayNumber(countermeasure)}`}
+                                  onClick={() => handleEditCountermeasure(countermeasure)}
                                 >
-                                  {fn}
-                                </Badge>
-                              ))}
-                              <Badge
-                                variant="outline"
-                                className={cn(
-                                  'text-xs',
-                                  CONTROL_NATURE_COLORS[countermeasure.controlNature]
-                                )}
-                              >
-                                {CONTROL_NATURE_LABELS[countermeasure.controlNature]}
-                              </Badge>
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 touch:opacity-100 text-muted-foreground hover:text-red-600"
+                                  aria-label={`Delete ${countermeasureDisplayNumber(countermeasure)}`}
+                                  onClick={() => guestEditor.removeCountermeasure(countermeasure.id)}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </div>
-                            <div className="min-w-0">
-                              <span className="truncate block">
-                                {countermeasure.name}
-                              </span>
-                              {countermeasure.description && (
-                                <span className="text-xs text-muted-foreground truncate block">
-                                  {countermeasure.description}
-                                </span>
+                            <p className="text-xs text-muted-foreground">
+                              Applies to: {describeScope(countermeasure)}
+                              {otherThreats.length > 0 && (
+                                <>; also mitigates {otherThreats.map((threat) => threatDisplayNumber(threat)).join(', ')}</>
                               )}
-                            </div>
+                            </p>
                           </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 touch:opacity-100"
-                              onClick={() =>
-                                handleEditCountermeasure(countermeasure)
-                              }
-                            >
-                              <Pencil className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 touch:opacity-100 text-muted-foreground hover:text-red-600"
-                              onClick={() =>
-                                handleDeleteCountermeasure(countermeasure.id)
-                              }
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   )}
                 </div>
@@ -653,23 +593,20 @@ export function GuestThreatAnalysis() {
       </div>
 
       {/* Dialogs */}
-      {selectedComponent && (
-        <GuestThreatDialog
-          open={showThreatDialog}
-          onOpenChange={setShowThreatDialog}
-          targetId={selectedComponent.id}
-          targetType={selectedComponent.targetType}
-          targetName={selectedComponent.label}
-          editThreat={editingThreat}
-        />
-      )}
+      <GuestThreatDialog
+        open={showThreatDialog}
+        onOpenChange={setShowThreatDialog}
+        initialTarget={selection.kind === 'element' ? selection.target : null}
+        initialWholeSystem={selection.kind === 'wholeSystem'}
+        targetName={selection.kind === 'element' ? selection.label : undefined}
+        editThreat={editingThreat}
+      />
 
       {selectedThreat && (
         <GuestCountermeasureDialog
           open={showCountermeasureDialog}
           onOpenChange={setShowCountermeasureDialog}
-          threatId={selectedThreat.id}
-          threatName={selectedThreat.name}
+          initialThreatId={selectedThreat.id}
           editCountermeasure={editingCountermeasure}
         />
       )}
