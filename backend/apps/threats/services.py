@@ -480,6 +480,7 @@ def create_instance_countermeasure(
     number=None,
     targets=(),
     implemented_by=(),
+    user=None,
     **fields,
 ):
     """Create one countermeasure scoped to a threat model, with its number.
@@ -488,7 +489,13 @@ def create_instance_countermeasure(
     library row unless given. Status falls back to the library default, then
     to ``gap``. ``targets`` (where it applies) and ``implemented_by`` (which
     components implement it) are optional; no targets means the whole system.
+
+    ``user`` is the person asking. When given, an explicit ``platform`` status
+    goes through ``check_platform_status`` (H6). Generation and other system
+    writes pass no user.
     """
+    if user is not None:
+        check_platform_status(user, threat_model, new_status=status)
     library = countermeasure_library
     values = {
         "countermeasure_name": library.name if library else "",

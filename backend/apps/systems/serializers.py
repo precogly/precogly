@@ -29,6 +29,37 @@ def _same_blueprint(blueprint, *related):
     return all(row is None or row.blueprint_id == blueprint.id for row in related)
 
 
+def _refuse_blueprint_change(serializer, attrs):
+    """A row stays in the blueprint it was created in.
+
+    Moving one would leave its children, boundaries, flows and threat targets
+    pointing across blueprints, and nothing re-checks them.
+    """
+    instance = serializer.instance
+    if (
+        instance is not None
+        and "blueprint" in attrs
+        and attrs["blueprint"].id != instance.blueprint_id
+    ):
+        raise serializers.ValidationError(
+            {"blueprint": "A row cannot move to another blueprint."}
+        )
+
+
+def _refuse_cross_blueprint_asset(owner, data_asset, field_name):
+    """A data asset link joins a component or flow to an asset of its own blueprint."""
+    if (
+        owner is not None
+        and data_asset is not None
+        and owner.blueprint_id != data_asset.blueprint_id
+    ):
+        raise serializers.ValidationError(
+            {
+                "data_asset": f"The data asset must belong to the {field_name}'s blueprint."
+            }
+        )
+
+
 class OrgsystemUsageMixin:
     """Usage counts of an inventory system (plan J1): the threat models whose
     primary system it is and the system assets linked to it. The viewset
@@ -158,6 +189,7 @@ class ZoneSerializer(serializers.ModelSerializer):
         read_only_fields = ["format_metadata", "id", "created_at", "updated_at"]
 
     def validate(self, attrs):
+        _refuse_blueprint_change(self, attrs)
         blueprint = attrs.get("blueprint") or getattr(self.instance, "blueprint", None)
         parent = attrs.get("parent", getattr(self.instance, "parent", None))
         if blueprint is not None and not _same_blueprint(blueprint, parent):
@@ -239,6 +271,7 @@ class BoundarySerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(str(error)) from error
 
     def validate(self, attrs):
+        _refuse_blueprint_change(self, attrs)
         blueprint = attrs.get("blueprint") or getattr(self.instance, "blueprint", None)
         zone_a = attrs.get("zone_a", getattr(self.instance, "zone_a", None))
         zone_b = attrs.get("zone_b", getattr(self.instance, "zone_b", None))
@@ -331,6 +364,7 @@ class OrgsystemComponentSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
+        _refuse_blueprint_change(self, attrs)
         blueprint = attrs.get("blueprint") or getattr(self.instance, "blueprint", None)
         zone = attrs.get("zone", getattr(self.instance, "zone", None))
         parent = attrs.get(
@@ -341,6 +375,20 @@ class OrgsystemComponentSerializer(serializers.ModelSerializer):
                 {
                     "blueprint": "The zone and the parent component must belong "
                     "to the component's blueprint."
+                }
+            )
+        organization_id = blueprint.threat_model.organization_id if blueprint else None
+        orgsystem = attrs.get("orgsystem")
+        if orgsystem is not None and orgsystem.organization_id != organization_id:
+            raise serializers.ValidationError(
+                {"orgsystem": "The system must belong to this model's organization."}
+            )
+        source = attrs.get("source_integration")
+        if source is not None and source.orgsystem.organization_id != organization_id:
+            raise serializers.ValidationError(
+                {
+                    "source_integration": "The integration must belong to this "
+                    "model's organization."
                 }
             )
         return attrs
@@ -378,6 +426,10 @@ class DataAssetSerializer(serializers.ModelSerializer):
             "updated_at",
             "threat_model",
         ]
+
+    def validate(self, attrs):
+        _refuse_blueprint_change(self, attrs)
+        return attrs
 
 
 class FlowSerializer(serializers.ModelSerializer):
@@ -452,6 +504,7 @@ class FlowSerializer(serializers.ModelSerializer):
         dest = attrs.get(
             "dest_component", getattr(self.instance, "dest_component", None)
         )
+        _refuse_blueprint_change(self, attrs)
         blueprint = attrs.get("blueprint") or getattr(self.instance, "blueprint", None)
         if blueprint is None and source is not None:
             blueprint = source.blueprint
@@ -512,6 +565,14 @@ class ComponentDataAssetSerializer(serializers.ModelSerializer):
             "data_asset_name",
         ]
 
+    def validate(self, attrs):
+        _refuse_cross_blueprint_asset(
+            attrs.get("component", getattr(self.instance, "component", None)),
+            attrs.get("data_asset", getattr(self.instance, "data_asset", None)),
+            "component",
+        )
+        return attrs
+
 
 class FlowAssetSerializer(serializers.ModelSerializer):
     """Serializer for FlowAsset model."""
@@ -541,6 +602,14 @@ class FlowAssetSerializer(serializers.ModelSerializer):
             "flow_name",
             "data_asset_name",
         ]
+
+    def validate(self, attrs):
+        _refuse_cross_blueprint_asset(
+            attrs.get("flow", getattr(self.instance, "flow", None)),
+            attrs.get("data_asset", getattr(self.instance, "data_asset", None)),
+            "flow",
+        )
+        return attrs
 
     def get_flow_name(self, obj):
         """Return 'source → dest' label for the data flow."""

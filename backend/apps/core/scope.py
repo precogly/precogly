@@ -62,3 +62,29 @@ def belongs_to_organization(row, organization) -> bool:
     wanted = getattr(organization, "pk", organization)
     found = organization_id_of(row)
     return found is not None and wanted is not None and found == wanted
+
+
+def refuse_users_outside(attrs, organization_id, *field_names):
+    """Refuse a user field set to someone who is not in ``organization_id``.
+
+    Owner and assignee fields take a user id, and the response carries that
+    user's email, so an unchecked id would let a caller read any user's email
+    and attach people from other organizations to a model.
+    """
+    from rest_framework import serializers
+
+    from apps.organizations.models import OrganizationMember
+
+    for field_name in field_names:
+        user = attrs.get(field_name)
+        if user is None:
+            continue
+        if (
+            organization_id is None
+            or not OrganizationMember.objects.filter(
+                user=user, organization_id=organization_id
+            ).exists()
+        ):
+            raise serializers.ValidationError(
+                {field_name: "The user is not a member of this organization."}
+            )

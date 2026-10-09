@@ -132,3 +132,53 @@ class CanWrite(permissions.BasePermission):
         if threat_model is not None:
             return threat_model.owning_team
         return None
+
+
+def check_write_access(view, row):
+    """Refuse a write that points at ``row`` unless the caller may write its model.
+
+    Object permissions run only for rows that already exist, so an id sent in
+    a request body (a threat model, a blueprint, a threat, a countermeasure,
+    a component, a flow) is checked here instead. A row in an organization the
+    caller is not a member of reads as missing (404); a row in the caller's
+    organization goes through ``CanWrite`` on its threat model (403).
+    """
+    from rest_framework.exceptions import NotFound
+
+    from apps.threat_models.models import ThreatModel
+
+    threat_model = row if isinstance(row, ThreatModel) else _threat_model_of(row)
+    if (
+        threat_model is None
+        or not view.request.user.organization_memberships.filter(
+            organization_id=threat_model.organization_id
+        ).exists()
+    ):
+        raise NotFound(f"{type(row).__name__} {row.pk} not found.")
+    view.check_object_permissions(view.request, threat_model)
+
+
+class WritableParentsMixin:
+    """Run ``check_write_access`` on every parent a create or update names.
+
+    ``writable_parent_fields`` lists the serializer fields that point at a
+    model-scoped row. Each one present in ``validated_data`` is checked before
+    the row is saved, so neither a create nor a PATCH can attach a row to
+    another organization's model or to a model the caller cannot write.
+    """
+
+    writable_parent_fields = ()
+
+    def check_writable_parents(self, serializer):
+        for field_name in self.writable_parent_fields:
+            row = serializer.validated_data.get(field_name)
+            if row is not None:
+                check_write_access(self, row)
+
+    def perform_create(self, serializer):
+        self.check_writable_parents(serializer)
+        super().perform_create(serializer)
+
+    def perform_update(self, serializer):
+        self.check_writable_parents(serializer)
+        super().perform_update(serializer)

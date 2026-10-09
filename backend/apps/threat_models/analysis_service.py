@@ -70,6 +70,22 @@ SHARED_COUNTERMEASURE_KEYS = frozenset(
     }
 )
 
+# What a magic-link viewer may see of the model itself: the fields the shared
+# page shows. Everything else on ``ThreatModelSerializer`` (related models,
+# the inventory system, serial number, blueprints, approval, people) stays off
+# the public page unless it is added here on purpose (plan 5.0, M6).
+SHARED_THREAT_MODEL_KEYS = frozenset(
+    {
+        "id",
+        "name",
+        "description",
+        "criticality",
+        "workspace_data",
+        "dfds",
+        "reference_images",
+    }
+)
+
 
 def serialize_taxonomy_entries(threat):
     """Library and instance taxonomy entries, deduplicated, else the snapshot."""

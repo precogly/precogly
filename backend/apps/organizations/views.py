@@ -18,7 +18,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.core.permissions import IsSecurityTeam
-from apps.threat_models.analysis_service import SHARED, build_threat_analysis
+from apps.threat_models.analysis_service import (
+    SHARED,
+    SHARED_THREAT_MODEL_KEYS,
+    build_threat_analysis,
+)
 
 from .models import (
     BusinessUnit,
@@ -641,7 +645,11 @@ class MagicLinkAccessView(APIView):
         )
 
         response_data = {
-            "threat_model": serializer.data,
+            "threat_model": {
+                key: value
+                for key, value in serializer.data.items()
+                if key in SHARED_THREAT_MODEL_KEYS
+            },
             "stats": stats,
             "threat_analysis": threat_analysis,
             "read_only": True,

@@ -6,6 +6,8 @@ import re
 
 from rest_framework import serializers
 
+from apps.core.scope import refuse_users_outside
+
 from .models import (
     ComponentLibraryThreat,
     CountermeasureComment,
@@ -628,7 +630,8 @@ class InstanceThreatSerializer(serializers.ModelSerializer):
             )
         if (
             self.instance is not None
-            and attrs.get("threat_model", threat_model) != threat_model
+            and "threat_model" in attrs
+            and attrs["threat_model"] != self.instance.threat_model
         ):
             raise serializers.ValidationError(
                 {"threat_model": "A scenario cannot move to another threat model."}
@@ -941,13 +944,17 @@ class InstanceCountermeasureSerializer(serializers.ModelSerializer):
             )
         if (
             self.instance is not None
-            and attrs.get("threat_model", threat_model) != threat_model
+            and "threat_model" in attrs
+            and attrs["threat_model"] != self.instance.threat_model
         ):
             raise serializers.ValidationError(
                 {
                     "threat_model": "A countermeasure cannot move to another threat model."
                 }
             )
+        refuse_users_outside(
+            attrs, threat_model.organization_id, "assigned_owner", "verified_by"
+        )
         if (
             threat_id is not None
             and not InstanceThreat.objects.filter(
@@ -1000,7 +1007,11 @@ class InstanceCountermeasureSerializer(serializers.ModelSerializer):
 
         threat_id = validated_data.pop("threat_id", None)
         threat_model = validated_data.pop("threat_model")
-        instance = create_instance_countermeasure(threat_model, **validated_data)
+        instance = create_instance_countermeasure(
+            threat_model,
+            user=getattr(self.context.get("request"), "user", None),
+            **validated_data,
+        )
         if threat_id:
             link_countermeasure(instance, InstanceThreat.objects.get(id=threat_id))
         return instance
@@ -1063,6 +1074,27 @@ class PentestFindingSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "created_at", "updated_at", "matched_threat_name"]
 
+    def validate(self, attrs):
+        threat_model = attrs.get("threat_model") or getattr(
+            self.instance, "threat_model", None
+        )
+        countermeasure = attrs.get(
+            "matched_countermeasure",
+            getattr(self.instance, "matched_countermeasure", None),
+        )
+        if (
+            countermeasure is not None
+            and threat_model is not None
+            and countermeasure.threat_model_id != threat_model.id
+        ):
+            raise serializers.ValidationError(
+                {
+                    "matched_countermeasure": "The countermeasure must belong to "
+                    "this threat model."
+                }
+            )
+        return attrs
+
 
 class InstanceCountermeasureStandardSerializer(serializers.ModelSerializer):
     """Serializer for InstanceCountermeasureStandard (instance-level compliance mappings)."""
@@ -1095,6 +1127,25 @@ class InstanceCountermeasureStandardSerializer(serializers.ModelSerializer):
             "section_code",
             "requirement_description",
         ]
+
+    def validate(self, attrs):
+        """A model's own framework is usable only inside that model's organization."""
+        countermeasure = attrs.get(
+            "countermeasure", getattr(self.instance, "countermeasure", None)
+        )
+        requirement = attrs.get("requirement")
+        framework = getattr(requirement, "framework", None)
+        if (
+            countermeasure is not None
+            and framework is not None
+            and framework.threat_model_id is not None
+            and framework.threat_model.organization_id
+            != countermeasure.threat_model.organization_id
+        ):
+            raise serializers.ValidationError(
+                {"requirement": "The requirement is not available to this model."}
+            )
+        return attrs
 
     def get_framework_name(self, obj):
         if obj.requirement and obj.requirement.framework:
@@ -1394,6 +1445,12 @@ class RiskDetailSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         """Every threat id belongs to the same model; rating inputs rate now."""
         threat_model = self._threat_model()
+        refuse_users_outside(
+            attrs,
+            getattr(threat_model, "organization_id", None),
+            "owner",
+            "assigned_to",
+        )
         threat_ids = attrs.get("threat_ids", [])
         if threat_model and threat_ids:
             valid_count = InstanceThreat.objects.filter(
@@ -1505,6 +1562,12 @@ class RiskResponseSerializer(serializers.ModelSerializer):
             }
             for link in obj.countermeasure_links.all()
         ]
+
+    def validate(self, attrs):
+        risk = self.context.get("risk") or getattr(self.instance, "risk", None)
+        organization_id = risk.threat_model.organization_id if risk else None
+        refuse_users_outside(attrs, organization_id, "owner")
+        return attrs
 
     def validate_countermeasure_ids(self, value):
         risk = self.context.get("risk") or getattr(self.instance, "risk", None)

@@ -2,20 +2,24 @@
 Views for threats app.
 """
 
-import contextlib
-
 from django.db.models import Count, Prefetch, Q
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from apps.ai import AIDisabledError, AIProviderError
 from apps.ai.resolver import organization_for_component, resolve_config
-from apps.core.permissions import CanWrite, IsSecurityTeam
+from apps.core.permissions import (
+    CanWrite,
+    IsSecurityTeam,
+    WritableParentsMixin,
+    check_write_access,
+)
 from apps.systems.models import OrgsystemComponent
 from apps.threat_models.models import ThreatModel
 from apps.threats.ai.suggest import suggest_component_threats
@@ -225,7 +229,7 @@ class ComponentLibraryThreatViewSet(viewsets.ModelViewSet):
     filterset_fields = ["component_library", "threat_library", "applies_to"]
 
 
-class InstanceThreatViewSet(viewsets.ModelViewSet):
+class InstanceThreatViewSet(WritableParentsMixin, viewsets.ModelViewSet):
     """One endpoint for every scenario, whatever it targets.
 
     Filters: ``threat_model``, ``blueprint``, ``component``, ``flow``, ``zone``,
@@ -236,6 +240,7 @@ class InstanceThreatViewSet(viewsets.ModelViewSet):
 
     serializer_class = InstanceThreatSerializer
     permission_classes = [IsAuthenticated, CanWrite]
+    writable_parent_fields = ("threat_model",)
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
     filterset_fields = [
         "threat_model",
@@ -399,14 +404,11 @@ class InstanceThreatViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # Block non-Security Team users from explicitly setting platform status.
-        requested_status = request.data.get("status")
-        check_platform_status(request.user, threat_model, new_status=requested_status)
-
         instance_cm = create_instance_countermeasure(
             threat_model,
             countermeasure_library=countermeasure,
-            status=requested_status,
+            status=request.data.get("status"),
+            user=request.user,
         )
         link_countermeasure(instance_cm, threat)
         note_user_edit(threat)
@@ -479,6 +481,10 @@ class InstanceThreatViewSet(viewsets.ModelViewSet):
                 {"error": "Some IDs not found or not accessible"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        for threat_model in ThreatModel.objects.filter(
+            threats__id__in=existing_ids
+        ).distinct():
+            check_write_access(self, threat_model)
         target_type = request.data.get("target_type")
         target_id = request.data.get("target_id")
         if target_type in InstanceThreatTarget.TARGET_KINDS and target_id:
@@ -590,11 +596,12 @@ class InstanceThreatViewSet(viewsets.ModelViewSet):
         return Response({"available": True, "reason": None})
 
 
-class InstanceCountermeasureViewSet(viewsets.ModelViewSet):
+class InstanceCountermeasureViewSet(WritableParentsMixin, viewsets.ModelViewSet):
     """Unified ViewSet for InstanceCountermeasure (component and flow)."""
 
     serializer_class = InstanceCountermeasureSerializer
     permission_classes = [IsAuthenticated, CanWrite]
+    writable_parent_fields = ("threat_model",)
 
     def get_queryset(self):
         org_ids = self.request.user.organization_memberships.values_list(
@@ -647,6 +654,7 @@ class InstanceCountermeasureViewSet(viewsets.ModelViewSet):
     ]
 
     def perform_update(self, serializer):
+        self.check_writable_parents(serializer)
         new_status = serializer.validated_data.get("status")
         if new_status is not None:
             check_platform_status(
@@ -757,8 +765,17 @@ class InstanceCountermeasureViewSet(viewsets.ModelViewSet):
                 {"error": "ordered_ids list is required"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        org_ids = request.user.organization_memberships.values_list(
+            "organization_id", flat=True
+        )
+        threat = InstanceThreat.objects.filter(
+            id=threat_id, threat_model__organization_id__in=org_ids
+        ).first()
+        if threat is None:
+            raise NotFound("Threat not found.")
+        check_write_access(self, threat)
         links = CountermeasureThreatLink.objects.filter(
-            threat_id=threat_id, countermeasure_id__in=ordered_ids
+            threat=threat, countermeasure_id__in=ordered_ids
         )
         by_countermeasure = {link.countermeasure_id: link for link in links}
         if len(by_countermeasure) != len(ordered_ids):
@@ -796,11 +813,12 @@ class VerificationTestViewSet(viewsets.ModelViewSet):
     search_fields = ["name"]
 
 
-class PentestFindingViewSet(viewsets.ModelViewSet):
+class PentestFindingViewSet(WritableParentsMixin, viewsets.ModelViewSet):
     """ViewSet for PentestFinding."""
 
     serializer_class = PentestFindingSerializer
     permission_classes = [IsAuthenticated, CanWrite]
+    writable_parent_fields = ("threat_model",)
 
     def get_queryset(self):
         org_ids = self.request.user.organization_memberships.values_list(
@@ -820,7 +838,9 @@ class PentestFindingViewSet(viewsets.ModelViewSet):
     ordering = ["-created_at"]
 
 
-class InstanceCountermeasureStandardViewSet(viewsets.ModelViewSet):
+class InstanceCountermeasureStandardViewSet(
+    WritableParentsMixin, viewsets.ModelViewSet
+):
     """ViewSet for InstanceCountermeasureStandard (instance-level compliance mappings).
 
     These mappings override library-level compliance mappings for specific countermeasure instances.
@@ -828,6 +848,7 @@ class InstanceCountermeasureStandardViewSet(viewsets.ModelViewSet):
 
     serializer_class = InstanceCountermeasureStandardSerializer
     permission_classes = [IsAuthenticated, CanWrite]
+    writable_parent_fields = ("countermeasure",)
 
     def get_queryset(self):
         org_ids = self.request.user.organization_memberships.values_list(
@@ -845,11 +866,12 @@ class InstanceCountermeasureStandardViewSet(viewsets.ModelViewSet):
     filterset_fields = ["countermeasure", "requirement", "sufficiency"]
 
 
-class InstanceThreatTaxonomyEntryViewSet(viewsets.ModelViewSet):
+class InstanceThreatTaxonomyEntryViewSet(WritableParentsMixin, viewsets.ModelViewSet):
     """CRUD for instance-level taxonomy entries on threat scenarios."""
 
     serializer_class = InstanceThreatTaxonomyEntrySerializer
     permission_classes = [IsAuthenticated, CanWrite]
+    writable_parent_fields = ("threat",)
 
     def get_queryset(self):
         org_ids = self.request.user.organization_memberships.values_list(
@@ -944,16 +966,28 @@ class RiskViewSet(viewsets.ModelViewSet):
             return RiskListSerializer
         return RiskDetailSerializer
 
+    def _threat_model(self):
+        """The model in the URL; 404 when the caller is not in its organization."""
+        org_ids = self.request.user.organization_memberships.values_list(
+            "organization_id", flat=True
+        )
+        threat_model = ThreatModel.objects.filter(
+            pk=self.kwargs.get("threat_model_pk"), organization_id__in=org_ids
+        ).first()
+        if threat_model is None:
+            raise NotFound("Threat model not found.")
+        return threat_model
+
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        threat_model_pk = self.kwargs.get("threat_model_pk")
-        if threat_model_pk:
-            with contextlib.suppress(ThreatModel.DoesNotExist):
-                context["threat_model"] = ThreatModel.objects.get(pk=threat_model_pk)
+        if self.kwargs.get("threat_model_pk"):
+            context["threat_model"] = self._threat_model()
         return context
 
     def perform_create(self, serializer):
-        serializer.save(threat_model=self.get_serializer_context()["threat_model"])
+        threat_model = self._threat_model()
+        check_write_access(self, threat_model)
+        serializer.save(threat_model=threat_model)
 
     @action(detail=True, methods=["post"])
     def recalculate(self, request, threat_model_pk=None, pk=None):
@@ -1028,6 +1062,8 @@ class RiskViewSet(viewsets.ModelViewSet):
                 accepted, transferred, retired)
             owner: optional owner user ID (null to clear)
         """
+        threat_model = self._threat_model()
+        check_write_access(self, threat_model)
         risk_ids = request.data.get("risk_ids", [])
         if not risk_ids:
             return Response(
@@ -1050,7 +1086,18 @@ class RiskViewSet(viewsets.ModelViewSet):
                 )
             update_fields["status"] = new_status
         if "owner" in request.data:
-            update_fields["owner_id"] = request.data["owner"]
+            owner_id = request.data["owner"]
+            if owner_id is not None and not (
+                str(owner_id).isdigit()
+                and threat_model.organization.members.filter(
+                    user_id=int(owner_id)
+                ).exists()
+            ):
+                return Response(
+                    {"owner": "The user is not a member of this organization."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            update_fields["owner_id"] = owner_id
 
         if not update_fields:
             return Response(
@@ -1091,14 +1138,17 @@ class RiskResponseViewSet(viewsets.ModelViewSet):
         return context
 
     def perform_create(self, serializer):
-        serializer.save(risk=self._risk())
+        risk = self._risk()
+        check_write_access(self, risk)
+        serializer.save(risk=risk)
 
 
-class CountermeasureCommentViewSet(viewsets.ModelViewSet):
+class CountermeasureCommentViewSet(WritableParentsMixin, viewsets.ModelViewSet):
     """ViewSet for CountermeasureComment (comment/history log on countermeasures)."""
 
     serializer_class = CountermeasureCommentSerializer
     permission_classes = [IsAuthenticated, CanWrite]
+    writable_parent_fields = ("countermeasure",)
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["countermeasure"]
 

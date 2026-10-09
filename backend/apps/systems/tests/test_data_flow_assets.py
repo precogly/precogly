@@ -4,7 +4,12 @@ from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from apps.organizations.models import Organization, OrganizationMember
+from apps.organizations.models import (
+    Organization,
+    OrganizationMember,
+    Team,
+    TeamMembership,
+)
 from apps.systems.models import DataAsset, Flow, FlowAsset, OrgsystemComponent
 from apps.threat_models.models import ThreatModel
 
@@ -22,9 +27,13 @@ class FlowAssetAPITests(APITestCase):
         OrganizationMember.objects.create(
             organization=cls.organization, user=cls.member
         )
+        # Writing needs a non-viewer role on the model's owning team.
+        team = Team.objects.create(organization=cls.organization, name="Payments")
+        TeamMembership.objects.create(team=team, user=cls.member, role="member")
 
         cls.threat_model = ThreatModel.objects.create(
             organization=cls.organization,
+            owning_team=team,
             created_by=cls.member,
             name="Acme threat model",
         )

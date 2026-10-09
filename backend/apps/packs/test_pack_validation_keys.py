@@ -7,7 +7,11 @@ from unittest.mock import patch
 import yaml
 from django.test import SimpleTestCase
 
-from apps.packs.services import validate_pack
+from apps.packs.services import (
+    ValidationResult,
+    import_pack_from_path,
+    validate_pack,
+)
 
 
 def _write(root: Path, name: str, data) -> None:
@@ -202,3 +206,19 @@ class KeyValidationTests(SimpleTestCase):
         self.assertIn("'authenticated' is retired", messages)
         self.assertIn("flowType 'beam'", messages)
         self.assertFalse(result.success)
+
+    def test_import_anyway_still_refuses_errors(self):
+        """Import anyway accepts warnings only; a retired key is an error (S2)."""
+        pack_path = _pack(
+            self.root,
+            template={
+                "nodes": [{"id": "n", "type": "process", "data": {}}],
+                "edges": [
+                    {"id": "e", "type": "dataFlow", "data": {"authenticated": True}}
+                ],
+            },
+        )
+        result = import_pack_from_path(pack_path, accept_warnings=True)
+        self.assertIsInstance(result, ValidationResult)
+        self.assertFalse(result.success)
+        self.assertIn("'authenticated' is retired", self._messages(result))

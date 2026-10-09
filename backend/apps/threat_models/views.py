@@ -680,6 +680,7 @@ class ThreatModelReferenceImageViewSet(viewsets.ModelViewSet):
             return Response(
                 {"detail": "Not authorized"}, status=status.HTTP_403_FORBIDDEN
             )
+        self.check_object_permissions(request, threat_model)
 
         serializer = ThreatModelReferenceImageUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -732,18 +733,19 @@ class OutOfScopeItemViewSet(viewsets.ModelViewSet):
 
 
 class _ThreatModelNestedViewSet(viewsets.ModelViewSet):
-    """Rows nested under ``/api/threat-models/{id}/``: scoped to the caller's
-    organizations; the model is passed to the serializer as ``threat_model``."""
+    """Rows nested under ``/api/threat-models/{id}/``: scoped to the models the
+    caller can read (``ThreatModel.objects.visible_to``, the same boundary as
+    ``ThreatModelViewSet``); the model is passed to the serializer as
+    ``threat_model``."""
 
     permission_classes = [IsAuthenticated, CanWrite]
 
     def _threat_model(self):
-        org_ids = self.request.user.organization_memberships.values_list(
-            "organization_id", flat=True
+        threat_model = (
+            ThreatModel.objects.visible_to(self.request.user)
+            .filter(id=self.kwargs["threat_model_pk"])
+            .first()
         )
-        threat_model = ThreatModel.objects.filter(
-            id=self.kwargs["threat_model_pk"], organization_id__in=org_ids
-        ).first()
         if threat_model is None:
             from rest_framework.exceptions import NotFound
 

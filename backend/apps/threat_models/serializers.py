@@ -2,7 +2,11 @@
 Serializers for threat_models app.
 """
 
+from django.db.models import Q
 from rest_framework import serializers
+
+from apps.compliance.models import StandardFramework
+from apps.core.scope import refuse_users_outside
 
 from .models import (
     MODEL_TYPES,
@@ -20,7 +24,7 @@ from .models import (
     ThreatModelState,
     UseCase,
 )
-from .relationships import relationships_of
+from .relationships import add_relationship, relationships_of
 
 
 class ThreatModelReferenceImageSerializer(serializers.ModelSerializer):
@@ -121,7 +125,6 @@ class ThreatModelFieldsMixin:
         countermeasures -> countermeasure_library -> standard_mappings ->
         requirement -> framework. Returns unique frameworks.
         """
-        from apps.compliance.models import StandardFramework
         from apps.threats.models import InstanceCountermeasure
 
         # Library-level mappings (using threat_model FK)
@@ -239,6 +242,7 @@ class AssumptionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"blueprint": "The blueprint is not part of this threat model."}
             )
+        refuse_users_outside(attrs, blueprint.threat_model.organization_id, "owner")
         if "component_ids" in attrs:
             wanted = list(dict.fromkeys(attrs["component_ids"]))
             found = {
@@ -334,6 +338,15 @@ class BusinessObjectiveSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+    def validate(self, attrs):
+        threat_model = self.context.get("threat_model") or getattr(
+            self.instance, "threat_model", None
+        )
+        refuse_users_outside(
+            attrs, getattr(threat_model, "organization_id", None), "owner"
+        )
+        return attrs
+
     def get_threat_count(self, obj):
         return obj.threat_links.count()
 
@@ -427,6 +440,14 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
 
     def validate(self, attrs):
         validate_scoring_method_change(self.instance, attrs.get("risk_scoring_method"))
+        if (
+            self.instance is not None
+            and "organization" in attrs
+            and attrs["organization"].id != self.instance.organization_id
+        ):
+            raise serializers.ValidationError(
+                {"organization": "A threat model cannot move to another organization."}
+            )
         return attrs
 
     def validate_owning_team(self, value):
@@ -1004,6 +1025,33 @@ class ThreatModelCreateSerializer(serializers.ModelSerializer):
     def validate_methodologies(self, value):
         return validate_methodologies(value)
 
+    def validate_organization(self, organization):
+        user = self.context["request"].user
+        if (
+            organization is not None
+            and not user.organization_memberships.filter(
+                organization=organization
+            ).exists()
+        ):
+            raise serializers.ValidationError(
+                "You are not a member of this organization."
+            )
+        return organization
+
+    def validate_referenced_model_ids(self, value):
+        """Every referenced model is one the caller can read (``visible_to``)."""
+        wanted = list(dict.fromkeys(value))
+        found = {
+            model.id: model
+            for model in ThreatModel.objects.visible_to(
+                self.context["request"].user
+            ).filter(id__in=wanted)
+        }
+        missing = [model_id for model_id in wanted if model_id not in found]
+        if missing:
+            raise serializers.ValidationError(f"Threat model(s) {missing} not found.")
+        return [found[model_id] for model_id in wanted]
+
     def create(self, validated_data):
         """Create threat model with all relationships."""
         framework_ids = validated_data.pop("framework_ids", [])
@@ -1059,6 +1107,37 @@ class ThreatModelCreateSerializer(serializers.ModelSerializer):
                 {"owning_team": "Team does not belong to the selected organization."}
             )
 
+        organization = validated_data["organization"]
+        foreign_models = [
+            model.id
+            for model in referenced_model_ids
+            if model.organization_id != organization.id
+        ]
+        if foreign_models:
+            raise serializers.ValidationError(
+                {
+                    "referenced_model_ids": "Related threat models must belong to "
+                    f"the same organization: {foreign_models}."
+                }
+            )
+        usable_framework_ids = set(
+            StandardFramework.objects.filter(id__in=framework_ids)
+            .filter(
+                Q(threat_model__isnull=True)
+                | Q(threat_model__organization=organization)
+            )
+            .values_list("id", flat=True)
+        )
+        unusable_framework_ids = [
+            framework_id
+            for framework_id in framework_ids
+            if framework_id not in usable_framework_ids
+        ]
+        if unusable_framework_ids:
+            raise serializers.ValidationError(
+                {"framework_ids": f"Framework(s) {unusable_framework_ids} not found."}
+            )
+
         # Initialize workspace_data — only progressChecklist remains here;
         # status, description, scope_locked, assets, out_of_scope_items
         # are now managed via dedicated model fields and API endpoints.
@@ -1076,12 +1155,12 @@ class ThreatModelCreateSerializer(serializers.ModelSerializer):
                 framework_id=framework_id,
             )
 
-        # Create threat model references
-        for ref_model_id in referenced_model_ids:
-            ThreatModelRelationship.objects.create(
-                source_threat_model=threat_model,
-                target_threat_model_id=ref_model_id,
-                relation_type=ThreatModelRelationship.RelationType.RELATED_TO,
+        # Create threat model references (organization checked above)
+        for referenced_model in referenced_model_ids:
+            add_relationship(
+                threat_model,
+                referenced_model,
+                ThreatModelRelationship.RelationType.RELATED_TO,
             )
 
         # Auto-connect all imported packs

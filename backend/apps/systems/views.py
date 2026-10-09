@@ -12,11 +12,10 @@ from django.db.models import Count, Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from apps.core.permissions import CanWrite
+from apps.core.permissions import CanWrite, WritableParentsMixin
 from apps.threats.models import InstanceThreat
 
 from .models import (
@@ -46,15 +45,18 @@ from .serializers import (
 )
 
 
-class BlueprintScopedMixin:
+class BlueprintScopedMixin(WritableParentsMixin):
     """Queryset scoping for rows that belong to a blueprint.
 
     `blueprint_path` is the lookup from the model to its blueprint key
     (`"blueprint"` for direct rows, `"component__blueprint"` for rows that hang
-    off a component, and so on).
+    off a component, and so on). `writable_parent_fields` are the keys a
+    create or PATCH may send that lead to a blueprint; each is checked against
+    the caller's write access to that blueprint's model.
     """
 
     blueprint_path = "blueprint"
+    writable_parent_fields = ("blueprint",)
 
     def _organization_ids(self):
         return self.request.user.organization_memberships.values_list(
@@ -73,22 +75,6 @@ class BlueprintScopedMixin:
         if blueprint_id:
             queryset = queryset.filter(**{f"{path}_id": blueprint_id})
         return queryset
-
-    def perform_create(self, serializer):
-        """Refuse a row whose blueprint the caller cannot reach.
-
-        Object permissions run only for rows that exist, so a create carrying
-        another tenant's blueprint id has to be checked here. The blueprint's
-        threat model is the object the write permission is checked against.
-        """
-        blueprint = serializer.validated_data.get("blueprint")
-        if blueprint is not None:
-            if blueprint.threat_model.organization_id not in set(
-                self._organization_ids()
-            ):
-                raise NotFound("Blueprint not found")
-            self.check_object_permissions(self.request, blueprint.threat_model)
-        serializer.save()
 
 
 class OrgsystemViewSet(viewsets.ModelViewSet):
@@ -317,6 +303,7 @@ class ComponentDataAssetViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
     filterset_fields = ["component", "data_asset"]
     ordering = ["id"]
     blueprint_path = "component__blueprint"
+    writable_parent_fields = ("component", "data_asset")
 
     def get_queryset(self):
         return self.scope_queryset(ComponentDataAsset.objects.all()).select_related(
@@ -332,6 +319,7 @@ class FlowAssetViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["flow", "data_asset"]
     blueprint_path = "flow__blueprint"
+    writable_parent_fields = ("flow", "data_asset")
 
     def get_queryset(self):
         return (

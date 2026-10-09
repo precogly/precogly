@@ -1706,6 +1706,7 @@ def import_pack_from_path(
     selected_overlays: list[str] | None = None,
     dry_run: bool = False,
     skip_validation: bool = False,
+    accept_warnings: bool = False,
 ) -> ImportResult | ValidationResult:
     """
     Import a pack from a directory path.
@@ -1716,14 +1717,21 @@ def import_pack_from_path(
         selected_overlays: Optional list of framework IDs to load overlays for.
                           If None, all overlays are loaded. If empty list, no overlays.
         dry_run: If True, validate references without importing
-        skip_validation: If True, skip pre-import validation (used by batch sync)
+        skip_validation: If True, skip pre-import validation. Only for callers
+                         that already ran ``validate_pack`` (seed, batch sync);
+                         never from a request.
+        accept_warnings: If True, import a pack whose validation found warnings
+                         but no errors (the "Import anyway" choice). Errors
+                         still refuse the import (S2).
 
     Returns:
         ImportResult with details of the import operation, or ValidationResult if dry_run
     """
     if dry_run:
         return validate_pack(pack_path)
-    return _import_pack(pack_path, force, selected_overlays, skip_validation)
+    return _import_pack(
+        pack_path, force, selected_overlays, skip_validation, accept_warnings
+    )
 
 
 def _import_pack(
@@ -1731,6 +1739,7 @@ def _import_pack(
     force: bool = False,
     selected_overlays: list[str] | None = None,
     skip_validation: bool = False,
+    accept_warnings: bool = False,
 ) -> ImportResult | ValidationResult:
     """
     Import a pack from a directory path.
@@ -1748,13 +1757,16 @@ def _import_pack(
         force: If True, reinstall even if pack exists
         selected_overlays: Optional list of framework IDs to load overlays for.
                           If None, all overlays are loaded. If empty list, no overlays.
-        skip_validation: If True, skip pre-import validation
+        skip_validation: If True, skip pre-import validation (already run)
+        accept_warnings: If True, go ahead when validation finds only warnings
     """
     import_warnings: list[str] = []
-    # Run validation before import unless skipped
+    # Run validation before import unless the caller already did
     if not skip_validation:
         validation_result = validate_pack(pack_path)
-        if not validation_result.success or validation_result.warnings:
+        if not validation_result.success or (
+            validation_result.warnings and not accept_warnings
+        ):
             return validation_result
 
     pack_yaml = pack_path / "pack.yaml"

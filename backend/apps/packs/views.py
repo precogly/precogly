@@ -206,7 +206,8 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
         selected_overlays = request.data.get(
             "selected_overlays"
         )  # camelCase auto-converted by middleware
-        skip_validation = request.data.get("skip_validation", False)
+        # "Import anyway" accepts warnings only; errors always refuse (S2).
+        accept_warnings = bool(request.data.get("skip_validation", False))
 
         if not slug:
             return Response(
@@ -229,7 +230,7 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
             Path(pack_info.path),
             force=force,
             selected_overlays=selected_overlays,
-            skip_validation=skip_validation,
+            accept_warnings=accept_warnings,
         )
 
         # Handle ValidationResult (returned when validation finds issues)
