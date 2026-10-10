@@ -116,6 +116,8 @@ export interface CreateThreatInput {
   actorPersona?: number | null
   threatActorText?: string
   businessObjectiveIds?: number[]
+  /** Replaces the scenario's threat sources; `[]` clears them, omitted leaves them alone. */
+  threatSourceIds?: number[]
   intent?: ThreatIntent | ''
   accessLevel?: ThreatAccessLevel | ''
   displayOrder?: number
@@ -388,6 +390,23 @@ export function useThreats(filters: ThreatFilters, options: { enabled?: boolean 
       return Array.isArray(response) ? response : response.results
     },
     enabled: options.enabled ?? true,
+  })
+}
+
+/** One threat source (reference data): who or what the attack comes from. */
+export interface ThreatSource {
+  id: number
+  name: string
+  slug: string
+  description: string
+}
+
+/** The threat sources to pick from. The list never changes at run time. */
+export function useThreatSources() {
+  return useQuery({
+    queryKey: ['threat-sources'],
+    queryFn: () => api.get<ThreatSource[]>('/threat-sources/'),
+    staleTime: Infinity,
   })
 }
 

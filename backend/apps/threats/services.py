@@ -39,6 +39,7 @@ from .models import (
     RiskResponse,
     RiskResponseCountermeasure,
     RiskThreat,
+    ThreatSourceLink,
     build_taxonomy_snapshot,
 )
 from .scoring.registry import get_engine
@@ -1036,6 +1037,25 @@ def set_threat_business_objectives(threat, objectives) -> None:
     _sync_objective_links(
         InstanceThreatBusinessObjective, "threat", threat, list(objectives)
     )
+
+
+def set_threat_sources(threat, sources) -> None:
+    """Replace the threat sources a scenario cites (NIST SP 800-30 origins).
+
+    ``sources`` are ``ThreatSource`` rows, shared reference data. Links not in
+    the list go, missing ones are created; a source listed twice counts once.
+    """
+    wanted = {source.pk: source for source in sources}
+    with transaction.atomic():
+        threat.source_links.exclude(source_id__in=list(wanted)).delete()
+        existing = set(threat.source_links.values_list("source_id", flat=True))
+        ThreatSourceLink.objects.bulk_create(
+            [
+                ThreatSourceLink(threat=threat, source=source)
+                for source_id, source in wanted.items()
+                if source_id not in existing
+            ]
+        )
 
 
 def set_risk_business_objectives(risk, objectives) -> None:

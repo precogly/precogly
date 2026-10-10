@@ -536,6 +536,9 @@ class InstanceThreatSerializer(serializers.ModelSerializer):
     rating_inputs = serializers.JSONField(write_only=True, required=False)
     business_objective_ids = BusinessObjectiveIdsField(required=False)
     business_objectives = serializers.SerializerMethodField()
+    threat_source_ids = serializers.ListField(
+        child=serializers.IntegerField(), write_only=True, required=False
+    )
     actor_persona_name = serializers.CharField(
         source="actor_persona.name", read_only=True, default=None
     )
@@ -569,6 +572,7 @@ class InstanceThreatSerializer(serializers.ModelSerializer):
             "rating",
             "rating_inputs",
             "business_objective_ids",
+            "threat_source_ids",
             "business_objectives",
             "status",
             "triage_status",
@@ -612,6 +616,17 @@ class InstanceThreatSerializer(serializers.ModelSerializer):
     def get_taxonomy_entries(self, obj):
         """Merge library + instance taxonomy entries, fall back to snapshot."""
         return _merge_taxonomy_entries(obj)
+
+    def validate_threat_source_ids(self, value):
+        """Shared reference rows (``Tenancy.SHARED_REFERENCE``): existence is
+        the whole check, no organization scope applies."""
+        wanted = list(dict.fromkeys(value))
+        found = {
+            source.pk: source for source in ThreatSource.objects.filter(pk__in=wanted)
+        }
+        if len(found) != len(wanted):
+            raise serializers.ValidationError("Unknown threat source.")
+        return [found[source_id] for source_id in wanted]
 
     def get_threat_sources(self, obj):
         return [
@@ -706,6 +721,7 @@ class InstanceThreatSerializer(serializers.ModelSerializer):
         threat_model = validated_data.pop("threat_model")
         rating_inputs = validated_data.pop("rating_inputs", None)
         objectives = validated_data.pop("business_objective_ids", [])
+        sources = validated_data.pop("threat_source_ids", [])
         rating = (
             rating_from_inputs(threat_model, rating_inputs, for_threat=True)
             if rating_inputs
@@ -722,6 +738,10 @@ class InstanceThreatSerializer(serializers.ModelSerializer):
             from .services import set_threat_business_objectives
 
             set_threat_business_objectives(threat, objectives)
+        if sources:
+            from .services import set_threat_sources
+
+            set_threat_sources(threat, sources)
         return threat
 
     @transaction.atomic
@@ -732,16 +752,21 @@ class InstanceThreatSerializer(serializers.ModelSerializer):
             recalculate_risks_for_threat,
             set_targets,
             set_threat_business_objectives,
+            set_threat_sources,
         )
 
         targets = validated_data.pop("targets", None)
         whole_system = validated_data.pop("whole_system", None)
         rating_inputs = validated_data.pop("rating_inputs", None)
         objectives = validated_data.pop("business_objective_ids", None)
+        sources = validated_data.pop("threat_source_ids", None)
         validated_data.pop("threat_model", None)
         instance = super().update(instance, validated_data)
         if objectives is not None:
             set_threat_business_objectives(instance, objectives)
+        if sources is not None:
+            # [] clears them all; note_user_edit below marks the threat edited.
+            set_threat_sources(instance, sources)
         if rating_inputs:
             apply_rating(
                 instance,

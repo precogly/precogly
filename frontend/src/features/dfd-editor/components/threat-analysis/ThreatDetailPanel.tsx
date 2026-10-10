@@ -1,8 +1,8 @@
 /**
  * The detail of a selected scenario (plan 11.11 "Threat" row): the rating
  * form (matrix or level only), the actor (persona or text), the impact, the
- * business objectives once the model has one (J4), and intent, access level
- * and threat sources read-only when an import set them (J11, J12). Edits
+ * business objectives once the model has one (J4), the threat sources, and
+ * intent and access level read-only when an import set them (J11, J12). Edits
  * apply to the one scenario, so they show under every target at once.
  *
  * The caller keys the panel by threat id, so the form starts from the
@@ -31,6 +31,8 @@ import type { AnalysisThreat } from '../../types/threat-analysis'
 import { ActorPicker } from './ActorPicker'
 import { type ActorValue } from './actor-utils'
 import { BusinessObjectivesPicker } from './BusinessObjectivesPicker'
+import { ThreatSourcesPicker } from './ThreatSourcesPicker'
+import { threatSourceIdsFromThreat } from './threat-source-selection'
 import { useHasBusinessObjectives } from './useHasBusinessObjectives'
 
 type ThreatRatingMethod = 'qualitative-matrix' | 'manual'
@@ -90,6 +92,10 @@ function ThreatDetailForm({
     () => threatDetail.businessObjectiveIds ?? threatDetail.businessObjectives.map((objective) => objective.id)
   )
 
+  const [threatSourceIds, setThreatSourceIds] = useState<number[]>(() =>
+    threatSourceIdsFromThreat(threatDetail.threatSources ?? threat.threatSources)
+  )
+
   const switchRatingMethod = (method: ThreatRatingMethod) => {
     setRatingMethod(method)
     setRatingInputs(ratingInputsFromRating(threat.rating, method))
@@ -102,6 +108,7 @@ function ThreatDetailForm({
       actorPersona: actor.actorPersona,
       // One actor: the text is cleared when a persona is chosen (K3).
       threatActorText: actor.actorPersona !== null ? '' : actor.threatActorText,
+      threatSourceIds,
     }
     if (hasObjectives) data.businessObjectiveIds = objectiveIds
     updateThreat.mutate(
@@ -115,8 +122,7 @@ function ThreatDetailForm({
 
   const intentLabel = THREAT_INTENTS.find((entry) => entry.value === threat.intent)?.label
   const accessLevelLabel = THREAT_ACCESS_LEVELS.find((entry) => entry.value === threat.accessLevel)?.label
-  const threatSources = threatDetail.threatSources ?? threat.threatSources ?? []
-  const showReadOnly = Boolean(intentLabel || accessLevelLabel || threatSources.length > 0)
+  const showReadOnly = Boolean(intentLabel || accessLevelLabel)
 
   return (
     <div className="space-y-3" onClick={(event) => event.stopPropagation()}>
@@ -161,6 +167,11 @@ function ThreatDetailForm({
       </div>
 
       <div>
+        <div className="mb-1 text-xs font-medium text-muted-foreground">Threat sources</div>
+        <ThreatSourcesPicker value={threatSourceIds} onChange={setThreatSourceIds} />
+      </div>
+
+      <div>
         <div className="mb-1 text-xs font-medium text-muted-foreground">Attacker impact</div>
         <Textarea
           value={impactDescription}
@@ -181,11 +192,7 @@ function ThreatDetailForm({
       {showReadOnly && (
         <div className="rounded border bg-background px-2 py-1.5 text-[11px] text-muted-foreground">
           <span className="mr-1 font-medium">From import:</span>
-          {[
-            intentLabel && `Intent: ${intentLabel}`,
-            accessLevelLabel && `Access level: ${accessLevelLabel}`,
-            threatSources.length > 0 && `Sources: ${threatSources.map((source) => source.name).join(', ')}`,
-          ]
+          {[intentLabel && `Intent: ${intentLabel}`, accessLevelLabel && `Access level: ${accessLevelLabel}`]
             .filter(Boolean)
             .join(' · ')}
         </div>

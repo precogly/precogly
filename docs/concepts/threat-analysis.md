@@ -45,7 +45,7 @@ Threats are rated with the matrix or a manual level. Risks use the scoring metho
 
 A threat has one actor: a persona, one of the built-in actors (State Actor, Hacktivist, Insider Threat, Competitor, Organized Crime, Opportunist), free text, or none. **Manage personas** in the actor picker creates and edits personas (name, description, person or system, malicious intent, skill level, motivation, resources, objectives) and says how many threats use each one.
 
-Once the model has at least one business objective, a picker lets you say which objectives a threat puts at risk. Intent, access level, and threat sources are shown read-only when an import set them.
+Once the model has at least one business objective, a picker lets you say which objectives a threat puts at risk. **Threat sources** says where a threat comes from, using the four NIST SP 800-30 sources: adversarial, accidental, structural, and environmental. Tick any that apply in the threat's detail panel. Intent and access level are shown read-only when an import set them.
 
 ## Countermeasures
 
