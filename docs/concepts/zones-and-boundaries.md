@@ -2,7 +2,7 @@
 
 Zones group the components of a system by where they sit: a network segment, a physical site, a tenant, a trust level. Boundaries join two zones and record what a crossing has to satisfy. Both follow the CycloneDX 2.0 TM-BOM vocabulary, so what you draw in the DFD editor is what the export contains.
 
-This page replaces the older [Zone Protections](zone-protections.md) feature. Countermeasures are no longer inherited across zones; a countermeasure now has a scope of its own, described in [Platform Controls](platform-controls.md).
+This page replaces the older Zone Protections feature. Countermeasures are no longer inherited across zones; a countermeasure now has a scope of its own, described in [Platform Controls](platform-controls.md).
 
 ## Zones
 

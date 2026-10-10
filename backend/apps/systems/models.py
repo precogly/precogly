@@ -469,12 +469,6 @@ class OrgsystemComponent(TimestampedModel):
     # TODO: drop `null=True` and migrate existing NULLs to "". `component_type` and
     # `provider` below are copied from the library the same way and both spell "not
     # set" as `blank=True` alone, so this field is the odd one of the three.
-    #
-    # The migration changes .tm export output. `adapters/tm_library.py` exports a
-    # component as an actor when `comp.category is None` and its format_metadata
-    # carries an `original_type`; migrating the NULLs stops that branch firing, and
-    # relaxing it to `not comp.category` newly catches rows already holding "".
-    # No test covers either direction.
     category = models.CharField(  # noqa: DJ001
         max_length=30,
         blank=True,

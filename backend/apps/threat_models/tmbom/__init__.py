@@ -3,9 +3,9 @@
 Built against the pinned schema in ``tmbom/schema``. Every document this package
 emits validates against that schema with zero errors; see ``validation``.
 
-The package replaces ``adapters/cyclonedx.py`` slice by slice (plan section 9).
-It lives beside ``adapters/`` rather than inside it because a package named
-``cyclonedx`` cannot coexist with the old module of the same name.
+It replaced the pre-2.0 ``adapters/cyclonedx.py``, which has been removed. It
+lives beside ``adapters/`` because the two could not coexist while the old
+module was there (D-B1); moving it under ``adapters/`` is a possible follow-up.
 """
 
 from .exporter import export_threat_model

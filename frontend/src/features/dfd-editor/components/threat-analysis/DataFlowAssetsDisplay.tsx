@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Database, ChevronDown, ChevronUp, Lock, LockOpen } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { useDataFlowAssets } from '@/features/threat-models/api/data-flow-assets'
+import { useFlowAssets } from '@/features/threat-models/api/flow-assets'
 
 export function DataFlowAssetsDisplay({
   dataFlowId,
@@ -9,7 +9,7 @@ export function DataFlowAssetsDisplay({
   dataFlowId: number | undefined
 }) {
   const [collapsed, setCollapsed] = useState(false)
-  const { data: flowDataAssets = [] } = useDataFlowAssets(dataFlowId)
+  const { data: flowDataAssets = [] } = useFlowAssets(dataFlowId)
 
   if (!dataFlowId || flowDataAssets.length === 0) return null
 
