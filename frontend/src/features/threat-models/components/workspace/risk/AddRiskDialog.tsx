@@ -24,7 +24,7 @@ import { MultiSelectCombobox, type ComboboxOption } from '@/components/ui/multi-
 import { useCreateRisk } from '@/features/threat-models/api/risks'
 import { useBusinessObjectives } from '@/features/threat-models/api/threat-models'
 import { RatingForm, emptyRatingInputs, ratingInputsComplete } from '@/features/threat-models/components/rating'
-import type { ComponentThreat } from '@/features/dfd-editor/types/threat-analysis'
+import type { AnalysisThreat } from '@/features/dfd-editor/types/threat-analysis'
 import { RISK_DOMAINS, type RiskDomain } from '@/types/domain'
 import {
   RISK_STATUSES,
@@ -46,7 +46,7 @@ export interface AddRiskDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   threatModelId: string
-  componentThreats: ComponentThreat[]
+  analysisThreats: AnalysisThreat[]
   owners: OwnerOption[]
   scoringMethodKey: ScoringMethodKey
   scoringMethod: ScoringMethod | undefined
@@ -56,7 +56,7 @@ export function AddRiskDialog({
   open,
   onOpenChange,
   threatModelId,
-  componentThreats,
+  analysisThreats,
   owners,
   scoringMethodKey,
   scoringMethod,
@@ -77,7 +77,7 @@ export function AddRiskDialog({
 
   const createRisk = useCreateRisk(threatModelId)
   const { data: businessObjectives = [] } = useBusinessObjectives(threatModelId)
-  const pickerEntries = useMemo(() => threatPickerEntries(componentThreats), [componentThreats])
+  const pickerEntries = useMemo(() => threatPickerEntries(analysisThreats), [analysisThreats])
 
   const objectiveOptions: ComboboxOption[] = businessObjectives.map((objective) => ({
     value: String(objective.id),
@@ -91,7 +91,7 @@ export function AddRiskDialog({
     setSelectedThreatIds(nextThreatIds)
     if (!ratingEdited) {
       setRatingInputs(
-        ratingInputsFromLinkedThreats(nextThreatIds, componentThreats, ratingMethod) ??
+        ratingInputsFromLinkedThreats(nextThreatIds, analysisThreats, ratingMethod) ??
           emptyRatingInputs(ratingMethod)
       )
     }

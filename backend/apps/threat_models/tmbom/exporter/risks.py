@@ -85,7 +85,7 @@ def _risk(risk, refs: RefRegistry, parties) -> dict:
         refs.ref("scenario", link.threat) for link in risk.risk_threats.order_by("id")
     ]
     for extra in _cyclonedx_metadata(risk).get("extra_related_threats") or []:
-        if isinstance(extra, str) and refs.is_issued(extra) and extra not in related:
+        if isinstance(extra, str) and refs.will_resolve(extra) and extra not in related:
             related.append(extra)
     if related:
         entry["relatedThreats"] = related

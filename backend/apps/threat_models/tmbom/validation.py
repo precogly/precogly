@@ -35,9 +35,17 @@ class SchemaError:
 
 @cache
 def _validator() -> Draft202012Validator:
+    """The pinned schema's validator, with ``format`` keywords checked (R49).
+
+    jsonschema checks the formats it has a checker for: email, date, uuid and
+    IP addresses here. ``date-time`` and ``uri`` need its ``format-nongpl``
+    extra and are skipped without it.
+    """
     schema = load_schema()
     Draft202012Validator.check_schema(schema)
-    return Draft202012Validator(schema)
+    return Draft202012Validator(
+        schema, format_checker=Draft202012Validator.FORMAT_CHECKER
+    )
 
 
 def _json_path(error) -> str:

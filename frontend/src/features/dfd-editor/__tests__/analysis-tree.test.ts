@@ -10,7 +10,7 @@ function countermeasure(status: AnalysisCountermeasure['status']): AnalysisCount
   return {
     id: `cm-${Math.random()}`,
     countermeasureId: 'custom',
-    componentThreatId: '',
+    threatId: '',
     status,
     createdAt: '',
     updatedAt: '',

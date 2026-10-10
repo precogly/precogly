@@ -155,12 +155,10 @@ class ORMReader:
 
     def _threat_models(self, organization_id: int | None) -> Listing:
         # `visible_to` is the read boundary, shared with `ThreatModelViewSet` so that
-        # who-sees-what has one definition. The `select_related` mirrors the viewset's:
-        # the list serializer reaches `created_by.email`, `owning_team.name` and
-        # `owning_team.business_unit.name` on every row.
-        queryset = ThreatModel.objects.visible_to(self._user()).select_related(
-            "created_by", "organization", "owning_team", "owning_team__business_unit"
-        )
+        # who-sees-what has one definition. `for_listing` is the viewset's list
+        # queryset too: everything the list serializer reads, in a fixed number of
+        # queries.
+        queryset = ThreatModel.objects.visible_to(self._user()).for_listing()
 
         # Narrowing an already-scoped queryset, so an organization the caller cannot read
         # comes back empty. The REST filter answers differently — it validates against

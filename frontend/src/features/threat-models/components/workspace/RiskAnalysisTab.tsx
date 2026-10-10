@@ -59,7 +59,7 @@ import {
   type RiskListFilters,
 } from '@/features/threat-models/api/risks'
 import { RatingBadge } from '@/features/threat-models/components/rating'
-import type { ComponentThreat } from '@/features/dfd-editor/types/threat-analysis'
+import type { AnalysisThreat } from '@/features/dfd-editor/types/threat-analysis'
 import {
   RATING_LEVELS,
   RISK_STATUSES,
@@ -83,7 +83,7 @@ import {
 interface RiskAnalysisTabProps {
   threatModelId: string
   /** The model's threats from the analysis payload; the threat picker and the countermeasure labels read them. */
-  componentThreats: ComponentThreat[]
+  analysisThreats: AnalysisThreat[]
   riskScoringMethod: ScoringMethodKey
   onScoringMethodChange: (method: ScoringMethodKey) => void
 }
@@ -575,7 +575,7 @@ function RegisterFilters({
 
 export function RiskAnalysisTab({
   threatModelId,
-  componentThreats,
+  analysisThreats,
   riskScoringMethod,
   onScoringMethodChange,
 }: RiskAnalysisTabProps) {
@@ -694,7 +694,7 @@ export function RiskAnalysisTab({
     <RiskDetailPanel
       threatModelId={threatModelId}
       risk={selectedRisk}
-      componentThreats={componentThreats}
+      analysisThreats={analysisThreats}
       owners={owners}
       scoringMethod={activeScoringMethod}
       scoringMethods={scoringMethods}
@@ -872,7 +872,7 @@ export function RiskAnalysisTab({
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         threatModelId={threatModelId}
-        componentThreats={componentThreats}
+        analysisThreats={analysisThreats}
         owners={owners}
         scoringMethodKey={riskScoringMethod}
         scoringMethod={activeScoringMethod}

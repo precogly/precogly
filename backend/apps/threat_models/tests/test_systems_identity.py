@@ -524,3 +524,41 @@ class VersionAndApprovalTests(Fixture):
         self.assertEqual(self.approval_state(), "approved")
         self.assertEqual(self.export()["version"], first["version"])
         self.assertEqual(self.approval_state(), "approved")
+
+
+class ListQueryCountTests(Fixture):
+    """R40: the model list costs the same number of queries for 1 or 4 models."""
+
+    def list_query_count(self):
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        client = self.api_client(self.security)
+        with CaptureQueriesContext(connection) as queries:
+            response = client.get("/api/threat-models/")
+        self.assertEqual(response.status_code, 200)
+        return len(queries), response.data["results"]
+
+    def add_rich_model(self, name):
+        from apps.threat_models.models import Blueprint
+        from apps.threat_models.review import approve
+
+        threat_model = ThreatModel.objects.create(
+            name=name, organization=self.organization, primary_system=self.payments
+        )
+        Blueprint.objects.create(threat_model=threat_model, name="Second")
+        approve(threat_model, self.security)
+        return threat_model
+
+    def test_query_count_does_not_grow_with_rows(self):
+        self.add_rich_model("First")
+        single_count, rows = self.list_query_count()
+        for name in ("Second", "Third", "Fourth"):
+            self.add_rich_model(name)
+        many_count, rows = self.list_query_count()
+        self.assertEqual(many_count, single_count)
+        rich = next(row for row in rows if row["name"] == "Fourth")
+        self.assertEqual(rich["blueprint_count"], 2)
+        self.assertIsNotNone(rich["approved_at"])
+        self.assertEqual(rich["version"], 1)
+        self.assertEqual(rich["primary_system_name"], "Payments")

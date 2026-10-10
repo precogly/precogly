@@ -393,7 +393,7 @@ class ThreatApiTests(TargetFixture):
             {
                 "threat_model": self.threat_model.id,
                 "threat_name": "Multi",
-                "inherent_severity": "high",
+                "rating_inputs": {"level": "high"},
                 "targets": [
                     {"type": "component", "id": self.api.id},
                     {"type": "flow", "id": self.flow.id},
@@ -403,6 +403,7 @@ class ThreatApiTests(TargetFixture):
         )
         self.assertEqual(response.status_code, 201, response.content)
         self.assertEqual(response.data["display_number"], "T1")
+        self.assertEqual(response.data["rating"]["level"], "high")
         self.assertEqual(
             [(t["type"], t["name"]) for t in response.data["targets"]],
             [("component", "API"), ("flow", "Query")],

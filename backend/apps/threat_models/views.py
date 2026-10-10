@@ -75,9 +75,16 @@ class ThreatModelViewSet(viewsets.ModelViewSet):
         calls as well — it has no request and no permission classes, so the rule has to
         live somewhere both can reach.
         """
-        queryset = ThreatModel.objects.visible_to(self.request.user).select_related(
-            "created_by", "organization", "owning_team", "owning_team__business_unit"
-        )
+        queryset = ThreatModel.objects.visible_to(self.request.user)
+        if self.action == "list":
+            queryset = queryset.for_listing()
+        else:
+            queryset = queryset.select_related(
+                "created_by",
+                "organization",
+                "owning_team",
+                "owning_team__business_unit",
+            )
 
         # Optional further filter by specific team
         owning_team_id = self.request.query_params.get("owning_team")
@@ -241,12 +248,12 @@ class ThreatModelViewSet(viewsets.ModelViewSet):
     def add_pack(self, request, pk=None):
         """Add a pack to this threat model.
 
-        After connecting the pack, scans existing components on the TM
-        whose component_library belongs to the newly connected pack and
-        generates threats and countermeasures for each.
+        After connecting the pack, generates threats and countermeasures for
+        the existing components whose component_library belongs to it, and for
+        the flows with such a component at either end (plan 4.1, R43).
         """
         from apps.packs.models import LibraryPack
-        from apps.systems.models import OrgsystemComponent
+        from apps.systems.models import Flow, OrgsystemComponent
         from apps.threats.services import ensure_generated_threats
 
         threat_model = self.get_object()
@@ -273,20 +280,30 @@ class ThreatModelViewSet(viewsets.ModelViewSet):
         # Auto-materialize threats for existing components from this pack
         threats_created = 0
         components_matched = 0
+        flows_matched = 0
         if created:
             matching_components = OrgsystemComponent.objects.filter(
                 blueprint__threat_model=threat_model,
                 component_library__source_pack=library_pack,
             )
+            matching_flows = Flow.objects.filter(
+                Q(source_component__component_library__source_pack=library_pack)
+                | Q(dest_component__component_library__source_pack=library_pack),
+                blueprint__threat_model=threat_model,
+            ).select_related("source_component", "dest_component")
             with transaction.atomic():
                 for component in matching_components:
                     components_matched += 1
                     threats_created += ensure_generated_threats(component)
+                for flow in matching_flows:
+                    flows_matched += 1
+                    threats_created += ensure_generated_threats(flow)
 
         return Response(
             {
                 "status": "pack added",
                 "components_matched": components_matched,
+                "flows_matched": flows_matched,
                 "threats_created": threats_created,
             },
             status=status.HTTP_200_OK,

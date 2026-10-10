@@ -146,7 +146,7 @@ export interface AnalysisCountermeasure {
   // Reference to countermeasure definition (e.g., "lib-123" for backend)
   countermeasureId: string
   // The UI id of the threat this entry belongs to
-  componentThreatId: string
+  threatId: string
   // Current status
   status: CountermeasureStatus
   // Owner (email or username)
@@ -247,8 +247,6 @@ export interface AnalysisThreat {
   threatSources?: { id: number; name: string; slug?: string }[]
 }
 
-/** @deprecated Use `AnalysisThreat`. Kept so readers compile until the step 15 UI rewrite. */
-export type ComponentThreat = AnalysisThreat
 /** @deprecated Use `AnalysisCountermeasure`. Kept so readers compile until the step 15 UI rewrite. */
 export type ComponentThreatCountermeasure = AnalysisCountermeasure
 
@@ -315,7 +313,7 @@ export function summarizeComponentThreats(
   technology: string | undefined,
   threats: AnalysisThreat[]
 ): ComponentThreatSummary {
-  const componentThreats = threats.filter(
+  const analysisThreats = threats.filter(
     (t) => threatTargetsCanvasId(t, componentId) && isActiveThreat(t.triageStatus)
   )
 
@@ -323,7 +321,7 @@ export function summarizeComponentThreats(
   let addressable = 0
   let mitigated = 0
 
-  componentThreats.forEach((threat) => {
+  analysisThreats.forEach((threat) => {
     const status = deriveThreatStatus(threat.countermeasures)
     if (status === 'exposed') exposed++
     else if (status === 'addressable') addressable++
@@ -335,7 +333,7 @@ export function summarizeComponentThreats(
     componentLabel,
     componentType,
     technology,
-    totalThreats: componentThreats.length,
+    totalThreats: analysisThreats.length,
     exposedThreats: exposed,
     addressableThreats: addressable,
     mitigatedThreats: mitigated,
@@ -370,7 +368,7 @@ export interface ExpandedComponentThreat {
  */
 export interface ExpandedCountermeasure {
   id: string
-  componentThreatId: string
+  threatId: string
   // Countermeasure definition data
   countermeasureId: string
   name: string

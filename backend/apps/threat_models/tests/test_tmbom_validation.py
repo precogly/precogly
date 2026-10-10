@@ -50,6 +50,19 @@ class PinnedSchemaTests(SimpleTestCase):
         self.assertEqual(errors[0].path, "blueprints/0")
         self.assertIn("name", errors[0].message)
 
+    def test_format_keywords_are_checked(self):
+        """R49: a value that breaks a ``format`` keyword is an error."""
+        document = {
+            **MINIMAL_VALID_DOCUMENT,
+            "metadata": {"authors": [{"name": "Dana", "email": "not an address"}]},
+        }
+        errors = validate_document(document)
+        self.assertTrue(
+            any(error.path == "metadata/authors/0/email" for error in errors), errors
+        )
+        document["metadata"]["authors"][0]["email"] = "dana@example.com"
+        self.assertEqual(validate_document(document), [])
+
     def test_assert_valid_tmbom_lists_every_error(self):
         document = {"specFormat": "CycloneDX"}
         with self.assertRaises(AssertionError) as raised:
@@ -181,3 +194,83 @@ class StaleRefRepairTests(SimpleTestCase):
                 "threats section: removed 'gone' from relatedRisks; it no longer resolves."
             ],
         )
+
+
+class SpecValuesTests(SimpleTestCase):
+    """R50, plan 9.6: every ``spec_values`` list matches the pinned schema.
+
+    Each list names the schema enum it mirrors. A re-pin that changes an enum
+    fails here, and the guest editor's generated copy follows through
+    ``frontend/scripts/generate-cyclonedx-spec.mjs``.
+    """
+
+    BLUEPRINT = "/$defs/cyclonedx-blueprint-2.0/$defs"
+    EXACT = {
+        "ASSET_TYPES": f"{BLUEPRINT}/asset/properties/type/oneOf/0",
+        "BOUNDARY_TYPES": f"{BLUEPRINT}/boundary/properties/type/oneOf/0",
+        "DATA_STORE_TYPES": f"{BLUEPRINT}/dataStore/properties/type/oneOf/0",
+        "FLOW_TYPES": f"{BLUEPRINT}/flow/properties/type/oneOf/0",
+        "MODEL_TYPES": f"{BLUEPRINT}/modelType/oneOf/0",
+        "VISUALIZATION_TYPES": (
+            f"{BLUEPRINT}/visualizationType/oneOf/0/properties/type"
+        ),
+        "ZONE_TYPES": f"{BLUEPRINT}/zone/properties/type/oneOf/0",
+        "CONTROL_CATEGORIES": (
+            "/$defs/cyclonedx-control-2.0/$defs/control/properties/category/oneOf/0"
+        ),
+        "IMPLEMENTATION_STATUSES": (
+            "/$defs/cyclonedx-control-2.0/$defs/implementationStatus/oneOf/0"
+        ),
+        "DATA_CLASSIFICATIONS": (
+            "/$defs/cyclonedx-data-2.0/$defs/dataClassification/oneOf/0"
+        ),
+        "METADATA_COMPONENT_TYPES": (
+            "/$defs/cyclonedx-component-2.0/$defs/component/properties/type"
+        ),
+        "PERSONA_ARCHETYPES": (
+            "/$defs/cyclonedx-party-2.0/$defs/persona/properties/archetype/oneOf/0"
+        ),
+        "SCENARIO_ACCESS_LEVELS": (
+            "/$defs/cyclonedx-threat-2.0/$defs/threatScenario/properties/accessLevel"
+        ),
+        "SCENARIO_INTENTS": (
+            "/$defs/cyclonedx-threat-2.0/$defs/threatScenario/properties/intent"
+        ),
+        "THREAT_ORIGINS": (
+            "/$defs/cyclonedx-threat-2.0/$defs/threat/properties/origin/oneOf/0"
+        ),
+        "THREAT_TAXONOMIES": (
+            "/$defs/cyclonedx-threat-2.0/$defs/threat/properties/categories"
+            "/items/properties/taxonomy"
+        ),
+        "TRUST_LEVELS": (
+            "/$defs/cyclonedx-threat-2.0/$defs/trustBoundary/properties/trustLevel"
+        ),
+    }
+    # Lists that are a chosen part of a larger enum, on purpose.
+    SUBSET = {
+        "ATTACKER_ARCHETYPES": EXACT["PERSONA_ARCHETYPES"],
+        "EXTERNAL_REFERENCE_TYPES": (
+            "/$defs/cyclonedx-common-2.0/$defs/externalReference/properties/type"
+        ),
+    }
+
+    def schema_enum(self, pointer: str) -> set:
+        node = load_schema()
+        for part in pointer.strip("/").split("/"):
+            node = node[int(part)] if isinstance(node, list) else node[part]
+        return set(node["enum"])
+
+    def test_lists_equal_their_schema_enums(self):
+        from apps.threat_models.tmbom import spec_values
+
+        for name, pointer in self.EXACT.items():
+            with self.subTest(name=name):
+                self.assertEqual(
+                    set(getattr(spec_values, name)), self.schema_enum(pointer)
+                )
+        for name, pointer in self.SUBSET.items():
+            with self.subTest(name=name):
+                self.assertLessEqual(
+                    set(getattr(spec_values, name)), self.schema_enum(pointer)
+                )

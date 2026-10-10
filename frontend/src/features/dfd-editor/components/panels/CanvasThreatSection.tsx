@@ -32,7 +32,7 @@ import {
   threatTargetsCanvasId,
 } from '../../types/threat-analysis'
 import { RatingBadge } from '@/features/threat-models/components/rating'
-import type { ComponentThreat, CountermeasureStatus } from '../../types/threat-analysis'
+import type { AnalysisThreat, CountermeasureStatus } from '../../types/threat-analysis'
 import { isActiveThreat } from '@/types/triage'
 import { CONTROL_FUNCTIONS, CONTROL_NATURES } from '@/types/controls'
 
@@ -53,7 +53,7 @@ export function CanvasThreatSection({
 }: CanvasThreatSectionProps) {
   const [isOpen, setIsOpen] = useState(true)
   const [showAddDialog, setShowAddDialog] = useState(false)
-  const [countermeasureThreat, setCountermeasureThreat] = useState<ComponentThreat | null>(null)
+  const [countermeasureThreat, setCountermeasureThreat] = useState<AnalysisThreat | null>(null)
   const [editingCountermeasure, setEditingCountermeasure] = useState<{
     id: number
     name: string
@@ -89,7 +89,7 @@ export function CanvasThreatSection({
 
   const { data: threatData } = useThreatModelThreats(threatModelId)
 
-  const threats: ComponentThreat[] = threatData?.analysisThreats
+  const threats: AnalysisThreat[] = threatData?.analysisThreats
     ? threatData.analysisThreats.filter(
         (t) => threatTargetsCanvasId(t, canvasId) && isActiveThreat(t.triageStatus)
       )

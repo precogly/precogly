@@ -51,6 +51,23 @@ class ThreatModelQuerySet(models.QuerySet):
             models.Q(owning_team_id__in=team_ids) | models.Q(owning_team__isnull=True)
         )
 
+    def for_listing(self):
+        """What ``ThreatModelListSerializer`` reads, in a fixed number of queries.
+
+        Shared by the list endpoint and the MCP reader (R40): the related rows
+        come in one join and the blueprint count as an annotation, so the
+        query count does not grow with the number of models.
+        """
+        return self.select_related(
+            "created_by",
+            "organization",
+            "owning_team",
+            "owning_team__business_unit",
+            "primary_system",
+            "review",
+            "state",
+        ).annotate(listed_blueprint_count=models.Count("blueprints", distinct=True))
+
 
 LIFECYCLE_PHASES = (
     "design",

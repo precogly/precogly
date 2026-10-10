@@ -315,6 +315,24 @@ class PassthroughTests(_ReferenceModelTests):
         )
         self.assertEqual(as_lines(document), as_lines(second))
 
+    def test_kept_refs_on_a_control_that_point_into_kept_content_round_trip(self):
+        """R48 and R31: refs kept on a row resolve to kept elements and come back."""
+        from apps.threat_models.tmbom.validation import check_ref_integrity
+
+        document = self._group_b_document()
+        control = document["controls"][0]
+        control["appliesTo"] = [*control.get("appliesTo", []), "tree-1"]
+        control["implementedBy"] = [*control.get("implementedBy", []), "path-1"]
+        assert_valid_tmbom(document, context="control refs into kept content")
+
+        second = self.export(self.import_copy(document))
+        self.assertEqual(check_ref_integrity(second), [])
+        exported = next(
+            entry for entry in second["controls"] if entry["name"] == control["name"]
+        )
+        self.assertIn("tree-1", exported["appliesTo"])
+        self.assertIn("path-1", exported["implementedBy"])
+
 
 class DfdGenerationTests(_ReferenceModelTests):
     """A document without a visualization gets a canvas that syncs to no change (9.11)."""

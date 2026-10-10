@@ -124,7 +124,7 @@ export function useWorkspaceThreatAnalysis(
   // Update countermeasure status
   const updateCountermeasureStatus = useCallback(
     (
-      _componentThreatId: string,
+      _threatUiId: string,
       countermeasureInstanceId: string,
       status: CountermeasureStatus,
       notes?: string
@@ -179,12 +179,12 @@ export function useWorkspaceThreatAnalysis(
   // Assign owner to countermeasure
   const assignOwner = useCallback(
     (
-      componentThreatId: string,
+      threatUiId: string,
       countermeasureInstanceId: string,
       assignee: { type: 'member'; userId: number; email: string; name: string | null },
       newStatus?: CountermeasureStatus
     ) => {
-      const threat = state.threats.find((ct) => ct.id === componentThreatId)
+      const threat = state.threats.find((ct) => ct.id === threatUiId)
       const countermeasure = threat?.countermeasures.find((cm) => cm.id === countermeasureInstanceId)
 
       if (countermeasure) {
@@ -207,7 +207,7 @@ export function useWorkspaceThreatAnalysis(
       setState((prev) => ({
         ...prev,
         threats: prev.threats.map((ct) => {
-          if (ct.id !== componentThreatId) return ct
+          if (ct.id !== threatUiId) return ct
           return {
             ...ct,
             updatedAt: new Date().toISOString(),
@@ -229,8 +229,8 @@ export function useWorkspaceThreatAnalysis(
 
   // Update countermeasure priority
   const updateCountermeasurePriority = useCallback(
-    (componentThreatId: string, countermeasureInstanceId: string, priority: AnalysisCountermeasure['priority']) => {
-      const threat = state.threats.find((ct) => ct.id === componentThreatId)
+    (threatUiId: string, countermeasureInstanceId: string, priority: AnalysisCountermeasure['priority']) => {
+      const threat = state.threats.find((ct) => ct.id === threatUiId)
       const countermeasure = threat?.countermeasures.find((cm) => cm.id === countermeasureInstanceId)
 
       if (countermeasure) {
@@ -248,7 +248,7 @@ export function useWorkspaceThreatAnalysis(
       setState((prev) => ({
         ...prev,
         threats: prev.threats.map((ct) => {
-          if (ct.id !== componentThreatId) return ct
+          if (ct.id !== threatUiId) return ct
           return {
             ...ct,
             updatedAt: new Date().toISOString(),
@@ -269,8 +269,8 @@ export function useWorkspaceThreatAnalysis(
 
   // Update countermeasure due date
   const updateCountermeasureDueDate = useCallback(
-    (componentThreatId: string, countermeasureInstanceId: string, dueDate: string | null) => {
-      const threat = state.threats.find((ct) => ct.id === componentThreatId)
+    (threatUiId: string, countermeasureInstanceId: string, dueDate: string | null) => {
+      const threat = state.threats.find((ct) => ct.id === threatUiId)
       const countermeasure = threat?.countermeasures.find((cm) => cm.id === countermeasureInstanceId)
 
       if (countermeasure) {
@@ -287,7 +287,7 @@ export function useWorkspaceThreatAnalysis(
       setState((prev) => ({
         ...prev,
         threats: prev.threats.map((ct) => {
-          if (ct.id !== componentThreatId) return ct
+          if (ct.id !== threatUiId) return ct
           return {
             ...ct,
             updatedAt: new Date().toISOString(),
@@ -304,8 +304,8 @@ export function useWorkspaceThreatAnalysis(
 
   // Update countermeasure external ticket URL
   const updateCountermeasureExternalTicket = useCallback(
-    (componentThreatId: string, countermeasureInstanceId: string, externalTicketUrl: string) => {
-      const threat = state.threats.find((ct) => ct.id === componentThreatId)
+    (threatUiId: string, countermeasureInstanceId: string, externalTicketUrl: string) => {
+      const threat = state.threats.find((ct) => ct.id === threatUiId)
       const countermeasure = threat?.countermeasures.find((cm) => cm.id === countermeasureInstanceId)
 
       if (countermeasure) {
@@ -322,7 +322,7 @@ export function useWorkspaceThreatAnalysis(
       setState((prev) => ({
         ...prev,
         threats: prev.threats.map((ct) => {
-          if (ct.id !== componentThreatId) return ct
+          if (ct.id !== threatUiId) return ct
           return {
             ...ct,
             updatedAt: new Date().toISOString(),
@@ -339,11 +339,11 @@ export function useWorkspaceThreatAnalysis(
 
   // Update the triage status of one scenario; it shows under every target.
   const updateTriageStatus = useCallback((
-    componentThreatId: string,
+    threatUiId: string,
     triageStatus: TriageStatus,
     decisionRationale?: string
   ) => {
-    const threat = state.threats.find((ct) => ct.id === componentThreatId)
+    const threat = state.threats.find((ct) => ct.id === threatUiId)
     if (threat?.backendThreatId) {
       updateTriageStatusMutation.mutate(
         { threatId: threat.backendThreatId, triageStatus, decisionRationale },
@@ -353,7 +353,7 @@ export function useWorkspaceThreatAnalysis(
     setState((prev) => ({
       ...prev,
       threats: prev.threats.map((ct) => {
-        if (ct.id !== componentThreatId) return ct
+        if (ct.id !== threatUiId) return ct
         return {
           ...ct,
           triageStatus,
@@ -366,20 +366,20 @@ export function useWorkspaceThreatAnalysis(
 
   // Add custom countermeasure
   const addCountermeasure = useCallback(
-    (componentThreatId: string, countermeasureId: string) => {
+    (threatUiId: string, countermeasureId: string) => {
       setState((prev) => {
         const timestamp = new Date().toISOString()
         return {
           ...prev,
           threats: prev.threats.map((ct) => {
-            if (ct.id !== componentThreatId) return ct
+            if (ct.id !== threatUiId) return ct
             if (ct.countermeasures.some((cm) => cm.countermeasureId === countermeasureId)) {
               return ct
             }
             const newCm: AnalysisCountermeasure = {
-              id: `ctcm-${componentThreatId}-${countermeasureId}-${Date.now()}`,
+              id: `ctcm-${threatUiId}-${countermeasureId}-${Date.now()}`,
               countermeasureId,
-              componentThreatId,
+              threatId: threatUiId,
               status: 'gap',
               createdAt: timestamp,
               updatedAt: timestamp,
@@ -427,12 +427,12 @@ export function useWorkspaceThreatAnalysis(
 
   // Reorder countermeasures for a threat
   const reorderCountermeasures = useCallback(
-    (componentThreatId: string, reorderedCountermeasures: AnalysisCountermeasure[]) => {
+    (threatUiId: string, reorderedCountermeasures: AnalysisCountermeasure[]) => {
       // Update local state immediately
       setState((prev) => ({
         ...prev,
         threats: prev.threats.map((ct) => {
-          if (ct.id !== componentThreatId) return ct
+          if (ct.id !== threatUiId) return ct
           return {
             ...ct,
             countermeasures: reorderedCountermeasures.map((cm, index) => ({
@@ -444,7 +444,7 @@ export function useWorkspaceThreatAnalysis(
       }))
 
       // Collect all backend CM IDs and fire single mutation
-      const threatId = threatIdFromUiId(componentThreatId)
+      const threatId = threatIdFromUiId(threatUiId)
       const backendCmIds: number[] = []
       for (const cm of reorderedCountermeasures) {
         const parsed = parseCountermeasureId(cm.id)
@@ -545,7 +545,7 @@ export function useWorkspaceThreatAnalysis(
   return {
     threats: state.threats,
     /** @deprecated Use `threats`; kept for the readers the step 15 UI rewrite replaces. */
-    componentThreats: state.threats,
+    analysisThreats: state.threats,
     progressChecklist,
     completionStatus,
     summaries,

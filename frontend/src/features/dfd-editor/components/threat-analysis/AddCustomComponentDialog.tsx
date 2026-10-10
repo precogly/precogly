@@ -56,7 +56,7 @@ export function AddCustomComponentDialog({
   // Custom component fields
   const [customName, setCustomName] = useState('')
   const [customCategory, setCustomCategory] = useState('')
-  const [selectedTrustZone, setSelectedTrustZone] = useState<string>('')
+  const [selectedZone, setSelectedZone] = useState<string>('')
   // Kind (plan 11.11 "Component" row): empty defaults from the category.
   const [selectedKind, setSelectedKind] = useState<string>('default')
 
@@ -88,7 +88,7 @@ export function AddCustomComponentDialog({
         category: selectedLibraryItem.category,
         componentLibrary: selectedLibraryId,
         blueprint: blueprintId,
-        zone: selectedTrustZone && selectedTrustZone !== 'none' ? parseInt(selectedTrustZone, 10) : null,
+        zone: selectedZone && selectedZone !== 'none' ? parseInt(selectedZone, 10) : null,
         kind: selectedKind === 'default' ? '' : (selectedKind as ComponentKind),
       },
       {
@@ -117,7 +117,7 @@ export function AddCustomComponentDialog({
         category: customCategory,
         componentLibrary: null,
         blueprint: blueprintId,
-        zone: selectedTrustZone && selectedTrustZone !== 'none' ? parseInt(selectedTrustZone, 10) : null,
+        zone: selectedZone && selectedZone !== 'none' ? parseInt(selectedZone, 10) : null,
         kind: selectedKind === 'default' ? '' : (selectedKind as ComponentKind),
       },
       {
@@ -135,7 +135,7 @@ export function AddCustomComponentDialog({
     setSelectedLibraryId(null)
     setCustomName('')
     setCustomCategory('')
-    setSelectedTrustZone('')
+    setSelectedZone('')
     setSelectedKind('default')
     setActiveTab('library')
   }
@@ -242,7 +242,7 @@ export function AddCustomComponentDialog({
             {/* Trust Zone selector for library tab */}
             <div className="space-y-2">
               <Label htmlFor="library-trust-zone">Trust Zone</Label>
-              <Select value={selectedTrustZone} onValueChange={setSelectedTrustZone}>
+              <Select value={selectedZone} onValueChange={setSelectedZone}>
                 <SelectTrigger id="library-trust-zone">
                   <SelectValue placeholder="None (no trust zone)" />
                 </SelectTrigger>
@@ -290,7 +290,7 @@ export function AddCustomComponentDialog({
             {/* Trust Zone selector for custom tab */}
             <div className="space-y-2">
               <Label htmlFor="custom-trust-zone">Trust Zone</Label>
-              <Select value={selectedTrustZone} onValueChange={setSelectedTrustZone}>
+              <Select value={selectedZone} onValueChange={setSelectedZone}>
                 <SelectTrigger id="custom-trust-zone">
                   <SelectValue placeholder="None (no trust zone)" />
                 </SelectTrigger>

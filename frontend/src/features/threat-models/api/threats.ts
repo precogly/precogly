@@ -874,7 +874,7 @@ export function transformAnalysisThreats(payloadThreats: AnalysisPayloadThreat[]
     const countermeasures: AnalysisCountermeasure[] = payloadThreat.countermeasures.map((cm) => ({
       id: countermeasureUiId(cm.id),
       countermeasureId: cm.countermeasureLibraryId ? `lib-${cm.countermeasureLibraryId}` : 'custom',
-      componentThreatId: uiThreatId,
+      threatId: uiThreatId,
       status: cm.status as CountermeasureStatus,
       priority: (cm.priority || 'none') as AnalysisCountermeasure['priority'],
       dueDate: cm.dueDate ?? null,

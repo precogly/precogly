@@ -41,7 +41,7 @@ import {
   useUpdateRiskResponse,
 } from '@/features/threat-models/api/risks'
 import { useCountermeasuresInUse } from '@/features/threat-models/api/threats'
-import type { ComponentThreat } from '@/features/dfd-editor/types/threat-analysis'
+import type { AnalysisThreat } from '@/features/dfd-editor/types/threat-analysis'
 import {
   RISK_RESPONSE_COSTS,
   RISK_RESPONSE_PRIORITIES,
@@ -72,11 +72,11 @@ export interface OwnerOption {
  * in-use endpoint lists every control; display numbers come from the
  * analysis payload where a control is linked to a threat there.
  */
-function useCountermeasureOptions(threatModelId: string, componentThreats: ComponentThreat[]): ComboboxOption[] {
+function useCountermeasureOptions(threatModelId: string, analysisThreats: AnalysisThreat[]): ComboboxOption[] {
   const { data: inUse } = useCountermeasuresInUse(threatModelId)
   return useMemo(() => {
     const numberById = new Map<number, string>()
-    for (const threat of componentThreats) {
+    for (const threat of analysisThreats) {
       for (const countermeasure of threat.countermeasures) {
         if (countermeasure.backendCountermeasureId && countermeasure.displayNumber) {
           numberById.set(countermeasure.backendCountermeasureId, countermeasure.displayNumber)
@@ -92,7 +92,7 @@ function useCountermeasureOptions(threatModelId: string, componentThreats: Compo
         meta: countermeasure.status,
       }
     })
-  }, [inUse, componentThreats])
+  }, [inUse, analysisThreats])
 }
 
 interface ResponseFormState {
@@ -347,7 +347,7 @@ export interface RiskResponsesTableProps {
   /** The detail serializer's nested responses, shown until the responses query answers. */
   initialResponses?: RiskResponse[]
   owners: OwnerOption[]
-  componentThreats: ComponentThreat[]
+  analysisThreats: AnalysisThreat[]
 }
 
 export function RiskResponsesTable({
@@ -355,14 +355,14 @@ export function RiskResponsesTable({
   riskId,
   initialResponses,
   owners,
-  componentThreats,
+  analysisThreats,
 }: RiskResponsesTableProps) {
   const { data: fetchedResponses } = useRiskResponses(threatModelId, riskId)
   const responses = fetchedResponses ?? initialResponses ?? []
   const createResponse = useCreateRiskResponse(threatModelId)
   const updateResponse = useUpdateRiskResponse(threatModelId)
   const deleteResponse = useDeleteRiskResponse(threatModelId)
-  const countermeasureOptions = useCountermeasureOptions(threatModelId, componentThreats)
+  const countermeasureOptions = useCountermeasureOptions(threatModelId, analysisThreats)
 
   const [addOpen, setAddOpen] = useState(false)
   const [editing, setEditing] = useState<RiskResponse | null>(null)

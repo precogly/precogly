@@ -51,6 +51,32 @@ class Fixture(TestCase):
 
 
 class AssumptionTests(Fixture):
+    def test_moving_to_another_blueprint_cannot_keep_old_links(self):
+        """R42: a blueprint change alone is refused while links point back."""
+        client = self.api_client()
+        base = f"/api/threat-models/{self.threat_model.id}/assumptions/"
+        created = client.post(
+            base,
+            {"description": "Only staff reach it", "component_ids": [self.api.id]},
+            format="json",
+        )
+        self.assertEqual(created.status_code, 201, created.content)
+        url = f"{base}{created.data['id']}/"
+
+        moved_alone = client.patch(
+            url, {"blueprint": self.other_blueprint.id}, format="json"
+        )
+        self.assertEqual(moved_alone.status_code, 400, moved_alone.content)
+        self.assertIn("component_ids", moved_alone.data)
+
+        moved_with_links = client.patch(
+            url,
+            {"blueprint": self.other_blueprint.id, "component_ids": [self.firewall.id]},
+            format="json",
+        )
+        self.assertEqual(moved_with_links.status_code, 200, moved_with_links.content)
+        self.assertEqual(moved_with_links.data["component_ids"], [self.firewall.id])
+
     def test_crud_defaults_and_related_components(self):
         client = self.api_client()
         base = f"/api/threat-models/{self.threat_model.id}/assumptions/"

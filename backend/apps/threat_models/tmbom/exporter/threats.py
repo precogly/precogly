@@ -392,7 +392,11 @@ def _scenario(
     # (H11). They are re-emitted only while they resolve in this document;
     # passthrough sections, where most of them live, land at step 14.
     for extra in _cyclonedx_metadata(threat).get("extra_affected_assets") or []:
-        if isinstance(extra, str) and refs.is_issued(extra) and extra not in affected:
+        if (
+            isinstance(extra, str)
+            and refs.will_resolve(extra)
+            and extra not in affected
+        ):
             affected.append(extra)
     if affected:
         entry["affectedAssets"] = affected

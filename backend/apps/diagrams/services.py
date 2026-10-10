@@ -2,6 +2,8 @@
 Services for diagrams app - DFD node synchronization and threat generation.
 """
 
+import copy
+
 from django.db import transaction
 
 from apps.systems.crossing import (
@@ -34,6 +36,24 @@ from apps.threats.services import (
 from .canvas import normalize_canvas
 
 ANALYZABLE_NODE_TYPES = ("process", "datastore", "humanActor", "systemActor")
+
+
+def _row_values(row) -> dict:
+    """A row's field values, to tell whether a sync changed it (R41)."""
+    return {
+        field.attname: copy.deepcopy(getattr(row, field.attname))
+        for field in row._meta.concrete_fields
+        if field.attname != "updated_at"
+    }
+
+
+def _save_if_changed(row, before: dict) -> None:
+    """Save only when sync changed a field, so ``updated_at`` means an edit.
+
+    Section 15: saving a DFD unchanged changes no row field.
+    """
+    if _row_values(row) != before:
+        row.save()
 
 
 def _extract_backend_ids_from_canvas(canvas_data):
@@ -423,6 +443,7 @@ def sync_dfd_nodes_to_components(dfd, blueprint, old_canvas_data=None):
                 synced_count += 1
                 components_to_generate.append((component, False))
             else:
+                before = _row_values(component)
                 library_changed = component.component_library_id != new_library_id
                 kind = _kind_from_node(node_data, component_library)
                 component.name = label
@@ -434,7 +455,7 @@ def sync_dfd_nodes_to_components(dfd, blueprint, old_canvas_data=None):
                     for key, value in _library_copy_fields(component_library).items():
                         setattr(component, key, value)
                 component.kind = kind
-                component.save()
+                _save_if_changed(component, before)
                 synced_count += 1
                 if library_changed:
                     components_to_generate.append((component, True))
@@ -703,6 +724,7 @@ def _sync_edges_to_flows(dfd, edges, node_component_map, blueprint):
             synced_count += 1
             flows_to_generate.append((flow, False))
         else:
+            before = _row_values(flow)
             ends_changed = (
                 flow.source_component_id != source_component_id
                 or flow.dest_component_id != target_component_id
@@ -713,7 +735,7 @@ def _sync_edges_to_flows(dfd, edges, node_component_map, blueprint):
             flow.source_component_id = source_component_id
             flow.dest_component_id = target_component_id
             flow.edge_id = edge_id
-            flow.save()
+            _save_if_changed(flow, before)
             synced_count += 1
             if ends_changed:
                 flows_to_generate.append((flow, True))
@@ -794,9 +816,10 @@ def _sync_nodes_to_zones(dfd, nodes, blueprint):
         if existing_zone_id:
             try:
                 zone = Zone.objects.get(id=existing_zone_id, blueprint=blueprint)
+                before = _row_values(zone)
                 for key, value in fields.items():
                     setattr(zone, key, value)
-                zone.save()
+                _save_if_changed(zone, before)
                 synced_count += 1
             except Zone.DoesNotExist:
                 zone = Zone.objects.create(blueprint=blueprint, **fields)
@@ -905,9 +928,10 @@ def _sync_scope_nodes_to_system_components(dfd, nodes, blueprint, node_lookup):
             component = OrgsystemComponent.objects.create(blueprint=blueprint, **fields)
             created_count += 1
         else:
+            before = _row_values(component)
             for key, value in fields.items():
                 setattr(component, key, value)
-            component.save()
+            _save_if_changed(component, before)
         synced_count += 1
         node_system_map[node_id] = component.id
     _update_canvas_with_component_ids(dfd, node_system_map)
@@ -999,13 +1023,14 @@ def _sync_edges_to_boundaries(dfd, edges, node_zone_map, blueprint):
             ).first()
 
         if boundary is not None:
+            before = _row_values(boundary)
             fields = _boundary_fields_from_edge(edge_data, boundary.session_management)
             boundary.zone_a_id = zone_a_id
             boundary.zone_b_id = zone_b_id
             boundary.edge_id = edge_id
             for key, value in fields.items():
                 setattr(boundary, key, value)
-            boundary.save()
+            _save_if_changed(boundary, before)
             synced_count += 1
         else:
             boundary = Boundary.objects.create(

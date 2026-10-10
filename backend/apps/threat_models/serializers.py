@@ -119,48 +119,63 @@ class ThreatModelFieldsMixin:
         return None
 
     def get_frameworks(self, obj):
-        """Derive frameworks from countermeasure compliance mappings.
+        """Frameworks the model's countermeasures map to (library or instance).
 
-        Traverses: threat model -> components/dataflows -> threats ->
-        countermeasures -> countermeasure_library -> standard_mappings ->
-        requirement -> framework. Returns unique frameworks.
+        A list serializer fills ``frameworks_by_model`` for the whole page at
+        once (R40); a single model is looked up on its own.
         """
-        from apps.threats.models import InstanceCountermeasure
+        by_model = self.context.get("frameworks_by_model")
+        if by_model is None:
+            by_model = frameworks_by_model([obj.pk])
+        return by_model.get(obj.pk, [])
 
-        # Library-level mappings (using threat_model FK)
-        library_fw_ids = set(
-            InstanceCountermeasure.objects.filter(
-                threat_model=obj,
-                countermeasure_library__standard_mappings__requirement__framework__isnull=False,
-            ).values_list(
-                "countermeasure_library__standard_mappings__requirement__framework_id",
-                flat=True,
-            )
+
+def frameworks_by_model(threat_model_ids) -> dict:
+    """``{threat model id: [framework, ...]}`` in three queries, whatever the count.
+
+    Traverses countermeasure -> library -> standard mappings -> requirement ->
+    framework, and countermeasure -> instance mappings -> requirement ->
+    framework. Each list holds unique frameworks in the frameworks' order.
+    """
+    from apps.threats.models import InstanceCountermeasure
+
+    ids_by_model: dict = {}
+    for path in (
+        "countermeasure_library__standard_mappings__requirement__framework_id",
+        "instance_standard_mappings__requirement__framework_id",
+    ):
+        rows = (
+            InstanceCountermeasure.objects.filter(threat_model_id__in=threat_model_ids)
+            .exclude(**{f"{path}__isnull": True})
+            .values_list("threat_model_id", path)
         )
-
-        # Instance-level mappings
-        instance_fw_ids = set(
-            InstanceCountermeasure.objects.filter(
-                threat_model=obj,
-                instance_standard_mappings__requirement__framework__isnull=False,
-            ).values_list(
-                "instance_standard_mappings__requirement__framework_id",
-                flat=True,
-            )
-        )
-
-        all_framework_ids = library_fw_ids | instance_fw_ids
-
-        if not all_framework_ids:
-            return []
-
-        frameworks = StandardFramework.objects.filter(id__in=all_framework_ids).values(
-            "id", "name", "version"
-        )
-        return [
+        for threat_model_id, framework_id in rows:
+            ids_by_model.setdefault(threat_model_id, set()).add(framework_id)
+    all_ids = set().union(*ids_by_model.values()) if ids_by_model else set()
+    if not all_ids:
+        return {}
+    frameworks = list(
+        StandardFramework.objects.filter(id__in=all_ids).values("id", "name", "version")
+    )
+    return {
+        threat_model_id: [
             {"id": fw["id"], "name": fw["name"], "version": fw["version"] or ""}
             for fw in frameworks
+            if fw["id"] in framework_ids
         ]
+        for threat_model_id, framework_ids in ids_by_model.items()
+    }
+
+
+class ThreatModelListOfRowsSerializer(serializers.ListSerializer):
+    """Looks up every row's frameworks in one go before serializing the page."""
+
+    def to_representation(self, data):
+        rows = list(data.all() if hasattr(data, "all") else data)
+        self.context["frameworks_by_model"] = frameworks_by_model(
+            [row.pk for row in rows]
+        )
+        return super().to_representation(rows)
 
 
 def validate_methodologies(value):
@@ -260,6 +275,21 @@ class AssumptionSerializer(serializers.ModelSerializer):
                     }
                 )
             attrs["component_ids"] = [found[i] for i in wanted]
+        elif (
+            self.instance is not None
+            and blueprint.id != self.instance.blueprint_id
+            and self.instance.component_links.exclude(
+                component__blueprint=blueprint
+            ).exists()
+        ):
+            # A move must not keep links into the old blueprint (plan 5.9, R42).
+            raise serializers.ValidationError(
+                {
+                    "component_ids": "The assumption links components of its "
+                    "current blueprint; send component_ids for the new one "
+                    "(an empty list to clear them)."
+                }
+            )
         return attrs
 
     def _sync_components(self, instance, components):
@@ -926,7 +956,9 @@ class ThreatModelListSerializer(ThreatModelFieldsMixin, serializers.ModelSeriali
     approved_at = serializers.SerializerMethodField()
 
     def get_approved_at(self, obj):
-        review = ThreatModelReview.objects.filter(threat_model=obj).first()
+        # The reverse one-to-one is joined by ``for_listing``; a missing row
+        # raises an AttributeError subclass, hence getattr.
+        review = getattr(obj, "review", None)
         return review.approved_at if review is not None else None
 
     primary_system_name = serializers.CharField(
@@ -936,14 +968,16 @@ class ThreatModelListSerializer(ThreatModelFieldsMixin, serializers.ModelSeriali
     blueprint_count = serializers.SerializerMethodField()
 
     def get_version(self, obj):
-        state = ThreatModelState.objects.filter(threat_model=obj).first()
+        state = getattr(obj, "state", None)
         return state.version if state is not None else 1
 
     def get_blueprint_count(self, obj):
-        return obj.blueprints.count()
+        annotated = getattr(obj, "listed_blueprint_count", None)
+        return annotated if annotated is not None else obj.blueprints.count()
 
     class Meta:
         model = ThreatModel
+        list_serializer_class = ThreatModelListOfRowsSerializer
         fields = [
             "id",
             "name",
@@ -1138,9 +1172,8 @@ class ThreatModelCreateSerializer(serializers.ModelSerializer):
                 {"framework_ids": f"Framework(s) {unusable_framework_ids} not found."}
             )
 
-        # Initialize workspace_data — only progressChecklist remains here;
-        # status, description, scope_locked, assets, out_of_scope_items
-        # are now managed via dedicated model fields and API endpoints.
+        # workspace_data now holds only the progress checklist; everything
+        # else lives in model fields and has its own endpoints.
         validated_data["workspace_data"] = {
             "progress_checklist": [],
         }

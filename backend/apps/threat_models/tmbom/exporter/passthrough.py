@@ -89,13 +89,34 @@ def apply_passthrough(
     restore_document_level(document, threat_model, stale=stale, warnings=warnings)
 
 
-def _refs_in_kept_content(threat_model, kept_rows) -> set:
+# A blueprint's kept actors and visualizations are written back only when the
+# export did not produce the same element itself (``_restore_blueprint_extras``),
+# so their refs are not reserved up front.
+_CONDITIONAL_KEPT_KEYS = ("actors", "visualizations")
+
+
+def kept_content_refs(threat_model) -> set:
+    """Refs the kept content of ``threat_model`` always writes back (R48).
+
+    Reserved before any ref is issued, so a derived ref cannot collide with
+    one, and a ref kept on a row can point at one.
+    """
+    return _refs_in_kept_content(
+        threat_model,
+        _rows_with_kept_content(threat_model),
+        skip_blueprint_keys=_CONDITIONAL_KEPT_KEYS,
+    )
+
+
+def _refs_in_kept_content(threat_model, kept_rows, skip_blueprint_keys=()) -> set:
     """Every ``bom-ref`` defined inside content this export writes back."""
     found: set = set()
-    for row in [threat_model, *threat_model.blueprints.all(), *kept_rows]:
+    blueprints = list(threat_model.blueprints.all())
+    for row in [threat_model, *blueprints, *kept_rows]:
         cyclonedx = (row.format_metadata or {}).get("cyclonedx") or {}
+        skipped = skip_blueprint_keys if row in blueprints else ()
         for key, value in cyclonedx.items():
-            if key != "known_refs":
+            if key != "known_refs" and key not in skipped:
                 collect_refs(value, found)
     return found
 

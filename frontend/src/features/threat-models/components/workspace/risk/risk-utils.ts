@@ -5,7 +5,7 @@
  */
 
 import { ApiError } from '@/lib/api'
-import type { ComponentThreat } from '@/features/dfd-editor/types/threat-analysis'
+import type { AnalysisThreat } from '@/features/dfd-editor/types/threat-analysis'
 import { isActiveThreat } from '@/types/triage'
 import { ratingInputsFromRating } from '@/features/threat-models/components/rating'
 import {
@@ -87,8 +87,8 @@ export interface ThreatPickerEntry {
 }
 
 /** The picker rows from the analysis payload: active threats with a backend id. */
-export function threatPickerEntries(componentThreats: ComponentThreat[]): ThreatPickerEntry[] {
-  return componentThreats
+export function threatPickerEntries(analysisThreats: AnalysisThreat[]): ThreatPickerEntry[] {
+  return analysisThreats
     .filter((threat) => isActiveThreat(threat.triageStatus) && threat.backendThreatId)
     .map((threat) => ({
       threatId: threat.backendThreatId,
@@ -161,13 +161,13 @@ export function formatTargetDate(targetDate: string | null | undefined): string 
  */
 export function ratingInputsFromLinkedThreats(
   linkedThreatIds: readonly number[],
-  componentThreats: readonly ComponentThreat[],
+  analysisThreats: readonly AnalysisThreat[],
   ratingMethod: string
 ): RatingInputs | null {
   if (ratingMethod !== 'qualitative-matrix') return null
   let best: { inputs: RatingInputs; rank: number } | null = null
   for (const threatId of linkedThreatIds) {
-    const threat = componentThreats.find((candidate) => candidate.backendThreatId === threatId)
+    const threat = analysisThreats.find((candidate) => candidate.backendThreatId === threatId)
     const rating = threat?.rating
     if (!rating || rating.methodology !== 'qualitative-matrix') continue
     // ratingInputsFromRating falls back to empty inputs when a level has no matrix step.

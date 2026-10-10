@@ -22,7 +22,7 @@ from .context import (
 )
 from .controls import PartyIndex, export_controls, reserve_control_refs
 from .identity import relationship_assets, serial_urn, system_component, version_for
-from .passthrough import apply_passthrough
+from .passthrough import apply_passthrough, kept_content_refs
 from .risks import export_risks, reserve_risk_refs
 from .threats import export_threats, reserve_threat_refs
 from .trust_boundaries import export_trust_boundaries
@@ -69,6 +69,7 @@ def export_threat_model(threat_model, warnings: list | None = None) -> dict:
     reserve_control_refs(threat_model, refs)
     reserve_risk_refs(threat_model, refs)
     reserve_context_refs(threat_model, refs)
+    refs.reserve_kept(kept_content_refs(threat_model))
 
     metadata = _metadata(threat_model, refs)
     party_index = PartyIndex(refs)

@@ -202,7 +202,7 @@ export function ThreatModelDetail() {
 
   // Workspace threat analysis state
   const {
-    componentThreats,
+    analysisThreats,
     progressChecklist,
     completionStatus,
     summaries,
@@ -231,11 +231,11 @@ export function ThreatModelDetail() {
   // The analysis screen builds its tree from the backend rows (ComponentView); this page
   // only filters the scenarios by the chosen diagram and holds the selection.
   const filteredComponentThreats = useMemo(() => {
-    if (!selectedDiagramId) return componentThreats
-    return componentThreats.filter(
+    if (!selectedDiagramId) return analysisThreats
+    return analysisThreats.filter(
       (ct) => ct.wholeSystem || ct.targets.some((target) => String(target.dfdId) === selectedDiagramId)
     )
-  }, [componentThreats, selectedDiagramId])
+  }, [analysisThreats, selectedDiagramId])
 
   const selectedComponentThreat = useMemo(() => {
     if (!selectedThreatId) return null
@@ -754,7 +754,7 @@ export function ThreatModelDetail() {
         <TabsContent value="risk-analysis" className="flex-1 overflow-auto m-0">
           <RiskAnalysisTab
             threatModelId={id!}
-            componentThreats={componentThreats}
+            analysisThreats={analysisThreats}
             riskScoringMethod={threatModel.riskScoringMethod ?? 'qualitative-matrix'}
             onScoringMethodChange={handleScoringMethodChange}
           />

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ApiError } from '@/lib/api'
-import type { ComponentThreat } from '@/features/dfd-editor/types/threat-analysis'
+import type { AnalysisThreat } from '@/features/dfd-editor/types/threat-analysis'
 import type { Rating, RatingLevel, RiskStatus } from '@/types/risk'
 import {
   RISK_BOARD_COLUMNS,
@@ -180,8 +180,8 @@ function matrixRating(level: RatingLevel, likelihoodLevel: string, impactLevel: 
   }
 }
 
-function threatWithRating(backendThreatId: number, rating: Rating | null): ComponentThreat {
-  return { backendThreatId, rating } as unknown as ComponentThreat
+function threatWithRating(backendThreatId: number, rating: Rating | null): AnalysisThreat {
+  return { backendThreatId, rating } as unknown as AnalysisThreat
 }
 
 describe('ratingInputsFromLinkedThreats', () => {

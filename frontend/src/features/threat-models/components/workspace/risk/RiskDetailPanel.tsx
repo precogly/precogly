@@ -23,7 +23,7 @@ import {
   useUpdateRisk,
 } from '@/features/threat-models/api/risks'
 import { useBusinessObjectives } from '@/features/threat-models/api/threat-models'
-import type { ComponentThreat } from '@/features/dfd-editor/types/threat-analysis'
+import type { AnalysisThreat } from '@/features/dfd-editor/types/threat-analysis'
 import { RISK_DOMAINS, type RiskDomain } from '@/types/domain'
 import { RISK_STATUSES, type Risk, type RiskStatus, type ScoringMethod, type UpdateRiskInput } from '@/types/risk'
 import { RiskRatingSection } from './RiskRatingSection'
@@ -80,7 +80,7 @@ function useBlurSave(serverValue: string, save: (next: string) => void) {
 export interface RiskDetailPanelProps {
   threatModelId: string
   risk: Risk
-  componentThreats: ComponentThreat[]
+  analysisThreats: AnalysisThreat[]
   owners: OwnerOption[]
   scoringMethod: ScoringMethod | undefined
   scoringMethods: ScoringMethod[] | undefined
@@ -90,7 +90,7 @@ export interface RiskDetailPanelProps {
 export function RiskDetailPanel({
   threatModelId,
   risk,
-  componentThreats,
+  analysisThreats,
   owners,
   scoringMethod,
   scoringMethods,
@@ -120,7 +120,7 @@ export function RiskDetailPanel({
     patchRisk({ statement }, 'Failed to save the statement.')
   )
 
-  const pickerEntries = useMemo(() => threatPickerEntries(componentThreats), [componentThreats])
+  const pickerEntries = useMemo(() => threatPickerEntries(analysisThreats), [analysisThreats])
   const linkedThreats = displayRisk.threats ?? []
   const linkedThreatIds = linkedThreats.map((entry) => entry.threatId)
 
@@ -310,7 +310,7 @@ export function RiskDetailPanel({
           riskId={risk.id}
           initialResponses={displayRisk.responses}
           owners={owners}
-          componentThreats={componentThreats}
+          analysisThreats={analysisThreats}
         />
 
         <div className="text-xs text-muted-foreground pt-2 border-t">

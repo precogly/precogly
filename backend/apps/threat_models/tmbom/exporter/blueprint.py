@@ -332,7 +332,11 @@ def _boundary(boundary, refs: RefRegistry) -> dict:
         "extra_zones"
     )
     for ref in extra_zones or []:
-        if isinstance(ref, str) and refs.is_issued(ref) and ref not in entry["zones"]:
+        if (
+            isinstance(ref, str)
+            and refs.will_resolve(ref)
+            and ref not in entry["zones"]
+        ):
             entry["zones"].append(ref)
     requirements = _crossing_requirements(boundary)
     if requirements:

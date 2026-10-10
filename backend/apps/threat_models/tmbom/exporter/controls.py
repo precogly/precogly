@@ -314,7 +314,11 @@ def _control(
         else:
             applies_to.append(refs.ref(row.target_kind, target))
     for extra in _cyclonedx_metadata(countermeasure).get("extra_applies_to") or []:
-        if isinstance(extra, str) and refs.is_issued(extra) and extra not in applies_to:
+        if (
+            isinstance(extra, str)
+            and refs.will_resolve(extra)
+            and extra not in applies_to
+        ):
             applies_to.append(extra)
     if applies_to:
         entry["appliesTo"] = applies_to
@@ -328,7 +332,7 @@ def _control(
     for extra in _cyclonedx_metadata(countermeasure).get("extra_implemented_by") or []:
         if (
             isinstance(extra, str)
-            and refs.is_issued(extra)
+            and refs.will_resolve(extra)
             and extra not in implemented_by
         ):
             implemented_by.append(extra)

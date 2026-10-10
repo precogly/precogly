@@ -302,6 +302,34 @@ class SyncTests(Fixture):
         self.assertEqual(Boundary.objects.filter(blueprint=dfd2.blueprint).count(), 1)
         Zone.objects.filter(blueprint=dfd2.blueprint).exists()
 
+    def test_an_unchanged_save_writes_no_row(self):
+        """R41, section 15: saving a DFD unchanged changes no row field."""
+        dfd = DFD.objects.create(
+            blueprint=self.blueprint,
+            name="D",
+            is_primary=True,
+            canvas_data=self._canvas({"flow_type": "data"}, boundary=True),
+        )
+        sync_dfd_nodes_to_components(dfd, self.blueprint)
+        dfd.refresh_from_db()
+
+        def stamps():
+            return {
+                model.__name__: sorted(
+                    model.objects.filter(blueprint=self.blueprint).values_list(
+                        "id", "updated_at"
+                    )
+                )
+                for model in (OrgsystemComponent, Flow, Zone, Boundary)
+            }
+
+        before = stamps()
+        self.assertTrue(all(before.values()))
+        sync_dfd_nodes_to_components(
+            dfd, self.blueprint, old_canvas_data=dfd.canvas_data
+        )
+        self.assertEqual(stamps(), before)
+
     def test_choosing_default_clears_a_chosen_kind(self):
         """R14: no ``kind`` on the node means the library's kind, not "keep"."""
         dfd = DFD.objects.create(
@@ -479,3 +507,35 @@ class ApiTests(Fixture):
         client.patch(f"/api/components/{source.id}/", {"zone": cell.id}, format="json")
         flow.refresh_from_db()
         self.assertFalse(flow.crosses_boundary)
+
+    def test_connecting_a_pack_generates_flow_threats_too(self):
+        """R43: add_pack runs generation for flows as well as components."""
+        from apps.packs.models import LibraryPack
+
+        pack = LibraryPack.objects.create(slug="ot-test", name="OT test")
+        ComponentLibrary.objects.filter(pk=self.sensor.pk).update(source_pack=pack)
+        source, dest = self._components()
+        flow = Flow.objects.create(
+            blueprint=self.blueprint,
+            source_component=source,
+            dest_component=dest,
+            flow_type="data",
+        )
+        self.assertFalse(InstanceThreat.objects.filter(targets__flow=flow).exists())
+
+        client = APIClient()
+        client.force_authenticate(self.user)
+        response = client.post(
+            f"/api/threat-models/{self.threat_model.id}/add_pack/",
+            {"pack_id": pack.id},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.data["flows_matched"], 1)
+        self.assertEqual(
+            {
+                threat.threat_library.name
+                for threat in InstanceThreat.objects.filter(targets__flow=flow)
+            },
+            {"Eavesdropping"},
+        )
