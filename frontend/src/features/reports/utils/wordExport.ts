@@ -158,7 +158,7 @@ function buildReviewSection(data: ReportData, numbers: SectionNumberer): Block[]
   const personAndDate = (person: string | null, date: string | null) =>
     !person && !date ? 'Not yet' : [person, formatReportDate(date)].filter(Boolean).join(', ')
   const rows = [
-    ['State', approvalStateLabel(review.approvalState)],
+    ['State', approvalStateLabel(review.approvalState) + (review.reviewDue ? ' (review due)' : '')],
     ['Reviewed by', personAndDate(review.reviewer, review.reviewedAt)],
     ['Approved by', personAndDate(review.approver, review.approvedAt)],
     ['Valid from', formatReportDate(metadata.validFrom) || 'Not set'],

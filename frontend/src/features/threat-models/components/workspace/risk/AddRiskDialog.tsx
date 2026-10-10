@@ -36,7 +36,7 @@ import {
 } from '@/types/risk'
 import type { OwnerOption } from './RiskResponsesTable'
 import { ThreatPicker } from './ThreatPicker'
-import { apiErrorMessage, threatPickerEntries } from './risk-utils'
+import { apiErrorMessage, ratingInputsFromLinkedThreats, threatPickerEntries } from './risk-utils'
 
 const NO_OWNER = '_none'
 
@@ -72,6 +72,8 @@ export function AddRiskDialog({
   const [businessObjectiveIds, setBusinessObjectiveIds] = useState<number[]>([])
   const [ratingInputs, setRatingInputs] = useState<RatingInputs>(() => emptyRatingInputs(ratingMethod))
   const [selectedThreatIds, setSelectedThreatIds] = useState<number[]>([])
+  // Once the user touches the rating, linking threats no longer pre-fills it.
+  const [ratingEdited, setRatingEdited] = useState(false)
 
   const createRisk = useCreateRisk(threatModelId)
   const { data: businessObjectives = [] } = useBusinessObjectives(threatModelId)
@@ -83,9 +85,21 @@ export function AddRiskDialog({
   }))
 
   const handleToggleThreat = (threatId: number, nextSelected: boolean) => {
-    setSelectedThreatIds((previous) =>
-      nextSelected ? [...previous.filter((id) => id !== threatId), threatId] : previous.filter((id) => id !== threatId)
-    )
+    const nextThreatIds = nextSelected
+      ? [...selectedThreatIds.filter((id) => id !== threatId), threatId]
+      : selectedThreatIds.filter((id) => id !== threatId)
+    setSelectedThreatIds(nextThreatIds)
+    if (!ratingEdited) {
+      setRatingInputs(
+        ratingInputsFromLinkedThreats(nextThreatIds, componentThreats, ratingMethod) ??
+          emptyRatingInputs(ratingMethod)
+      )
+    }
+  }
+
+  const handleRatingChange = (nextInputs: RatingInputs) => {
+    setRatingEdited(true)
+    setRatingInputs(nextInputs)
   }
 
   const resetForm = () => {
@@ -98,6 +112,7 @@ export function AddRiskDialog({
     setBusinessObjectiveIds([])
     setRatingInputs(emptyRatingInputs(ratingMethod))
     setSelectedThreatIds([])
+    setRatingEdited(false)
   }
 
   const handleSubmit = () => {
@@ -235,7 +250,7 @@ export function AddRiskDialog({
               method={ratingMethod}
               scoringMethod={scoringMethod}
               value={ratingInputs}
-              onChange={setRatingInputs}
+              onChange={handleRatingChange}
             />
           </div>
           <div className="space-y-1">

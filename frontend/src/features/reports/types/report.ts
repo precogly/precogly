@@ -13,6 +13,8 @@ export type ReportType = 'executive' | 'technical' | 'compliance' | 'full'
 /** The review block of the report metadata (`report_service._review`). */
 export interface ReportReview {
   approvalState: ApprovalState
+  /** True once validUntil has passed; older payloads may lack it. */
+  reviewDue?: boolean
   reviewer: string | null
   reviewedAt: string | null
   approver: string | null

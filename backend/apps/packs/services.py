@@ -24,6 +24,7 @@ from apps.systems.crossing import (
     BOUNDARY_TYPES,
     FLOW_TYPES,
     ZONE_TYPES,
+    clean_type_list,
 )
 from apps.systems.models import ComponentLibrary
 from apps.threats.models import (
@@ -744,6 +745,12 @@ def _validate_template_canvas(template_name: str, canvas_data: dict) -> list:
             error(
                 edge_id, f"Edge '{edge_id}': authentication must be a list of methods"
             )
+        elif authentication is not None:
+            # Same rule as the API and sync: 'none' cannot sit beside a method.
+            try:
+                clean_type_list(authentication, field="authentication")
+            except ValueError as problem:
+                error(edge_id, f"Edge '{edge_id}': {problem}")
     return found
 
 

@@ -1,14 +1,23 @@
 """Prompt templates, output schemas, and constants for DFD generation."""
 
+from apps.systems.crossing import (
+    ASSET_TYPES,
+    AUTHENTICATION_TYPES,
+    FLOW_TYPES,
+    ZONE_TYPES,
+)
+
 # Valid DFD node types the model may emit.
-VALID_NODE_TYPES = frozenset({
-    "process",
-    "datastore",
-    "humanActor",
-    "systemActor",
-    "trustZone",
-    "systemScope",
-})
+VALID_NODE_TYPES = frozenset(
+    {
+        "process",
+        "datastore",
+        "humanActor",
+        "systemActor",
+        "trustZone",
+        "systemScope",
+    }
+)
 
 # Maps DFD node types to ComponentLibrary category values.
 NODE_TYPE_TO_CATEGORY = {
@@ -43,23 +52,26 @@ Analyze the provided image and return a JSON object with exactly this shape:
       "type": "process | datastore | humanActor | systemActor",
       "description": "<brief description of what this component does>",
       "technology": "<specific technology if identifiable, e.g. PostgreSQL, S3, Nginx>",
-      "trustZone": "<which trust zone this component belongs in, e.g. 'Internal Network', 'DMZ', 'External'>",
+      "zone": "<which zone this component belongs in, e.g. 'Internal Network', 'DMZ', 'External'>",
+      "kind": "<optional: one of the component kinds listed below>",
       "dataSensitivity": "<low | medium | high | critical>"
     }
   ],
-  "dataFlows": [
+  "flows": [
     {
       "from": "<source component name>",
       "to": "<target component name>",
-      "description": "<what data flows between them>",
+      "description": "<what flows between them>",
+      "type": "<optional: one of the flow types listed below; default data>",
       "protocol": "<protocol if identifiable, e.g. HTTPS, gRPC, SQL>",
       "encrypted": true | false,
-      "authenticated": true | false
+      "authentication": ["<authentication methods listed below, or 'none'>"]
     }
   ],
-  "trustZones": [
+  "zones": [
     {
       "name": "<zone name>",
+      "type": "<optional: one of the zone types listed below; default trust>",
       "trustLevel": <0-100 integer, higher = more trusted>
     }
   ],
@@ -86,8 +98,10 @@ than an exhaustive inventory.
 - Create ONE data flow per logical communication channel between two components. \
 Summarize multiple operations into a single flow description \
 (e.g. "HTTPS: authentication, course browsing, subscription management").
-- Group components into trust zones based on network boundaries, cloud regions, \
+- Group components into zones based on network boundaries, cloud regions, \
 or security domains.
+- Leave "authentication" empty when the diagram does not say how a flow is \
+authenticated; use ["none"] only when it clearly is not.
 - Ask 1-3 clarifying questions about aspects you cannot determine from the diagram \
 alone (e.g. authentication methods, encryption, data sensitivity, missing components).
 - If technology is not identifiable, use an empty string.
@@ -116,7 +130,10 @@ Return a JSON object with exactly this shape:
       "data": {
         "label": "<display name>",
         "description": "<brief description>",
-        "technology": "<technology if known>"
+        "technology": "<technology if known>",
+        "kind": "<optional, components only: a component kind listed below>",
+        "zoneType": "<optional, trustZone only: a zone type listed below>",
+        "trustLevel": <optional, trustZone only: 0-100>
       },
       "parentId": "<id of parent trustZone or systemScope, if nested>"
     }
@@ -131,9 +148,10 @@ Return a JSON object with exactly this shape:
       "targetHandle": "left-target",
       "data": {
         "label": "<flow description>",
+        "flowType": "<optional: a flow type listed below; default data>",
         "protocol": "<protocol>",
         "encrypted": true | false,
-        "authenticated": true | false
+        "authentication": ["<authentication methods listed below, or 'none'>"]
       }
     }
   ]
@@ -174,3 +192,17 @@ additional components, data flows, or trust boundaries, include them.
 
 # Maximum number of component library entries to include in the prompt.
 MAX_COMPONENT_LIBRARY_ENTRIES = 200
+
+# The values the prompts may use, from the same lists sync and the API check
+# (plan section 8). Anything else the model writes is dropped by the parsers.
+ALLOWED_VALUES_TEXT = f"""
+Allowed values:
+- Zone types: {", ".join(ZONE_TYPES)}
+- Flow types: {", ".join(FLOW_TYPES)}
+- Component kinds: {", ".join(ASSET_TYPES)}
+- Authentication methods: {", ".join(AUTHENTICATION_TYPES)}
+Leave an optional field out when unsure.
+"""
+
+ANALYZE_SYSTEM_PROMPT += ALLOWED_VALUES_TEXT
+GENERATE_SYSTEM_PROMPT += ALLOWED_VALUES_TEXT

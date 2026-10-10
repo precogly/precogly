@@ -9,7 +9,7 @@ sit in another blueprint.
 
 from rest_framework import serializers
 
-from .crossing import clean_session_management, clean_type_list
+from .crossing import clean_session_management, clean_type_list, is_data_like
 from .models import (
     Boundary,
     ComponentDataAsset,
@@ -515,6 +515,11 @@ class FlowSerializer(serializers.ModelSerializer):
                     "blueprint": "Both ends of a flow must belong to the flow's blueprint."
                 }
             )
+        # The DFD sync rule (section 4.6): protocol, port and encryption
+        # describe data-like flows only, so other types carry none (R23).
+        flow_type = attrs.get("flow_type", getattr(self.instance, "flow_type", "data"))
+        if not is_data_like(flow_type):
+            attrs.update(protocol="", port=None, encrypted=False)
         return attrs
 
 

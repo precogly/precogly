@@ -110,12 +110,15 @@ components:
   - id: s3
     name: Amazon S3
     category: datastore
+    kind: data-store # optional: CycloneDX asset type, defaults from category
     type: Object Storage
     provider: aws
     description: |
       Amazon Simple Storage Service (S3) provides scalable object storage
       for data backup, archival, and analytics.
 ```
+
+`kind` is the CycloneDX asset type the component exports as, such as `device`, `service`, `api`, `gateway` or `data-store`. If you leave it out, it comes from `category`: `process` gives `process`, `datastore` gives `data-store`, and the two actor categories give `actor`. Set it when the default is too vague (a field sensor should be `device`). A value outside the asset type list is a validation error.
 
 **`threats.yaml`** defines what can go wrong:
 
@@ -142,6 +145,58 @@ countermeasures:
     control_nature: technical
     cost: low
 ```
+
+**`joins/components-threats.yaml`** can also say which flows a threat reaches and how severe it starts:
+
+```yaml
+mappings:
+  - component: plc
+    threats:
+      - threat: plc-logic-tampering
+        applies_to: component
+      - threat: ot-protocol-mitm
+        applies_to: flow
+        flow_types: [data, message, control] # list of flow types, or any
+        severity: high                       # info | low | medium | high | critical
+```
+
+A flow link that leaves out `flow_types` applies to data-like flows only (`data`, `message`, `event`). It never reaches `signal`, `energy`, `physical`, `control`, `process` or `financial` flows. So any threat that should reach those flows must list them, or use `any`. `flow_types` is an error on a link with `applies_to: component`. `severity` defaults to `medium`.
+
+**`dfd-templates/*.yaml`** hold pre-built diagrams. These keys carry the type information:
+
+```yaml
+canvas_data:
+  nodes:
+    - id: tb-plant
+      type: trustZone
+      data:
+        label: Plant Network
+        zoneType: network # default trust
+        trustLevel: 40    # optional, integer from 0 to 100
+    - id: process-plc
+      type: process
+      parentId: tb-plant
+      data:
+        label: PLC
+        kind: device      # optional, CycloneDX asset type
+  edges:
+    - id: edge-1
+      source: process-plc
+      target: process-valve
+      type: dataFlow
+      data:
+        label: Valve command
+        flowType: control             # default data
+        authentication: [certificate] # a list of methods
+```
+
+- `zoneType`: one of `availability`, `compliance`, `data`, `deployment`, `functional`, `geographic`, `logical`, `network`, `organizational`, `physical`, `process`, `tenant`, `trust`.
+- `trustLevel`: an integer from 0 (untrusted) to 100 (most trusted).
+- `flowType`: one of `control`, `data`, `energy`, `event`, `financial`, `message`, `physical`, `process`, `signal`.
+- `boundaryType` on `trustBoundary` edges: one of `data`, `functional`, `network`, `organizational`, `physical`, `process`, `trust`.
+- `authentication`: always a list. Name the real method (`oidc`, `mtls`, `jwt`, `certificate` and so on). Use `unspecified` only when the flow is authenticated and the method is unknown. An empty list means not recorded.
+
+**Retired keys.** The boolean `authenticated` on edges is no longer read, and the old zone values `zoneInternet`, `zoneDmz`, `zoneInternal`, `zoneRestricted` and `zoneExternal` are not zone types. A template that still uses them fails validation and the import is refused. The pack format version stays `1`.
 
 **Join files** wire everything together. See [`libraries/README.md`](https://github.com/precogly/precogly/blob/main/libraries/README.md) for the full join file reference.
 
@@ -193,6 +248,10 @@ Use these conventions:
 - control_nature: technical, administrative, or physical
 - cost: low, medium, or high
 - applies_to in component-threat joins: "component", "flow", or "both"
+- flow_types on flow or both links: a list of control, data, energy, event, financial, message, physical, process, signal (or "any"). Never on a "component" link. Without it, a link reaches data, message and event flows only
+- severity on a component-threat link (optional): info, low, medium, high, or critical
+- kind on components (optional): a CycloneDX asset type such as device, service, api, gateway, or data-store
+- In DFD templates: zoneType on trustZone nodes is a CycloneDX zone type (use "trust" or "network", never zoneRestricted or other zone* values); trustLevel is an integer 0 to 100; flowType on edges is one of the flow types above; authentication on edges is a list of methods (never the boolean "authenticated")
 
 Reference this example from the aws pack for structure:
 [paste a sample from aws]
@@ -256,6 +315,13 @@ LLM-generated content needs careful human review. Check each area:
 - [ ] `control_functions` and `control_nature` values use only allowed values
 - [ ] `cost` values use only allowed values
 - [ ] `applies_to` uses only `component`, `flow`, or `both`
+- [ ] `flow_types` uses only flow types or `any`, and is never set on an `applies_to: component` link
+- [ ] Flow threats that should reach `signal`, `control`, `energy` or other non-data flows say so with `flow_types`
+- [ ] `severity` uses only `info`, `low`, `medium`, `high`, or `critical`
+- [ ] Component `kind` (and template node `kind`) is a CycloneDX asset type
+- [ ] Template `zoneType`, `flowType` and `boundaryType` values come from the lists above, and no `zoneRestricted` style values remain
+- [ ] Template `trustLevel` is an integer from 0 to 100
+- [ ] Template edges use `authentication` lists, never the retired `authenticated`; `unspecified` only where the method is unknown
 
 ### Quality
 
@@ -300,7 +366,20 @@ This endpoint requires **Security Team** role. It checks structural issues (meta
 | Invalid `control_functions` | "Unknown control function" | Use `preventive`, `detective`, `corrective`, `deterrent`, `recovery`, or `compensating` |
 | Invalid `control_nature` | "Unknown control_nature" | Use `technical`, `administrative`, or `physical` |
 | Invalid `cost` | "Unknown cost" | Use `low`, `medium`, or `high` |
-| Invalid `category` | "Unknown category" | Use `process`, `datastore`, `external_human_actor`, or `external_system_actor` |
+| Invalid `category` | "Unknown category" (error) | Use `process`, `datastore`, `external_human_actor`, or `external_system_actor` |
+| Invalid component `kind` | "unknown kind" (error) | Use a CycloneDX asset type such as `device`, `service`, `api`, `gateway` or `data-store`, or remove `kind` |
+| Invalid `applies_to` in a join | "applies_to ... is not one of" (error) | Use `component`, `flow`, or `both` |
+| Invalid `flow_types` in a join | "flow_types ... are not flow types" (error) | Use `control`, `data`, `energy`, `event`, `financial`, `message`, `physical`, `process`, `signal`, or `any` |
+| `flow_types` on a component link | "flow_types is set on an entry with applies_to: component" (error) | Change `applies_to` to `flow` or `both`, or remove `flow_types` |
+| Invalid `severity` in a join | "severity ... is not one of" (error) | Use `info`, `low`, `medium`, `high`, or `critical` |
+| Legacy or unknown template `zoneType` | "zoneType ... is not a zone type" (error) | Use a CycloneDX zone type. Replace `zoneRestricted`, `zoneInternal`, `zoneDmz`, `zoneInternet` and `zoneExternal` with `trust` or `network` |
+| `trustLevel` out of range | "trustLevel ... must be 0 to 100" (error) | Use an integer from 0 to 100 |
+| Invalid template node `kind` | "kind ... is not a CycloneDX asset type" (error) | Use a CycloneDX asset type |
+| Invalid edge `flowType` | "flowType ... is not a flow type" (error) | Use one of the nine flow types |
+| Invalid edge `boundaryType` | "boundaryType ... is not a boundary type" (error) | Use `data`, `functional`, `network`, `organizational`, `physical`, `process`, or `trust` |
+| Retired `authenticated` on an edge | "'authenticated' is retired; use authentication" (error) | Replace `authenticated: true` with the real method, for example `authentication: [oidc]`, and delete `authenticated: false` |
+| `authentication` is not a list | "authentication must be a list of methods" (error) | Write it as a list, for example `[mtls]` |
+| `none` beside other methods | "authentication cannot combine 'none' with other values" (error) | Use `[none]` alone, or list only the real methods |
 | Missing `pack_type` | "Missing required field: pack_type" | Add `pack_type` to the `pack:` section |
 | Missing `schema_version` | "Missing schema_version field" | Add `schema_version: 1` to the `pack:` section |
 | Unsupported `schema_version` | "Unsupported schema_version: N" | Use `schema_version: 1` (the only currently supported version) |

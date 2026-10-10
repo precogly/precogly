@@ -38,6 +38,7 @@ import {
   useUpdateBlueprint,
 } from '@/features/threat-models/api/threat-models'
 import { useAnalysisComponents } from '@/features/threat-models/api/components'
+import { showDeleteWarnings } from '@/features/threat-models/api/delete-warnings'
 import { useFlows } from '@/features/threat-models/api/flows'
 import type { Blueprint } from '@/features/threat-models/types/core'
 import { deletePreviewLines, nextDisplayOrder, reorderBlueprints, sortBlueprints } from './blueprint-utils'
@@ -74,8 +75,9 @@ export function ManageBlueprintsModal({
     if (!blueprintToDelete) return
     const deletedId = blueprintToDelete.id
     deleteMutation.mutate(deletedId, {
-      onSuccess: () => {
+      onSuccess: (warnings) => {
         toast.success(`Blueprint "${blueprintToDelete.name}" deleted`)
+        showDeleteWarnings(warnings)
         setBlueprintToDelete(null)
         onDeleted?.(deletedId)
       },

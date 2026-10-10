@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { ApiError } from '@/lib/api'
-import type { RiskStatus } from '@/types/risk'
+import type { ComponentThreat } from '@/features/dfd-editor/types/threat-analysis'
+import type { Rating, RatingLevel, RiskStatus } from '@/types/risk'
 import {
   RISK_BOARD_COLUMNS,
   apiErrorMessage,
   formatTargetDate,
+  ratingInputsFromLinkedThreats,
   groupRisksByStatus,
   threatPickerLabel,
   threatPickerMatches,
@@ -163,5 +165,70 @@ describe('formatTargetDate', () => {
 
   it('returns anything that is not an ISO date unchanged', () => {
     expect(formatTargetDate('next quarter')).toBe('next quarter')
+  })
+})
+
+function matrixRating(level: RatingLevel, likelihoodLevel: string, impactLevel: string): Rating {
+  return {
+    id: 1,
+    methodology: 'qualitative-matrix',
+    level,
+    score: 10,
+    likelihood: { level: likelihoodLevel, score: null, factors: [], extra: {} },
+    impact: { level: impactLevel, score: null, factors: [], extra: {} },
+    rationale: 'from the threat',
+  }
+}
+
+function threatWithRating(backendThreatId: number, rating: Rating | null): ComponentThreat {
+  return { backendThreatId, rating } as unknown as ComponentThreat
+}
+
+describe('ratingInputsFromLinkedThreats', () => {
+  const lowThreat = threatWithRating(1, matrixRating('low', 'low', 'low'))
+  const highThreat = threatWithRating(2, matrixRating('high', 'high', 'major'))
+  const mediumThreat = threatWithRating(3, matrixRating('medium', 'medium', 'moderate'))
+  const allThreats = [lowThreat, highThreat, mediumThreat]
+
+  it('copies likelihood and impact from the highest-level linked threat', () => {
+    expect(ratingInputsFromLinkedThreats([1, 2, 3], allThreats, 'qualitative-matrix')).toEqual({
+      likelihood: 'likely',
+      impact: 'major',
+      rationale: '',
+    })
+  })
+
+  it('only looks at linked threats', () => {
+    expect(ratingInputsFromLinkedThreats([1, 3], allThreats, 'qualitative-matrix')).toMatchObject({
+      likelihood: 'possible',
+      impact: 'moderate',
+    })
+  })
+
+  it('keeps the first linked threat on a tie', () => {
+    const firstHigh = threatWithRating(4, matrixRating('high', 'high', 'major'))
+    const secondHigh = threatWithRating(5, matrixRating('high', 'certain', 'catastrophic'))
+    expect(ratingInputsFromLinkedThreats([5, 4], [firstHigh, secondHigh], 'qualitative-matrix')).toMatchObject({
+      likelihood: 'certain',
+      impact: 'severe',
+    })
+  })
+
+  it('returns null with nothing linked or for a method without pre-fill', () => {
+    expect(ratingInputsFromLinkedThreats([], allThreats, 'qualitative-matrix')).toBeNull()
+    expect(ratingInputsFromLinkedThreats([2], allThreats, 'owasp-risk-rating')).toBeNull()
+    expect(ratingInputsFromLinkedThreats([2], allThreats, 'manual')).toBeNull()
+  })
+
+  it('skips threats that are unrated, not matrix ratings or have unmappable levels', () => {
+    const unrated = threatWithRating(6, null)
+    const manualRating = threatWithRating(7, { ...matrixRating('critical', 'high', 'major'), methodology: 'manual' })
+    const unmappable = threatWithRating(8, matrixRating('critical', 'very-high', 'major'))
+    expect(
+      ratingInputsFromLinkedThreats([6, 7, 8], [unrated, manualRating, unmappable], 'qualitative-matrix')
+    ).toBeNull()
+    expect(
+      ratingInputsFromLinkedThreats([8, 3], [unmappable, mediumThreat], 'qualitative-matrix')
+    ).toMatchObject({ likelihood: 'possible' })
   })
 })

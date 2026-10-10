@@ -86,14 +86,20 @@ describe('deletePreviewLines', () => {
     diagrams: 1,
     dataAssets: 2,
     outOfScopeItems: 0,
+    assumptions: 1,
     threatsDeleted: 6,
+    threatsLosingTargets: 2,
   }
 
-  it('lists the counts that are not zero and the threats that go', () => {
+  it('lists the counts that are not zero and the threats that go or shrink', () => {
     expect(deletePreviewLines(preview)).toEqual([
-      '5 components, 8 flows, 3 zones, 1 boundary, 1 diagram, 2 data assets',
+      '5 components, 8 flows, 3 zones, 1 boundary, 1 diagram, 2 data assets, 1 assumption',
       '6 threats that only sit on things in this blueprint',
+      '2 threats also on other blueprints stay and lose the targets here',
     ])
+    expect(deletePreviewLines({ ...preview, threatsLosingTargets: 1 })[2]).toBe(
+      '1 threat also on other blueprints stays and loses the targets here'
+    )
   })
 
   it('is empty for an empty blueprint', () => {
@@ -106,7 +112,9 @@ describe('deletePreviewLines', () => {
         boundaries: 0,
         diagrams: 0,
         dataAssets: 0,
+        assumptions: 0,
         threatsDeleted: 0,
+        threatsLosingTargets: 0,
       })
     ).toEqual([])
   })

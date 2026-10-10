@@ -97,6 +97,7 @@ def _review(threat_model):
     state = review_state(threat_model)
     return {
         "approval_state": state["approval_state"],
+        "review_due": state["review_due"],
         "reviewer": state["reviewer_email"],
         "reviewed_at": state["reviewed_at"].isoformat()
         if state["reviewed_at"]

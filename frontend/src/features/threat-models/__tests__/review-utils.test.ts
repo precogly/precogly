@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   REVIEW_FREQUENCY_CUSTOM,
   REVIEW_FREQUENCY_NONE,
+  REVIEW_DUE_BADGE_CLASS,
+  approvalStateBadgeClass,
   approvalStateLabel,
   dateInputToIso,
   dateInputValue,
@@ -12,13 +14,19 @@ import {
 } from '../components/workspace/review-utils'
 
 describe('approvalStateLabel', () => {
-  it('names the four backend states and treats a missing state as not approved', () => {
+  it('names the three backend states and treats a missing state as not approved', () => {
     expect(approvalStateLabel('approved')).toBe('Approved')
     expect(approvalStateLabel('changed')).toBe('Changed since approval')
-    expect(approvalStateLabel('review_due')).toBe('Review due')
     expect(approvalStateLabel('none')).toBe('Not approved')
     expect(approvalStateLabel(undefined)).toBe('Not approved')
     expect(approvalStateLabel(null)).toBe('Not approved')
+  })
+})
+
+describe('review due', () => {
+  it('is not an approval state, so the state badge keeps its own colour', () => {
+    expect(approvalStateBadgeClass('approved')).toContain('green')
+    expect(REVIEW_DUE_BADGE_CLASS).toContain('orange')
   })
 })
 

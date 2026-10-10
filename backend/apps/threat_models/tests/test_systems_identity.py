@@ -414,3 +414,25 @@ class IdentityExportTests(Fixture):
             ),
             [hidden.id],
         )
+
+    def test_importing_the_same_file_twice_warns_and_names_the_first_copy(self):
+        """R29 and R35: re-import makes a new model with its own serial number."""
+        document = TmBomAdapter().export_data(self.threat_model)
+        first, first_summary = TmBomAdapter().import_data(
+            document, self.organization, self.security
+        )
+        self.assertNotIn(
+            "imported here before", "\n".join(first_summary.get("warnings", []))
+        )
+        second, second_summary = TmBomAdapter().import_data(
+            document, self.organization, self.security
+        )
+        warnings = "\n".join(second_summary["warnings"])
+        self.assertIn("imported here before", warnings)
+        self.assertIn(first.name, warnings)
+        self.assertNotEqual(first.serial_number, second.serial_number)
+        for copy in (first, second):
+            self.assertEqual(
+                copy.format_metadata["cyclonedx"]["imported_serial_number"],
+                document["serialNumber"],
+            )

@@ -109,6 +109,7 @@ export function makeReportData(overrides: Partial<ReportData> = {}): ReportData 
       reviewFrequency: 'P1Y',
       review: {
         approvalState: 'none',
+        reviewDue: false,
         reviewer: null,
         reviewedAt: null,
         approver: null,

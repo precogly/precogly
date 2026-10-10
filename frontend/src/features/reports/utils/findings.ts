@@ -92,7 +92,7 @@ export function deriveFindings(data: ReportData, depth: SectionDepth): ReportFin
       title: 'Changed since approval',
       detail: 'The model differs from what was approved. A new approval is needed.',
     })
-  } else if (metadata.review.approvalState === 'review_due') {
+  } else if (metadata.review.reviewDue) {
     findings.push({
       severity: 'medium',
       title: 'Review due',

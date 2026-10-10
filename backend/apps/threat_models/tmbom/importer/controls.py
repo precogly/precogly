@@ -189,8 +189,15 @@ class ControlImporter:
         return str(party.get("bom-ref") or "")
 
     def _implemented_by(self, control: dict, label: str):
+        """Provider components, provider party text, and refs kept for export.
+
+        A ref that is neither a component nor a declared party (another
+        tool's element, kept in passthrough content) is kept on the control
+        and written back on export while it still resolves (S5, R31).
+        """
         components = []
         party_names = []
+        extras = []
         for ref in control.get("implementedBy") or []:
             if not isinstance(ref, str):
                 continue
@@ -203,11 +210,14 @@ class ControlImporter:
             if party is not None:
                 party_names.append(self._party_name(party))
                 continue
+            extras.append(ref)
+        if extras:
             self.context.warn(
-                f"Control '{label}': implementedBy '{ref}' is neither a component nor "
-                "a declared party; skipped."
+                f"Control '{label}': {len(extras)} implementedBy ref(s) are neither a "
+                "component nor a declared party and were kept for export: "
+                + ", ".join(extras)
             )
-        return components, ", ".join(party_names)[:255]
+        return components, ", ".join(party_names)[:255], extras
 
     def _owner(self, control: dict, label: str):
         """The assigned owner as a user of the organization, else None."""
@@ -383,7 +393,7 @@ class ControlImporter:
         properties = read_properties(control.get("properties"), PropertyOwner.CONTROL)
         status, original_status = self._status(control, label)
         targets, extra_targets = self._targets(control, label)
-        components, party_text = self._implemented_by(control, label)
+        components, party_text, extra_providers = self._implemented_by(control, label)
         owner, kept_owner = self._owner(control, label)
         ticket, evidence, other_references = self._external_references(control)
 
@@ -448,6 +458,8 @@ class ControlImporter:
             cyclonedx["original_status"] = original_status
         if extra_targets:
             cyclonedx["extra_applies_to"] = extra_targets
+        if extra_providers:
+            cyclonedx["extra_implemented_by"] = extra_providers
         if kept_owner is not None:
             cyclonedx["owner"] = kept_owner
         if other_references:

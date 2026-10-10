@@ -7,9 +7,14 @@
 import { ApiError } from '@/lib/api'
 import type { ComponentThreat } from '@/features/dfd-editor/types/threat-analysis'
 import { isActiveThreat } from '@/types/triage'
+import { ratingInputsFromRating } from '@/features/threat-models/components/rating'
 import {
+  MATRIX_IMPACT_FROM_LEVEL,
+  MATRIX_LIKELIHOOD_FROM_LEVEL,
+  RATING_LEVEL_RANK,
   RISK_STATUSES,
   type Risk,
+  type RatingInputs,
   type RiskExposure,
   type RiskStatus,
 } from '@/types/risk'
@@ -145,4 +150,36 @@ export function formatTargetDate(targetDate: string | null | undefined): string 
   const date = new Date(Number(year), Number(month) - 1, Number(day))
   if (Number.isNaN(date.getTime())) return targetDate
   return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+/**
+ * The rating inputs a new risk starts with when threats are linked (#31, 2.10):
+ * the likelihood and impact of the highest-level linked threat whose rating is
+ * a qualitative matrix rating. Null when the risk's method is not the matrix
+ * (other engines have no pre-fill), no linked threat has such a rating, or
+ * nothing is linked. Ties keep the threat linked first.
+ */
+export function ratingInputsFromLinkedThreats(
+  linkedThreatIds: readonly number[],
+  componentThreats: readonly ComponentThreat[],
+  ratingMethod: string
+): RatingInputs | null {
+  if (ratingMethod !== 'qualitative-matrix') return null
+  let best: { inputs: RatingInputs; rank: number } | null = null
+  for (const threatId of linkedThreatIds) {
+    const threat = componentThreats.find((candidate) => candidate.backendThreatId === threatId)
+    const rating = threat?.rating
+    if (!rating || rating.methodology !== 'qualitative-matrix') continue
+    // ratingInputsFromRating falls back to empty inputs when a level has no matrix step.
+    if (
+      !MATRIX_LIKELIHOOD_FROM_LEVEL[rating.likelihood?.level ?? ''] ||
+      !MATRIX_IMPACT_FROM_LEVEL[rating.impact?.level ?? '']
+    ) {
+      continue
+    }
+    const inputs = ratingInputsFromRating(rating, ratingMethod)
+    const rank = RATING_LEVEL_RANK[rating.level]
+    if (best === null || rank > best.rank) best = { inputs: { ...inputs, rationale: '' }, rank }
+  }
+  return best?.inputs ?? null
 }

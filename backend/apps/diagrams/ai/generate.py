@@ -5,11 +5,14 @@ from __future__ import annotations
 import json
 import logging
 import math
+from contextlib import suppress
 
 from apps.ai.providers.base import AIProviderError
 from apps.ai.resolver import resolve_provider
 from apps.ai.utils import extract_json_object
+from apps.systems.crossing import ASSET_TYPES, FLOW_TYPES, ZONE_TYPES, is_data_like
 
+from .analyze import clean_authentication
 from .prompts import (
     DEFAULT_NODE_SIZES,
     GENERATE_SYSTEM_PROMPT,
@@ -200,6 +203,7 @@ def _validate_and_resolve(
             # Strip component_ref regardless — it served its purpose.
             data.pop("component_ref", None)
 
+        _clean_node_data(node_type, data)
         valid_nodes.append(node)
         valid_node_ids.add(node_id)
 
@@ -232,10 +236,57 @@ def _validate_and_resolve(
         # Ensure edge has data dict.
         if "data" not in edge or not isinstance(edge.get("data"), dict):
             edge["data"] = {}
+        if edge["type"] == "dataFlow":
+            _clean_edge_data(edge["data"])
 
         valid_edges.append(edge)
 
     return valid_nodes, valid_edges
+
+
+def _pop_either(data: dict, camel: str, snake: str):
+    """A value the model may have written under either spelling; both go."""
+    value = data.pop(camel, None)
+    snake_value = data.pop(snake, None)
+    return value if value is not None else snake_value
+
+
+def _clean_node_data(node_type: str, data: dict) -> None:
+    """Keep the zone type, trust level and kind the canvas understands (section 8).
+
+    Written in the canvas's own keys (``zone_type``, ``trust_level``,
+    ``kind``), which DFD sync reads; an unknown value is dropped, so sync
+    applies its default.
+    """
+    zone_type = _pop_either(data, "zoneType", "zone_type")
+    trust_level = _pop_either(data, "trustLevel", "trust_level")
+    kind = data.pop("kind", None)
+    if node_type == "trustZone":
+        if zone_type in ZONE_TYPES:
+            data["zone_type"] = zone_type
+        with suppress(TypeError, ValueError):
+            data["trust_level"] = max(0, min(100, int(trust_level)))
+    elif node_type in NODE_TYPE_TO_CATEGORY and kind in ASSET_TYPES:
+        data["kind"] = kind
+
+
+def _clean_edge_data(data: dict) -> None:
+    """A data flow edge in the canvas's keys: ``flow_type`` and ``authentication``.
+
+    The old ``authenticated`` boolean is read once and dropped (I9); protocol
+    and encryption go on flow types that are not data-like, as sync does.
+    """
+    flow_type = _pop_either(data, "flowType", "flow_type")
+    if flow_type in FLOW_TYPES:
+        data["flow_type"] = flow_type
+    authentication = clean_authentication(data)
+    data.pop("authenticated", None)
+    data.pop("authentication", None)
+    if authentication:
+        data["authentication"] = authentication
+    if not is_data_like(data.get("flow_type") or "data"):
+        data.pop("protocol", None)
+        data.pop("encrypted", None)
 
 
 # ---------------------------------------------------------------------------
@@ -252,7 +303,7 @@ def _fix_layout(
     with precise coordinates. This function:
 
     1. Recovers orphaned nodes by matching them to trust zones via the
-       analysis's component→trustZone mapping.
+       analysis's component→zone mapping.
     2. Re-lays out children inside each container in a compact grid.
     3. Auto-sizes containers (bottom-up) to fit their children with padding.
     4. Places external actors outside the system scope.
@@ -303,14 +354,14 @@ def _recover_orphans(
 ) -> None:
     """Assign parentId to leaf nodes that lost their container reference.
 
-    Uses the analysis's component→trustZone name mapping to match nodes to
+    Uses the analysis's component→zone name mapping to match nodes to
     the trust zone node whose label best matches.
     """
-    # Build component name → trustZone name from the analysis.
+    # Build component name → zone name from the analysis.
     component_zone_map: dict[str, str] = {}
     for comp in analysis.get("components", []):
         name = comp.get("name", "")
-        zone = comp.get("trustZone", "")
+        zone = comp.get("zone") or comp.get("trustZone", "")
         if name and zone:
             component_zone_map[name.lower()] = zone.lower()
 

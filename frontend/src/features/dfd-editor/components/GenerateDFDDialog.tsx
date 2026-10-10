@@ -441,8 +441,8 @@ export function GenerateDFDDialog({
 
             {/* Summary stats */}
             <div className="flex gap-4 text-sm text-muted-foreground">
-              <span>{analysis.dataFlows.length} data flows</span>
-              <span>{analysis.trustZones.length} trust zones</span>
+              <span>{analysis.flows?.length ?? 0} flows</span>
+              <span>{analysis.zones?.length ?? 0} zones</span>
               {analysis.systemScope?.name && (
                 <span>Scope: {analysis.systemScope.name}</span>
               )}

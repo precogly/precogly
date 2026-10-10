@@ -40,6 +40,40 @@ class SnapshotCoverageTests(TestCase):
                 set(counted) & set(left_out), set(), f"{label}: listed twice"
             )
 
+    def test_every_table_that_hangs_off_a_model_is_decided(self):
+        """R30: a model-owned table is either in the snapshot or left out by name.
+
+        Walks foreign keys out from the model and its blueprints. Tables that
+        hold both shared and model-owned rows (``Tenancy.MIXED``) are not
+        walked further: what points at them is library data.
+        """
+        from apps.core.tenancy import Tenancy
+        from apps.threat_models.digest import LEFT_OUT_TABLES, ROW_SOURCES
+
+        decided = set(SNAPSHOT_FIELDS) | set(LEFT_OUT_TABLES)
+        self.assertEqual(set(SNAPSHOT_FIELDS) & set(LEFT_OUT_TABLES), set())
+        self.assertEqual(set(ROW_SOURCES), set(SNAPSHOT_FIELDS) - {"threats.Rating"})
+        owned = {"threat_models.ThreatModel", "threat_models.Blueprint"}
+        frontier = set(owned)
+        while frontier:
+            reached = set()
+            for model in apps.get_models():
+                label = model._meta.label
+                if label in owned:
+                    continue
+                for field in model._meta.concrete_fields:
+                    if (field.many_to_one or field.one_to_one) and (
+                        field.related_model._meta.label in frontier
+                    ):
+                        reached.add(label)
+            owned |= reached
+            frontier = {
+                label
+                for label in reached
+                if getattr(apps.get_model(label), "tenancy", None) != Tenancy.MIXED
+            }
+        self.assertEqual(owned - decided, set(), "undecided model-owned tables")
+
 
 class DigestTests(TestCase):
     @classmethod
@@ -179,9 +213,11 @@ class DigestTests(TestCase):
             format="json",
         )
         self.assertEqual(edited.status_code, 200, edited.content)
-        self.assertEqual(
-            security.get(f"{url}review/").data["approval_state"], "review_due"
-        )
+        # An expired model keeps its approval state (here "changed": the PATCH
+        # edited counted fields) and flags the review separately (R24).
+        expired = security.get(f"{url}review/").data
+        self.assertEqual(expired["approval_state"], "changed")
+        self.assertTrue(expired["review_due"])
         bad = security.patch(url, {"review_frequency": "6 months"}, format="json")
         self.assertEqual(bad.status_code, 400)
         revoked = security.post(f"{url}revoke-approval/")

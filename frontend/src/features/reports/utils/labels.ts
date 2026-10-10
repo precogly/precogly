@@ -86,7 +86,6 @@ const APPROVAL_STATE_LABELS: Record<ApprovalState, string> = {
   none: 'Not approved',
   approved: 'Approved',
   changed: 'Changed since approval',
-  review_due: 'Review due',
 }
 
 export function approvalStateLabel(value: ApprovalState | string | null | undefined): string {

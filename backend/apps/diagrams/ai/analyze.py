@@ -8,13 +8,21 @@ import logging
 from apps.ai.providers.base import AIProviderError
 from apps.ai.resolver import resolve_provider
 from apps.ai.utils import extract_json_object
+from apps.systems.crossing import (
+    ASSET_TYPES,
+    AUTHENTICATION_TYPES,
+    FLOW_TYPES,
+    UNSPECIFIED,
+    ZONE_TYPES,
+    clean_type_list,
+)
 
 from .prompts import ANALYZE_SYSTEM_PROMPT
 
 logger = logging.getLogger(__name__)
 
 # Keys we require in the analysis response.
-_REQUIRED_KEYS = {"components", "dataFlows", "trustZones", "systemScope", "questions"}
+_REQUIRED_KEYS = ("components", "flows", "zones", "systemScope", "questions")
 
 
 def analyze_architecture_image(
@@ -28,13 +36,11 @@ def analyze_architecture_image(
 ) -> dict:
     """Send an architecture image to a vision model and return structured analysis.
 
-    Returns a dict with keys: components, dataFlows, trustZones, systemScope,
-    questions.  Raises ``AIProviderError`` if the model cannot be reached or
+    Returns a dict with keys: components, flows, zones, systemScope,
+    questions (``normalize_analysis``).  Raises ``AIProviderError`` if the model cannot be reached or
     returns unparseable output (e.g. the model does not support vision).
     """
-    provider = resolve_provider(
-        organization, feature="generate_dfd", user=user
-    )
+    provider = resolve_provider(organization, feature="generate_dfd", user=user)
 
     image_b64 = base64.b64encode(image_bytes).decode("ascii")
     data_uri = f"data:{image_content_type};base64,{image_b64}"
@@ -42,7 +48,10 @@ def analyze_architecture_image(
     user_text = f"Application: {app_name}"
     if app_description:
         user_text += f"\nDescription: {app_description}"
-    user_text += "\n\nAnalyze the architecture diagram above and extract all components, data flows, trust zones, and clarifying questions."
+    user_text += (
+        "\n\nAnalyze the architecture diagram above and extract all components, "
+        "flows, zones, and clarifying questions."
+    )
 
     messages = [
         {"role": "system", "content": ANALYZE_SYSTEM_PROMPT},
@@ -74,26 +83,87 @@ def analyze_architecture_image(
             "model such as GPT-4o."
         )
 
-    # Validate required keys, filling in defaults for missing ones so
-    # downstream code always sees a consistent shape.
+    return normalize_analysis(result, app_name, app_description)
+
+
+def normalize_analysis(result: dict, app_name: str, app_description: str) -> dict:
+    """The analysis in the shape the generate step and the dialog expect.
+
+    Keys are ``components``, ``flows``, ``zones``, ``systemScope`` and
+    ``questions`` (plan section 8). The old names (``dataFlows``,
+    ``trustZones``, a component's ``trustZone``, a flow's ``authenticated``)
+    are read too, since models repeat what they have seen. Types, kinds and
+    authentication methods outside the allowed lists are dropped, never
+    guessed.
+    """
+    for new_key, old_key in (("flows", "dataFlows"), ("zones", "trustZones")):
+        if new_key not in result and old_key in result:
+            result[new_key] = result.pop(old_key)
+        result.pop(old_key, None)
+
+    default_scope = {"name": app_name, "description": app_description}
     for key in _REQUIRED_KEYS:
         if key not in result:
-            result[key] = [] if key != "systemScope" else {"name": app_name, "description": app_description}
+            result[key] = default_scope if key == "systemScope" else []
+        expected = dict if key == "systemScope" else list
+        if not isinstance(result[key], expected):
+            result[key] = default_scope if key == "systemScope" else []
 
-    # Ensure components is a list of dicts.
-    if not isinstance(result["components"], list):
-        result["components"] = []
-    # Ensure dataFlows is a list.
-    if not isinstance(result["dataFlows"], list):
-        result["dataFlows"] = []
-    # Ensure trustZones is a list.
-    if not isinstance(result["trustZones"], list):
-        result["trustZones"] = []
-    # Ensure questions is a list.
-    if not isinstance(result["questions"], list):
-        result["questions"] = []
-    # Ensure systemScope is a dict.
-    if not isinstance(result["systemScope"], dict):
-        result["systemScope"] = {"name": app_name, "description": app_description}
-
+    result["components"] = [
+        _clean_component(component)
+        for component in result["components"]
+        if isinstance(component, dict)
+    ]
+    result["flows"] = [
+        _clean_flow(flow) for flow in result["flows"] if isinstance(flow, dict)
+    ]
+    result["zones"] = [
+        _clean_zone(zone) for zone in result["zones"] if isinstance(zone, dict)
+    ]
+    result["questions"] = [str(question) for question in result["questions"]]
     return result
+
+
+def _clean_component(component: dict) -> dict:
+    if "zone" not in component and "trustZone" in component:
+        component["zone"] = component["trustZone"]
+    component.pop("trustZone", None)
+    if component.get("kind") not in ASSET_TYPES:
+        component.pop("kind", None)
+    return component
+
+
+def _clean_flow(flow: dict) -> dict:
+    if flow.get("type") not in FLOW_TYPES:
+        flow.pop("type", None)
+    flow["authentication"] = clean_authentication(flow)
+    flow.pop("authenticated", None)
+    return flow
+
+
+def _clean_zone(zone: dict) -> dict:
+    if zone.get("type") not in ZONE_TYPES:
+        zone.pop("type", None)
+    try:
+        zone["trustLevel"] = max(0, min(100, int(zone.get("trustLevel"))))
+    except (TypeError, ValueError):
+        zone.pop("trustLevel", None)
+    return zone
+
+
+def clean_authentication(data: dict) -> list[str]:
+    """A flow's authentication list from model output (I9).
+
+    A valid ``authentication`` list is kept. Otherwise the old boolean maps
+    the way DFD sync maps it: true is ``[unspecified]``, false is nothing.
+    """
+    raw = data.get("authentication")
+    if isinstance(raw, list):
+        try:
+            return clean_type_list(
+                [item for item in raw if item in AUTHENTICATION_TYPES],
+                field="authentication",
+            )
+        except ValueError:
+            return []
+    return [UNSPECIFIED] if data.get("authenticated") is True else []

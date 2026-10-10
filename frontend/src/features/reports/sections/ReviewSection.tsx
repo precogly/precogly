@@ -20,8 +20,9 @@ const APPROVAL_STATE_COLORS: Record<string, string> = {
   none: 'bg-gray-100 text-gray-700',
   approved: 'bg-green-100 text-green-700',
   changed: 'bg-yellow-100 text-yellow-700',
-  review_due: 'bg-orange-100 text-orange-700',
 }
+
+const REVIEW_DUE_COLOR = 'bg-orange-100 text-orange-700'
 
 /** "2 verified, 2 unverified, 1 invalid" in a fixed order; the empty string with no assumptions. */
 function assumptionValiditySummary(assumptions: readonly ReportAssumption[]): string {
@@ -64,6 +65,7 @@ export function ReviewSection({ metadata, assumptions, depth }: ReviewSectionPro
           <Badge className={APPROVAL_STATE_COLORS[review.approvalState] || ''}>
             {approvalStateLabel(review.approvalState)}
           </Badge>
+          {review.reviewDue && <Badge className={REVIEW_DUE_COLOR}>Review due</Badge>}
           {validityWindow && <span className="text-muted-foreground">Valid {validityWindow}</span>}
         </div>
 

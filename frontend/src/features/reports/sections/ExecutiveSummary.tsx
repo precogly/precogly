@@ -22,8 +22,9 @@ const APPROVAL_STATE_COLORS: Record<string, string> = {
   none: 'bg-gray-100 text-gray-700',
   approved: 'bg-green-100 text-green-700',
   changed: 'bg-yellow-100 text-yellow-700',
-  review_due: 'bg-orange-100 text-orange-700',
 }
+
+const REVIEW_DUE_COLOR = 'bg-orange-100 text-orange-700'
 
 function threatStatusClass(status: string): string {
   return THREAT_STATUS_CONFIG[status as keyof typeof THREAT_STATUS_CONFIG]?.bgColor ?? 'bg-gray-100 text-gray-700'
@@ -44,6 +45,7 @@ export function ExecutiveSummary({ data }: ExecutiveSummaryProps) {
           <Badge className={APPROVAL_STATE_COLORS[metadata.review.approvalState] || ''}>
             {approvalStateLabel(metadata.review.approvalState)}
           </Badge>
+          {metadata.review.reviewDue && <Badge className={REVIEW_DUE_COLOR}>Review due</Badge>}
           {metadata.methodologies.map((methodology) => (
             <Badge key={methodology} variant="outline">
               {methodologyNameLabel(methodology)}

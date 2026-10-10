@@ -392,6 +392,47 @@ SNAPSHOT_FIELDS = {
         ["response", "countermeasure"],
         ["id", "created_at", "updated_at", "display_order"],
     ),
+    # A model's own internal standard and its requirements (pack standards
+    # have no threat_model and are outside the model).
+    "compliance.StandardFramework": (
+        ["slug", "name", "version", "issuer", "description"],
+        ["id", "created_at", "updated_at", "source_pack", "threat_model"],
+    ),
+    "compliance.StandardRequirement": (
+        [
+            "framework",
+            "section_code",
+            "name",
+            "description",
+            "parent",
+            "requirement_type",
+            "status",
+            "priority",
+            "acceptance_criteria",
+            "format_metadata",
+        ],
+        ["id", "created_at", "updated_at"],
+    ),
+    # Which verification tests a control is checked by; when it was last
+    # tested is a result, not part of the model.
+    "threats.InstanceCountermeasureTest": (
+        ["countermeasure", "verification_test"],
+        ["id", "created_at", "updated_at", "tested_at"],
+    ),
+}
+
+# Model-owned tables whose rows are left out of the snapshot entirely, with
+# the reason. Together with ``SNAPSHOT_FIELDS`` this decides every table that
+# hangs off a model (R30); a test walks the foreign keys and fails on a table
+# in neither.
+LEFT_OUT_TABLES = {
+    "threat_models.ThreatModelReview": "the review fields themselves",
+    "threat_models.ThreatModelState": "export bookkeeping (version, export digest)",
+    "threat_models.ThreatModelReferenceImage": "attachments, like diagram layout",
+    "threats.CountermeasureComment": "comments are not content",
+    "threats.PentestFinding": "results of a test against the system, not the model",
+    "organizations.MagicLink": "sharing, not content",
+    "organizations.SharedWithMe": "sharing, not content",
 }
 
 
@@ -475,6 +516,15 @@ ROW_SOURCES = {
     ),
     "threats.RiskResponseCountermeasure": lambda tm: _rows(
         "threats.RiskResponseCountermeasure", response__risk__threat_model=tm
+    ),
+    "compliance.StandardFramework": lambda tm: _rows(
+        "compliance.StandardFramework", threat_model=tm
+    ),
+    "compliance.StandardRequirement": lambda tm: _rows(
+        "compliance.StandardRequirement", framework__threat_model=tm
+    ),
+    "threats.InstanceCountermeasureTest": lambda tm: _rows(
+        "threats.InstanceCountermeasureTest", countermeasure__threat_model=tm
     ),
 }
 

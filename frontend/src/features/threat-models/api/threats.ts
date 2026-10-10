@@ -14,6 +14,7 @@
 
 import { useQuery, useMutation, useQueryClient, skipToken } from '@tanstack/react-query'
 import { api } from '@/lib/api'
+import { deleteWithWarnings } from './delete-warnings'
 import type {
   AnalysisCountermeasure,
   AnalysisTarget,
@@ -997,7 +998,7 @@ export function useDeleteComponent() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (componentId: number) => api.delete(`/components/${componentId}/`),
+    mutationFn: (componentId: number) => deleteWithWarnings(`/components/${componentId}/`),
     onSuccess: () => {
       invalidateThreatReaders(queryClient)
       queryClient.invalidateQueries({ queryKey: componentKeys.all })

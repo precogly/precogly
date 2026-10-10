@@ -100,6 +100,37 @@ class ScopeLossWarningMixin:
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+def recompute_crossings(blueprint):
+    """Recompute every flow's ``crosses_boundary`` in ``blueprint`` (H19, R23).
+
+    Run after any API write that can move a flow end across a boundary: a
+    flow's ends, a component's zone, a zone's parent, a boundary's zones.
+    """
+    from apps.diagrams.services import update_crosses_boundary
+
+    update_crosses_boundary(blueprint)
+
+
+class RecomputeCrossingsMixin:
+    """Keep ``crosses_boundary`` true to the rows after creates, updates and deletes."""
+
+    def perform_create(self, serializer):
+        with transaction.atomic():
+            super().perform_create(serializer)
+            recompute_crossings(serializer.instance.blueprint)
+
+    def perform_update(self, serializer):
+        with transaction.atomic():
+            super().perform_update(serializer)
+            recompute_crossings(serializer.instance.blueprint)
+
+    def perform_destroy(self, instance):
+        blueprint = instance.blueprint
+        with transaction.atomic():
+            super().perform_destroy(instance)
+            recompute_crossings(blueprint)
+
+
 def zone_subtree_ids(zone):
     """The zone and every zone nested under it (children cascade with it)."""
     ids = {zone.id}
@@ -170,7 +201,12 @@ class OrgsystemViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
 
-class ZoneViewSet(ScopeLossWarningMixin, BlueprintScopedMixin, viewsets.ModelViewSet):
+class ZoneViewSet(
+    ScopeLossWarningMixin,
+    RecomputeCrossingsMixin,
+    BlueprintScopedMixin,
+    viewsets.ModelViewSet,
+):
     """ViewSet for Zone CRUD operations."""
 
     serializer_class = ZoneSerializer
@@ -187,7 +223,10 @@ class ZoneViewSet(ScopeLossWarningMixin, BlueprintScopedMixin, viewsets.ModelVie
 
 
 class BoundaryViewSet(
-    ScopeLossWarningMixin, BlueprintScopedMixin, viewsets.ModelViewSet
+    ScopeLossWarningMixin,
+    RecomputeCrossingsMixin,
+    BlueprintScopedMixin,
+    viewsets.ModelViewSet,
 ):
     """ViewSet for Boundary CRUD operations."""
 
@@ -242,7 +281,10 @@ class ComponentLibraryViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class OrgsystemComponentViewSet(
-    ScopeLossWarningMixin, BlueprintScopedMixin, viewsets.ModelViewSet
+    ScopeLossWarningMixin,
+    RecomputeCrossingsMixin,
+    BlueprintScopedMixin,
+    viewsets.ModelViewSet,
 ):
     """ViewSet for OrgsystemComponent CRUD operations."""
 
@@ -311,7 +353,12 @@ class DataAssetViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
         return self.scope_queryset(DataAsset.objects.all())
 
 
-class FlowViewSet(ScopeLossWarningMixin, BlueprintScopedMixin, viewsets.ModelViewSet):
+class FlowViewSet(
+    ScopeLossWarningMixin,
+    RecomputeCrossingsMixin,
+    BlueprintScopedMixin,
+    viewsets.ModelViewSet,
+):
     """ViewSet for Flow CRUD operations."""
 
     serializer_class = FlowSerializer
@@ -326,6 +373,31 @@ class FlowViewSet(ScopeLossWarningMixin, BlueprintScopedMixin, viewsets.ModelVie
 
     def scope_loss_ids(self, instance):
         return {"flow_ids": [instance.id]}
+
+    def perform_create(self, serializer):
+        """A new flow gets its library threats, as one drawn on the DFD does."""
+        from apps.threats.services import ensure_generated_threats
+
+        with transaction.atomic():
+            super().perform_create(serializer)
+            ensure_generated_threats(serializer.instance)
+
+    def perform_update(self, serializer):
+        """A type or ends change regenerates threats, as DFD sync does (R23)."""
+        from apps.threats.services import (
+            ensure_generated_threats,
+            remove_threats_that_stopped_applying,
+        )
+
+        flow = serializer.instance
+        before = (flow.flow_type, flow.source_component_id, flow.dest_component_id)
+        with transaction.atomic():
+            super().perform_update(serializer)
+            flow.refresh_from_db()
+            after = (flow.flow_type, flow.source_component_id, flow.dest_component_id)
+            if after != before:
+                remove_threats_that_stopped_applying(flow)
+                ensure_generated_threats(flow)
 
 
 class IntegrationSourceViewSet(viewsets.ModelViewSet):

@@ -259,6 +259,33 @@ FIELD_HOMES: dict[str, dict[str, str | tuple[str, str]]] = {
         "framework_name": "standards[].name",
         "requirement_description": "standards[].requirements[].text",
     },
+    "compliance.StandardFramework": {
+        "name": "definitions.standards[].name (when a control cites it)",
+        "version": "definitions.standards[].version (when a control cites it)",
+        "slug": not_exported("the standard's bom-ref is derived from its id"),
+        "issuer": not_exported("only a cited standard's name and version are written"),
+        "description": not_exported(
+            "only a cited standard's name and version are written"
+        ),
+    },
+    "compliance.StandardRequirement": {
+        "framework": ROW_LINK,
+        "section_code": "standards[].requirements[].identifier (when cited)",
+        "name": "standards[].requirements[].title (when cited)",
+        "description": "standards[].requirements[].text (when cited)",
+        "parent": not_exported("requirements are written flat"),
+        "requirement_type": not_exported("no spec field"),
+        "status": not_exported("no spec field"),
+        "priority": not_exported("no spec field"),
+        "acceptance_criteria": not_exported("no spec field"),
+        "format_metadata": not_exported("nothing writes it for internal standards"),
+    },
+    "threats.InstanceCountermeasureTest": {
+        "countermeasure": ROW_LINK,
+        "verification_test": not_exported(
+            "verification tests are not part of the TM-BOM export"
+        ),
+    },
     "threats.InstanceThreatTaxonomyEntry": {
         "taxonomy_entry": "threats[].taxonomies, precogly:instance-categories",
         "threat": ROW_LINK,

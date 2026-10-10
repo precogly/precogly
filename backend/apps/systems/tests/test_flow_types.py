@@ -428,3 +428,54 @@ class ApiTests(Fixture):
         self.assertEqual(
             create_risk(self.threat_model, name="R2", level="low").domains, []
         )
+
+    def test_flow_api_follows_the_sync_rules(self):
+        """R23: a REST edit regenerates threats, blanks data fields and recomputes crossing."""
+        source, dest = self._components()
+        client = APIClient()
+        client.force_authenticate(self.user)
+
+        created = client.post(
+            "/api/flows/",
+            {
+                "source_component": source.id,
+                "dest_component": dest.id,
+                "flow_type": "data",
+                "protocol": "Modbus",
+                "encrypted": True,
+            },
+            format="json",
+        )
+        self.assertEqual(created.status_code, 201, created.content)
+        flow = Flow.objects.get(pk=created.data["id"])
+
+        def threat_names():
+            return {
+                threat.threat_library.name
+                for threat in InstanceThreat.objects.filter(targets__flow=flow)
+            }
+
+        self.assertEqual(threat_names(), {"Eavesdropping"})
+
+        changed = client.patch(
+            f"/api/flows/{flow.id}/", {"flow_type": "signal"}, format="json"
+        )
+        self.assertEqual(changed.status_code, 200, changed.content)
+        flow.refresh_from_db()
+        self.assertEqual((flow.protocol, flow.encrypted), ("", False))
+        self.assertEqual(threat_names(), {"Signal spoofing"})
+
+        plant = Zone.objects.create(blueprint=self.blueprint, name="Plant")
+        cell = Zone.objects.create(blueprint=self.blueprint, name="Cell", parent=plant)
+        Boundary.objects.create(blueprint=self.blueprint, zone_a=plant, zone_b=cell)
+        for component, zone in ((source, plant), (dest, cell)):
+            response = client.patch(
+                f"/api/components/{component.id}/", {"zone": zone.id}, format="json"
+            )
+            self.assertEqual(response.status_code, 200, response.content)
+        flow.refresh_from_db()
+        self.assertTrue(flow.crosses_boundary)
+
+        client.patch(f"/api/components/{source.id}/", {"zone": cell.id}, format="json")
+        flow.refresh_from_db()
+        self.assertFalse(flow.crosses_boundary)

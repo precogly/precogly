@@ -14,7 +14,6 @@ from .models import ThreatModelReview
 APPROVAL_NONE = "none"
 APPROVAL_APPROVED = "approved"
 APPROVAL_CHANGED = "changed"
-APPROVAL_REVIEW_DUE = "review_due"
 
 
 def _locked_review(threat_model):
@@ -62,8 +61,9 @@ def revoke_approval(threat_model):
 def review_state(threat_model) -> dict:
     """The derived approval state plus the review row's fields.
 
-    ``approval_state`` is ``none``, ``approved`` or ``changed``, or
-    ``review_due`` when ``valid_until`` has passed.
+    ``approval_state`` is ``none``, ``approved`` or ``changed``. ``review_due``
+    is a separate flag, true once ``valid_until`` has passed, so an expired
+    model still shows whether it was approved or has changed (plan 4.8, R24).
     """
     review, _ = ThreatModelReview.objects.get_or_create(threat_model=threat_model)
     current = model_digest(threat_model)
@@ -73,10 +73,12 @@ def review_state(threat_model) -> dict:
         )
     else:
         state = APPROVAL_NONE
-    if threat_model.valid_until is not None and threat_model.valid_until < now():
-        state = APPROVAL_REVIEW_DUE
+    review_due = (
+        threat_model.valid_until is not None and threat_model.valid_until < now()
+    )
     return {
         "approval_state": state,
+        "review_due": review_due,
         "reviewer": review.reviewer_id,
         "reviewer_email": review.reviewer.email if review.reviewer else None,
         "reviewed_at": review.reviewed_at,

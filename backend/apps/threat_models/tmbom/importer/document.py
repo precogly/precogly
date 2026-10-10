@@ -41,6 +41,32 @@ logger = logging.getLogger(__name__)
 SECTIONS_NOT_YET_IMPORTED = ()
 
 
+def _warn_about_earlier_copies(document: dict, context) -> None:
+    """Re-import makes a new model and names the ones made from the same file (I4).
+
+    A model counts when it kept the document's serial number from an earlier
+    import (plan 9.2). Importing a model's own export is a plain copy and is
+    not warned about. Only models the importing user can see are named.
+    """
+    serial = str(document.get("serialNumber") or "")
+    bare = serial.removeprefix("urn:uuid:")
+    if not bare:
+        return
+    earlier = sorted(
+        ThreatModel.objects.visible_to(context.user)
+        .filter(
+            organization=context.organization,
+            format_metadata__cyclonedx__imported_serial_number__in=[serial, bare],
+        )
+        .values_list("name", flat=True)
+    )
+    if earlier:
+        context.warn(
+            "This file was imported here before; a new model was "
+            f"created. Existing models from the same file: {', '.join(earlier)}."
+        )
+
+
 class TmBomImportError(Exception):
     """User-facing import error. Raised only when the file is not a TM-BOM."""
 
@@ -152,6 +178,7 @@ def import_document(document, organization, user):
         context.warn(f"References: {finding}")
 
     name, description = _model_name(document)
+    _warn_about_earlier_copies(document, context)
 
     with transaction.atomic():
         threat_model = ThreatModel.objects.create(

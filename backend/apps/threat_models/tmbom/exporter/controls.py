@@ -325,6 +325,13 @@ def _control(
     ]
     if countermeasure.implemented_by_party:
         implemented_by.append(parties.provider_ref(countermeasure.implemented_by_party))
+    for extra in _cyclonedx_metadata(countermeasure).get("extra_implemented_by") or []:
+        if (
+            isinstance(extra, str)
+            and refs.is_issued(extra)
+            and extra not in implemented_by
+        ):
+            implemented_by.append(extra)
     if implemented_by:
         entry["implementedBy"] = implemented_by
 

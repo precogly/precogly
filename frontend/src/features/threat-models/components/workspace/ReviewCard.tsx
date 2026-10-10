@@ -149,13 +149,24 @@ export function ReviewCard({ threatModelId, threatModelName, isSecurityTeam }: R
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="text-sm font-medium">Review</CardTitle>
-          <Badge
-            variant="outline"
-            className={cn('text-xs', approvalStateBadgeClass(approvalState))}
-            data-testid="approval-state"
-          >
-            {approvalStateLabel(approvalState)}
-          </Badge>
+          <div className="flex flex-wrap items-center justify-end gap-1">
+            <Badge
+              variant="outline"
+              className={cn('text-xs', approvalStateBadgeClass(approvalState))}
+              data-testid="approval-state"
+            >
+              {approvalStateLabel(approvalState)}
+            </Badge>
+            {reviewState?.reviewDue && (
+              <Badge
+                variant="outline"
+                className={cn('text-xs', REVIEW_DUE_BADGE_CLASS)}
+                data-testid="review-due"
+              >
+                Review due
+              </Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -188,9 +199,9 @@ export function ReviewCard({ threatModelId, threatModelName, isSecurityTeam }: R
                   The content differs from what was approved. Approve again or undo the change.
                 </p>
               )}
-              {approvalState === 'review_due' && reviewState?.validUntil && (
+              {reviewState?.reviewDue && reviewState.validUntil && (
                 <p className="text-xs text-red-700">
-                  Valid until {formatReviewDate(reviewState.validUntil)} has passed.
+                  Review due since {formatReviewDate(reviewState.validUntil)}.
                 </p>
               )}
             </dl>

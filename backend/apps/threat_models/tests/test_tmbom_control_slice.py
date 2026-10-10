@@ -486,6 +486,11 @@ class ComplianceImportTests(ControlSliceTestCase):
         self.assertEqual(
             control.format_metadata["cyclonedx"]["extra_applies_to"], ["ds1"]
         )
+        # R31: an implementedBy ref with no row is kept on the control.
+        self.assertEqual(
+            control.format_metadata["cyclonedx"]["extra_implemented_by"],
+            ["unknown-party"],
+        )
         self.assertEqual(
             sorted(control.threat_links.values_list("threat__threat_name", flat=True)),
             ["A", "B"],

@@ -172,6 +172,43 @@ class BlueprintApiTests(TestCase):
         self.assertEqual(response.data["diagrams"], 1)
         self.assertEqual(response.data["out_of_scope_items"], 1)
 
+    def test_delete_preview_counts_threats_and_assumptions(self):
+        """R25 and R39: which scenarios go, which only lose targets."""
+        from apps.threat_models.models import Assumption
+        from apps.threats.services import create_instance_threat
+
+        second = Blueprint.objects.create(
+            threat_model=self.threat_model, name="Second", display_order=1
+        )
+        inside = OrgsystemComponent.objects.create(blueprint=second, name="Inside")
+        also_inside = OrgsystemComponent.objects.create(blueprint=second, name="Also")
+        outside = OrgsystemComponent.objects.create(
+            blueprint=self.threat_model.default_blueprint, name="Outside"
+        )
+        create_instance_threat(
+            self.threat_model, targets=[inside, also_inside], threat_name="Goes"
+        )
+        create_instance_threat(
+            self.threat_model, targets=[inside, outside], threat_name="Shrinks"
+        )
+        create_instance_threat(
+            self.threat_model, targets=[outside], threat_name="Untouched"
+        )
+        create_instance_threat(
+            self.threat_model, whole_system=True, threat_name="Everywhere"
+        )
+        Assumption.objects.create(blueprint=second, description="Network is private")
+
+        response = self.client.get(f"{self.base_url}{second.id}/delete_preview/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["threats_deleted"], 1)
+        self.assertEqual(response.data["threats_losing_targets"], 1)
+        self.assertEqual(response.data["assumptions"], 1)
+
+        self.client.delete(f"{self.base_url}{second.id}/")
+        remaining = set(self.threat_model.threats.values_list("threat_name", flat=True))
+        self.assertEqual(remaining, {"Shrinks", "Untouched", "Everywhere"})
+
     def test_another_tenants_model_is_not_reachable(self):
         response = self.client.get(
             f"/api/threat-models/{self.other_model.id}/blueprints/"

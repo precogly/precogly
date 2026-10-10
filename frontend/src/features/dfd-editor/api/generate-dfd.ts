@@ -3,7 +3,7 @@
  *
  * Two-step flow:
  *  1. `analyze-image` (POST, multipart): send architecture diagram image + context,
- *     receive extracted components, data flows, trust zones, and clarifying questions.
+ *     receive extracted components, flows, zones, and clarifying questions.
  *  2. `generate-dfd` (POST, JSON): send analysis + user answers, receive canvas_data
  *     (nodes + edges) ready for insertion via handleInsertTemplate.
  *
@@ -18,33 +18,40 @@ import { api } from '@/lib/api'
 
 // ---------- Types ----------
 
+/** backend/apps/diagrams/ai/analyze.py normalize_analysis: unknown values are dropped. */
 export interface AnalysisComponent {
   name: string
   type: 'process' | 'datastore' | 'humanActor' | 'systemActor'
   description: string
   technology: string
-  trustZone: string
+  zone?: string
+  kind?: string
   dataSensitivity: string
 }
 
-export interface AnalysisDataFlow {
+export interface AnalysisFlow {
   from: string
   to: string
   description: string
+  /** A flow type; absent means data. */
+  type?: string
   protocol: string
   encrypted: boolean
-  authenticated: boolean
+  /** Authentication methods; empty when the diagram does not say. */
+  authentication: string[]
 }
 
-export interface AnalysisTrustZone {
+export interface AnalysisZone {
   name: string
-  trustLevel: number
+  /** A zone type; absent means trust. */
+  type?: string
+  trustLevel?: number
 }
 
 export interface AnalysisResult {
   components: AnalysisComponent[]
-  dataFlows: AnalysisDataFlow[]
-  trustZones: AnalysisTrustZone[]
+  flows: AnalysisFlow[]
+  zones: AnalysisZone[]
   systemScope: { name: string; description: string }
   questions: string[]
 }

@@ -58,8 +58,11 @@ export interface BlueprintDeletePreview {
   diagrams: number
   dataAssets: number
   outOfScopeItems: number
-  /** Scenarios whose only targets sit in this blueprint; the rest only lose targets. */
+  assumptions: number
+  /** Scenarios whose only targets sit in this blueprint. */
   threatsDeleted: number
+  /** Scenarios that also target rows elsewhere: they stay and lose these targets. */
+  threatsLosingTargets: number
 }
 
 /** backend/apps/threat_models/serializers.py AssumptionSerializer (rows on a blueprint, plan 4.8) */
@@ -130,12 +133,14 @@ export interface CreateBusinessObjectiveInput {
 
 export type UpdateBusinessObjectiveInput = Partial<CreateBusinessObjectiveInput>
 
-/** backend/apps/threat_models/review.py review_state: `none`, `approved`, `changed`, or `review_due` once validUntil has passed. */
-export type ApprovalState = 'none' | 'approved' | 'changed' | 'review_due'
+/** backend/apps/threat_models/review.py review_state: `none`, `approved` or `changed`. Overdue review is the separate `reviewDue` flag. */
+export type ApprovalState = 'none' | 'approved' | 'changed'
 
 /** GET /threat-models/{id}/review/ and the three review actions */
 export interface ReviewState {
   approvalState: ApprovalState
+  /** True once validUntil has passed, whatever the approval state is. */
+  reviewDue: boolean
   reviewer: number | null
   reviewerEmail: string | null
   reviewedAt: string | null

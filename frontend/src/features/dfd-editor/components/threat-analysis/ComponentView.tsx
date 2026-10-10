@@ -50,6 +50,7 @@ import { useThreatModel } from '@/features/threat-models/api/threat-models'
 import { useAnalysisComponents, useZones } from '@/features/threat-models/api/components'
 import { useFlows } from '@/features/threat-models/api/flows'
 import { useBoundaries } from '@/features/threat-models/api/boundaries'
+import { showDeleteWarnings } from '@/features/threat-models/api/delete-warnings'
 import {
   useCountermeasures,
   useDeleteComponent,
@@ -359,8 +360,9 @@ export function ComponentView({
   const handleConfirmDeleteComponent = () => {
     if (!deleteComponentConfirmFor) return
     deleteComponentMutation.mutate(deleteComponentConfirmFor.id, {
-      onSuccess: () => {
+      onSuccess: (warnings) => {
         toast.success('Component deleted')
+        showDeleteWarnings(warnings)
         setDeleteComponentConfirmFor(null)
       },
       onError: () => toast.error('Could not delete the component'),

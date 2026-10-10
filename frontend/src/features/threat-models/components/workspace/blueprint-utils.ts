@@ -69,8 +69,9 @@ function plural(count: number, singular: string, pluralForm = `${singular}s`): s
 }
 
 /**
- * The lines of the delete confirmation: what goes with the blueprint, then
- * the threats that are deleted. Zero counts are left out.
+ * The lines of the delete confirmation: what goes with the blueprint, the
+ * threats that are deleted, then the threats that only lose targets (plan
+ * 11.11, J2). Zero counts are left out.
  */
 export function deletePreviewLines(preview: BlueprintDeletePreview): string[] {
   const parts: string[] = []
@@ -81,10 +82,15 @@ export function deletePreviewLines(preview: BlueprintDeletePreview): string[] {
   if (preview.diagrams > 0) parts.push(plural(preview.diagrams, 'diagram'))
   if (preview.dataAssets > 0) parts.push(plural(preview.dataAssets, 'data asset'))
   if (preview.outOfScopeItems > 0) parts.push(plural(preview.outOfScopeItems, 'out-of-scope item'))
+  if (preview.assumptions > 0) parts.push(plural(preview.assumptions, 'assumption'))
   const lines: string[] = []
   if (parts.length > 0) lines.push(parts.join(', '))
   if (preview.threatsDeleted > 0) {
     lines.push(`${plural(preview.threatsDeleted, 'threat')} that only sit on things in this blueprint`)
+  }
+  if (preview.threatsLosingTargets > 0) {
+    const count = preview.threatsLosingTargets
+    lines.push(`${plural(count, 'threat')} also on other blueprints ${count === 1 ? 'stays' : 'stay'} and ${count === 1 ? 'loses' : 'lose'} the targets here`)
   }
   return lines
 }

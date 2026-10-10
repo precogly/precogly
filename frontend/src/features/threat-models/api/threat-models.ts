@@ -31,6 +31,7 @@ import type {
 } from '@/features/threat-models/types/core'
 import type { RelationType } from '@/types/domain'
 import { api, getAccessToken } from '@/lib/api'
+import { deleteWithWarnings } from './delete-warnings'
 
 // Query keys
 export const threatModelKeys = {
@@ -421,7 +422,7 @@ export function useDeleteBlueprint(threatModelId: string) {
 
   return useMutation({
     mutationFn: (blueprintId: number) =>
-      api.delete(`/threat-models/${threatModelId}/blueprints/${blueprintId}/`),
+      deleteWithWarnings(`/threat-models/${threatModelId}/blueprints/${blueprintId}/`),
     onSuccess: () => {
       invalidateBlueprints(queryClient, threatModelId)
       queryClient.invalidateQueries({ queryKey: ['threat-model-threats'] })

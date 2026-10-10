@@ -222,3 +222,23 @@ class KeyValidationTests(SimpleTestCase):
         self.assertIsInstance(result, ValidationResult)
         self.assertFalse(result.success)
         self.assertIn("'authenticated' is retired", self._messages(result))
+
+    def test_none_beside_a_method_is_an_error(self):
+        """Section 15: a list holding none with other methods is refused."""
+        result = validate_pack(
+            _pack(
+                self.root,
+                template={
+                    "nodes": [{"id": "n", "type": "process", "data": {}}],
+                    "edges": [
+                        {
+                            "id": "e",
+                            "type": "dataFlow",
+                            "data": {"authentication": ["none", "mtls"]},
+                        }
+                    ],
+                },
+            )
+        )
+        self.assertFalse(result.success)
+        self.assertIn("cannot combine 'none'", self._messages(result))

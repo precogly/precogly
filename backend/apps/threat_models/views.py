@@ -886,10 +886,30 @@ class BlueprintViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"])
     def delete_preview(self, request, threat_model_pk=None, pk=None):
-        """Counts of what deleting this blueprint removes."""
-        from apps.threats.models import InstanceThreat
+        """Counts of what deleting this blueprint removes (plan 11.11, J2)."""
+        from apps.threats.models import InstanceThreatTarget
 
         blueprint = self.get_object()
+        # Rows refuse cross-blueprint references, so a target is in this
+        # blueprint exactly when its row is.
+        in_blueprint = (
+            Q(component__blueprint=blueprint)
+            | Q(flow__blueprint=blueprint)
+            | Q(zone__blueprint=blueprint)
+            | Q(boundary__blueprint=blueprint)
+        )
+        touched = set(
+            InstanceThreatTarget.objects.filter(
+                in_blueprint, threat__threat_model_id=blueprint.threat_model_id
+            ).values_list("threat_id", flat=True)
+        )
+        # A scenario with a target outside the blueprint survives and only
+        # loses the targets inside it; the rest go with the blueprint.
+        staying = set(
+            InstanceThreatTarget.objects.filter(threat_id__in=touched)
+            .exclude(in_blueprint)
+            .values_list("threat_id", flat=True)
+        )
         return Response(
             {
                 "blueprint": {"id": blueprint.id, "name": blueprint.name},
@@ -905,28 +925,8 @@ class BlueprintViewSet(viewsets.ModelViewSet):
                 "diagrams": blueprint.dfds.count(),
                 "data_assets": blueprint.data_assets.count(),
                 "out_of_scope_items": blueprint.out_of_scope_items.count(),
-                # Scenarios whose only targets sit in this blueprint go with it;
-                # the rest only lose targets.
-                "threats_deleted": InstanceThreat.objects.filter(
-                    threat_model_id=blueprint.threat_model_id, whole_system=False
-                )
-                .exclude(
-                    Q(targets__component__isnull=False)
-                    & ~Q(targets__component__blueprint=blueprint)
-                    | Q(targets__flow__isnull=False)
-                    & ~Q(targets__flow__blueprint=blueprint)
-                    | Q(targets__zone__isnull=False)
-                    & ~Q(targets__zone__blueprint=blueprint)
-                    | Q(targets__boundary__isnull=False)
-                    & ~Q(targets__boundary__blueprint=blueprint)
-                )
-                .filter(
-                    Q(targets__component__blueprint=blueprint)
-                    | Q(targets__flow__blueprint=blueprint)
-                    | Q(targets__zone__blueprint=blueprint)
-                    | Q(targets__boundary__blueprint=blueprint)
-                )
-                .distinct()
-                .count(),
+                "assumptions": blueprint.assumptions.count(),
+                "threats_deleted": len(touched - staying),
+                "threats_losing_targets": len(touched & staying),
             }
         )

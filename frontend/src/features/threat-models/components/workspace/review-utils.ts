@@ -13,7 +13,6 @@ export const APPROVAL_STATE_LABELS: Record<ApprovalState, string> = {
   none: 'Not approved',
   approved: 'Approved',
   changed: 'Changed since approval',
-  review_due: 'Review due',
 }
 
 export function approvalStateLabel(state: ApprovalState | undefined | null): string {
@@ -28,12 +27,13 @@ export function approvalStateBadgeClass(state: ApprovalState | undefined | null)
       return 'border-green-300 bg-green-50 text-green-700'
     case 'changed':
       return 'border-amber-300 bg-amber-50 text-amber-700'
-    case 'review_due':
-      return 'border-red-300 bg-red-50 text-red-700'
     default:
       return 'border-gray-300 bg-gray-50 text-gray-600'
   }
 }
+
+/** Tailwind classes for the separate "Review due" badge. */
+export const REVIEW_DUE_BADGE_CLASS = 'border-orange-300 bg-orange-50 text-orange-700'
 
 /** Sentinel values of the review frequency select beside the presets. */
 export const REVIEW_FREQUENCY_NONE = 'none'
