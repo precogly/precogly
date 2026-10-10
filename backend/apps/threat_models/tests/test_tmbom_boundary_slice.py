@@ -216,3 +216,84 @@ class BoundarySliceTests(TestCase):
         zone = next(z for z in again["blueprints"][0]["zones"] if z["name"] == "A")
         self.assertEqual(zone["type"], {"name": "blast-radius"})
         self.assertEqual(again["blueprints"][0]["boundaries"][0]["zones"][2], "z3")
+
+    def test_import_recomputes_crosses_boundary_from_boundary_rows(self):
+        """Section 15, PR #559 bullet: the zone-crossing flag is derived on import.
+
+        Ported from PR #559 (JJediny), its zone-crossing behaviour. The
+        exporter writes no crossing hint (``crosses_boundary`` is derived from
+        the boundary rows, H19), so the document here plants the
+        opposite claim in a property and a plain key to show the import does
+        not trust the file.
+        """
+        document = {
+            "specFormat": "CycloneDX",
+            "specVersion": "2.0",
+            "blueprints": [
+                {
+                    "name": "Crossing",
+                    "modelTypes": ["data-flow"],
+                    "zones": [
+                        {"bom-ref": "zA", "name": "A", "type": "network"},
+                        {"bom-ref": "zB", "name": "B", "type": "network"},
+                    ],
+                    "boundaries": [
+                        {
+                            "bom-ref": "b1",
+                            "name": "A to B",
+                            "type": "network",
+                            "zones": ["zA", "zB"],
+                        }
+                    ],
+                    "assets": [
+                        {
+                            "bom-ref": "a1",
+                            "name": "A one",
+                            "type": "service",
+                            "zone": "zA",
+                        },
+                        {
+                            "bom-ref": "a2",
+                            "name": "A two",
+                            "type": "service",
+                            "zone": "zA",
+                        },
+                        {
+                            "bom-ref": "b-one",
+                            "name": "B one",
+                            "type": "service",
+                            "zone": "zB",
+                        },
+                    ],
+                    "flows": [
+                        {
+                            "bom-ref": "f-cross",
+                            "name": "Across",
+                            "source": "a1",
+                            "destination": "b-one",
+                            "crossesBoundary": False,
+                            "properties": [
+                                {"name": "precogly:crosses-boundary", "value": "false"}
+                            ],
+                        },
+                        {
+                            "bom-ref": "f-inside",
+                            "name": "Inside",
+                            "source": "a1",
+                            "destination": "a2",
+                            "crossesBoundary": True,
+                            "properties": [
+                                {"name": "precogly:crosses-boundary", "value": "true"}
+                            ],
+                        },
+                    ],
+                }
+            ],
+        }
+        imported, _summary = TmBomAdapter().import_data(
+            document, self.organization, self.user
+        )
+        flows = {flow.label: flow for flow in imported.default_blueprint.flows.all()}
+        self.assertEqual(set(flows), {"Across", "Inside"})
+        self.assertTrue(flows["Across"].crosses_boundary)
+        self.assertFalse(flows["Inside"].crosses_boundary)

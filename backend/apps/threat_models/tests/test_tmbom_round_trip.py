@@ -231,6 +231,90 @@ class PassthroughTests(_ReferenceModelTests):
         )
         self.assertEqual(json.loads(clean["X-Export-Warnings"]), [])
 
+    def _group_b_document(self):
+        """The reference export plus every group B section Precogly keeps but
+        does not model (9.7, 9.9): attack trees, attack paths, abuse cases,
+        risk appetites, assessments and blueprint behaviors."""
+        document = self.export()
+        actor_ref = document["blueprints"][0]["actors"][0]["bom-ref"]
+        risk_ref = document["risks"]["risks"][0]["bom-ref"]
+        threats = document["threats"]
+        threats["attackTrees"] = [
+            {
+                "bom-ref": "tree-1",
+                "name": "Steal card data",
+                "root": "tree-node-1",
+                "nodes": [
+                    {
+                        "bom-ref": "tree-node-1",
+                        "name": "Get card data",
+                        "children": ["tree-node-2"],
+                    },
+                    {"bom-ref": "tree-node-2", "name": "Phish an operator"},
+                ],
+            }
+        ]
+        threats["attackPaths"] = [
+            {
+                "bom-ref": "path-1",
+                "name": "Phishing to database",
+                "actor": actor_ref,
+                "relatedRisks": [risk_ref],
+                "steps": [{"description": "Send a phishing mail"}],
+            }
+        ]
+        threats["abuseCases"] = [
+            {
+                "bom-ref": "abuse-1",
+                "name": "Insider exports card data",
+                "abuser": actor_ref,
+            }
+        ]
+        document["risks"]["riskAppetites"] = [
+            {
+                "bom-ref": "appetite-1",
+                "level": "cautious",
+                "statement": "Little appetite for card data loss",
+            }
+        ]
+        document["risks"]["assessments"] = [
+            {
+                "bom-ref": "assessment-1",
+                "type": ["security"],
+                "cadence": "periodic",
+                "timestamp": "2026-01-01T00:00:00Z",
+                "risks": [risk_ref],
+            }
+        ]
+        document["blueprints"][0]["behaviors"] = {"graphs": [], "instances": []}
+        assert_valid_tmbom(document, context="group B")
+        return document
+
+    def test_group_b_sections_survive_a_round_trip(self):
+        """R37: kept sections come back identical, with refs that resolve."""
+        from apps.threat_models.tmbom.validation import check_ref_integrity
+
+        document = self._group_b_document()
+        second = self.export(self.import_copy(document))
+        self.assertEqual(check_ref_integrity(second), [])
+        actor_ref = second["blueprints"][0]["actors"][0]["bom-ref"]
+        risk_ref = second["risks"]["risks"][0]["bom-ref"]
+        for section, key in (
+            ("threats", "attackTrees"),
+            ("threats", "abuseCases"),
+            ("risks", "riskAppetites"),
+        ):
+            with self.subTest(key=key):
+                self.assertEqual(second[section][key], document[section][key])
+        path = second["threats"]["attackPaths"][0]
+        self.assertEqual((path["actor"], path["relatedRisks"]), (actor_ref, [risk_ref]))
+        self.assertEqual(second["threats"]["abuseCases"][0]["abuser"], actor_ref)
+        self.assertEqual(second["risks"]["assessments"][0]["risks"], [risk_ref])
+        self.assertEqual(
+            second["blueprints"][0]["behaviors"], document["blueprints"][0]["behaviors"]
+        )
+        self.assertEqual(as_lines(document), as_lines(second))
+
 
 class DfdGenerationTests(_ReferenceModelTests):
     """A document without a visualization gets a canvas that syncs to no change (9.11)."""

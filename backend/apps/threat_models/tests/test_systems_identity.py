@@ -436,3 +436,91 @@ class IdentityExportTests(Fixture):
                 copy.format_metadata["cyclonedx"]["imported_serial_number"],
                 document["serialNumber"],
             )
+
+
+class VersionAndApprovalTests(Fixture):
+    """R33: what raises the export version, and what leaves the approval alone.
+
+    Plan 4.8: the version follows the exported document (M2), the approval
+    follows the content digest, which ignores library text, user names and
+    inventory names (L5), and other models' versions never move ours (M3).
+    """
+
+    def export(self, threat_model=None):
+        document = TmBomAdapter().export_data(threat_model or self.threat_model)
+        assert_valid_tmbom(document, context="version test")
+        return document
+
+    def approval_state(self):
+        from apps.threat_models.review import review_state
+
+        return review_state(self.threat_model)["approval_state"]
+
+    def test_outside_renames_raise_the_version_and_keep_the_approval(self):
+        from apps.threat_models.models import Assumption
+        from apps.threat_models.review import approve
+        from apps.threats.models import ThreatLibrary
+
+        library = ThreatLibrary.objects.create(
+            name="SQL injection", description="Old pack text"
+        )
+        create_instance_threat(
+            self.threat_model, whole_system=True, threat_library=library
+        )
+        Assumption.objects.create(
+            blueprint=self.threat_model.default_blueprint,
+            description="Only staff reach the admin site",
+            owner=self.member,
+        )
+        self.assertEqual(self.export()["version"], 1)
+        approve(self.threat_model, self.security)
+
+        library.description = "New pack text"
+        library.save()
+        self.assertEqual(self.export()["version"], 2)
+        self.assertEqual(self.approval_state(), "approved")
+
+        self.member.first_name, self.member.last_name = "Dana", "Renamed"
+        self.member.email = "dana@org.test"
+        self.member.save()
+        self.assertEqual(self.export()["version"], 3)
+        self.assertEqual(self.approval_state(), "approved")
+
+        self.payments.name = "Payments Platform"
+        self.payments.save()
+        self.assertEqual(self.export()["version"], 4)
+        self.assertEqual(self.approval_state(), "approved")
+
+    def test_two_models_that_depend_on_each_other_keep_their_versions(self):
+        ledger = ThreatModel.objects.create(
+            name="Ledger", organization=self.organization
+        )
+        for source, target in (
+            (self.threat_model, ledger),
+            (ledger, self.threat_model),
+        ):
+            ThreatModelRelationship.objects.create(
+                source_threat_model=source,
+                target_threat_model=target,
+                relation_type="depends_on",
+            )
+        for _round in range(2):
+            self.assertEqual(self.export()["version"], 1)
+            self.assertEqual(self.export(ledger)["version"], 1)
+        self.assertEqual(
+            sorted(
+                ThreatModelState.objects.filter(
+                    threat_model__in=[self.threat_model, ledger]
+                ).values_list("version", flat=True)
+            ),
+            [1, 1],
+        )
+
+    def test_the_first_export_after_an_approval_keeps_it(self):
+        from apps.threat_models.review import approve
+
+        approve(self.threat_model, self.security)
+        first = self.export()
+        self.assertEqual(self.approval_state(), "approved")
+        self.assertEqual(self.export()["version"], first["version"])
+        self.assertEqual(self.approval_state(), "approved")

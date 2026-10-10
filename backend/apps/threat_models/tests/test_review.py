@@ -151,6 +151,55 @@ class DigestTests(TestCase):
         )
         self.assertEqual(model_digest(self.threat_model), before)
 
+    def test_layout_only_save_through_dfd_sync_keeps_the_approval(self):
+        """R32: moving a node and saving through DFD sync is not a content change."""
+        import copy
+
+        from apps.diagrams.services import sync_dfd_nodes_to_components
+
+        # The fixture component was made without a category, which the first
+        # sync fills in (a content change). Sync once so the canvas and rows
+        # agree, as they do for any model that has been saved from the editor.
+        sync_dfd_nodes_to_components(self.dfd, self.dfd.blueprint)
+        approve(self.threat_model, self.security)
+        digest_before = model_digest(self.threat_model)
+        dfd = DFD.objects.get(pk=self.dfd.pk)
+        old_canvas = copy.deepcopy(dfd.canvas_data)
+        new_canvas = copy.deepcopy(dfd.canvas_data)
+        new_canvas["nodes"][0]["position"] = {"x": 400, "y": 90}
+
+        dfd.canvas_data = new_canvas
+        dfd.save()
+        sync_dfd_nodes_to_components(dfd, dfd.blueprint, old_canvas_data=old_canvas)
+
+        self.assertEqual(review_state(self.threat_model)["approval_state"], "approved")
+        self.assertEqual(model_digest(self.threat_model), digest_before)
+
+    def test_layout_only_dfd_patch_through_the_api_keeps_the_approval(self):
+        """R32: the same layout-only save sent as PATCH /api/diagrams/{id}/."""
+        import copy
+
+        from apps.diagrams.services import sync_dfd_nodes_to_components
+
+        # The fixture component was made without a category, which the first
+        # sync fills in (a content change). Sync once so the canvas and rows
+        # agree, as they do for any model that has been saved from the editor.
+        sync_dfd_nodes_to_components(self.dfd, self.dfd.blueprint)
+        approve(self.threat_model, self.security)
+        digest_before = model_digest(self.threat_model)
+        canvas = copy.deepcopy(DFD.objects.get(pk=self.dfd.pk).canvas_data)
+        canvas["nodes"][0]["position"] = {"x": 400, "y": 90}
+
+        response = self.api_client(self.security).patch(
+            f"/api/diagrams/{self.dfd.id}/", {"canvas_data": canvas}, format="json"
+        )
+
+        self.assertEqual(response.status_code, 200, response.data)
+        moved = DFD.objects.get(pk=self.dfd.pk).canvas_data["nodes"][0]["position"]
+        self.assertEqual(moved, {"x": 400, "y": 90})
+        self.assertEqual(review_state(self.threat_model)["approval_state"], "approved")
+        self.assertEqual(model_digest(self.threat_model), digest_before)
+
     def test_replacing_a_rating_with_the_same_content_keeps_the_approval(self):
         """Rating rows are replaced on every rating and recalculation (R9)."""
         from apps.threats.services import (

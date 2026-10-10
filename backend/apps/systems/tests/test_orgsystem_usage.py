@@ -2,6 +2,7 @@
 
 from django.contrib.auth import get_user_model
 from django.db import connection
+from django.db.models import RestrictedError
 from django.test import TestCase
 from django.test.utils import CaptureQueriesContext
 from rest_framework.test import APIClient
@@ -127,3 +128,28 @@ class OrgsystemUsageTests(TestCase):
         asset.refresh_from_db()
         self.assertIsNone(asset.orgsystem_id)
         self.assertEqual(asset.name, "Ledger feed")
+
+
+class OrgsystemDeleteRestrictTests(TestCase):
+    """R34, section 15 / plan K1: RESTRICT blocks a lone delete, not an org delete."""
+
+    def setUp(self):
+        self.organization = Organization.objects.create(name="Org", domain="org.test")
+        self.system = Orgsystem.objects.create(
+            organization=self.organization, name="Payments"
+        )
+        self.threat_model = ThreatModel.objects.create(
+            name="Checkout", organization=self.organization, primary_system=self.system
+        )
+
+    def test_deleting_the_system_alone_is_restricted_at_the_orm_level(self):
+        with self.assertRaises(RestrictedError):
+            self.system.delete()
+        self.assertTrue(Orgsystem.objects.filter(id=self.system.id).exists())
+        self.assertTrue(ThreatModel.objects.filter(id=self.threat_model.id).exists())
+
+    def test_deleting_the_whole_organization_takes_system_and_model(self):
+        system_id, model_id = self.system.id, self.threat_model.id
+        self.organization.delete()
+        self.assertFalse(Orgsystem.objects.filter(id=system_id).exists())
+        self.assertFalse(ThreatModel.objects.filter(id=model_id).exists())

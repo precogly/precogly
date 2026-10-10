@@ -11,7 +11,7 @@ from apps.threats.models import (
     RiskResponse,
 )
 
-from ..passthrough import restore, restore_document_level, stale_refs
+from ..passthrough import collect_refs, restore, restore_document_level, stale_refs
 from ..refs import RefRegistry, stored_ref
 
 
@@ -61,10 +61,15 @@ def apply_passthrough(
     document: dict, threat_model, refs: RefRegistry, warnings: list
 ) -> None:
     """Merge every row's kept content and the document-level sections back in."""
-    stale = stale_refs(threat_model, document)
+    kept_rows = _rows_with_kept_content(threat_model)
+    # A ref defined inside kept content (an attack tree's nodes, say) is not
+    # in the document yet, but it will be: it is not stale (R37).
+    stale = stale_refs(threat_model, document) - _refs_in_kept_content(
+        threat_model, kept_rows
+    )
     entries: dict = {}
     _entries_by_ref(document, entries)
-    for row in _rows_with_kept_content(threat_model):
+    for row in kept_rows:
         ref = stored_ref(row)
         entry = entries.get(ref) if ref else None
         if entry is None:
@@ -82,6 +87,17 @@ def apply_passthrough(
                         abstract[key] = copy.deepcopy(value)
     _restore_blueprint_extras(document, threat_model, refs, warnings)
     restore_document_level(document, threat_model, stale=stale, warnings=warnings)
+
+
+def _refs_in_kept_content(threat_model, kept_rows) -> set:
+    """Every ``bom-ref`` defined inside content this export writes back."""
+    found: set = set()
+    for row in [threat_model, *threat_model.blueprints.all(), *kept_rows]:
+        cyclonedx = (row.format_metadata or {}).get("cyclonedx") or {}
+        for key, value in cyclonedx.items():
+            if key != "known_refs":
+                collect_refs(value, found)
+    return found
 
 
 def _restore_blueprint_extras(
