@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Blueprint, BlueprintDeletePreview } from '../types/core'
 import {
+  blueprintFormErrors,
   deletePreviewLines,
   groupByBlueprint,
   nextDisplayOrder,
@@ -136,5 +137,18 @@ describe('ordering', () => {
     ])
     expect(reorderBlueprints([first, second, third], 0, 'up')).toEqual([])
     expect(reorderBlueprints([first, second, third], 2, 'down')).toEqual([])
+  })
+})
+
+describe('blueprintFormErrors', () => {
+  it('asks for a name and a model type when both are missing', () => {
+    expect(blueprintFormErrors({ name: '   ', modelTypes: [] })).toEqual({
+      name: 'Give the blueprint a name.',
+      modelTypes: 'Choose at least one model type.',
+    })
+  })
+
+  it('is empty when the required fields are filled', () => {
+    expect(blueprintFormErrors({ name: 'Electrical', modelTypes: ['physical'] })).toEqual({})
   })
 })

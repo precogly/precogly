@@ -95,6 +95,24 @@ export function deletePreviewLines(preview: BlueprintDeletePreview): string[] {
   return lines
 }
 
+/** What the blueprint form still needs, by field; empty when it can be sent. */
+export interface BlueprintFormErrors {
+  name?: string
+  modelTypes?: string
+}
+
+/**
+ * The blueprint form's required fields: a name, and at least one model type
+ * (the backend refuses an empty list). Checked before sending, so the user
+ * sees what is missing under the field instead of a failed request.
+ */
+export function blueprintFormErrors(form: { name: string; modelTypes: readonly string[] }): BlueprintFormErrors {
+  const errors: BlueprintFormErrors = {}
+  if (!form.name.trim()) errors.name = 'Give the blueprint a name.'
+  if (form.modelTypes.length === 0) errors.modelTypes = 'Choose at least one model type.'
+  return errors
+}
+
 /** The next display order for a new blueprint: after the last one. */
 export function nextDisplayOrder(blueprints: Blueprint[]): number {
   return blueprints.reduce((highest, blueprint) => Math.max(highest, blueprint.displayOrder), -1) + 1

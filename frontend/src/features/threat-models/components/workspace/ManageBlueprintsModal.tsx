@@ -1,12 +1,12 @@
 /**
  * Manage blueprints (plan J2): add, rename, description, reorder, delete.
- * Model types and the scope description sit under Advanced. Delete is
- * blocked for the last blueprint and otherwise shows the `delete_preview`
- * counts.
+ * Name and model types are required and marked; a save with either missing
+ * says so under the field. Delete is blocked for the last blueprint and
+ * otherwise shows the `delete_preview` counts.
  */
 
 import { useMemo, useState } from 'react'
-import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Loader2, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, Loader2, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -41,7 +41,15 @@ import { useAnalysisComponents } from '@/features/threat-models/api/components'
 import { showDeleteWarnings } from '@/features/threat-models/api/delete-warnings'
 import { useFlows } from '@/features/threat-models/api/flows'
 import type { Blueprint } from '@/features/threat-models/types/core'
-import { deletePreviewLines, nextDisplayOrder, reorderBlueprints, sortBlueprints } from './blueprint-utils'
+import {
+  blueprintFormErrors,
+  deletePreviewLines,
+  nextDisplayOrder,
+  reorderBlueprints,
+  sortBlueprints,
+  type BlueprintFormErrors,
+} from './blueprint-utils'
+import { apiErrorMessage } from './risk/risk-utils'
 
 export type ManageBlueprintsMode = 'list' | 'add'
 
@@ -165,6 +173,9 @@ interface BlueprintFormState {
   scopeDescription: string
 }
 
+// Model types start empty on purpose: the first blueprint is already a data
+// flow model, and a new one is usually a different view (physical, process),
+// so the user picks rather than accepting a default by accident.
 const EMPTY_FORM: BlueprintFormState = { name: '', description: '', modelTypes: [], scopeDescription: '' }
 
 interface ManageBlueprintsBodyProps {
@@ -183,7 +194,8 @@ function ManageBlueprintsBody({ threatModelId, blueprints, initialMode, onReques
   const [editingId, setEditingId] = useState<number | null>(null)
   const [isAdding, setIsAdding] = useState(initialMode === 'add')
   const [form, setForm] = useState<BlueprintFormState>(EMPTY_FORM)
-  const [advancedOpen, setAdvancedOpen] = useState(false)
+  // Shown after a save attempt; a field's message clears when it is edited.
+  const [errors, setErrors] = useState<BlueprintFormErrors>({})
 
   const ordered = useMemo(() => sortBlueprints(blueprints), [blueprints])
   // A blueprint deleted while its form is open closes the form.
@@ -207,13 +219,13 @@ function ManageBlueprintsBody({ threatModelId, blueprints, initialMode, onReques
     setEditingId(null)
     setIsAdding(false)
     setForm(EMPTY_FORM)
-    setAdvancedOpen(false)
+    setErrors({})
   }
 
   const startAdd = () => {
     setEditingId(null)
     setForm(EMPTY_FORM)
-    setAdvancedOpen(false)
+    setErrors({})
     setIsAdding(true)
   }
 
@@ -226,12 +238,14 @@ function ManageBlueprintsBody({ threatModelId, blueprints, initialMode, onReques
       modelTypes: blueprint.modelTypes,
       scopeDescription: blueprint.scopeDescription,
     })
-    setAdvancedOpen(blueprint.modelTypes.length > 0 || blueprint.scopeDescription.length > 0)
+    setErrors({})
   }
 
   const handleSave = () => {
+    const formErrors = blueprintFormErrors(form)
+    setErrors(formErrors)
+    if (Object.keys(formErrors).length > 0) return
     const trimmedName = form.name.trim()
-    if (!trimmedName) return
     const data = {
       name: trimmedName,
       description: form.description.trim(),
@@ -240,7 +254,7 @@ function ManageBlueprintsBody({ threatModelId, blueprints, initialMode, onReques
     }
     const options = {
       onSuccess: () => resetForm(),
-      onError: (error: Error) => toast.error(error.message || 'Could not save the blueprint'),
+      onError: (error: Error) => toast.error(apiErrorMessage(error, 'Could not save the blueprint')),
     }
     if (editingBlueprint) {
       updateMutation.mutate({ blueprintId: editingBlueprint.id, data }, options)
@@ -336,15 +350,20 @@ function ManageBlueprintsBody({ threatModelId, blueprints, initialMode, onReques
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="blueprint-name" className="text-xs">
-              Name
+              Name *
             </Label>
             <Input
               id="blueprint-name"
               value={form.name}
-              onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+              onChange={(event) => {
+                setForm((current) => ({ ...current, name: event.target.value }))
+                setErrors((current) => ({ ...current, name: undefined }))
+              }}
               placeholder="e.g. Plant network view"
+              aria-invalid={Boolean(errors.name)}
               autoFocus
             />
+            {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="blueprint-description" className="text-xs">
@@ -357,43 +376,32 @@ function ManageBlueprintsBody({ threatModelId, blueprints, initialMode, onReques
               rows={2}
             />
           </div>
-          <div>
-            <button
-              type="button"
-              className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
-              onClick={() => setAdvancedOpen((current) => !current)}
-              aria-expanded={advancedOpen}
-            >
-              {advancedOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-              Advanced
-            </button>
-            {advancedOpen && (
-              <div className="mt-3 space-y-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Model types</Label>
-                  <MultiSelectCombobox
-                    options={modelTypeOptions}
-                    selected={form.modelTypes}
-                    onChange={(selected) => setForm((current) => ({ ...current, modelTypes: selected }))}
-                    placeholder="Choose model types"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="blueprint-scope" className="text-xs">
-                    Scope description
-                  </Label>
-                  <Textarea
-                    id="blueprint-scope"
-                    value={form.scopeDescription}
-                    onChange={(event) => setForm((current) => ({ ...current, scopeDescription: event.target.value }))}
-                    rows={2}
-                  />
-                </div>
-              </div>
-            )}
+          <div className="space-y-1.5">
+            <Label className="text-xs">Model types *</Label>
+            <MultiSelectCombobox
+              options={modelTypeOptions}
+              selected={form.modelTypes}
+              onChange={(selected) => {
+                setForm((current) => ({ ...current, modelTypes: selected }))
+                setErrors((current) => ({ ...current, modelTypes: undefined }))
+              }}
+              placeholder="Choose model types"
+            />
+            {errors.modelTypes && <p className="text-xs text-destructive">{errors.modelTypes}</p>}
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="blueprint-scope" className="text-xs">
+              Scope description
+            </Label>
+            <Textarea
+              id="blueprint-scope"
+              value={form.scopeDescription}
+              onChange={(event) => setForm((current) => ({ ...current, scopeDescription: event.target.value }))}
+              rows={2}
+            />
           </div>
           <div className="flex justify-end">
-            <Button size="sm" onClick={handleSave} disabled={!form.name.trim() || isSaving}>
+            <Button size="sm" onClick={handleSave} disabled={isSaving}>
               {isSaving && <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />}
               {editingBlueprint ? 'Save' : 'Add blueprint'}
             </Button>
