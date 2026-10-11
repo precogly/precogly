@@ -165,8 +165,8 @@ map of the public resources and custom actions.
 | `GET` | `/api/threat-models/{id}/delete_preview/` | Preview cascade before deletion |
 | `POST` | `/api/threat-models/{id}/add_referenced_model/` | Add a model relationship (`referenced_model_id`, `relation_type`: `depends_on`, `subsystem_of`, `related_to`, `superseded_by`) |
 | `POST` | `/api/threat-models/{id}/remove_referenced_model/` | Remove a model relationship (same fields) |
-| `POST` | `/api/threat-models/{id}/generate-threats/` | Add every missing library threat across all blueprints; returns `{created, targets}` |
-| `GET` | `/api/threat-models/{id}/review/` | Review and approval state: `approval_state` (`none`, `approved`, `changed`, `review_due`), reviewer, approver, dates, validity fields, the source document's review block |
+| `POST` | `/api/threat-models/{id}/generate-threats/` | Add every missing library threat across all blueprints; returns `{created, targets}`. Not used by the UI |
+| `GET` | `/api/threat-models/{id}/review/` | Review and approval state: `approval_state` (`none`, `approved`, `changed`), `review_due` (true once `valid_until` has passed), reviewer, approver, dates, validity fields, the source document's review block |
 | `POST` | `/api/threat-models/{id}/mark-reviewed/` | Record the caller as reviewer |
 | `POST` | `/api/threat-models/{id}/approve/` | Approve the model and store its content digest (Security Team only) |
 | `POST` | `/api/threat-models/{id}/revoke-approval/` | Revoke the approval (Security Team only) |

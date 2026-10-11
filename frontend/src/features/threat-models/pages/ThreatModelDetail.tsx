@@ -36,7 +36,7 @@ import { AddThreatDialog } from '@/features/dfd-editor/components/threat-analysi
 import { AddCountermeasureDialog } from '@/features/dfd-editor/components/threat-analysis/AddCountermeasureDialog'
 import { AddCustomComponentDialog } from '@/features/dfd-editor/components/threat-analysis/AddCustomComponentDialog'
 import { ManagePersonasDialog } from '@/features/dfd-editor/components/threat-analysis/ManagePersonasDialog'
-import { useThreatModelThreats, useGenerateModelThreats, type TargetRef } from '@/features/threat-models/api/threats'
+import { useThreatModelThreats, type TargetRef } from '@/features/threat-models/api/threats'
 import { useAnalysisComponents } from '@/features/threat-models/api/components'
 import {
   SYSTEM_SELECTION,
@@ -46,16 +46,6 @@ import {
   type AnalysisSelection,
 } from '@/features/dfd-editor/components/threat-analysis/analysis-selection'
 import { useModelTargets } from '@/features/dfd-editor/components/threat-analysis/useModelTargets'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 import type { ThreatModel, Diagram, ScoringMethodKey } from '@/types'
 import { cn } from '@/lib/utils'
@@ -101,7 +91,6 @@ export function ThreatModelDetail() {
   // The selection is a target reference or the whole system, not a canvas id.
   const [selectedTarget, setSelectedTarget] = useState<AnalysisSelection | null>(null)
   const [selectedThreatId, setSelectedThreatId] = useState<string | null>(null)
-  const [generateThreatsConfirmOpen, setGenerateThreatsConfirmOpen] = useState(false)
 
   // Modal state
   const [systemContextModalOpen, setSystemContextModalOpen] = useState(false)
@@ -198,7 +187,6 @@ export function ThreatModelDetail() {
 
   // The model's targets by key, for the selection's name (plan 11.3).
   const modelTargets = useModelTargets(id)
-  const generateModelThreats = useGenerateModelThreats()
 
   // Workspace threat analysis state
   const {
@@ -273,22 +261,6 @@ export function ThreatModelDetail() {
       return selection
     })
   }, [])
-
-  const handleGenerateMissingThreats = () => {
-    if (!id) return
-    generateModelThreats.mutate(id, {
-      onSuccess: (result) => {
-        toast.success(
-          result.created === 0
-            ? 'No missing library threats'
-            : `Added ${result.created} ${result.created === 1 ? 'threat' : 'threats'} on ${result.targets} targets`
-        )
-        setGenerateThreatsConfirmOpen(false)
-        refetchThreats()
-      },
-      onError: () => toast.error('Could not add the library threats'),
-    })
-  }
 
   // Inline name editing handlers
   const handleExportCycloneDx = useCallback(async (threatModelId: string) => {
@@ -670,17 +642,6 @@ export function ThreatModelDetail() {
                       </Button>
                     </div>
                   )}
-                  {/* "Add missing library threats" (plan L7), where the zone protections button was. */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => setGenerateThreatsConfirmOpen(true)}
-                    disabled={generateModelThreats.isPending}
-                  >
-                    {generateModelThreats.isPending ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : null}
-                    Add missing library threats
-                  </Button>
                 </div>
                 <div className="flex items-center rounded-lg border bg-background p-1">
                   <Button
@@ -904,31 +865,6 @@ export function ThreatModelDetail() {
           }}
         />
       )}
-
-      <AlertDialog open={generateThreatsConfirmOpen} onOpenChange={setGenerateThreatsConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Add missing library threats?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This adds every library threat that applies to this model and is not in it, including ones you
-              deleted earlier.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={generateModelThreats.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(event) => {
-                event.preventDefault()
-                handleGenerateMissingThreats()
-              }}
-              disabled={generateModelThreats.isPending}
-            >
-              {generateModelThreats.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Add threats
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Add Countermeasure Dialog */}
       {selectedThreatBackendInfo && (

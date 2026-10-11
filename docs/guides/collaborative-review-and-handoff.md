@@ -186,7 +186,7 @@ The **Review** card on the model page records who reviewed and who approved the 
 2. A **Security Team** member clicks **Approve**. The sign-off view first lists what is still open: assumptions that are not verified, and risks still in the Identified status. It informs; it does not block. **Approve anyway** records the approval with the approver and the date.
 3. **Revoke** withdraws the approval.
 
-Under Advanced, the card takes the lifecycle phase, the validity period (**Valid from** and **Valid until**), and the **Review frequency** (monthly, quarterly, half-yearly, yearly, or an ISO 8601 duration such as `P18M`). When the validity period has passed, the card shows **Review due**.
+Under Advanced, the card takes the lifecycle phase, the validity period (**Valid from** and **Valid until**), and the **Review frequency** (monthly, quarterly, half-yearly, yearly, or an ISO 8601 duration such as `P18M`). When the validity period has passed, the card shows **Review due** next to the approval state, so you can still see whether the model was approved or has changed since.
 
 ### What "Changed since approval" means
 

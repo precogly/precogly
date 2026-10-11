@@ -244,7 +244,7 @@ The workspace offers two views:
 
 ### Adding threats: library vs. custom
 
-**Using library packs (Approach 1):** Select a component to see threats pre-mapped from the library. Threats arrive with taxonomy links already attached. You can triage them, accept them as-is, or reorder them. Library threats appear when a node or flow is first placed, not on every save; a threat you delete stays deleted until you click **Add missing library threats**.
+**Using library packs (Approach 1):** Select a component to see threats pre-mapped from the library. Threats arrive with taxonomy links already attached. You can triage them, accept them as-is, or reorder them. Library threats appear when a node or flow is first placed, not on every save; a threat you delete stays deleted unless you add it back from the library with **+ Add** in the Threats column.
 
 **From scratch (Approach 2):** Click **Add threat** to create a threat manually. You write the name and description, choose what it applies to (one or more components, flows, zones, or boundaries, or the whole system), then optionally link it to taxonomy entries (STRIDE categories, CAPEC IDs, CWE IDs, etc.).
 

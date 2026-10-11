@@ -36,6 +36,7 @@ import {
 import type { ThreatModel } from '@/features/threat-models/types/core'
 import { ApproveSignOffDialog } from './ApproveSignOffDialog'
 import {
+  REVIEW_DUE_BADGE_CLASS,
   REVIEW_FREQUENCY_CUSTOM,
   REVIEW_FREQUENCY_NONE,
   approvalStateBadgeClass,

@@ -114,7 +114,7 @@ You can manage DFDs from the **Overview** tab of the workspace:
 
 ### When library threats appear
 
-Saving the primary DFD adds library threats when a node or flow is first placed, when a component's technology or a flow's type changes, or when a flow is reconnected to a different end. An ordinary save adds nothing, so a library threat you deleted stays deleted. To pull in threats you removed earlier, or threats a pack upgrade added, click **Add missing library threats** in the threat analysis toolbar. See [Threat Analysis](threat-analysis.md).
+Saving the primary DFD adds library threats when a node or flow is first placed, when a component's technology or a flow's type changes, or when a flow is reconnected to a different end. An ordinary save adds nothing, so a library threat you deleted stays deleted. To add a library threat back, use **+ Add** in the Threats column of the threat analysis screen. See [Threat Analysis](threat-analysis.md).
 
 ## Keyboard shortcuts
 

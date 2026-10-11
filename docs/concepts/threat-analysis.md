@@ -69,7 +69,7 @@ A countermeasure that loses its last threat link is kept, unless it was generate
 
 ## Library threats
 
-Library threats are added when a node or flow is first placed, when a technology or flow type changes, or when a flow is reconnected, never on an ordinary save. A library threat you deleted stays deleted. **Add missing library threats** in the toolbar adds every library threat that applies to the model and is not in it, including ones deleted earlier; the confirmation says how many. This is also how new threats from an upgraded pack reach a model: a pack upgrade on its own changes nothing in any model.
+Library threats are added when a node or flow is first placed, when a technology or flow type changes, or when a flow is reconnected, never on an ordinary save. A library threat you deleted stays deleted; add it back from the library with **+ Add** in the Threats column. A pack upgrade changes nothing in any model: threats it adds reach a component or flow only when that target's technology or flow type changes, or when you add them with **+ Add**.
 
 After a technology or flow type change, a library threat that no longer applies is removed if nobody has edited it. An edited one stays, with the note "The library no longer lists this threat here. It was kept because it has been edited."
 

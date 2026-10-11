@@ -292,12 +292,6 @@ export interface GenerateThreatsResponse {
   message: string
 }
 
-/** POST /threat-models/{id}/generate-threats/ (plan L7). */
-export interface GenerateModelThreatsResponse {
-  created: number
-  targets: number
-}
-
 export interface SuggestedCountermeasuresResponse {
   threatId: number
   threatName: string
@@ -484,20 +478,6 @@ export function useGenerateThreats() {
   return useMutation({
     mutationFn: (componentId: number) =>
       api.post<GenerateThreatsResponse>(`/components/${componentId}/generate_threats/`),
-    onSuccess: () => invalidateThreatReaders(queryClient),
-  })
-}
-
-/**
- * "Add missing library threats" for the whole model (plan L7). Threats
- * deleted earlier come back.
- */
-export function useGenerateModelThreats() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (threatModelId: string) =>
-      api.post<GenerateModelThreatsResponse>(`/threat-models/${threatModelId}/generate-threats/`),
     onSuccess: () => invalidateThreatReaders(queryClient),
   })
 }
