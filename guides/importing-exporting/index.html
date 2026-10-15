@@ -1,0 +1,3127 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for Precogly — the open-source threat modeling platform">
+      
+      
+      
+        <link rel="canonical" href="https://precogly.github.io/precogly/guides/importing-exporting/">
+      
+      
+        <link rel="prev" href="../pentests/">
+      
+      
+        <link rel="next" href="../compliance-mapping/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Importing & Exporting - Precogly Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#importing-exporting" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Precogly Documentation" class="md-header__button md-logo" aria-label="Precogly Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Precogly Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Importing & Exporting
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/precogly/precogly" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    precogly/precogly
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Precogly Documentation" class="md-nav__button md-logo" aria-label="Precogly Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Precogly Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/precogly/precogly" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    precogly/precogly
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/local-podman/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Podman (rootless)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/library-packs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Library Packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/dfd-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DFD Editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/threat-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/use-cases-and-abuse-cases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Use Cases and Abuse Cases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/threat-model-as-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat Model as Code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/zones-and-boundaries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zones and Boundaries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/platform-controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/completion-status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Completion Status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/reference-images/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference Images
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/org-hierarchy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Org Hierarchy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/roles-and-permissions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roles and Permissions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/connected-systems-tm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connected Systems & TMs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../concepts/magic-links/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Magic Links
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../creating-threat-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Threat Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../end-to-end-assessment-workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    End-to-End Assessment Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guest-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guest Editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pentests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pentest Scope
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Importing & Exporting
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Importing & Exporting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exporting-a-threat-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exporting a threat model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exporting a threat model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serial-number-and-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Serial number and version
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#whats-included" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's included
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#precogly-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Precogly properties
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-cases-and-abuse-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use cases and abuse cases
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#whats-not-exported" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's not exported
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#importing-a-threat-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Importing a threat model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Importing a threat model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#steps_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-import-never-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What import never does
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#diagrams" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagrams
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Numbers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#import-warnings-and-what-they-mean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Import warnings and what they mean
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#passthrough-what-is-kept-and-written-back" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Passthrough: what is kept and written back
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-precogly-does-not-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Precogly does not model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#files-from-earlier-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files from earlier versions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#guest-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guest editor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interoperability-with-other-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interoperability with other tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sample-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sample files
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's next?
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../compliance-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../report-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../collaborative-review-and-handoff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collaborative Review and Handoff
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ai-threat-model-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Threat Model Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recipes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recipes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recipes/iec-62443/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IEC 62443
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../recipes/eu-banking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EU Banking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../api/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/development-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/creating-library-packs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating Library Packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The schema
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exporting-a-threat-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exporting a threat model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Exporting a threat model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#steps" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#serial-number-and-version" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Serial number and version
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#whats-included" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's included
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#precogly-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Precogly properties
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#use-cases-and-abuse-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Use cases and abuse cases
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#whats-not-exported" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's not exported
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#importing-a-threat-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Importing a threat model
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Importing a threat model">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#steps_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Steps
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-import-never-does" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What import never does
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#diagrams" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagrams
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#numbers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Numbers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#import-warnings-and-what-they-mean" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Import warnings and what they mean
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#passthrough-what-is-kept-and-written-back" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Passthrough: what is kept and written back
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-precogly-does-not-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Precogly does not model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#files-from-earlier-versions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Files from earlier versions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#guest-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guest editor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#interoperability-with-other-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interoperability with other tools
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sample-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sample files
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-next" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What's next?
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="importing-exporting">Importing &amp; Exporting<a class="headerlink" href="#importing-exporting" title="Permanent link">&para;</a></h1>
+<p>Precogly exports threat models as CycloneDX 2.0 Threat Modeling BOM (TM-BOM) JSON and imports them back, enabling cross-instance transfer, version-controlled threat models, and interoperability with other tools. For background on the format and version control workflows, see <a href="../../concepts/threat-model-as-code/">Threat Model as Code</a>.</p>
+<div class="admonition info">
+<p class="admonition-title">One format</p>
+<p>The <a href="https://cyclonedx.org/">CycloneDX 2.0 TM-BOM</a> is Precogly's only interchange format. The earlier TM-Library format has been removed, in both directions. Files exported by earlier versions of Precogly are not supported either, except in the guest editor; see <a href="#files-from-earlier-versions">Files from earlier versions</a>.</p>
+</div>
+<h2 id="the-schema">The schema<a class="headerlink" href="#the-schema" title="Permanent link">&para;</a></h2>
+<p>Precogly validates against a pinned copy of the CycloneDX 2.0 bundled schema, taken from the <code>2.0-dev</code> branch of the <a href="https://github.com/CycloneDX/specification">CycloneDX specification repository</a> at commit <code>f6dcf4d33fecff511c21c4616a5a66d2b8134687</code> (2026-10-07, the last change to the schema before the 2026-10-11 snapshot). The copy lives at <code>backend/apps/threat_models/tmbom/schema/</code>. It will be re-pinned when CycloneDX 2.0 is final.</p>
+<p>Every export passes two checks: zero schema errors, and reference integrity (every <code>bom-ref</code> is unique and every reference points at one). Imports run the same checks and report findings as warnings.</p>
+<hr />
+<h2 id="exporting-a-threat-model">Exporting a threat model<a class="headerlink" href="#exporting-a-threat-model" title="Permanent link">&para;</a></h2>
+<h3 id="steps">Steps<a class="headerlink" href="#steps" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Open the threat model you want to export.</li>
+<li>Click <strong>Export TM-BOM</strong> in the toolbar.</li>
+</ol>
+<p>The browser downloads a file named after your threat model, such as <code>payment-processing-api-cyclonedx-tm-bom.cdx.json</code>.</p>
+<p><img alt="Export button on the threat model detail page" src="../../assets/images/importing-exporting-cyclonedx-export.png" /></p>
+<h3 id="serial-number-and-version">Serial number and version<a class="headerlink" href="#serial-number-and-version" title="Permanent link">&para;</a></h3>
+<p>The document's <code>serialNumber</code> is the model's own serial number, a UUID URN assigned when the model is created and never changed. Its <code>version</code> starts at 1 and goes up only when the exported content differs from the previous export (serial number, version, timestamps, and the version part of BOM-Links to other models are left out of that comparison). Exporting twice without a change gives the same version twice.</p>
+<p>Together they form a BOM-Link, <code>urn:cdx:&lt;serial number&gt;/&lt;version&gt;</code>, which other documents use to point at this model. <strong>Copy BOM-Link</strong> copies it. It is under <strong>Advanced</strong> on the <strong>Details</strong> tab of the <strong>System</strong> dialog on the threat model's <strong>Overview</strong> tab, where both values are also shown read-only.</p>
+<h3 id="whats-included">What's included<a class="headerlink" href="#whats-included" title="Permanent link">&para;</a></h3>
+<p>The export reads the live model. The tables below say where each Precogly concept lands in the document. References (<code>bom-ref</code>) are derived from the row and are stable across exports: <code>blueprint-&lt;id&gt;</code>, <code>asset-&lt;id&gt;</code>, <code>datastore-&lt;id&gt;</code>, <code>dataset-&lt;id&gt;</code>, <code>zone-&lt;id&gt;</code>, <code>boundary-&lt;id&gt;</code>, <code>flow-&lt;id&gt;</code>, <code>scenario-&lt;id&gt;</code>, <code>control-&lt;id&gt;</code>, <code>risk-&lt;id&gt;</code>, <code>response-&lt;id&gt;</code>, <code>objective-&lt;id&gt;</code>, <code>usecase-&lt;id&gt;</code>; a library threat is <code>threat-&lt;qualified slug&gt;</code>, so it is the same on every installation. A ref that arrived with an import is kept and written back as it came.</p>
+<p><strong>Document</strong></p>
+<table>
+<thead>
+<tr>
+<th>Precogly</th>
+<th>TM-BOM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Serial number, version</td>
+<td><code>serialNumber</code>, <code>version</code></td>
+</tr>
+<tr>
+<td>Primary system (or the model itself when none is set)</td>
+<td><code>metadata.component</code> of type <code>application</code>, with <code>precogly:criticality</code> and <code>precogly:lifecycle-state</code></td>
+</tr>
+<tr>
+<td>Lifecycle phase</td>
+<td><code>metadata.lifecycles[]</code> and each blueprint's <code>metadata.lifecycles</code></td>
+</tr>
+<tr>
+<td>Reviewer, approver, dates, validity period, review frequency</td>
+<td>Each blueprint's <code>metadata</code> (reviewer with role <code>reviewer</code>, approver with role <code>signatory</code>, <code>validityPeriod</code>)</td>
+</tr>
+<tr>
+<td>Users (reviewer, approver, owners, assignees)</td>
+<td>Parties on <code>metadata.component.parties</code>, identified by email</td>
+</tr>
+<tr>
+<td>Methodologies</td>
+<td><code>threats.methodologies[]</code> (spec values as strings, custom names as objects)</td>
+</tr>
+<tr>
+<td>Risk scoring method</td>
+<td><code>precogly:risk-scoring-method</code> on the document</td>
+</tr>
+<tr>
+<td>Threat and countermeasure number counters</td>
+<td><code>precogly:next-threat-number</code>, <code>precogly:next-countermeasure-number</code> on the document</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Blueprint</strong> (one <code>blueprints[]</code> entry per blueprint, with <code>name</code>, <code>description</code>, <code>modelTypes</code>)</p>
+<table>
+<thead>
+<tr>
+<th>Precogly</th>
+<th>TM-BOM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Scope description, out-of-scope items</td>
+<td><code>scope</code>: <code>excludedComponents</code> when an item's name matches a component, else <code>precogly:out-of-scope</code></td>
+</tr>
+<tr>
+<td>Zone</td>
+<td><code>zones[]</code> with <code>type</code>, <code>parent</code>, and <code>precogly:trust-level</code> when set</td>
+</tr>
+<tr>
+<td>Boundary</td>
+<td><code>boundaries[]</code> with <code>type</code>, <code>zones</code>, <code>crossingRequirements</code> (authentication and authorization lists; data validation, logging, monitoring only when true; <code>rateLimit</code> as text; protocols), <code>sessionManagement</code></td>
+</tr>
+<tr>
+<td>Boundary of type trust</td>
+<td>Also one <code>threats.trustBoundaries[]</code> entry with <code>trustLevel</code> (only when both zones have a level), <code>threatsAtBoundary</code>, <code>controlsAtBoundary</code></td>
+</tr>
+<tr>
+<td>Component (process, actor, system box)</td>
+<td><code>assets[]</code> with <code>type</code> from the component's kind, <code>zone</code>, and <code>precogly:category</code>, <code>precogly:actor-type</code>, <code>precogly:data-sensitivity</code>, <code>precogly:library</code>, <code>precogly:component-type</code>, <code>precogly:provider</code>, <code>precogly:parent</code></td>
+</tr>
+<tr>
+<td>Data store component</td>
+<td><code>dataStores[]</code> with <code>type</code>, <code>vendor</code>, <code>zone</code>, <code>dataSets</code>, and <code>precogly:data-store-type</code> when ours is not a spec value</td>
+</tr>
+<tr>
+<td>Data asset</td>
+<td><code>dataSets[]</code> with a <code>dataProfiles</code> entry carrying the classification, <code>placements</code>, and <code>precogly:confidentiality</code>, <code>precogly:integrity</code>, <code>precogly:availability</code>, <code>precogly:data-sensitivity-tags</code>, <code>precogly:placements</code></td>
+</tr>
+<tr>
+<td>Flow</td>
+<td><code>flows[]</code> with <code>type</code>, <code>source</code>, <code>destination</code>, <code>encrypted</code>, <code>protocols</code>, <code>authentication</code>, <code>authorization</code>, <code>dataProfiles</code>, and <code>precogly:port</code>, <code>precogly:has-sensitive-data</code>, <code>precogly:data-classification</code>, <code>precogly:flow-data</code></td>
+</tr>
+<tr>
+<td>DFD</td>
+<td><code>visualizations[]</code> of type <code>data-flow</code> or <code>context</code>, the canvas as a base64 <code>attachment</code> with media type <code>application/vnd.precogly.dfd+json</code>, <code>precogly:diagram-type</code>, <code>precogly:primary</code></td>
+</tr>
+<tr>
+<td>Assumption</td>
+<td><code>assumptions[]</code> with <code>topic</code>, <code>validity</code>, <code>impact</code>, <code>owner</code>, <code>relatedAssets</code>, <code>validationMethod</code>, <code>validationDate</code></td>
+</tr>
+<tr>
+<td>Related threat model</td>
+<td>A <code>system</code> asset with a <code>threat-model</code> external reference holding the other model's BOM-Link and <code>precogly:relationship</code>; "depends on" and "is a subsystem of" also as <code>relationships[]</code> (<code>dependsOn</code>, <code>contains</code>)</td>
+</tr>
+<tr>
+<td>Threat actor (a persona in the spec), or a threat's free-text actor</td>
+<td><code>actors[]</code> with an inline party (role <code>attacker</code>, an <code>archetype</code>) and the <code>precogly:persona-*</code> properties, or <code>precogly:actor-text</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Threats</strong></p>
+<table>
+<thead>
+<tr>
+<th>Precogly</th>
+<th>TM-BOM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Library threat, or a custom threat's definition</td>
+<td><code>threats.threats[]</code> with <code>categories</code> for STRIDE, LINDDUN, MAESTRO, and MITRE ATT&amp;CK tactics, <code>precogly:taxonomy</code> for every other taxonomy (CAPEC, CWE, OWASP Top 10, ...), <code>origin</code> when every scenario agrees, <code>mitigations</code> and <code>relatedBusinessObjectives</code> as the union over its scenarios</td>
+</tr>
+<tr>
+<td>Threat (one scenario, however many targets)</td>
+<td><code>threats.scenarios[]</code> with <code>name</code>, <code>threats</code>, <code>affectedAssets</code> (the targets; the system component for a whole-system threat), <code>actor</code>, <code>intent</code>, <code>accessLevel</code></td>
+</tr>
+<tr>
+<td>Rating</td>
+<td><code>riskScore</code> (level, score, methodology), <code>likelihood</code> and <code>impact</code> with their factors, categories, and quantification</td>
+</tr>
+<tr>
+<td>Impact description</td>
+<td><code>impact.description</code> when the scenario has an impact level, else <code>precogly:impact-description</code></td>
+</tr>
+<tr>
+<td>Number, status, triage, rationale, generated flag, sources, extra taxonomy entries, objectives</td>
+<td>Scenario properties, listed below</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Controls</strong> (one <code>controls[]</code> entry per countermeasure)</p>
+<table>
+<thead>
+<tr>
+<th>Precogly</th>
+<th>TM-BOM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Control functions and nature</td>
+<td><code>category</code> holds the first function that is a spec value; the full list in <code>precogly:control-functions</code>; <code>precogly:control-nature</code></td>
+</tr>
+<tr>
+<td>Status</td>
+<td><code>status</code> as the spec value; <code>gap</code>, <code>waived</code>, and <code>platform</code> as custom status objects</td>
+</tr>
+<tr>
+<td>Applies to</td>
+<td><code>appliesTo</code> (left out when the control applies to the whole system)</td>
+</tr>
+<tr>
+<td>Implemented by</td>
+<td><code>implementedBy</code>: component refs plus a party with the <code>provider</code> role for the text</td>
+</tr>
+<tr>
+<td>Owner, effectiveness, ticket, evidence</td>
+<td><code>owner</code>, <code>effectiveness.percentage</code>, external references of type <code>issue-tracker</code> and <code>evidence</code>. An imported owner who is not a member, and an imported effectiveness <code>rating</code>, are written back (see <a href="#passthrough-what-is-kept-and-written-back">Passthrough</a>)</td>
+</tr>
+<tr>
+<td>Compliance mappings</td>
+<td><code>satisfies</code> pointing into <code>definitions.standards[].requirements[]</code> (one standard per framework; a standard built from the mapping's snapshot when the framework is not installed), with <code>precogly:sufficiency</code>. Standards from an imported file are written back as they came, with their refs; a mapping to one of their requirements (same standard name and identifier) points at it, and a new requirement of such a standard is added to it. Imported refs to anything else, such as an engineering requirement, are written back as they came</td>
+</tr>
+<tr>
+<td>Linked threats</td>
+<td><code>precogly:mitigates</code> (the scenarios) and the abstract threat's <code>mitigations</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Risks</strong></p>
+<table>
+<thead>
+<tr>
+<th>Precogly</th>
+<th>TM-BOM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Risk</td>
+<td><code>risks.risks[]</code> with <code>statement</code> (built from the description or name when the risk has none, marked <code>precogly:statement-generated</code>), <code>status</code>, <code>domains</code> (with an imported domain's <code>priority</code> and <code>description</code>, and imported custom domains), <code>relatedThreats</code> (scenario refs), <code>relatedBusinessObjectives</code>, <code>owner</code>, <code>precogly:assigned-to</code></td>
+</tr>
+<tr>
+<td>Inherent, residual, target rating</td>
+<td><code>inherentRisk</code>, <code>residualRisk</code>, <code>targetRisk</code></td>
+</tr>
+<tr>
+<td>Response</td>
+<td><code>responses[]</code> with <code>strategy</code>, <code>description</code>, <code>status</code>, <code>effectiveness</code>, <code>cost</code>, <code>priority</code>, <code>owner</code>, <code>targetDate</code>, <code>controls</code>. An imported status that Precogly stores as planned (<code>recommended</code>, <code>proposed</code>, <code>approved</code>, <code>rejected</code>, <code>decommissioned</code>, or a custom one) is written back while the response is still planned. On import, a response's <code>targetDate</code> becomes the due date of each control it names that has no <code>precogly:due-date</code> of its own; with several responses the earliest date wins. This is the spec's own place for a planned control's date in 2.0, such as a POA&amp;M milestone, so overdue controls show from a file with no Precogly properties</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Definitions</strong></p>
+<table>
+<thead>
+<tr>
+<th>Precogly</th>
+<th>TM-BOM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Business objective</td>
+<td><code>definitions.businessObjectives[]</code></td>
+</tr>
+<tr>
+<td>Compliance framework and requirement</td>
+<td><code>definitions.standards[]</code> and their <code>requirements[]</code></td>
+</tr>
+<tr>
+<td>Use case</td>
+<td><code>definitions.useCases[]</code> with <code>businessObjectives</code>, and <code>precogly:abuse-cases</code> (refs of the abuse cases that misuse it). Its components and flows are written as each blueprint's <code>useCases[]</code> entries (<code>assets</code>, <code>flows</code>, data store refs included) and as <code>useCases</code> on each process or actor asset, never on a <code>dataStores</code> entry</td>
+</tr>
+<tr>
+<td>Abuse case</td>
+<td><code>threats.abuseCases[]</code> with <code>name</code>, <code>description</code>, <code>abuser</code> (the persona's actor), <code>preconditions</code>, <code>mainFlow</code>, <code>detectionOpportunities</code>, <code>targets</code> (components and flows), <code>realizes</code> (the abstract threats of its threats), and kept <code>mitigations</code>. The abstract threat's <code>abuseCases</code> lists the abuse cases that realize it. The spec gives an abuse case no properties</td>
+</tr>
+</tbody>
+</table>
+<h3 id="precogly-properties">Precogly properties<a class="headerlink" href="#precogly-properties" title="Permanent link">&para;</a></h3>
+<p>Everything Precogly stores that has no field in the schema is written as a <code>precogly:</code> property on the object it belongs to. This is the full registry; it is generated from <code>backend/apps/threat_models/tmbom/properties.py</code>, and the guest editor uses the same list. A property not in this table is passthrough. Value types: <code>string</code>, <code>integer</code>, <code>boolean</code> (<code>true</code> or <code>false</code>), <code>date</code>, or <code>json</code> (a JSON document in the string value).</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>On</th>
+<th>Type</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>precogly:out-of-scope</code></td>
+<td>scope</td>
+<td>json</td>
+<td>An out-of-scope item whose name matches no component: {name, reason}.</td>
+</tr>
+<tr>
+<td><code>precogly:diagram-type</code></td>
+<td>visualization</td>
+<td>string</td>
+<td>The DFD level (context, level1, level2) of a Precogly canvas visualization.</td>
+</tr>
+<tr>
+<td><code>precogly:primary</code></td>
+<td>visualization</td>
+<td>boolean</td>
+<td>True on the blueprint's primary DFD, the one that syncs to rows.</td>
+</tr>
+<tr>
+<td><code>precogly:category</code></td>
+<td>asset</td>
+<td>string</td>
+<td>Precogly's DFD role of a component: process, datastore, external_human_actor or external_system_actor.</td>
+</tr>
+<tr>
+<td><code>precogly:actor-type</code></td>
+<td>asset</td>
+<td>string</td>
+<td>The actor or system type chosen on an external actor component.</td>
+</tr>
+<tr>
+<td><code>precogly:data-sensitivity</code></td>
+<td>asset</td>
+<td>string</td>
+<td>The data sensitivity level chosen on a process or data store.</td>
+</tr>
+<tr>
+<td><code>precogly:data-store-type</code></td>
+<td>data-store</td>
+<td>string</td>
+<td>Precogly's own data store type value when it is not a spec value.</td>
+</tr>
+<tr>
+<td><code>precogly:next-threat-number</code></td>
+<td>document</td>
+<td>integer</td>
+<td>The model's next threat number, so a reopened file never reuses one.</td>
+</tr>
+<tr>
+<td><code>precogly:number</code></td>
+<td>scenario</td>
+<td>integer</td>
+<td>The scenario's threat number (T7 is 7).</td>
+</tr>
+<tr>
+<td><code>precogly:threat-status</code></td>
+<td>scenario</td>
+<td>string</td>
+<td>Derived status: exposed, addressable or mitigated.</td>
+</tr>
+<tr>
+<td><code>precogly:triage-status</code></td>
+<td>scenario</td>
+<td>string</td>
+<td>Triage decision: open, accept, mitigate, delegate or eliminate.</td>
+</tr>
+<tr>
+<td><code>precogly:decision-rationale</code></td>
+<td>scenario</td>
+<td>string</td>
+<td>Rationale recorded with the triage decision.</td>
+</tr>
+<tr>
+<td><code>precogly:auto-generated</code></td>
+<td>scenario</td>
+<td>boolean</td>
+<td>True while the scenario is an untouched product of library generation.</td>
+</tr>
+<tr>
+<td><code>precogly:impact-description</code></td>
+<td>scenario</td>
+<td>string</td>
+<td>What the attacker achieves, when the scenario has no impact level to carry it as impact.description.</td>
+</tr>
+<tr>
+<td><code>precogly:instance-categories</code></td>
+<td>scenario</td>
+<td>json</td>
+<td>Taxonomy entries added on a library threat's scenario itself, which its shared threat definition cannot carry: [{taxonomy_slug, external_id, title}]. A custom threat's own categories are on its definition.</td>
+</tr>
+<tr>
+<td><code>precogly:threat-sources</code></td>
+<td>scenario</td>
+<td>json</td>
+<td>Slugs of the NIST SP 800-30 threat sources the scenario cites.</td>
+</tr>
+<tr>
+<td><code>precogly:split-from</code></td>
+<td>scenario</td>
+<td>string</td>
+<td>The ref of the imported scenario this one was split from.</td>
+</tr>
+<tr>
+<td><code>precogly:taxonomy</code></td>
+<td>threat</td>
+<td>json</td>
+<td>A taxonomy entry outside the four spec taxonomies: {taxonomy_slug, external_id, title}.</td>
+</tr>
+<tr>
+<td><code>precogly:actor-text</code></td>
+<td>actor</td>
+<td>string</td>
+<td>The free-text actor of a scenario, declared once as an actor entry.</td>
+</tr>
+<tr>
+<td><code>precogly:persona-name</code></td>
+<td>persona-party</td>
+<td>string</td>
+<td>The persona's display name (the spec party has none).</td>
+</tr>
+<tr>
+<td><code>precogly:persona-symbolic-name</code></td>
+<td>persona-party</td>
+<td>string</td>
+<td>The persona's symbolic name; the match key on import.</td>
+</tr>
+<tr>
+<td><code>precogly:persona-is-person</code></td>
+<td>persona-party</td>
+<td>boolean</td>
+<td>Whether the persona is a person rather than a system or group.</td>
+</tr>
+<tr>
+<td><code>precogly:persona-malicious-intent</code></td>
+<td>persona-party</td>
+<td>boolean</td>
+<td>Whether the persona acts with malicious intent.</td>
+</tr>
+<tr>
+<td><code>precogly:persona-skill-level</code></td>
+<td>persona-party</td>
+<td>string</td>
+<td>The persona's skill level.</td>
+</tr>
+<tr>
+<td><code>precogly:persona-motivation</code></td>
+<td>persona-party</td>
+<td>string</td>
+<td>The persona's motivation, as text.</td>
+</tr>
+<tr>
+<td><code>precogly:persona-resources</code></td>
+<td>persona-party</td>
+<td>string</td>
+<td>The persona's resources, as text.</td>
+</tr>
+<tr>
+<td><code>precogly:persona-objectives</code></td>
+<td>persona-party</td>
+<td>string</td>
+<td>The persona's objectives, as text.</td>
+</tr>
+<tr>
+<td><code>precogly:next-countermeasure-number</code></td>
+<td>document</td>
+<td>integer</td>
+<td>The model's next countermeasure number.</td>
+</tr>
+<tr>
+<td><code>precogly:number</code></td>
+<td>control</td>
+<td>integer</td>
+<td>The control's number (C3 is 3).</td>
+</tr>
+<tr>
+<td><code>precogly:control-functions</code></td>
+<td>control</td>
+<td>json</td>
+<td>Every control function; the spec's single category holds the first spec value.</td>
+</tr>
+<tr>
+<td><code>precogly:control-nature</code></td>
+<td>control</td>
+<td>string</td>
+<td>technical, administrative or physical.</td>
+</tr>
+<tr>
+<td><code>precogly:priority</code></td>
+<td>control</td>
+<td>string</td>
+<td>The control's priority.</td>
+</tr>
+<tr>
+<td><code>precogly:due-date</code></td>
+<td>control</td>
+<td>date</td>
+<td>Target completion date (a POA&amp;M scheduled completion date). Wins over a response's <code>targetDate</code> on import.</td>
+</tr>
+<tr>
+<td><code>precogly:required-for-release</code></td>
+<td>control</td>
+<td>boolean</td>
+<td>True when the control blocks a release.</td>
+</tr>
+<tr>
+<td><code>precogly:auto-generated</code></td>
+<td>control</td>
+<td>boolean</td>
+<td>True while the control is an untouched product of library generation.</td>
+</tr>
+<tr>
+<td><code>precogly:source</code></td>
+<td>control</td>
+<td>string</td>
+<td>Where the control came from, as text.</td>
+</tr>
+<tr>
+<td><code>precogly:verified-by</code></td>
+<td>control</td>
+<td>string</td>
+<td>Email of the user who verified the control.</td>
+</tr>
+<tr>
+<td><code>precogly:waiver-reason</code></td>
+<td>control</td>
+<td>string</td>
+<td>Why a waived control is waived.</td>
+</tr>
+<tr>
+<td><code>precogly:library</code></td>
+<td>control</td>
+<td>string</td>
+<td>Qualified slug of the library countermeasure the control was made from.</td>
+</tr>
+<tr>
+<td><code>precogly:mitigates</code></td>
+<td>control</td>
+<td>json</td>
+<td>Refs of the scenarios the control is explicitly linked to.</td>
+</tr>
+<tr>
+<td><code>precogly:sufficiency</code></td>
+<td>control</td>
+<td>json</td>
+<td>[{requirement, sufficiency}] for each requirement in satisfies.</td>
+</tr>
+<tr>
+<td><code>precogly:trust-level</code></td>
+<td>zone</td>
+<td>integer</td>
+<td>The zone's trust level, 0 to 100; absent when not set.</td>
+</tr>
+<tr>
+<td><code>precogly:port</code></td>
+<td>flow</td>
+<td>integer</td>
+<td>The flow's port.</td>
+</tr>
+<tr>
+<td><code>precogly:has-sensitive-data</code></td>
+<td>flow</td>
+<td>boolean</td>
+<td>True when the flow carries sensitive data.</td>
+</tr>
+<tr>
+<td><code>precogly:data-classification</code></td>
+<td>flow</td>
+<td>json</td>
+<td>The flow's data classification tags.</td>
+</tr>
+<tr>
+<td><code>precogly:business-objectives</code></td>
+<td>scenario</td>
+<td>json</td>
+<td>Refs of the business objectives this scenario puts at risk; the abstract threat carries the union.</td>
+</tr>
+<tr>
+<td><code>precogly:criticality</code></td>
+<td>system</td>
+<td>string</td>
+<td>The model's criticality as a spec criticality value (low, moderate, high, critical).</td>
+</tr>
+<tr>
+<td><code>precogly:lifecycle-state</code></td>
+<td>system</td>
+<td>string</td>
+<td>The inventory system's lifecycle state.</td>
+</tr>
+<tr>
+<td><code>precogly:lifecycle-state</code></td>
+<td>asset</td>
+<td>string</td>
+<td>The lifecycle state of the inventory system a system asset stands for.</td>
+</tr>
+<tr>
+<td><code>precogly:relationship</code></td>
+<td>asset</td>
+<td>string</td>
+<td>On a system asset that stands for another threat model: depends_on, subsystem_of, related_to or superseded_by.</td>
+</tr>
+<tr>
+<td><code>precogly:statement-generated</code></td>
+<td>risk</td>
+<td>boolean</td>
+<td>True when the statement was synthesized from the description or name because the risk had none (the spec requires one).</td>
+</tr>
+<tr>
+<td><code>precogly:risk-scoring-method</code></td>
+<td>document</td>
+<td>string</td>
+<td>The model's scoring method: qualitative-matrix, owasp-risk-rating, fair or mozilla-rra. Each rating also names its own methodology.</td>
+</tr>
+<tr>
+<td><code>precogly:library</code></td>
+<td>asset</td>
+<td>string</td>
+<td>Qualified slug of the component library row the component was made from. Also read on data stores.</td>
+</tr>
+<tr>
+<td><code>precogly:component-type</code></td>
+<td>asset</td>
+<td>string</td>
+<td>The component type copied from the library. Also read on data stores.</td>
+</tr>
+<tr>
+<td><code>precogly:provider</code></td>
+<td>asset</td>
+<td>string</td>
+<td>The provider copied from the library; a data store writes it as vendor instead.</td>
+</tr>
+<tr>
+<td><code>precogly:parent</code></td>
+<td>asset</td>
+<td>string</td>
+<td>Ref of the component this one sits inside (a system asset or a process). Also read on data stores.</td>
+</tr>
+<tr>
+<td><code>precogly:confidentiality</code></td>
+<td>data-set</td>
+<td>string</td>
+<td>The data set's confidentiality need: low, medium or high.</td>
+</tr>
+<tr>
+<td><code>precogly:integrity</code></td>
+<td>data-set</td>
+<td>string</td>
+<td>The data set's integrity need: low, medium or high.</td>
+</tr>
+<tr>
+<td><code>precogly:availability</code></td>
+<td>data-set</td>
+<td>string</td>
+<td>The data set's availability need: low, medium or high.</td>
+</tr>
+<tr>
+<td><code>precogly:data-sensitivity-tags</code></td>
+<td>data-set</td>
+<td>json</td>
+<td>The data set's sensitivity tags (pii, phi, pci and so on).</td>
+</tr>
+<tr>
+<td><code>precogly:placements</code></td>
+<td>data-set</td>
+<td>json</td>
+<td>Per placement, what the spec placement cannot hold: [{dataStore, dataState, volume}].</td>
+</tr>
+<tr>
+<td><code>precogly:flow-data</code></td>
+<td>flow</td>
+<td>json</td>
+<td>Per data set the flow carries, how it is protected: [{dataSet, protectionMethod, encryptionType, format, sensitivityOverride}].</td>
+</tr>
+<tr>
+<td><code>precogly:assigned-to</code></td>
+<td>risk</td>
+<td>string</td>
+<td>Party ref of the person the risk is assigned to; the owner is the spec field.</td>
+</tr>
+<tr>
+<td><code>precogly:abuse-cases</code></td>
+<td>use-case</td>
+<td>json</td>
+<td>Refs of the abuse cases that misuse this use case; the spec has no field for that link.</td>
+</tr>
+<tr>
+<td><code>precogly:abuse-cases</code></td>
+<td>scenario</td>
+<td>json</td>
+<td>Refs of the abuse cases this scenario comes from. The abuse case's realizes names the abstract threat only, which several scenarios share.</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Other tools can ignore every <code>precogly:</code> property; the standard fields carry the model. When the file comes back to Precogly, the properties restore the numbers, triage decisions, scope, and the rest.</p>
+</div>
+<h3 id="use-cases-and-abuse-cases">Use cases and abuse cases<a class="headerlink" href="#use-cases-and-abuse-cases" title="Permanent link">&para;</a></h3>
+<p>Use cases and abuse cases are stored as rows and are editable in the app. See <a href="../../concepts/use-cases-and-abuse-cases/">Use Cases and Abuse Cases</a>.</p>
+<p>On import:</p>
+<ul>
+<li>A use case's <code>businessObjectives</code>, each blueprint's <code>useCases[]</code> (<code>assets</code>, <code>flows</code>) and each process or actor asset's <code>useCases</code> become the use case's links to business objectives, components, and flows.</li>
+<li>Each entry of <code>threats.abuseCases[]</code> becomes an abuse case. Its <code>abuser</code> becomes the persona the actor turned into, or is kept as a ref. Its <code>targets</code> become links to components and flows. Its use cases come from <code>precogly:abuse-cases</code> on each use case.</li>
+<li><code>realizes</code> names an abstract threat, and one abstract threat can have several scenarios. Precogly links the scenarios in this order: first the scenarios whose <code>precogly:abuse-cases</code> property names the abuse case, then the scenarios of that threat whose targets overlap the abuse case's targets. If neither finds a scenario, nothing is linked. The abuse case keeps the <code>realizes</code> ref and shows "Realizes library threat X, not linked to a threat in this model". <code>threat.abuseCases</code> on an abstract threat is read the same way.</li>
+<li>A step with no description, or an alternative flow or exception with no name or condition, is dropped with a warning. Exception handling must be one string. Repeated entries are dropped, and steps are numbered again from 1. Other keys, such as a step's <code>actor</code>, are kept.</li>
+<li>Requirements, step actors, and refs that resolve to nothing are kept and written back.</li>
+</ul>
+<p>On export:</p>
+<ul>
+<li>Kept refs that no longer resolve are left out with a warning naming the use case or abuse case: an <code>abuser</code>, a <code>targets</code>, <code>realizes</code> or <code>mitigations</code> entry, a step <code>actor</code>, or a use case's <code>businessObjectives</code> entry. For example <code>Abuse case 'Card testing': dropped abuser 'actor-9'; it no longer resolves.</code> and <code>Abuse case 'Card testing': left out realizes 'Payment fraud'; no threat of it is left in the model.</code></li>
+<li>Abuse cases and blueprint use case entries kept from an earlier import are merged with what the export writes. They are not replaced.</li>
+<li>Lists are written without repeats, as the schema requires.</li>
+</ul>
+<h3 id="whats-not-exported">What's not exported<a class="headerlink" href="#whats-not-exported" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>The owning team and organization</strong>: an import assigns the importing user's team.</li>
+<li><strong>Connected library packs</strong>: an installation detail. Components keep their library link as <code>precogly:library</code>, so a re-import re-links them when the pack is installed.</li>
+<li><strong>Whether a flow crosses a boundary</strong>: derived from the boundaries, and derived again on import.</li>
+<li><strong>Verification tests, pentest findings, countermeasure comments and history, reference images</strong>: evidence tied to the originating installation.</li>
+</ul>
+<p>Owners and assignees are exported as parties with their email. On import they are matched to members of the organization by email. The owner of a control, risk, or response who is not a member (a person from elsewhere, an organization, a persona) is kept for export and not assigned. Setting or clearing that owner in Precogly replaces the kept one.</p>
+<hr />
+<h2 id="importing-a-threat-model">Importing a threat model<a class="headerlink" href="#importing-a-threat-model" title="Permanent link">&para;</a></h2>
+<h3 id="steps_1">Steps<a class="headerlink" href="#steps_1" title="Permanent link">&para;</a></h3>
+<ol>
+<li>From the <strong>Threat Models</strong> list page, click <strong>Import</strong>.</li>
+<li>Drag a <code>.cdx.json</code> file onto the dropzone, or click to open the file picker.</li>
+<li>Precogly validates the file and creates a new threat model.</li>
+</ol>
+<p><img alt="Import dialog accepting CycloneDX files" src="../../assets/images/importing-exporting-cyclonedx-import.png" /></p>
+<p>After the import, a summary shows the counts of what was created (blueprints, zones, boundaries, components, flows, data assets, threats, controls, risks and responses, assumptions, business objectives, personas, use cases, related models, diagrams, and diagrams generated) and every warning. Where the file can be fixed, a warning says how: a missing required field names what to add, a requirement from a standard placed under <code>definitions.requirements</code> points to <code>definitions.standards[].requirements</code>, a <code>satisfies</code> entry that is not a reference asks for a bom-ref, a bad date shows the expected format, and an unknown status lists the ones Precogly reads. One warning also lists the custom properties Precogly does not read, so a value your tool relies on does not disappear without notice. Most are written back on export, but not those on objects Precogly rebuilds from its own fields, such as threat actors and visualizations.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The import always creates a <strong>new</strong> threat model with its own serial number. It never merges into or updates an existing one. Importing the same file twice gives two models.</p>
+</div>
+<h3 id="what-import-never-does">What import never does<a class="headerlink" href="#what-import-never-does" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Reject a TM-BOM.</strong> The only files refused are ones that are not a TM-BOM at all: not a JSON object, no <code>specFormat: "CycloneDX"</code>, or a <code>specVersion</code> that does not start with <code>2.</code>. Everything else is imported; schema findings become warnings, and whatever cannot be stored is kept as received so the export writes it back.</li>
+<li><strong>Count as approval.</strong> A review or approval block in the file is kept and shown on the Review card as "approved in the source document". The imported model starts unapproved.</li>
+<li><strong>Keep the file's serial number.</strong> The imported model gets a fresh serial number and starts at version 1. The original serial number and version are kept in the model, and BOM-Links from other files resolve through them. If two models in your organization carry the same original serial number, a BOM-Link to it resolves to neither, and the import warns naming both.</li>
+<li><strong>Grant platform status.</strong> A control with platform status is kept as platform only when the importing user is on the Security Team; otherwise it is stored as a gap with a warning.</li>
+<li><strong>Touch the system inventory on its own.</strong> <code>metadata.component</code> links an inventory system of the same name when one exists. A new inventory entry is created only when the component carries <code>precogly:lifecycle-state</code>, the sign that the exporting model had a primary system.</li>
+</ul>
+<p>The importing user's team owns the new model. When the user belongs to several teams, the model has no owning team until one is set.</p>
+<h3 id="diagrams">Diagrams<a class="headerlink" href="#diagrams" title="Permanent link">&para;</a></h3>
+<p>A Precogly canvas in the file (a visualization with the media type <code>application/vnd.precogly.dfd+json</code>) is restored as a DFD, with its node and edge ids mapped to the imported rows. A blueprint with no such canvas gets one generated from its rows: zones sized by their contents and nested by parent, components in a grid inside their zone, flows and boundaries as edges. Saving the generated diagram unchanged changes nothing in the model. When a canvas and the blueprint disagree on a label, the blueprint wins and the import warns per rename.</p>
+<h3 id="numbers">Numbers<a class="headerlink" href="#numbers" title="Permanent link">&para;</a></h3>
+<p>Threat and countermeasure numbers are read from <code>precogly:number</code>. A number that is already taken or invalid gets a fresh one with a warning. A document with no numbers gets fresh ones in document order. The counters are set past the larger of <code>precogly:next-*-number</code> and the highest number seen, so a reopened file never hands out a number again.</p>
+<h3 id="import-warnings-and-what-they-mean">Import warnings and what they mean<a class="headerlink" href="#import-warnings-and-what-they-mean" title="Permanent link">&para;</a></h3>
+<p>Every warning names the object it is about. The main kinds:</p>
+<table>
+<thead>
+<tr>
+<th>Warning says</th>
+<th>What happened</th>
+<th>What to do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Schema: ...</code></td>
+<td>The file does not match the pinned schema at that path</td>
+<td>Nothing is lost; check the named path if the file came from your own tooling</td>
+</tr>
+<tr>
+<td><code>References: ...</code></td>
+<td>A <code>bom-ref</code> is duplicated or a reference points at nothing</td>
+<td>The dangling link was skipped; fix the source file if the link mattered</td>
+</tr>
+<tr>
+<td><code>... is a custom type; stored as '...' and kept for export</code></td>
+<td>A zone, boundary, flow, asset, or assumption carries a type that is not a spec value</td>
+<td>Shown with the default type; the original is written back unless you pick another type</td>
+</tr>
+<tr>
+<td><code>... status '...' is not one Precogly has; stored as ... and kept for export</code></td>
+<td>A control or risk status outside Precogly's lifecycle</td>
+<td>Review the control or risk before relying on reports</td>
+</tr>
+<tr>
+<td><code>... cannot be a target in Precogly and were kept for export</code></td>
+<td>A scenario or control points at something Precogly cannot target, such as a data set or an actor kept as passthrough</td>
+<td>The remaining targets were linked; the extra refs are written back</td>
+</tr>
+<tr>
+<td><code>Scenario '...' names only elements Precogly cannot show; stored as a whole-system threat</code></td>
+<td>None of the scenario's targets could be linked</td>
+<td>Edit its targets in threat analysis</td>
+</tr>
+<tr>
+<td><code>Scenario '...' realizes N threats and was split ...</code></td>
+<td>One scenario named several abstract threats</td>
+<td>It became one threat per abstract threat; only the first keeps the original ref and number</td>
+</tr>
+<tr>
+<td><code>... number N is taken or invalid; a new one was allocated</code></td>
+<td>Two scenarios or controls carried the same number</td>
+<td>Nothing to do</td>
+</tr>
+<tr>
+<td><code>Control '...': platform status needs the Security Team role; stored as gap</code></td>
+<td>See above</td>
+<td>Ask a Security Team member to set the status</td>
+</tr>
+<tr>
+<td><code>Boundary '...' joins N zones; Precogly keeps the first two ...</code></td>
+<td>The spec allows a boundary across more than two zones</td>
+<td>The full list is written back</td>
+</tr>
+<tr>
+<td><code>Flow '...' was skipped: its source or destination is not a component of this blueprint</code></td>
+<td>An end of the flow was not an asset Precogly could create</td>
+<td>Add the flow by hand if needed</td>
+</tr>
+<tr>
+<td><code>... component library '...' is not installed</code></td>
+<td>The file names a library entry from a pack you do not have</td>
+<td>The component keeps its copied fields; install the pack and change the technology to re-link</td>
+</tr>
+<tr>
+<td><code>... satisfies reference '...' is no standard requirement here; kept for export, not linked</code></td>
+<td>A control satisfies something that is not a requirement of a standard in the file, such as an engineering requirement</td>
+<td>Written back while it resolves; add a compliance mapping by hand if it should be one</td>
+</tr>
+<tr>
+<td><code>...: owner matches no member of the organization; kept for export, not assigned</code></td>
+<td>The owner of a control, risk, or response is not a member</td>
+<td>Written back until you set an owner</td>
+</tr>
+<tr>
+<td><code>Risk '...': domain '...' is a custom domain; kept for export, not shown</code></td>
+<td>A risk domain outside the spec list</td>
+<td>Written back unchanged</td>
+</tr>
+<tr>
+<td><code>Risk '...': the name is taken; stored as '... (2)'</code></td>
+<td>Risk names are unique in Precogly</td>
+<td>The original name is written back on export unless you rename it</td>
+</tr>
+<tr>
+<td><code>Risk '...': response strategy '...' has no row in Precogly; kept for export</code></td>
+<td>An <code>exploit</code> or <code>enhance</code> response</td>
+<td>Kept on the risk and written back</td>
+</tr>
+<tr>
+<td><code>Risk '...' has no inherent rating; rated medium</code></td>
+<td>The spec does not require a rating; Precogly does</td>
+<td>Rate the risk</td>
+</tr>
+<tr>
+<td><code>The document carries a review or approval; it is shown as approved in the source document ...</code></td>
+<td>See above</td>
+<td>Review and approve here when ready</td>
+</tr>
+<tr>
+<td><code>A diagram was generated ...</code>, <code>Canvas node '...' renamed ...</code></td>
+<td>See Diagrams</td>
+<td>Nothing to do</td>
+</tr>
+<tr>
+<td><code>N visualization(s) are not Precogly canvases; kept for export, not shown</code></td>
+<td>Diagrams from another tool</td>
+<td>Written back unchanged</td>
+</tr>
+<tr>
+<td><code>The '...' section is not imported by this version; it was left out</code></td>
+<td>A section Precogly does not read</td>
+<td>Kept as passthrough</td>
+</tr>
+</tbody>
+</table>
+<p>Review the warnings before using an imported model as audit evidence. Warnings are also logged on the server.</p>
+<h3 id="passthrough-what-is-kept-and-written-back">Passthrough: what is kept and written back<a class="headerlink" href="#passthrough-what-is-kept-and-written-back" title="Permanent link">&para;</a></h3>
+<p>Precogly keeps everything it does not model and writes it back on export:</p>
+<ul>
+<li>Unknown top-level sections and unknown keys of known sections, on the model.</li>
+<li>Attack trees, attack paths, attack patterns, indicators, threat profiles, risk appetites, assessments, data profiles, and sequence diagrams, on the model or the blueprint they belong to.</li>
+<li>Engineering requirements in <code>definitions.requirements</code> (a project's own needs, such as "Lock the account after 5 failed logins"), and the <code>requirements</code> links to them from use cases and blueprints. Precogly does not show or edit them. Compliance requirements are different: they come from the frameworks in your library packs and travel in <code>definitions.standards</code>.</li>
+<li>Unknown fields of a known object, and every property that is not a <code>precogly:</code> property, on that object's row.</li>
+<li>Values Precogly could not store (a custom type object, a custom status, a mixed authentication list, an <code>exploit</code> response, the zones of a boundary beyond the first two), on the nearest row that was stored. A refused field value is written back as long as the field still holds the default it was imported with.</li>
+<li>Values Precogly holds only in part, written back while the row still holds what it was imported as:<ul>
+<li>an owner who is not a member, while no owner is set;</li>
+<li>an effectiveness <code>rating</code>, while the percentage is unchanged;</li>
+<li>a response status stored as planned (such as <code>proposed</code>), while the response is planned;</li>
+<li>a risk domain's <code>priority</code> and <code>description</code>, while the risk has that domain; custom domains always;</li>
+<li><code>satisfies</code> refs that are not standard requirements, while they resolve.</li>
+</ul>
+</li>
+</ul>
+<p><strong>The stale-ref rule.</strong> Kept content can point at things you later delete. On export, every such reference is checked: a reference that no longer resolves is removed from a list or dropped from an optional field; if removing it would leave a required field empty, the object that holds it is left out. Each removal is an export warning naming the object. The stored content is never changed, so nothing is lost if the rule changes later. The exported document always passes the reference check.</p>
+<p>Use case steps, and abuse case and blueprint use case entries that could not be stored as rows, are kept as JSON and follow the same rule.</p>
+<h3 id="what-precogly-does-not-model">What Precogly does not model<a class="headerlink" href="#what-precogly-does-not-model" title="Permanent link">&para;</a></h3>
+<p>These parts of the schema are not shown, linked, or edited. All of them are kept and written back. Each is a choice, not an oversight; they are listed here so you know what an imported file can and cannot do in Precogly.</p>
+<ul>
+<li><strong>Engineering requirements.</strong> <code>definitions.requirements</code> is kept as received. A control can point at one through <code>satisfies</code>, and the ref is written back, but Precogly shows no link. A risk cannot be linked to a requirement in Precogly.</li>
+<li><strong>Other risk links.</strong> <code>affects</code>, <code>relatedRequirements</code>, <code>relatedStandards</code>, <code>relatedVulnerabilities</code>, <code>relatedWeaknesses</code>, and <code>relatedClaims</code> are kept on the risk. Precogly has no vulnerabilities, weaknesses, or claims to link to. A <code>relatedThreats</code> ref to an abstract threat (rather than a scenario) is kept, not linked.</li>
+<li><strong><code>exploit</code> and <code>enhance</code> responses.</strong> These are for positive risks (opportunities). They are kept on the risk.</li>
+<li><strong>Assessments and risk appetites.</strong> Kept on the model.</li>
+<li><strong>Required fields that differ.</strong> Precogly requires an inherent rating, so a risk without one is rated medium with a warning. The schema requires a statement, so a risk without one exports a statement built from its description or name, marked <code>precogly:statement-generated</code> and dropped again on import. Risk names are unique in a model; a repeated name gets a suffix, and the original is written back.</li>
+<li><strong>Control statuses.</strong> <code>gap</code>, <code>waived</code>, and <code>platform</code> are Precogly's and export as custom statuses, which the schema allows. Decision statuses (<code>recommended</code>, <code>proposed</code>, <code>approved</code>) show as planned and <code>rejected</code> as waived; the original is written back while the status is unchanged.</li>
+<li><strong>Owners.</strong> An owner in Precogly is a member of the organization. The schema allows any party; other owners are kept, not shown.</li>
+<li><strong>Compliance requirements.</strong> A requirement from a library pack has a section code, a name, and a description. An imported file's <code>definitions.standards</code> is kept whole and written back, including requirements no control satisfies and fields such as <code>openCre</code> and multi-language <code>descriptions</code>; Precogly shows only the requirements its controls map to.</li>
+</ul>
+<h3 id="files-from-earlier-versions">Files from earlier versions<a class="headerlink" href="#files-from-earlier-versions" title="Permanent link">&para;</a></h3>
+<p>Files exported or saved by earlier versions of Precogly (before the TM-BOM alignment) used an older shape that does not match the schema. The workspace does not support them: there is no converter in the backend. Such a file goes through the normal import, most of its content lands in the warnings, and the result is not the model you had. To open one as it was, run the previous version of Precogly in Docker. TM-Library files cannot be imported at all.</p>
+<p>The guest editor converts files saved by its own earlier version when it opens them, since a guest's file is their only copy. The diagram, threats, countermeasures and system details come across, and a notice asks you to save the file, which writes the current format. Saved again, such a file also imports into the workspace.</p>
+<hr />
+<h2 id="guest-editor">Guest editor<a class="headerlink" href="#guest-editor" title="Permanent link">&para;</a></h2>
+<p>The <a href="../guest-editor/">guest editor</a> reads and writes the same TM-BOM shape. A file saved by the guest editor imports into the signed-in workspace with no warnings, and a signed-in export opens in the guest editor with the same threats, targets, and numbers. The guest editor edits the first blueprint and keeps the rest of the file as passthrough.</p>
+<hr />
+<h2 id="interoperability-with-other-tools">Interoperability with other tools<a class="headerlink" href="#interoperability-with-other-tools" title="Permanent link">&para;</a></h2>
+<p>A Precogly export is a plain CycloneDX 2.0 TM-BOM. Another tool reads the standard fields (blueprints, zones, boundaries, flows, assets, threats, scenarios, controls, risks, definitions) and can ignore the <code>precogly:</code> properties.</p>
+<p>A file from another tool imports with warnings for what Precogly has no place for. Actors used as the ends of flows become external actor components; an actor marked as an attacker becomes a persona; a scenario with several targets becomes one threat with several targets; a scenario naming several threats is split; per-scenario control links come from <code>precogly:mitigates</code> when present and from the abstract threat's <code>mitigations</code> otherwise.</p>
+<p>Components created from another tool's file are not linked to library packs unless the file names a library the installation has. If you later install a pack that covers the same components, change the technology on each component to link it; its threats and numbers are kept.</p>
+<hr />
+<h2 id="sample-files">Sample files<a class="headerlink" href="#sample-files" title="Permanent link">&para;</a></h2>
+<p><a href="https://github.com/precogly/precogly/blob/main/backend/apps/threat_models/tests/fixtures/tmbom/reference-model.cdx.json"><code>backend/apps/threat_models/tests/fixtures/tmbom/reference-model.cdx.json</code></a> is the reference document: a complete, valid export that touches every section above, and the file the backend and guest editor tests agree on. The <a href="../ai-threat-model-generation/">AI Threat Model Generation</a> guide has a smaller hand-written example; both are validated against the pinned schema in the test suite.</p>
+<hr />
+<h2 id="whats-next">What's next?<a class="headerlink" href="#whats-next" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../../concepts/threat-model-as-code/">Threat Model as Code</a>: version control workflows and format overview</li>
+<li><a href="../../concepts/library-packs/">Library Packs</a>: importing packs to enrich threat models with pre-mapped threats and compliance</li>
+<li><a href="../creating-threat-model/">Creating a Threat Model</a>: step-by-step guide to building from scratch or with library packs</li>
+<li><a href="../compliance-mapping/">Compliance Mapping</a>: mapping countermeasures to framework requirements</li>
+<li><a href="https://cyclonedx.org/">CycloneDX specification</a>: learn more about the CycloneDX BOM standard and ecosystem</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.tabs.link"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

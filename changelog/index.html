@@ -1,0 +1,2839 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for Precogly — the open-source threat modeling platform">
+      
+      
+      
+        <link rel="canonical" href="https://precogly.github.io/precogly/changelog/">
+      
+      
+        <link rel="prev" href="..">
+      
+      
+        <link rel="next" href="../getting-started/installation/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Changelog - Precogly Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#changelog" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Precogly Documentation" class="md-header__button md-logo" aria-label="Precogly Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Precogly Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Changelog
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/precogly/precogly" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    precogly/precogly
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Precogly Documentation" class="md-nav__button md-logo" aria-label="Precogly Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Precogly Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/precogly/precogly" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    precogly/precogly
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#unreleased" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unreleased
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Unreleased">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#threats-and-countermeasures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threats and countermeasures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#diagrams-zones-boundaries-flows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagrams, zones, boundaries, flows
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#context-review-approval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context, review, approval
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#import-and-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Import and export
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workspace
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reports-csv-word-pentests-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reports, CSV, Word, pentests, MCP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#guest-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guest editor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#library-packs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library packs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#credits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Credits
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v040" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.4.0
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.4.0">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ai-and-library-packs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI and library packs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#threat-triage-and-control-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threat triage and control classification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cyclonedx-tm-bom-interoperability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CycloneDX TM-BOM interoperability
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-and-oauth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security and OAuth
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dfd-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DFD editor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v030" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.3.0
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.3.0">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#interchange-and-libraries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interchange and libraries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#threat-modeling-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threat modeling workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ai-assistance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI assistance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dfd-and-guest-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DFD and guest editor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reports
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v020" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.2.0
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.2.0">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architecture-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture / Performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#devops-operational-readiness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DevOps / Operational Readiness
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v010-first-stable-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.1.0 - First stable release
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.1.0 - First stable release">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#highlights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Highlights
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quickstart
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/local-podman/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Local Podman (rootless)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Concepts
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Concepts
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/library-packs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Library Packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/dfd-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DFD Editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/threat-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat Analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/use-cases-and-abuse-cases/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Use Cases and Abuse Cases
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/threat-model-as-code/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Threat Model as Code
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/zones-and-boundaries/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zones and Boundaries
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/platform-controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Platform Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/completion-status/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Completion Status
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/reference-images/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference Images
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/org-hierarchy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Org Hierarchy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/roles-and-permissions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roles and Permissions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/connected-systems-tm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Connected Systems & TMs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../concepts/magic-links/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Magic Links
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/creating-threat-model/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating a Threat Model
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/end-to-end-assessment-workflow/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    End-to-End Assessment Workflow
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/guest-editor/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Guest Editor
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/pentests/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pentest Scope
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/importing-exporting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Importing & Exporting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/compliance-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Compliance Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/report-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Report Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/collaborative-review-and-handoff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collaborative Review and Handoff
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/ai-features/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Features
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guides/ai-threat-model-generation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI Threat Model Generation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Recipes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Recipes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/iec-62443/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    IEC 62443
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../recipes/eu-banking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    EU Banking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Contributing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Contributing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/development-setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../contributing/creating-library-packs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Creating Library Packs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#unreleased" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unreleased
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Unreleased">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#threats-and-countermeasures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threats and countermeasures
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#diagrams-zones-boundaries-flows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Diagrams, zones, boundaries, flows
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#risks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Risks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#context-review-approval" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context, review, approval
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#import-and-export" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Import and export
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#workspace" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workspace
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reports-csv-word-pentests-mcp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reports, CSV, Word, pentests, MCP
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#guest-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Guest editor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#library-packs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library packs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#credits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Credits
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v040" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.4.0
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.4.0">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ai-and-library-packs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI and library packs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#threat-triage-and-control-classification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threat triage and control classification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cyclonedx-tm-bom-interoperability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CycloneDX TM-BOM interoperability
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#security-and-oauth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Security and OAuth
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dfd-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DFD editor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v030" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.3.0
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.3.0">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#interchange-and-libraries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interchange and libraries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#threat-modeling-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Threat modeling workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ai-assistance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI assistance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dfd-and-guest-editor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DFD and guest editor
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reports" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reports
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v020" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.2.0
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.2.0">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bug-fixes_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bug Fixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#architecture-performance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture / Performance
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#devops-operational-readiness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DevOps / Operational Readiness
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#documentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documentation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#v010-first-stable-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        v0.1.0 - First stable release
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="v0.1.0 - First stable release">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#highlights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Highlights
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Notes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="changelog">Changelog<a class="headerlink" href="#changelog" title="Permanent link">&para;</a></h1>
+<p>All notable releases of Precogly are documented here.</p>
+<h2 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h2>
+<p>This release aligns Precogly's data model with the CycloneDX 2.0 Threat Modeling BOM (issues #583 and #584). What you draw, rate, and approve is what the export contains, and a file from any tool that writes the schema imports with warnings instead of errors.</p>
+<h3 id="breaking-changes">Breaking changes<a class="headerlink" href="#breaking-changes" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Local development databases must be recreated.</strong> The migrations assume no existing data. Run <code>docker compose down -v</code>, then <code>docker compose up</code>, and seed again.</li>
+<li><strong>Files exported by earlier versions do not import into the workspace.</strong> There is no converter in the backend. To open such a file as it was, run the previous version of Precogly in Docker. The guest editor is the exception: it converts files saved by its earlier version when it opens them (see Guest editor below).</li>
+<li><strong>The TM-Library format is removed.</strong> CycloneDX 2.0 TM-BOM is the one interchange format, in the signed-in workspace and the guest editor. The <code>import/tm-library</code> and <code>export/tm-library</code> endpoints are gone.</li>
+<li><strong>API paths renamed.</strong> <code>/api/component-threats/</code> and <code>/api/flow-threats/</code> are one <code>/api/threats/</code>; <code>/api/trust-zones/</code> is <code>/api/zones/</code>; <code>/api/trust-boundaries/</code> is <code>/api/boundaries/</code>; <code>/api/data-flows/</code> and <code>/api/data-flow-assets/</code> are <code>/api/flows/</code> and <code>/api/flow-assets/</code>. The zone protection, <code>add_system</code>, <code>remove_system</code>, and <code>assign_system</code> actions are removed. Threat severity fields are replaced by <code>rating</code>; risk score columns by <code>inherent</code>, <code>residual</code>, and <code>target</code>; the risk <code>response</code> by <code>status</code> and a responses endpoint; flow and boundary authentication booleans by lists. <code>format_metadata</code> is read-only. The full table is in the <a href="../api/overview/#changes-in-this-release">API overview</a>.</li>
+<li><strong>MCP output fields changed.</strong> <code>list_threat_models</code> returns <code>methodologies</code>, <code>lifecycle_phase</code>, <code>approved_at</code>, <code>primary_system_name</code>, <code>serial_number</code>, <code>version</code>, and <code>blueprint_count</code>, and <code>risk_scoring_method</code> uses the new values. Library components carry <code>kind</code>, and <code>search_component_library</code> takes a <code>kind</code> filter. Library countermeasures carry a <code>description</code>, and the countermeasure search matches it.</li>
+<li><strong>Library pack templates.</strong> The template keys <code>authenticated</code> and the old <code>zoneType</code> family are refused; packs use <code>authentication</code> lists, spec zone types with an explicit <code>trustLevel</code>, <code>flowType</code>, <code>boundaryType</code>, and <code>kind</code>. All shipped packs are converted.</li>
+<li><strong>The shared magic-link payload</strong> uses the unified threat shape: one list of threats with <code>number</code>, <code>display_number</code>, <code>whole_system</code>, and <code>targets</code>.</li>
+</ul>
+<h3 id="threats-and-countermeasures">Threats and countermeasures<a class="headerlink" href="#threats-and-countermeasures" title="Permanent link">&para;</a></h3>
+<ul>
+<li>One threat table. A threat is one scenario with any number of targets: components, flows, zones, boundaries, or the whole system. It appears under each target in the analysis tree, marked shared, and counts once.</li>
+<li>Numbers: every threat is <code>T&lt;n&gt;</code> and every countermeasure <code>C&lt;n&gt;</code>, per model, never reused, kept through export and import, and searchable (<code>T7</code>).</li>
+<li>Ratings replace severities: one rating form for threats and risks with the qualitative matrix (1 to 25), OWASP Risk Rating, or a level picked directly; levels gain <code>info</code>; impact categories (including safety), estimated loss, currency, and range under Advanced. Residual risk lives on risks only.</li>
+<li>Countermeasure scope and provider: <strong>Applies to</strong> (components, flows, zones, boundaries; empty means the whole system), <strong>Implemented by</strong> (components and another party), <strong>Source</strong> (free text), and effectiveness with a "not assessed" state. Scope changes no threat's status; a control counts for a threat only when linked to it.</li>
+<li>Zone protections are retired. Nothing is inherited across zones any more; the "Inherited from" badge and the review dialog are gone.</li>
+<li>A waived countermeasure keeps its reason in a field of its own, <code>waiver_reason</code>, exported as <code>precogly:waiver-reason</code>. The reason used to be sent to the evidence URL field, which refused any text that was not a URL, so waiving with a reason never saved. The API does not require a reason; the screens ask for one.</li>
+<li>Controls that lose their last threat link are kept (unless untouched library output) and listed under <strong>Controls not linked to any threat</strong>, left out of gap and coverage figures.</li>
+<li>Library threats are generated when a node or flow is first placed, when a technology or flow type changes, or when a flow is reconnected, never on an ordinary save. Deleted library threats stay deleted; add one back from the library with <strong>+ Add</strong> in the Threats column. A pack upgrade changes nothing in any model and no longer breaks library links.</li>
+<li>Changing a component's technology keeps the component, its flows, and its threats with their numbers.</li>
+<li>One <strong>threat actor</strong> per threat: one of the model's threat actors, a common threat actor (State Actor, Hacktivist, Insider Threat, Competitor, Opportunist, Organized Crime), or free text. Picking a common one adds it to the model's threat actors, so it is reusable and exports with its CycloneDX persona archetype. Abuse cases pick from the same list, without free text. <strong>Manage threat actors</strong> creates and edits them. "Threat actor" replaces "Actor", "Abuser" and "persona" on screen; the API and the export keep <code>persona</code>.</li>
+<li>Threat and control statuses are enforced in the services, so the Security Team gate on platform status also applies to imports.</li>
+</ul>
+<h3 id="diagrams-zones-boundaries-flows">Diagrams, zones, boundaries, flows<a class="headerlink" href="#diagrams-zones-boundaries-flows" title="Permanent link">&para;</a></h3>
+<ul>
+<li>A threat card in the diagram's side panel opens the threat modal, the same one as the threat analysis screen: rename, triage with a rationale, description, rating, categories, threat actor, sources, impact, objectives, targets and delete. Triaged threats sit under the cards on a collapsed "N triaged" line, from where they can be reopened. A card's countermeasure status follows the workspace rules (Planned asks for an owner, Waived for a reason), shows a status from an import such as In Progress instead of a blank, and offers Platform to the Security Team.</li>
+<li>Zones have a type (thirteen CycloneDX values, <code>trust</code> by default) and an optional trust level (0 to 100, trust and network zones only; no more default of 75).</li>
+<li>Boundaries have a type and crossing requirements shaped like the specification: authentication and authorization lists with the <code>none</code> rule, data validation, logging, monitoring, and a rate limit policy; two boundaries between the same zones are allowed. Whether a flow crosses a boundary is computed from the boundaries drawn.</li>
+<li>Flows have a type (<code>data</code>, <code>message</code>, <code>event</code>, <code>control</code>, <code>signal</code>, <code>energy</code>, <code>physical</code>, <code>process</code>, <code>financial</code>); protocol and encryption apply to the data-like types; authentication is a list of methods with an "Authenticated, method not specified" quick choice. Library threats apply per flow type.</li>
+<li>Components have a kind (the CycloneDX asset type), defaulting from their category.</li>
+<li><strong>Show flows</strong> filters the canvas by flow type: the physical view.</li>
+<li>AI DFD generation asks the model for boundaries between zones (drawn as trust boundary edges with type, authentication and authorization), data store types, library kinds, one flow per direction, and trust levels by band. Actors get no zone, so no empty external zone is drawn.</li>
+<li>A System Scope box is a system or subsystem asset, optionally linked to an inventory system; saving a diagram no longer creates or deletes inventory systems. The per-component System select is gone.</li>
+<li>Blueprints: a model has one structural view by default and can have more. The switcher appears only with two or more; each blueprint has its own primary DFD. <strong>Manage blueprints</strong> adds, renames, reorders, and deletes with a preview.</li>
+</ul>
+<h3 id="risks">Risks<a class="headerlink" href="#risks" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Risks have a lifecycle status (identified, assessed, mitigated, accepted, transferred, retired), a statement, domains (including safety), business objectives, and a read-only exposure derived from the linked threats. The board groups by status; bulk update sets status or owner.</li>
+<li>Responses replace the single response dropdown: strategy, description, status, owner, target date, and, under Advanced, cost, priority, and the countermeasures the response relies on.</li>
+<li>Scoring methods are <code>qualitative-matrix</code> (default) and <code>owasp-risk-rating</code>; FAIR and Mozilla RRA are listed as not yet available. The method cannot change while the model has risks.</li>
+</ul>
+<h3 id="context-review-approval">Context, review, approval<a class="headerlink" href="#context-review-approval" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Assumptions are rows with a validity (unverified, verified, invalid, unknown) and, under More, a topic, owner, impact, validation method and date, and related components. They belong to a blueprint.</li>
+<li>Business objectives, with criticality and owner, can be linked from threats and risks.</li>
+<li>Methodologies on the model (STRIDE by default; spec values or a custom name). The STRIDE summary in reports shows only when STRIDE is among them.</li>
+<li>The scope lock is replaced by review and approval: <strong>Mark reviewed</strong>, <strong>Approve</strong> (Security Team), <strong>Revoke</strong>, with a sign-off view that lists unverified assumptions and open risks. A content digest decides <strong>Changed since approval</strong>; undoing the change restores the approval. Lifecycle phase, validity period, and review frequency sit under Advanced, and <strong>Review due</strong> shows when the validity period has passed. Closes #348.</li>
+<li>Each model has a primary system (optional) chosen from the inventory, or created in place; the <strong>Systems</strong> page under Settings shows which models use each system. A system that is some model's primary system cannot be deleted on its own; deleting one that is only linked from diagrams unlinks and deletes nothing inside models.</li>
+<li>Related models have a type (depends on, is a subsystem of, is related to, is superseded by) with loop checks; the Overview tab lists links in both directions.</li>
+<li>Every model has a serial number and a version; <strong>Copy BOM-Link</strong> copies <code>urn:cdx:&lt;serial&gt;/&lt;version&gt;</code>.</li>
+<li>Use cases and abuse cases are editable. A use case leads to abuse cases, an abuse case leads to threats, and threats lead to countermeasures; every link to the diagram, a threat actor, or a business objective is optional. Threat analysis gains a third view, <strong>By Use Case</strong>, with four numbered columns (use cases, abuse cases, threats, countermeasures) and gap badges that do not change the completion score. A threat's detail panel shows <strong>From abuse cases</strong>. Editing them shows <strong>Changed since approval</strong>, covered by the one-time change already listed above. Import and export read and write the links, with two new properties named <code>precogly:abuse-cases</code>. See <a href="../concepts/use-cases-and-abuse-cases/">Use Cases and Abuse Cases</a> and the <a href="../api/overview/">API overview</a>.</li>
+</ul>
+<h3 id="import-and-export">Import and export<a class="headerlink" href="#import-and-export" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The adapter is rewritten on the pinned CycloneDX 2.0 schema (commit <code>f6dcf4d3</code>, 2026-10-07). Every export passes the schema and reference-integrity checks; every seeded model exports clean.</li>
+<li>Import never rejects a TM-BOM: schema findings and everything that cannot be stored become warnings, and the content is kept and written back on export. Import does not count as approval; the file's approval is shown as history. An imported model gets a fresh serial number; the original is kept, and BOM-Links resolve through it.</li>
+<li>Documents from other tools: scenarios with several targets become one threat with several targets (#533); a scenario naming several threats is split; actors that are flow ends become external actor components; per-scenario control links through <code>precogly:mitigates</code> (#529); several blueprints import in full (#538); a blueprint without a Precogly canvas gets a generated diagram (#288); the importing user's team owns the model (#337); compliance mappings resolve to installed frameworks or travel as snapshots (#342); impact descriptions round-trip (#343).</li>
+<li>A risk response's <code>targetDate</code> becomes the due date of each control it names that has no <code>precogly:due-date</code> of its own; with several responses the earliest wins.</li>
+<li>Import warnings say how to fix the file where they can (a missing required field, a standard's requirement under <code>definitions.requirements</code> instead of <code>definitions.standards[].requirements</code>, a <code>satisfies</code> entry that is not a reference, a date format, an unknown status), and one warning lists the custom properties Precogly does not read (most are written back on export, but not those on threat actors, visualizations and a few other objects). <code>satisfies</code> written as objects and compliance requirements under <code>definitions.requirements</code> are not valid 2.0 and are not imported.</li>
+<li>The <code>precogly:</code> property registry is one list, generated into the guest editor and printed in <a href="../guides/importing-exporting/">Importing and Exporting</a>.</li>
+<li>A threat typed in by hand exports the categories picked on it in its threat definition's <code>categories</code>, where other CycloneDX tools and the guest editor read them; a library threat's own categories stay in <code>precogly:instance-categories</code> on the scenario, since its definition is shared. On import, a custom threat's categories that name an installed taxonomy entry become editable entries on the threat instead of a locked snapshot.</li>
+<li>Passthrough keeps attack trees, attack paths, abuse cases, other tools' properties, and unknown fields; stale references are repaired on export with a warning.</li>
+<li>Values Precogly holds only in part are written back while the row still holds what it was imported as: an owner who is not a member (controls, risks, responses), an effectiveness rating, a response status stored as planned (such as <code>proposed</code>), a risk domain's priority and description, custom risk domains, and <code>satisfies</code> refs to engineering requirements. An imported file's <code>definitions.standards</code> is written back whole, with its refs, and mappings made in Precogly are added to it. What Precogly does not model is listed in <a href="../guides/importing-exporting/#what-precogly-does-not-model">Importing and Exporting</a>.</li>
+</ul>
+<h3 id="workspace">Workspace<a class="headerlink" href="#workspace" title="Permanent link">&para;</a></h3>
+<ul>
+<li>One URL per tab (<code>/threat-models/&lt;id&gt;/overview</code>, <code>threat-analysis</code>, <code>risk-analysis</code>, <code>pentests</code>, <code>reports</code>) and per Threat Analysis view (<code>/threat-analysis/components</code>, <code>/use-cases</code>, <code>/table</code>). Reload keeps the tab and view; Back and Forward move between them. <code>?threat=T17</code> and <code>?countermeasure=C5</code> open the matching dialog.</li>
+<li>Overview: collapsible sections, with diagrams and <strong>+ New DFD</strong> beside the completion checklist at the top, a one-row Review, then three buttons (<strong>System</strong>, with Details and Context tabs; <strong>Business objectives</strong>; <strong>Use cases</strong>) that open dialogs, <strong>Connections</strong> (related models, library packs, team members, and a Blueprints card, formerly Connected Systems), and <strong>Reference images</strong>. The counts strip is gone.</li>
+<li>Threat Analysis: a threat row shows number, title and state; a countermeasure row shows the status dot with its word, number and name. Everything else is in a threat or countermeasure dialog. The screen opens on the first node with threats, and <strong>Analyze Threats</strong> in the DFD editor opens on the node or flow selected there. "Exposed" shows once per level: the tab badge, each tree row and each threat row.</li>
+<li>Overdue countermeasures: past their due date and not yet implemented, verified or platform. The Countermeasures column shows an <strong>N overdue</strong> chip that filters it; an <strong>N overdue</strong> button in the toolbar lists every overdue countermeasure of the model.</li>
+</ul>
+<h3 id="reports-csv-word-pentests-mcp">Reports, CSV, Word, pentests, MCP<a class="headerlink" href="#reports-csv-word-pentests-mcp" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Report sections start collapsed, and the report type is a dropdown beside the model's name.</li>
+<li>
+<p>The Compliance and Full reports have a <strong>Compliance Matrix</strong>: for the framework you pick, one row per requirement with its state (Satisfied, Covered, Partial only, Not covered), the countermeasures mapped to it, their threats and an overdue mark. Coverage is stated against the installed pack, which may hold only part of a standard. It is also in the Word report and has its own CSV.</p>
+</li>
+<li>
+<p>Reports gain Review and approval, Business objectives, Countermeasure detail, and Unattached controls sections; one threat list with numbers and targets replaces the two lists by component and by flow; the Inherited countermeasures section is gone. Architecture shows zone and boundary types, trust levels, and crossing requirements.</p>
+</li>
+<li>CSV and Word exports carry number and target columns and lose the inherited and residual severity columns; a new Assumptions CSV.</li>
+<li>The pentest scope groups test cases by target (component, flow, zone, boundary, system) with <code>T</code> and <code>C</code> numbers (#590).</li>
+<li>Dashboard counts include the <code>info</code> level.</li>
+<li>The STRIDE summary counts a threat under each of its STRIDE categories, so a threat with three categories shows in all three; the total is the number of active threats. Categories a custom threat kept from an import now count too. Each report threat carries <code>stride_categories</code> beside <code>stride_category</code>.</li>
+<li>MCP: see the breaking changes above; the roadmap's export tool is single-format.</li>
+</ul>
+<h3 id="guest-editor">Guest editor<a class="headerlink" href="#guest-editor" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Reads and writes the same TM-BOM shape as the backend, generated from the same spec lists. Threats with several targets, zones and boundaries as targets, whole-system threats, controls linked to several threats, numbers stored in the file, zone, flow, and boundary types, and the <code>info</code> level.</li>
+<li>A file keeps its serial number across saves; the version goes up when the content changed.</li>
+<li>Edits the first blueprint; further blueprints are kept and written back, with a notice. Problems while opening a file are listed on screen.</li>
+<li>Opens files saved by the earlier guest editor: the diagram layout, threat names, statuses and STRIDE categories, countermeasure links, session details, criticality, data asset ratings and out-of-scope items come across, with a notice to save the file in the current format.</li>
+</ul>
+<h3 id="library-packs">Library packs<a class="headerlink" href="#library-packs" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Pack upgrades update rows in place, so library links in models survive.</li>
+<li>Templates carry spec zone types with explicit trust levels, flow types, boundary types, component kinds, and authentication lists; the OT/ICS pack models Purdue levels as nested network zones with signal and control flows, device components, and a network boundary. A third sample model, "Sample LNG Process Control", is seeded.</li>
+<li>Threat joins can say which flow types a threat applies to (<code>flow_types</code>); an empty list means the data-like types.</li>
+</ul>
+<h3 id="credits">Credits<a class="headerlink" href="#credits" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The countermeasure <code>source</code> field, the <code>satisfies</code> import with snapshots for frameworks that are not installed, the evidence external reference, the overdue filter, and the CycloneDX POA&amp;M groundwork came from PR #559 by <a href="https://github.com/JJediny">JJediny</a> and were absorbed into this branch. The ported tests keep a note of their origin.</li>
+<li>The compliance matrix rebuilds the idea of PR #561 by <a href="https://github.com/JJediny">JJediny</a> as a framework-neutral report section, with his access-isolation test and snapshot approach.</li>
+<li>The workspace simplification follows an outside UX review of the Overview and Threat Analysis screens.</li>
+</ul>
+<hr />
+<h2 id="v040">v0.4.0<a class="headerlink" href="#v040" title="Permanent link">&para;</a></h2>
+<p><strong>Release date:</strong> September 15, 2026</p>
+<p>The v0.4.0 release adds AI-powered DFD generation, a vendor-neutral AI/ML threat library, a redesigned threat triage workflow, and expanded AWS coverage.</p>
+<h3 id="ai-and-library-packs">AI and library packs<a class="headerlink" href="#ai-and-library-packs" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Added AI-powered DFD generation from architecture diagram images. A two-step flow uses a vision model to extract components, flows, and zones, then a text model generates canvas data with layout correction.</li>
+<li>Added vendor-neutral AI/ML threat library pack with 55 threats, 53 countermeasures, 12 components, and OWASP LLM/Agentic/MCP Top 10 taxonomies. Cross-pack AI references wired into the AWS pack.</li>
+<li>Expanded AWS library pack to 41 components with full taxonomy and compliance mappings, new DFD templates, and official AWS icons.</li>
+<li>Added STRIDE Worksheets pack with a STRIDE per Interaction table template for facilitating threat modeling sessions.</li>
+</ul>
+<h3 id="threat-triage-and-control-classification">Threat triage and control classification<a class="headerlink" href="#threat-triage-and-control-classification" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Replaced binary threat dismissal with a five-status triage workflow: Open, Accept, Mitigate, Delegate, Eliminate. Triaged threats require a decision rationale for audit traceability.</li>
+<li>Split the single <code>control_type</code> field into a multi-value <code>control_functions</code> list and a separate <code>control_nature</code> field (technical, administrative, or physical). Removed <code>procedural</code> from valid control function values.</li>
+<li>Migrated library packs and MCP server to the new control_functions/control_nature schema.</li>
+</ul>
+<h3 id="cyclonedx-tm-bom-interoperability">CycloneDX TM-BOM interoperability<a class="headerlink" href="#cyclonedx-tm-bom-interoperability" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Improved CycloneDX round-trip fidelity: triage status, control functions/nature, taxonomy categories, and assumptions now survive import and export via <code>precogly:*</code> properties.</li>
+<li>Improved CycloneDX import error messages with actionable detail about which entity failed.</li>
+</ul>
+<h3 id="security-and-oauth">Security and OAuth<a class="headerlink" href="#security-and-oauth" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Precogly now runs as an OAuth 2.1 authorization server.</li>
+<li>Added gitleaks support in CI and precommit.</li>
+<li>Fixed stored XSS via ComponentLibrary.icon_svg.</li>
+</ul>
+<h3 id="dfd-editor">DFD editor<a class="headerlink" href="#dfd-editor" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Added table node type with configurable size and text wrapping.</li>
+<li>Folded AI threat ranking into the Add Threat dialog and retired the standalone owl affordance.</li>
+<li>Added DFD notation switching (DFD3 / Yourdon-DeMarco).</li>
+<li>Allowed adding taxonomy entries to individual threat instances.</li>
+</ul>
+<h3 id="bug-fixes">Bug fixes<a class="headerlink" href="#bug-fixes" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Fixed guest editor import losing DFD layout by normalizing snake_case keys from backend export to camelCase.</li>
+<li>Fixed trust zone count inflation across multiple DFDs.</li>
+<li>Fixed CASCADE-delete on compliance requirement mappings.</li>
+<li>Fixed outdated and wrong MITRE taxonomy entries.</li>
+<li>Fixed image export cropping and added an export options dialog.</li>
+<li>Brought frontend CountermeasureStatus enums in sync with backend.</li>
+</ul>
+<p><a href="https://github.com/precogly/precogly/blob/main/CHANGELOG.md">View the full generated changelog</a>
+or <a href="https://github.com/precogly/precogly/releases/tag/v0.4.0">download v0.4.0</a>.</p>
+<hr />
+<h2 id="v030">v0.3.0<a class="headerlink" href="#v030" title="Permanent link">&para;</a></h2>
+<p><strong>Release date:</strong> July 31, 2026</p>
+<p>The v0.3.0 release expanded Precogly's interchange, AI-assisted modeling, risk,
+reporting, and guest-editor workflows.</p>
+<h3 id="interchange-and-libraries">Interchange and libraries<a class="headerlink" href="#interchange-and-libraries" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Added CycloneDX 2.0 Threat Modeling BOM import and export alongside TM-Library JSON.</li>
+<li>Added full CAPEC, CWE, MITRE ATT&amp;CK, and MITRE ATLAS taxonomy packs.</li>
+<li>Enriched exported models with Precogly metadata while retaining standard format compatibility.</li>
+</ul>
+<h3 id="threat-modeling-workflow">Threat modeling workflow<a class="headerlink" href="#threat-modeling-workflow" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Unified component and data-flow countermeasures into a shareable countermeasure model.</li>
+<li>Added countermeasure due dates, external ticket links, and history records.</li>
+<li>Added the risk register with table and Kanban views.</li>
+<li>Added the Pentests Scope workspace for deriving test priorities from a threat model.</li>
+</ul>
+<h3 id="ai-assistance">AI assistance<a class="headerlink" href="#ai-assistance" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Added grounded threat suggestions based on installed library packs.</li>
+<li>Added per-organization bring-your-own-model provider configuration.</li>
+<li>Added organization-level AI token usage tracking and reporting.</li>
+</ul>
+<h3 id="dfd-and-guest-editor">DFD and guest editor<a class="headerlink" href="#dfd-and-guest-editor" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Added DFD3 and Yourdon-DeMarco notation switching.</li>
+<li>Added threat visibility on the DFD canvas and improved canvas interactions.</li>
+<li>Expanded the guest editor with system context, threats, countermeasures, local
+  CycloneDX save/open, image export, and Word report generation.</li>
+</ul>
+<h3 id="reports">Reports<a class="headerlink" href="#reports" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Added CSV exports for threats, countermeasures, risks, and compliance coverage.</li>
+<li>Added Word report generation for offline review.</li>
+</ul>
+<p><a href="https://github.com/precogly/precogly/blob/main/CHANGELOG.md">View the full generated changelog</a>
+or <a href="https://github.com/precogly/precogly/releases/tag/v0.3.0">download v0.3.0</a>.</p>
+<hr />
+<h2 id="v020">v0.2.0<a class="headerlink" href="#v020" title="Permanent link">&para;</a></h2>
+<p><strong>Release date:</strong> May 26, 2026</p>
+<p>35 merged PRs covering features, bug fixes, architecture improvements, and operational readiness.</p>
+<h3 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Delete functionality for components and countermeasures in Threat Analysis view (<a href="https://github.com/precogly/precogly/pull/79">#79</a>)</li>
+<li>Actor and attacker impact fields added to threat records (<a href="https://github.com/precogly/precogly/pull/70">#70</a>)</li>
+<li>Show/hide password toggle on login and signup forms (<a href="https://github.com/precogly/precogly/pull/64">#64</a>)</li>
+<li>Threat model import/export — added ThreatPersona/ThreatSource models, fixed round-trip fidelity (<a href="https://github.com/precogly/precogly/pull/86">#86</a>)</li>
+<li>Cross-framework requirement mappings for compliance overlays (<a href="https://github.com/precogly/precogly/pull/50">#50</a>)</li>
+<li>Improved threat model completion status indicators (<a href="https://github.com/precogly/precogly/pull/84">#84</a>)</li>
+<li>Threat libraries can now be imported without compliance packs (<a href="https://github.com/precogly/precogly/pull/98">#98</a>)</li>
+<li>Schema version added to pack.yaml with validation (<a href="https://github.com/precogly/precogly/pull/95">#95</a>)</li>
+</ul>
+<h3 id="bug-fixes_1">Bug Fixes<a class="headerlink" href="#bug-fixes_1" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Threat materialization on re-sync — generate threats for existing components/flows and recalculate risks on orphan deletion (<a href="https://github.com/precogly/precogly/pull/63">#63</a>)</li>
+<li>Compliance overlay instances not refreshed after pack update (<a href="https://github.com/precogly/precogly/pull/60">#60</a>)</li>
+<li>Library packs can be removed and re-added to threat models (<a href="https://github.com/precogly/precogly/pull/57">#57</a>)</li>
+<li>Data flow threats no longer auto-populated from unrelated library packs (<a href="https://github.com/precogly/precogly/pull/46">#46</a>)</li>
+<li>Filter threat picker by component's library (<a href="https://github.com/precogly/precogly/pull/55">#55</a>)</li>
+<li>Taxonomy pack slug mismatch fix (<a href="https://github.com/precogly/precogly/pull/65">#65</a>)</li>
+<li>String-list format in components-threats.yaml now rejected at validation time (<a href="https://github.com/precogly/precogly/pull/74">#74</a>)</li>
+<li>Pack version mismatch — sync_all_packs_from_source now correctly returns success=False (<a href="https://github.com/precogly/precogly/pull/73">#73</a>)</li>
+<li>Provider parsing, component matching, and UI fallback fix (<a href="https://github.com/precogly/precogly/pull/48">#48</a>)</li>
+<li>Form field overflow in modals (<a href="https://github.com/precogly/precogly/pull/35">#35</a>)</li>
+<li>Forgot password element positioning fix (<a href="https://github.com/precogly/precogly/pull/36">#36</a>)</li>
+<li>npm audit vulnerabilities resolved (<a href="https://github.com/precogly/precogly/pull/62">#62</a>)</li>
+<li>tsconfig baseUrl deprecation fix (<a href="https://github.com/precogly/precogly/pull/67">#67</a>)</li>
+<li>Validation improvements with messages bubbled up to frontend (<a href="https://github.com/precogly/precogly/pull/78">#78</a>)</li>
+<li>Component category enums unified, control_type values consistent across stack (<a href="https://github.com/precogly/precogly/pull/87">#87</a>)</li>
+</ul>
+<h3 id="architecture-performance">Architecture / Performance<a class="headerlink" href="#architecture-performance" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Pack resolution simplified — use filesystem as source of truth with O(1) path-based lookup (<a href="https://github.com/precogly/precogly/pull/47">#47</a>, <a href="https://github.com/precogly/precogly/pull/54">#54</a>)</li>
+<li>Pack directory structure simplified and libraries UI improved (<a href="https://github.com/precogly/precogly/pull/89">#89</a>)</li>
+</ul>
+<h3 id="devops-operational-readiness">DevOps / Operational Readiness<a class="headerlink" href="#devops-operational-readiness" title="Permanent link">&para;</a></h3>
+<ul>
+<li>CI workflow added for PR checks — pytest (via docker compose) + tsc (<a href="https://github.com/precogly/precogly/pull/90">#90</a>, <a href="https://github.com/precogly/precogly/pull/91">#91</a>)</li>
+<li>Branch protection enabled on main (1 review required, status checks must pass)</li>
+<li>release-please workflow added for automated releases (<a href="https://github.com/precogly/precogly/pull/93">#93</a>)</li>
+<li>Version numbers reconciled across frontend, backend, and docs (<a href="https://github.com/precogly/precogly/pull/92">#92</a>)</li>
+<li>GitHub Milestones set up for roadmap visibility</li>
+</ul>
+<h3 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Added recipes section with IEC 62443 and EU banking recipes (<a href="https://github.com/precogly/precogly/pull/44">#44</a>)</li>
+<li>CONTRIBUTING.md added and updated (<a href="https://github.com/precogly/precogly/pull/42">#42</a>, <a href="https://github.com/precogly/precogly/pull/49">#49</a>)</li>
+<li>Docs for threat model import/export (<a href="https://github.com/precogly/precogly/pull/68">#68</a>)</li>
+<li>Docs for multiple DFD creation (<a href="https://github.com/precogly/precogly/pull/76">#76</a>)</li>
+<li>README updated with OWASP affiliation (<a href="https://github.com/precogly/precogly/pull/71">#71</a>)</li>
+<li>Discord link added to README (<a href="https://github.com/precogly/precogly/pull/85">#85</a>)</li>
+</ul>
+<p><a href="https://github.com/precogly/precogly/releases/tag/v0.2.0">View on GitHub</a></p>
+<hr />
+<h2 id="v010-first-stable-release">v0.1.0 - First stable release<a class="headerlink" href="#v010-first-stable-release" title="Permanent link">&para;</a></h2>
+<p><strong>Release date:</strong> April 28, 2026</p>
+<p>Initial public release of Precogly.</p>
+<h3 id="highlights">Highlights<a class="headerlink" href="#highlights" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Core threat modeling workflow</li>
+<li>DFD editor with nested components, trust zones, and trust boundaries</li>
+<li>Library packs (AWS, Azure, GCP)</li>
+<li>Threat analysis and reporting</li>
+<li>Import and export TM-BOM style JSON files</li>
+<li>Collaborative workspaces with roles and permissions</li>
+<li>Compliance mapping (DORA, CRA, ASVS, NIST CSF, SOC 2)</li>
+<li>Reference image support</li>
+<li>REST API with OpenAPI documentation</li>
+</ul>
+<h3 id="notes">Notes<a class="headerlink" href="#notes" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Early-stage release. APIs and data models may change.</li>
+<li>Recommended for evaluation and feedback, not production use.</li>
+</ul>
+<p><a href="https://github.com/precogly/precogly/releases/tag/v0.1.0">View on GitHub</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.instant", "navigation.tracking", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.tabs.link"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
