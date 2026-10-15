@@ -12,7 +12,7 @@ authors = [
     { name = "Alvin Kuruvilla", email = "alvineasokuruvilla@gmail.com" },
 ]
 dependencies = [
-    "httpx2>=2.9.1",
+    "httpx2>=2.13.1",
     "mcp[cli]==2.1.*",
     "pydantic>=2.13.4",
 ]
