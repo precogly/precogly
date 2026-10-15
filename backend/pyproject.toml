@@ -14,7 +14,7 @@ dependencies = [
     # Authentication
     "djangorestframework-simplejwt>=5.3,<6.0",
     "dj-rest-auth>=7.0,<8.0",
-    "django-allauth>=65.0,<66.0",
+    "django-allauth>=65.19.7,<66.0",
     "requests>=2.32,<3.0",
     # OAuth 2.1 authorization server, for MCP clients delegating a user's access.
     "django-oauth-toolkit>=3.4,<4.0",
