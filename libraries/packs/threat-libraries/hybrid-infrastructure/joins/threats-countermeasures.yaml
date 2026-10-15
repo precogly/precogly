@@ -1,0 +1,51 @@
+mappings:
+- threat: ad-ds-tier0-daily-admin-use
+  countermeasures: [ad-tier0-hardening]
+- threat: ad-ds-local-admin-identity-assets
+  countermeasures: [ad-remove-local-admins-identity, ad-tier0-hardening]
+- threat: ad-ds-dcsync
+  countermeasures: [ad-dcsync-permission-review, ad-dcsync-detection]
+- threat: ad-ds-kerberoasting
+  countermeasures: [ad-kerberos-service-account-hardening]
+- threat: ad-ds-as-rep-roasting
+  countermeasures: [ad-kerberos-service-account-hardening]
+- threat: ad-ds-golden-ticket
+  countermeasures: [ad-krbtgt-reset, ad-tier0-hardening]
+- threat: ad-ds-dc-print-spooler-coercion
+  countermeasures: [ad-dc-print-spooler-disable, smb-signing-ntlm-restriction]
+- threat: entra-connect-tier0-takeover
+  countermeasures: [entra-connect-tier0-isolation, entra-connect-privileged-mfa]
+- threat: entra-connect-sync-account-credential-exposure
+  countermeasures: [entra-connect-sync-account-scope, entra-connect-tier0-isolation]
+- threat: entra-connect-cloud-user-manipulation
+  countermeasures: [entra-connect-privileged-mfa, entra-connect-tier0-isolation]
+- threat: entra-hybrid-group-lateral-movement
+  countermeasures: [entra-hybrid-group-entitlements]
+- threat: smb-ntlm-relay
+  countermeasures: [smb-signing-ntlm-restriction]
+- threat: smb-ntlm-brute-force-pass-the-hash
+  countermeasures: [smb-signing-ntlm-restriction, smb-smb1-ntlm-audit]
+- threat: smb-unencrypted-transfer
+  countermeasures: [smb-encryption-required]
+- threat: smb-legacy-smbv1-exploitation
+  countermeasures: [smb-disable-v1, smb-smb1-ntlm-audit]
+- threat: nfs-unauthenticated-export-access
+  countermeasures: [nfs-export-restriction, nfs-kerberos-only]
+- threat: nfs-root-access-on-export
+  countermeasures: [nfs-export-restriction]
+- threat: nfs-unencrypted-traffic
+  countermeasures: [nfs-kerberos-only]
+- threat: print-spooler-privilege-escalation
+  countermeasures: [print-spooler-disable-servers, print-protected-print-mode]
+- threat: print-untrusted-driver-install
+  countermeasures: [print-point-and-print-restricted, print-protected-print-mode]
+- threat: printer-unencrypted-ipp
+  countermeasures: [printer-ipps-required]
+- threat: printer-tls-certificate-bypass
+  countermeasures: [printer-tls-certificate-validation]
+- threat: print-service-coercion
+  countermeasures: [print-spooler-disable-servers, smb-signing-ntlm-restriction]
+- threat: print-service-traffic-eavesdropping
+  countermeasures: [print-service-transport-encryption]
+- threat: printer-confidential-print-exposure
+  countermeasures: [printer-secure-print-release]

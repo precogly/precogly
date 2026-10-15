@@ -1,0 +1,347 @@
+template:
+  slug: hybrid-expressroute-extension
+  name: "Hybrid Extension With ExpressRoute"
+  description: "On-premises Active Directory, Entra Connect, file shares and print services connected to Azure over ExpressRoute with a VNet gateway, domain controllers in Azure, Azure Files over private endpoint, and central monitoring"
+  category: cloudInfrastructure
+  diagram_type: level1
+
+canvas_data:
+  nodes:
+    # ---- External actors ----
+    - id: "actor-employee"
+      type: "humanActor"
+      position: { x: 50, y: 200 }
+      data:
+        label: "Employee"
+        actorType: "user"
+        description: "Works from the office or remotely through the corporate network"
+
+    - id: "actor-admin"
+      type: "humanActor"
+      position: { x: 50, y: 470 }
+      data:
+        label: "Infrastructure Administrator"
+        actorType: "admin"
+        description: "Administers on-premises and Azure directory services"
+
+    # ---- On-premises scope ----
+    - id: "sb-onprem"
+      type: "systemScope"
+      position: { x: 200, y: 30 }
+      style: { width: 340, height: 640 }
+      data:
+        label: "On-Premises Datacenter"
+        owner: "Infrastructure Team"
+        classification: "Production"
+
+    - id: "tz-corp"
+      type: "trustZone"
+      parentId: "sb-onprem"
+      position: { x: 20, y: 60 }
+      style: { width: 150, height: 260 }
+      data:
+        label: "Corporate LAN"
+        zoneType: "trust"
+        trustLevel: 50
+        technology: "Corporate VLAN"
+
+    - id: "tz-server"
+      type: "trustZone"
+      parentId: "sb-onprem"
+      position: { x: 180, y: 60 }
+      style: { width: 140, height: 540 }
+      data:
+        label: "Server Zone"
+        zoneType: "trust"
+        trustLevel: 75
+        technology: "Server VLAN with firewall rules"
+
+    - id: "process-adds-onprem"
+      type: "process"
+      parentId: "tz-server"
+      position: { x: 15, y: 60 }
+      data:
+        label: "AD DS Domain Controllers"
+        component_ref: "ad-ds"
+        technology: "Windows Server AD DS"
+        description: "Authoritative directory for on-premises identities"
+        dataSensitivity: "confidential"
+
+    - id: "process-entra-connect"
+      type: "process"
+      parentId: "tz-server"
+      position: { x: 15, y: 200 }
+      data:
+        label: "Microsoft Entra Connect"
+        component_ref: "entra-connect"
+        technology: "Entra Connect Sync server"
+        description: "Synchronizes identities to Entra ID"
+        dataSensitivity: "confidential"
+
+    - id: "datastore-smb"
+      type: "datastore"
+      parentId: "tz-corp"
+      position: { x: 15, y: 60 }
+      data:
+        label: "SMB File Server"
+        component_ref: "smb-file-share"
+        technology: "Windows file server with SMB 3.x"
+        description: "Departmental shares"
+        dataSensitivity: "confidential"
+
+    - id: "process-print"
+      type: "process"
+      parentId: "tz-corp"
+      position: { x: 15, y: 200 }
+      data:
+        label: "Print Service"
+        component_ref: "print-service"
+        technology: "Windows print server"
+        description: "Hosts printer queues and drivers"
+
+    - id: "process-printer"
+      type: "process"
+      parentId: "tz-corp"
+      position: { x: 15, y: 340 }
+      data:
+        label: "Network Printers"
+        component_ref: "network-printer"
+        technology: "Network-attached MFP"
+        description: "Scans and prints from office floors"
+
+    # ---- Connectivity ----
+    - id: "process-firewall-onprem"
+      type: "process"
+      position: { x: 380, y: 200 }
+      data:
+        label: "On-Premises Firewall"
+        component_ref: "azure/firewall"
+        technology: "Edge firewall with IPsec and ExpressRoute routing"
+        description: "Filters traffic between corporate LAN, servers and Azure"
+
+    - id: "process-er"
+      type: "process"
+      position: { x: 380, y: 340 }
+      data:
+        label: "ExpressRoute Circuit"
+        component_ref: "azure/expressroute"
+        technology: "ExpressRoute private peering"
+        description: "Private connection between datacenter and Azure"
+
+    # ---- Azure scope ----
+    - id: "sb-azure"
+      type: "systemScope"
+      position: { x: 620, y: 30 }
+      style: { width: 380, height: 640 }
+      data:
+        label: "Azure Hub Network"
+        owner: "Cloud Platform Team"
+        classification: "Production"
+
+    - id: "tz-hub"
+      type: "trustZone"
+      parentId: "sb-azure"
+      position: { x: 20, y: 60 }
+      style: { width: 160, height: 540 }
+      data:
+        label: "Hub VNet"
+        zoneType: "trust"
+        trustLevel: 50
+        technology: "Azure VNet with gateway subnet"
+
+    - id: "tz-identity"
+      type: "trustZone"
+      parentId: "sb-azure"
+      position: { x: 200, y: 60 }
+      style: { width: 160, height: 260 }
+      data:
+        label: "Identity Subnet"
+        zoneType: "trust"
+        trustLevel: 75
+        technology: "Azure VNet, NSG restricted"
+
+    - id: "tz-files"
+      type: "trustZone"
+      parentId: "sb-azure"
+      position: { x: 200, y: 360 }
+      style: { width: 160, height: 240 }
+      data:
+        label: "Private Endpoints"
+        zoneType: "trust"
+        trustLevel: 75
+        technology: "Private Endpoints"
+
+    - id: "process-gateway"
+      type: "process"
+      parentId: "tz-hub"
+      position: { x: 15, y: 60 }
+      data:
+        label: "ExpressRoute Gateway"
+        component_ref: "azure/expressroute"
+        technology: "ExpressRoute virtual network gateway"
+        description: "Terminates the circuit into the hub network"
+
+    - id: "process-firewall-azure"
+      type: "process"
+      parentId: "tz-hub"
+      position: { x: 15, y: 260 }
+      data:
+        label: "Azure Firewall"
+        component_ref: "azure/firewall"
+        technology: "Azure Firewall Premium"
+        description: "Inspects traffic between spokes and on-premises"
+
+    - id: "process-azure-adds"
+      type: "process"
+      parentId: "tz-identity"
+      position: { x: 15, y: 60 }
+      data:
+        label: "Azure VM Domain Controllers"
+        component_ref: "azure-vm-domain-controller"
+        technology: "Windows Server AD DS on Azure VMs"
+        description: "Replicates with on-premises DCs for local sign-in"
+        dataSensitivity: "confidential"
+
+    - id: "process-entra-id"
+      type: "process"
+      parentId: "tz-identity"
+      position: { x: 15, y: 180 }
+      data:
+        label: "Microsoft Entra ID"
+        component_ref: "azure/entra-id"
+        technology: "Microsoft Entra ID"
+        description: "Cloud identity and Conditional Access"
+
+    - id: "datastore-azure-files"
+      type: "datastore"
+      parentId: "tz-files"
+      position: { x: 15, y: 60 }
+      data:
+        label: "Azure Files Share"
+        component_ref: "azure/files"
+        technology: "Azure Files (SMB, Entra Kerberos), private endpoint"
+        description: "Cloud file share for migrated and branch data"
+        dataSensitivity: "confidential"
+
+    - id: "process-monitor"
+      type: "process"
+      position: { x: 1050, y: 200 }
+      data:
+        label: "Microsoft Sentinel"
+        component_ref: "azure/sentinel"
+        technology: "Microsoft Sentinel on Log Analytics"
+        description: "Detections across identity, file and network logs"
+
+  edges:
+    - id: "edge-1"
+      source: "actor-employee"
+      target: "datastore-smb"
+      type: "dataFlow"
+      data:
+        label: "Read and write files"
+        protocol: "SMB 3.x (encrypted)"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-2"
+      source: "actor-employee"
+      target: "process-print"
+      type: "dataFlow"
+      data:
+        label: "Print jobs"
+        protocol: "IPP / SMB"
+        encrypted: false
+
+    - id: "edge-3"
+      source: "process-print"
+      target: "process-printer"
+      type: "dataFlow"
+      data:
+        label: "Forward job to device"
+        protocol: "IPP (unencrypted by default)"
+        encrypted: false
+
+    - id: "edge-4"
+      source: "process-entra-connect"
+      target: "process-entra-id"
+      type: "dataFlow"
+      data:
+        label: "Identity sync"
+        protocol: "HTTPS (outbound)"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-5"
+      source: "process-adds-onprem"
+      target: "process-azure-adds"
+      type: "dataFlow"
+      data:
+        label: "AD replication over ExpressRoute"
+        protocol: "RPC / LDAP over private path"
+        encrypted: true
+        authentication: ["kerberos"]
+
+    - id: "edge-6"
+      source: "process-firewall-onprem"
+      target: "process-er"
+      type: "dataFlow"
+      data:
+        label: "Routed traffic to Azure"
+        protocol: "BGP over private peering"
+        encrypted: true
+
+    - id: "edge-7"
+      source: "process-er"
+      target: "process-gateway"
+      type: "dataFlow"
+      data:
+        label: "Private peering to hub"
+        protocol: "ExpressRoute private peering"
+        encrypted: true
+
+    - id: "edge-8"
+      source: "process-gateway"
+      target: "process-firewall-azure"
+      type: "dataFlow"
+      data:
+        label: "Spoke-bound traffic"
+        protocol: "IP"
+        encrypted: true
+
+    - id: "edge-9"
+      source: "process-firewall-azure"
+      target: "datastore-azure-files"
+      type: "dataFlow"
+      data:
+        label: "Access cloud file share"
+        protocol: "SMB 3.x over private endpoint"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-10"
+      source: "actor-admin"
+      target: "process-azure-adds"
+      type: "dataFlow"
+      data:
+        label: "Directory administration"
+        protocol: "LDAP / RDP over Bastion"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-11"
+      source: "process-entra-id"
+      target: "process-monitor"
+      type: "dataFlow"
+      data:
+        label: "Sign-in and audit logs"
+        protocol: "HTTPS (diagnostic settings)"
+        encrypted: true
+
+    - id: "edge-12"
+      source: "process-adds-onprem"
+      target: "process-monitor"
+      type: "dataFlow"
+      data:
+        label: "Security events via agent"
+        protocol: "HTTPS (Azure Monitor agent)"
+        encrypted: true

@@ -1,0 +1,131 @@
+mappings:
+- component: ad-ds
+  threats:
+  - threat: ad-ds-tier0-daily-admin-use
+    applies_to: component
+- component: ad-ds
+  threats:
+  - threat: ad-ds-local-admin-identity-assets
+    applies_to: component
+- component: ad-ds
+  threats:
+  - threat: ad-ds-dcsync
+    applies_to: component
+- component: ad-ds
+  threats:
+  - threat: ad-ds-kerberoasting
+    applies_to: component
+- component: ad-ds
+  threats:
+  - threat: ad-ds-as-rep-roasting
+    applies_to: component
+- component: ad-ds
+  threats:
+  - threat: ad-ds-golden-ticket
+    applies_to: component
+- component: ad-ds
+  threats:
+  - threat: ad-ds-dc-print-spooler-coercion
+    applies_to: component
+- component: entra-connect
+  threats:
+  - threat: entra-connect-tier0-takeover
+    applies_to: component
+- component: entra-connect
+  threats:
+  - threat: entra-connect-sync-account-credential-exposure
+    applies_to: component
+- component: entra-connect
+  threats:
+  - threat: entra-connect-cloud-user-manipulation
+    applies_to: component
+- component: entra-connect
+  threats:
+  - threat: entra-hybrid-group-lateral-movement
+    applies_to: component
+- component: smb-file-share
+  threats:
+  - threat: smb-ntlm-relay
+    applies_to: component
+- component: smb-file-share
+  threats:
+  - threat: smb-ntlm-brute-force-pass-the-hash
+    applies_to: component
+- component: smb-file-share
+  threats:
+  - threat: smb-unencrypted-transfer
+    applies_to: component
+- component: smb-file-share
+  threats:
+  - threat: smb-legacy-smbv1-exploitation
+    applies_to: component
+- component: nfs-share
+  threats:
+  - threat: nfs-unauthenticated-export-access
+    applies_to: component
+- component: nfs-share
+  threats:
+  - threat: nfs-root-access-on-export
+    applies_to: component
+- component: nfs-share
+  threats:
+  - threat: nfs-unencrypted-traffic
+    applies_to: component
+- component: print-service
+  threats:
+  - threat: print-spooler-privilege-escalation
+    applies_to: component
+- component: print-service
+  threats:
+  - threat: print-untrusted-driver-install
+    applies_to: component
+- component: network-printer
+  threats:
+  - threat: printer-unencrypted-ipp
+    applies_to: component
+- component: network-printer
+  threats:
+  - threat: printer-tls-certificate-bypass
+    applies_to: component
+- component: print-service
+  threats:
+  - threat: print-service-coercion
+    applies_to: component
+- component: print-service
+  threats:
+  - threat: print-service-traffic-eavesdropping
+    applies_to: component
+- component: network-printer
+  threats:
+  - threat: printer-confidential-print-exposure
+    applies_to: component
+- component: azure-vm-domain-controller
+  threats:
+  - threat: ad-ds-tier0-daily-admin-use
+    applies_to: component
+  - threat: ad-ds-local-admin-identity-assets
+    applies_to: component
+  - threat: ad-ds-dcsync
+    applies_to: component
+  - threat: ad-ds-kerberoasting
+    applies_to: component
+  - threat: ad-ds-as-rep-roasting
+    applies_to: component
+  - threat: ad-ds-golden-ticket
+    applies_to: component
+  - threat: ad-ds-dc-print-spooler-coercion
+    applies_to: component
+  - threat: azure/azure-virtual-machine-public-management-exposure
+    applies_to: component
+  - threat: azure/azure-virtual-machine-unpatched
+    applies_to: component
+  - threat: azure/azure-virtual-machine-no-endpoint-protection
+    applies_to: component
+  - threat: azure/azure-virtual-machine-configuration-drift
+    applies_to: component
+  - threat: azure/azure-virtual-machine-disk-exfiltration
+    applies_to: component
+  - threat: azure/azure-virtual-machine-run-command-abuse
+    applies_to: component
+  - threat: azure/azure-virtual-machine-ransomware
+    applies_to: component
