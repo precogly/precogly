@@ -1,0 +1,2006 @@
+framework: cra-2024
+mappings:
+- countermeasure: cm-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-network-default-deny
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-private-endpoint
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-enforce-tls12
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: cm-entra-id-authentication
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-least-privilege-rbac
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-pim-privileged-access
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-conditional-access-mfa
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-diagnostic-logging
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-activity-log-alerting
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-resource-lock
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: cm-terraform-state-protection
+  requirements: [Annex I.1(c)]
+  sufficiency: partial
+- countermeasure: cm-secrets-outside-terraform-state
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(c)]
+  sufficiency: partial
+- countermeasure: cm-iac-security-scanning
+  requirements: [Annex I.1(c), Annex I.2(c)]
+  sufficiency: partial
+- countermeasure: cm-azure-policy-guardrails
+  requirements: [Annex I.1(c)]
+  sufficiency: partial
+- countermeasure: cm-secret-scanning
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.2(c)]
+  sufficiency: partial
+- countermeasure: cm-egress-filtering
+  requirements: [Annex I.1(j), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: cm-nsg-segmentation
+  requirements: [Annex I.1(j), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: cm-waf
+  requirements: [Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-ssrf-protection
+  requirements: [Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-defender-for-storage
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-defender-for-key-vault
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-defender-for-containers
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-defender-for-app-service
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-defender-for-servers
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-disable-public-access
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-storage-disable-shared-key
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-storage-user-delegation-sas
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-storage-sas-expiration-policy
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-storage-soft-delete-versioning
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: cm-storage-immutability
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: cm-key-vault-rbac-authorization
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-key-vault-purge-protection
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: cm-key-vault-expiration-rotation
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-key-vault-per-application
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-secret-caching
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-federated-credential-scoping
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-aks-private-api-server
+  requirements: [Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: cm-aks-entra-rbac
+  requirements: [Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: cm-aks-disable-run-command
+  requirements: [Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: cm-aks-pod-security
+  requirements: [Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: cm-aks-workload-identity
+  requirements: [Annex I.1(d), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: cm-aks-network-policy
+  requirements: [Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: cm-aks-trusted-registries
+  requirements: [Art. 10(4), Annex I.2(a), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: cm-aks-key-vault-secrets-provider
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: cm-aks-kms-etcd-encryption
+  requirements: [Annex I.1(e), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: cm-aks-resource-limits
+  requirements: [Annex I.1(h), Annex I.1(i), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: cm-aks-auto-upgrade
+  requirements: [Annex I.1(b), Annex I.2(b), Art. 10(9), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: cm-aks-kubernetes-rbac-least-privilege
+  requirements: [Annex I.1(d), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: cm-app-service-authentication
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-app-service-key-vault-references
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-dangling-dns-protection
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-app-service-runtime-hardening
+  requirements: [Annex I.1(c)]
+  sufficiency: partial
+- countermeasure: cm-app-service-autoscale
+  requirements: [Annex I.1(h), Annex I.1(i)]
+  sufficiency: partial
+- countermeasure: cm-vm-patch-management
+  requirements: [Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: cm-avd-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-vnet-hub-spoke-peering
+  requirements: [Annex I.1(j), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: cm-dns-security-policy
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-ddos-protection
+  requirements: [Annex I.1(h), Annex I.1(i)]
+  sufficiency: partial
+- countermeasure: cm-vnet-flow-logs
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-subnet-disable-default-outbound
+  requirements: [Annex I.1(j), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: cm-service-endpoint-policies
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-nsg-least-privilege-rules
+  requirements: [Annex I.1(j), Annex I.1(k), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-iac-drift-detection
+  requirements: [Annex I.1(l), Annex I.1(c)]
+  sufficiency: partial
+- countermeasure: cm-firewall-least-privilege-rules
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-firewall-threat-protection
+  requirements: [Annex I.1(e), Annex I.1(f), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-private-endpoint-governance
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-private-endpoint-network-policies
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-private-dns-centralized
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-appgw-tls-policy
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: cm-appgw-end-to-end-tls
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: cm-appgw-key-vault-certificates
+  requirements: [Annex I.1(e), Annex I.1(f), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-header-sanitization
+  requirements: [Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-bastion-feature-hardening
+  requirements: [Annex I.1(c)]
+  sufficiency: partial
+- countermeasure: cm-vm-encryption-at-host
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: cm-vm-backup
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: cm-vm-log-collection
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-no-allow-all-azure-services
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-sql-entra-only-auth
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-parameterized-queries
+  requirements: [Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-defender-for-databases
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-sql-auditing
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-sql-backup-retention
+  requirements: [Annex I.1(l), Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: cm-sql-least-privilege-db-roles
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-sql-always-encrypted
+  requirements: [Annex I.1(e), Annex I.1(g)]
+  sufficiency: partial
+- countermeasure: cm-cosmosdb-continuous-backup
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: cm-workload-identity-federation
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-app-credential-management
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-app-owner-restrictions
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-entra-audit-alerting
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-graph-permission-least-privilege
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-redirect-uri-hygiene
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-oauth-secure-flows
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-pipeline-identity-separation
+  requirements: [Annex I.2(c)]
+  sufficiency: partial
+- countermeasure: cm-conditional-access-workload-identities
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-identity-lifecycle-reviews
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-function-app-entra-auth
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-function-app-storage-identity
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-input-validation
+  requirements: [Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-acr-disable-admin-user
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-acr-disable-anonymous-pull
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-acr-image-signing-and-locking
+  requirements: [Annex I.1(l), Art. 10(4), Annex I.2(a)]
+  sufficiency: partial
+- countermeasure: cm-log-analytics-access-control
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-log-data-minimization
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-log-immutability
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-log-analytics-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-log-retention
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-defender-plan-coverage
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: cm-defender-alert-routing
+  requirements: [Annex I.1(l), Art. 11(1), Art. 11(2), Art. 11(4)]
+  sufficiency: partial
+- countermeasure: aci-keyvault-secrets
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: aci-least-privilege-runtime
+  requirements: [Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: aci-private-registry-scan
+  requirements: [Art. 10(4), Annex I.2(a), Annex I.2(c)]
+  sufficiency: partial
+- countermeasure: aci-vnet-nsg
+  requirements: [Annex I.1(j), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: acr-disable-admin-user
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: acr-disable-anonymous-pull
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: acr-private-endpoint
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: adls-disable-anonymous-read
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: adls-group-based-acls
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: adls-private-endpoints-blob-dfs
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: afs-ad-ds-identity
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: afs-azure-files-backup
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: afs-private-endpoints
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: agw-end-to-end-tls
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: agw-least-privilege-rbac
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: agw-tls-policy
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: agw-waf-v2-prevention
+  requirements: [Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: ai-content-filtering
+  requirements: [Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: ai-managed-identity-auth
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: ai-private-endpoint
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: anf-cmk-encryption
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: anf-diagnostic-logging
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: anf-immutable-backup-lock
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: anf-permission-model-review
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: anf-snapshot-delete-alert
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: apic-least-privilege-keyvault
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: appi-entra-authentication
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: appi-scrub-sensitive-telemetry
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: appi-secret-references
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: appservice-app-settings-keyvault
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: appservice-diagnostic-logging
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: appservice-imds-egress-control
+  requirements: [Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: appservice-managed-identity-least-privilege
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: appservice-rce-sast
+  requirements: [Annex I.2(c)]
+  sufficiency: partial
+- countermeasure: appservice-secure-runtime
+  requirements: [Annex I.1(c)]
+  sufficiency: partial
+- countermeasure: appservice-waf
+  requirements: [Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: arc-full-disk-encryption
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: arc-least-privilege-roles
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: arc-onboarding-certificate-sp
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: asr-customer-managed-keys
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: asr-least-privilege-roles
+  requirements: [Annex I.1(d), Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: asr-private-replication
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: avd-appgroup-role-review
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: avd-conditional-access-mfa
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: avd-domain-join-delegation
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: avd-hostpool-diagnostics
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: avd-hostpool-mi-secret-scope
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: avd-scaling-plan-scope
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: avd-sh-edr
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: avd-sh-egress-control
+  requirements: [Annex I.1(j), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: avd-sh-idle-lock
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: avd-sh-jit-no-direct-rdp
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: avd-sh-laps-rotation
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: avd-sh-no-user-admin
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: avd-sh-patch-image
+  requirements: [Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: avd-workspace-role-review
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: azure-files-backup-soft-delete
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: azure-files-diagnostic-monitoring
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: azure-files-disable-shared-key
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: azure-files-identity-rbac-with-ntfs
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: azure-files-private-endpoint
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: azure-files-short-lived-sas
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: azure-files-smb-encryption
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: b2c-enable-mfa
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: b2c-smart-lockout
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: b2c-user-risk-policy
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: bastion-entra-id-auth
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: bastion-nsg-required-rules
+  requirements: [Annex I.1(j), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: bkp-immutable-vault-lock
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: bkp-mua-resource-guard
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: bkp-private-endpoint
+  requirements: [Annex I.1(j), Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: bkp-soft-delete-always-on
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: ddos-monitoring-telemetry
+  requirements: [Annex I.1(l), Annex I.1(h), Annex I.1(i)]
+  sufficiency: partial
+- countermeasure: ddos-protect-every-public-ip
+  requirements: [Annex I.1(h), Annex I.1(i)]
+  sufficiency: partial
+- countermeasure: ddos-validate-supported-deployment
+  requirements: [Annex I.1(h), Annex I.1(i)]
+  sufficiency: partial
+- countermeasure: dds-disable-ntlm-password-sync
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: defender-containers-plan
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: defender-enable-on-all-subscriptions
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: defender-review-recommendations
+  requirements: [Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: dhsm-change-default-credentials
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: dhsm-ha-pairs-backup
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: dhsm-operational-procedures
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: dns-review-zone-links
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: dns-security-policy
+  requirements: [Annex I.1(l), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: dns-validating-resolver
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: entra-ca-gap-review
+  requirements: [Annex I.1(d), Annex I.1(c)]
+  sufficiency: partial
+- countermeasure: entra-password-protection
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: entra-phishing-resistant-mfa
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: entra-pim-just-in-time
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: entra-risk-detection
+  requirements: [Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: entra-sp-credential-hygiene
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: entra-sp-least-privilege-monitor
+  requirements: [Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: entra-token-protection-cae
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: er-ipsec-over-er
+  requirements: [Annex I.1(j), Annex I.1(k), Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: er-rbac-circuits
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: esan-disable-public-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: esan-private-endpoint-network-policies
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: esan-snapshot-recovery
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: fw-diagnostic-logs
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: fw-idps-deny
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: fw-threat-intel-deny
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: fw-tls-inspection
+  requirements: [Annex I.1(j), Annex I.1(k), Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: fwm-dns-proxy-clients
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: fwm-policy-hierarchy
+  requirements: [Annex I.1(c)]
+  sufficiency: partial
+- countermeasure: fwm-routing-intent
+  requirements: [Annex I.1(j), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: hdi-encryption-in-transit
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: hdi-keytab-protection
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: kv-backup
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: kv-cmk-for-regulated-data
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: kv-conditional-access
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: kv-defender-plan
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: kv-firewall-disable-public-access
+  requirements: [Annex I.1(j), Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: kv-key-autorotation
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: kv-least-privilege-rbac
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: kv-managed-identity
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: kv-private-endpoint
+  requirements: [Annex I.1(j), Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: kv-references-not-copies
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: kv-resource-logs-to-sentinel
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: kv-soft-delete-purge-protection
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: la-aad-trigger-auth
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: la-access-control-mode
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: la-immutable-export
+  requirements: [Annex I.1(l), Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: la-keyvault-app-settings
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: la-managed-identity
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: la-private-link
+  requirements: [Annex I.1(j), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: lb-protect-backend
+  requirements: [Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: lb-standard-sku
+  requirements: [Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: lb-tls-backend
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: managed-identity-review
+  requirements: [Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: mg-managed-identity-datasource
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: mg-private-endpoint
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: mhsm-key-autorotation
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: mhsm-purge-protection
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: mon-managed-identity-auth
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: mon-private-link-agents
+  requirements: [Annex I.1(j), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: mon-security-monitoring-defender
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: nat-anomaly-alerts
+  requirements: [Annex I.1(j), Annex I.1(k), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: nat-flow-logs
+  requirements: [Annex I.1(j), Annex I.1(k), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: nat-snat-alerts
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: nw-least-privilege-rbac
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: nw-migrate-vnet-flow-logs
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: nw-storage-private-endpoints
+  requirements: [Annex I.1(j), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-a-custom-ipsec-ike-policy-must-be-applied-to-all-azure-virtual-network-gateway-connections
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: policy-a-microsoft-entra-administrator-should-be-provisioned-for-mysql-servers
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-a-microsoft-entra-administrator-should-be-provisioned-for-postgresql-servers
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-all-flow-log-resources-should-be-in-enabled-state
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-api-management-services-should-use-a-virtual-network
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-api-management-should-disable-public-network-access-to-the-service-configuration-endpoints
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-app-configuration-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-app-configuration-should-use-a-customer-managed-key
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-app-configuration-should-use-a-sku-that-supports-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-app-configuration-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-app-service-app-slots-should-be-injected-into-a-virtual-network
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-app-service-app-slots-should-use-managed-identity
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-app-service-apps-should-be-injected-into-a-virtual-network
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-app-service-apps-should-use-a-sku-that-supports-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-app-service-apps-should-use-a-virtual-network-service-endpoint
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-app-service-apps-should-use-managed-identity
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-app-service-apps-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-application-insights-components-should-block-log-ingestion-and-querying-from-public-networ
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-audit-flow-logs-configuration-for-every-virtual-network
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-automation-account-variables-should-be-encrypted
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-automation-accounts-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-ai-search-service-should-use-a-sku-that-supports-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-ai-search-services-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-ai-search-services-should-have-local-authentication-methods-disabled
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-azure-ai-search-services-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-azure-api-for-fhir-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-application-gateway-should-have-resource-logs-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-arc-enabled-kubernetes-clusters-should-be-configured-with-an-azure-arc-private-link
+  requirements: [Annex I.1(j), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-azure-arc-enabled-servers-should-be-configured-with-an-azure-arc-private-link-scope
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-arc-private-link-scopes-should-be-configured-with-a-private-endpoint
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-arc-private-link-scopes-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-automation-account-should-have-local-authentication-method-disabled
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-azure-automation-accounts-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-azure-batch-account-should-use-customer-managed-keys-to-encrypt-data
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-azure-batch-pools-should-have-disk-encryption-enabled
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-azure-cache-for-redis-enterprise-should-use-customer-managed-keys-for-encrypting-disk-data
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-azure-cache-for-redis-enterprise-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-cache-for-redis-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-cache-for-redis-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-container-instance-container-group-should-use-customer-managed-key-for-encryption
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-azure-cosmos-db-accounts-should-have-firewall-rules
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-cosmos-db-accounts-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-azure-cosmos-db-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-data-explorer-cluster-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-data-explorer-encryption-at-rest-should-use-a-customer-managed-key
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-azure-data-explorer-should-use-a-sku-that-supports-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-data-factory-linked-services-should-use-system-assigned-managed-identity-authenticat
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-azure-data-factory-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-databricks-workspaces-should-be-in-a-virtual-network
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-databricks-workspaces-should-be-premium-sku-that-supports-features-like-private-link
+  requirements: [Annex I.1(j), Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-azure-databricks-workspaces-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-databricks-workspaces-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-app-service-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-azure-sql-database-servers-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-key-vault-should-be-enabled
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-open-source-relational-databases-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-resource-manager-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-servers-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-sql-servers-on-machines-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-sql-should-be-enabled-for-unprotected-azure-sql-servers
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-sql-should-be-enabled-for-unprotected-mysql-flexible-servers
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-sql-should-be-enabled-for-unprotected-postgresql-flexible-servers
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-sql-should-be-enabled-for-unprotected-sql-managed-instances
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-device-update-for-iot-hub-accounts-should-use-private-link
+  requirements: [Annex I.1(j), Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-domains-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-domains-should-have-local-authentication-methods-disabled
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-domains-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-namespace-mqtt-broker-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-namespace-topic-broker-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-namespaces-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-partner-namespaces-should-have-local-authentication-methods-disabled
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-topics-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-topics-should-have-local-authentication-methods-disabled
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-topics-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-event-hub-namespaces-should-have-local-authentication-methods-disabled
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-azure-file-sync-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-front-door-profiles-should-use-premium-tier-that-supports-managed-waf-rules-and-priv
+  requirements: [Annex I.1(j), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: policy-azure-front-door-should-have-resource-logs-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-front-door-standard-and-premium-should-be-running-minimum-tls-version-of-1-2
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: policy-azure-front-door-standard-or-premium-plus-waf-should-have-resource-logs-enabled
+  requirements: [Annex I.1(l), Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-hdinsight-clusters-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-azure-hdinsight-clusters-should-use-encryption-at-host-to-encrypt-data-at-rest
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-azure-hdinsight-clusters-should-use-encryption-in-transit-to-encrypt-communication-between
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: policy-azure-hdinsight-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-health-data-services-de-identification-service-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-health-data-services-workspace-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-key-vault-managed-hsm-should-have-purge-protection-enabled
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: policy-azure-key-vaults-should-use-private-link
+  requirements: [Annex I.1(j), Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-azure-kubernetes-service-clusters-should-enable-microsoft-entra-id-integration
+  requirements: [Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-azure-kubernetes-service-clusters-should-have-defender-profile-enabled
+  requirements: [Annex I.1(l), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-azure-kubernetes-service-clusters-should-have-local-authentication-methods-disabled
+  requirements: [Annex I.1(d), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-azure-kubernetes-service-clusters-should-use-managed-identities
+  requirements: [Annex I.1(d), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-compute-instances-should-be-recreated-to-get-the-latest-software-up
+  requirements: [Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-computes-should-be-in-a-virtual-network
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-computes-should-have-local-authentication-methods-disabled
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-be-encrypted-with-a-customer-managed-key
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-be-encrypted-with-the-use-of-a-customer-managed-k
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-use-user-assigned-managed-identity
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-azure-managed-grafana-workspaces-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-managed-grafana-workspaces-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-log-profile-should-collect-logs-for-categories-write-delete-and-action
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-logs-clusters-should-be-created-with-infrastructure-encryption-enabled-doubl
+  requirements: [Annex I.1(e), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-logs-clusters-should-be-encrypted-with-customer-managed-key
+  requirements: [Annex I.1(e), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-logs-for-application-insights-should-be-linked-to-a-log-analytics-workspace
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-private-link-scope-should-block-access-to-non-private-link-resources
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-private-link-scope-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-should-collect-activity-logs-from-all-regions
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-solution-security-and-audit-must-be-deployed
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-azure-mysql-flexible-server-should-have-microsoft-entra-only-authentication-enabled
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-azure-purview-accounts-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-registry-container-images-should-have-vulnerabilities-resolved-powered-by-microsoft
+  requirements: [Annex I.1(l), Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: policy-azure-running-container-images-should-have-vulnerabilities-resolved-powered-by-microsoft-d
+  requirements: [Annex I.1(l), Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: policy-azure-service-bus-namespaces-should-have-local-authentication-methods-disabled
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-azure-service-bus-namespaces-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-signalr-service-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-database-should-be-running-tls-version-1-2-or-newer
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-database-should-have-microsoft-entra-only-authentication-enabled
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-database-should-have-microsoft-entra-only-authentication-enabled-during-creation
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-managed-instance-should-have-microsoft-entra-only-authentication-enabled
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-managed-instances-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-managed-instances-should-have-microsoft-entra-only-authentication-enabled-during
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-azure-stream-analytics-jobs-should-use-customer-managed-keys-to-encrypt-data
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-azure-synapse-workspace-sql-server-should-be-running-tls-version-1-2-or-newer
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: policy-azure-synapse-workspaces-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-synapse-workspaces-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-azure-synapse-workspaces-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-virtual-desktop-service-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-web-pubsub-service-should-use-a-sku-that-supports-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-azure-web-pubsub-service-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-both-operating-systems-and-data-disks-in-azure-kubernetes-service-clusters-should-be-encry
+  requirements: [Annex I.1(e), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-botservice-resources-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-cognitive-services-accounts-should-use-a-managed-identity
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-communication-service-resource-should-use-a-managed-identity
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-container-app-environments-should-use-network-injection
+  requirements: [Annex I.1(f), Annex I.1(j), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-container-apps-environment-should-disable-public-network-access
+  requirements: [Annex I.1(j), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-container-apps-should-disable-external-network-access
+  requirements: [Annex I.1(j), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-container-apps-should-only-be-accessible-over-https
+  requirements: [Annex I.1(e), Annex I.1(f), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-container-registries-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-cosmos-db-database-accounts-should-have-local-authentication-methods-disabled
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-cosmos-db-should-use-a-virtual-network-service-endpoint
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-cosmosdb-accounts-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-create-and-assign-a-built-in-user-assigned-managed-identity
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-customer-managed-key-encryption-must-be-used-as-part-of-cmk-encryption-for-arc-sql-managed
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-diagnostic-logs-in-azure-ai-services-resources-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-disk-access-resources-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-disk-encryption-should-be-enabled-on-azure-data-explorer
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-double-encryption-should-be-enabled-on-azure-data-explorer
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-application-gateways-microsoft-network-applicationgat
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-bastions-microsoft-network-bastionhosts-to-event-hub
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-bastions-microsoft-network-bastionhosts-to-log-analyt
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-bastions-microsoft-network-bastionhosts-to-storage
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-endpoints-microsoft-cdn-profiles-endpoints-to-event-h
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-endpoints-microsoft-cdn-profiles-endpoints-to-log-ana
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-expressroute-circuits-microsoft-network-expressroutec
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-firewall-microsoft-network-azurefirewalls-to-log-anal
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-firewalls-microsoft-network-azurefirewalls-to-event-h
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-firewalls-microsoft-network-azurefirewalls-to-log-ana
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-firewalls-microsoft-network-azurefirewalls-to-storage
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-front-door-and-cdn-profiles-microsoft-cdn-profiles-to
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-front-door-and-cdn-profiles-microsoft-network-frontdo
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-load-balancers-microsoft-network-loadbalancers-to-eve
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-load-balancers-microsoft-network-loadbalancers-to-log
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-cdn-cdnwebapplicationfirewallpolicies-to-ev
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-cdn-cdnwebapplicationfirewallpolicies-to-lo
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-dnsresolverpolicies-to-event-hub
+  requirements: [Annex I.1(l), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-dnsresolverpolicies-to-log-analytic
+  requirements: [Annex I.1(l), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-networkmanagers-ipampools-to-event
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-networkmanagers-ipampools-to-log-an
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-networksecurityperimeters-to-event
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-networksecurityperimeters-to-log-an
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-p2svpngateways-to-event-hub
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-p2svpngateways-to-log-analytics
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-p2svpngateways-to-storage
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-vpngateways-to-event-hub
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-vpngateways-to-log-analytics
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-vpngateways-to-storage
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-networkfunction-azuretrafficcollectors-to-e
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-networkfunction-azuretrafficcollectors-to-l
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-network-managers-microsoft-network-networkmanagers-to
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-network-security-groups-microsoft-network-networksecu
+  requirements: [Annex I.1(j), Annex I.1(k), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-public-ip-addresses-microsoft-network-publicipaddress
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-public-ip-prefixes-microsoft-network-publicipprefixes
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-traffic-manager-profiles-microsoft-network-trafficman
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-virtual-network-gateways-microsoft-network-virtualnet
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-virtual-networks-microsoft-network-virtualnetworks-to
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-enforce-ssl-connection-should-be-enabled-for-mysql-database-servers
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: policy-enforce-ssl-connection-should-be-enabled-for-postgresql-database-servers
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: policy-event-hub-namespaces-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-event-hub-namespaces-should-have-double-encryption-enabled
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-event-hub-namespaces-should-use-a-customer-managed-key-for-encryption
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-event-hub-namespaces-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-event-hub-should-use-a-virtual-network-service-endpoint
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-should-not-have-cors-configured-to-allow-every-resource-to-access-your
+  requirements: [Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-should-only-be-accessible-over-https
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-should-use-the-latest-tls-version
+  requirements: [Annex I.1(e), Annex I.1(f), Annex I.1(b), Annex I.2(b)]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-that-use-java-should-use-a-specified-java-version
+  requirements: [Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-not-have-cors-configured-to-allow-every-resource-to-access-your-apps
+  requirements: [Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-only-be-accessible-over-https
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-use-managed-identity
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-use-the-latest-tls-version
+  requirements: [Annex I.1(e), Annex I.1(f), Annex I.1(b), Annex I.2(b)]
+  sufficiency: partial
+- countermeasure: policy-function-apps-that-use-java-should-use-a-specified-java-version
+  requirements: [Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: policy-function-apps-that-use-python-should-use-a-specified-python-version
+  requirements: [Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: policy-geo-redundant-backup-should-be-enabled-for-azure-database-for-mysql
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: policy-geo-redundant-backup-should-be-enabled-for-azure-database-for-postgresql
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: policy-infrastructure-encryption-should-be-enabled-for-azure-database-for-mysql-servers
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-infrastructure-encryption-should-be-enabled-for-azure-database-for-postgresql-servers
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-iot-central-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-iot-hub-device-provisioning-service-instances-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-iot-hub-device-provisioning-service-instances-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-ip-firewall-rules-on-azure-synapse-workspaces-should-be-removed
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-key-vault-should-use-a-virtual-network-service-endpoint
+  requirements: [Annex I.1(j), Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-cluster-pods-should-only-use-approved-host-network-and-port-list
+  requirements: [Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-cluster-should-not-allow-privileged-containers
+  requirements: [Annex I.1(d), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-clusters-should-be-accessible-only-over-https
+  requirements: [Annex I.1(e), Annex I.1(f), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-clusters-should-disable-automounting-api-credentials
+  requirements: [Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-clusters-should-ensure-that-the-cluster-admin-role-is-only-used-where-required
+  requirements: [Annex I.1(d), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-clusters-should-minimize-wildcard-use-in-role-and-cluster-role
+  requirements: [Annex I.1(d), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-services-should-be-upgraded-to-a-non-vulnerable-kubernetes-version
+  requirements: [Annex I.1(b), Annex I.2(b), Art. 10(9), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-linux-arc-enabled-machines-should-have-azure-monitor-agent-installed
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-linux-virtual-machine-scale-sets-should-have-azure-monitor-agent-installed
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-linux-virtual-machines-should-have-azure-monitor-agent-installed
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-log-analytics-agent-should-be-installed-on-your-cloud-services-extended-support-role-insta
+  requirements: [Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-log-analytics-workspaces-should-block-log-ingestion-and-querying-from-public-networks
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-logic-apps-integration-service-environment-should-be-encrypted-with-customer-managed-keys
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-long-term-geo-redundant-backup-should-be-enabled-for-azure-sql-databases
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: policy-managed-workspace-virtual-network-on-azure-synapse-workspaces-should-be-enabled
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-mariadb-server-should-use-a-virtual-network-service-endpoint
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-cspm-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-for-apis-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-for-azure-cosmos-db-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-for-containers-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-for-sql-should-be-enabled-for-unprotected-synapse-workspaces
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-for-storage-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-mysql-server-should-use-a-virtual-network-service-endpoint
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-mysql-servers-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-network-watcher-flow-logs-should-have-traffic-analytics-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-postgresql-flexible-servers-should-be-running-tls-version-1-2-or-newer
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: policy-postgresql-flexible-servers-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-postgresql-server-should-use-a-virtual-network-service-endpoint
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-postgresql-servers-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-public-ip-addresses-should-have-resource-logs-enabled-for-azure-ddos-protection
+  requirements: [Annex I.1(l), Annex I.1(h), Annex I.1(i)]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-for-azure-device-update-for-iot-hub-accounts-should-be-disabled
+  requirements: [Annex I.1(j), Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-on-azure-data-explorer-should-be-disabled
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-on-azure-data-factory-should-be-disabled
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-on-azure-iot-hub-should-be-disabled
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-on-azure-sql-database-should-be-disabled
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-azure-file-sync
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-batch-accounts
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-mysql-flexible-servers
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-mysql-servers
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-postgresql-flexible-servers
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-postgresql-servers
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-queue-storage-should-use-customer-managed-key-for-encryption
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-data-lake-store-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-databricks-workspaces-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-key-vault-managed-hsm-should-be-enabled
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-kubernetes-service-should-be-enabled
+  requirements: [Annex I.1(l), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-machine-learning-workspaces-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-stream-analytics-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-batch-accounts-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-data-lake-analytics-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-event-hub-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-iot-hub-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-logic-apps-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-search-services-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-service-bus-should-be-enabled
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-role-based-access-control-rbac-should-be-used-on-kubernetes-services
+  requirements: [Annex I.1(d), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-saved-queries-in-azure-monitor-should-be-saved-in-customer-storage-account-for-logs-encryp
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-service-bus-namespaces-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-service-bus-namespaces-should-have-double-encryption-enabled
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-service-bus-premium-namespaces-should-use-a-customer-managed-key-for-encryption
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-sql-databases-should-have-vulnerability-findings-resolved
+  requirements: [Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: policy-sql-managed-instance-should-have-the-minimal-tls-version-of-1-2
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: policy-sql-managed-instances-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-sql-server-integration-services-integration-runtimes-on-azure-data-factory-should-be-joine
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-sql-server-should-use-a-virtual-network-service-endpoint
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-storage-account-containing-the-container-with-activity-logs-must-be-encrypted-with-byok
+  requirements: [Annex I.1(e), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-storage-account-encryption-scopes-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-storage-account-encryption-scopes-should-use-double-encryption-for-data-at-rest
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-storage-account-public-access-should-be-disallowed
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-disable-public-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-have-infrastructure-encryption
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-have-the-specified-minimum-tls-version
+  requirements: [Annex I.1(e), Annex I.1(f), Annex I.1(b), Annex I.2(b)]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-prevent-shared-key-access
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-prevent-shared-key-access-excluding-storage-accounts-created-by-da
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-restrict-network-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-restrict-network-access-using-virtual-network-rules
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-restrict-network-access-using-virtual-network-rules-excluding-stor
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-use-a-virtual-network-service-endpoint
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-use-customer-managed-key-for-encryption
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-use-private-link-excluding-storage-accounts-created-by-databricks
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-stream-analytics-job-should-use-managed-identity-to-authenticate-endpoints
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-synapse-managed-private-endpoints-should-only-connect-to-resources-in-approved-azure-activ
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-synapse-workspaces-should-have-microsoft-entra-only-authentication-enabled
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-synapse-workspaces-should-use-only-microsoft-entra-identities-for-authentication-during-wo
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: policy-temp-disks-and-cache-for-agent-node-pools-in-azure-kubernetes-service-clusters-should-be-e
+  requirements: [Annex I.1(e), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: policy-virtual-machines-guest-configuration-extension-should-be-deployed-with-system-assigned-man
+  requirements: [Annex I.1(d), Annex I.1(c)]
+  sufficiency: partial
+- countermeasure: policy-virtual-machines-should-be-connected-to-an-approved-virtual-network
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-virtual-networks-should-be-protected-by-azure-ddos-protection
+  requirements: [Annex I.1(h), Annex I.1(i)]
+  sufficiency: partial
+- countermeasure: policy-vm-image-builder-templates-should-use-private-link
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: policy-windows-arc-enabled-machines-should-have-azure-monitor-agent-installed
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-windows-defender-exploit-guard-should-be-enabled-on-your-machines
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-windows-machines-should-configure-windows-defender-to-update-protection-signatures-within
+  requirements: [Annex I.1(l), Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: policy-windows-machines-should-enable-windows-defender-real-time-protection
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-windows-virtual-machine-scale-sets-should-have-azure-monitor-agent-installed
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: policy-windows-virtual-machines-should-have-azure-monitor-agent-installed
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: queue-entra-rbac
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: queue-network-restriction
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: queue-sas-least-privilege
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: sa-customer-managed-key
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: sa-defender-for-storage
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: sa-diagnostic-settings
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: sa-disable-public-access
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: sa-disallow-shared-key
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: sa-immutability-and-soft-delete
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: sa-least-privilege-rbac
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: sa-resource-lock
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: sa-sas-expiration-policy
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: sa-secure-transfer-tls12
+  requirements: [Annex I.1(e), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: sa-user-delegation-sas
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: sf-cert-expiry-monitoring
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: sf-secure-cluster-x509-entra
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: sm-least-privilege-target
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: subnet-flow-logs
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: subnet-nsg-deny-default
+  requirements: [Annex I.1(j), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: tm-https-monitoring
+  requirements: [Annex I.1(e), Annex I.1(f), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: tm-rbac-profiles
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: vm-backup-immutable
+  requirements: [Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: vm-brute-force-detection
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: vm-disk-export-control
+  requirements: [Annex I.1(e)]
+  sufficiency: partial
+- countermeasure: vm-edr-antimalware
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: vm-extension-allowlist
+  requirements: [Annex I.1(l), Art. 10(4), Annex I.2(a)]
+  sufficiency: partial
+- countermeasure: vm-patch-management
+  requirements: [Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: vm-restrict-management-ports
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: vm-secure-baseline
+  requirements: [Annex I.1(c)]
+  sufficiency: partial
+- countermeasure: vmss-automatic-os-upgrade
+  requirements: [Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: vnet-ddos-protection
+  requirements: [Annex I.1(h), Annex I.1(i)]
+  sufficiency: partial
+- countermeasure: vnet-private-endpoints
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: vnet-service-endpoint-scope
+  requirements: [Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: vwan-custom-route-tables
+  requirements: [Annex I.1(j), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: vwan-p2s-entra-auth
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: vwan-restrict-udr-permissions
+  requirements: [Annex I.1(j), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: waf-diagnostic-logs
+  requirements: [Annex I.1(l), Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: waf-prevention-mode
+  requirements: [Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: waf-rate-limit-bot
+  requirements: [Annex I.1(h), Annex I.1(i), Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: cm-ai-search-security-trimming
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-ai-services-quota-limits
+  requirements: [Annex I.1(l), Annex I.1(h), Annex I.1(i)]
+  sufficiency: partial
+- countermeasure: cm-app-configuration-purge-protection
+  requirements: [Annex I.1(l), Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: cm-key-vault-secret-references
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: cm-trusted-registry-only
+  requirements: [Art. 10(4), Annex I.2(a)]
+  sufficiency: partial
+- countermeasure: det-rbac-assignment-alert
+  requirements: [Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-network-change-alert
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-critical-delete-alert
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-policy-compliance-alerts
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-retired-sku-service-health-alert
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-credential-bearing-config-change-alert
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-orphaned-role-assignment-scan
+  requirements: [Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: det-keyvault-access-anomaly-alert
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-keyvault-throttling-metric-alert
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(l), Annex I.1(h)]
+  sufficiency: partial
+- countermeasure: det-terraform-state-access-monitoring
+  requirements: [Annex I.1(c)]
+  sufficiency: partial
+- countermeasure: det-key-expiry-event-alert
+  requirements: [Annex I.1(e), Annex I.1(d)]
+  sufficiency: partial
+- countermeasure: det-managed-hsm-audit-alerts
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-dedicated-hsm-audit-forwarding
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-managed-identity-sign-in-anomaly
+  requirements: [Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-signin-ca-gap-detection
+  requirements: [Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-entra-privileged-role-alerts
+  requirements: [Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-lockbox-request-alerts
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-b2c-spray-and-mfa-monitoring
+  requirements: [Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-egress-anomaly-detection
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-firewall-health-metric-alerts
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-waf-log-analysis
+  requirements: [Annex I.1(l), Annex I.1(f), Annex I.1(j)]
+  sufficiency: partial
+- countermeasure: det-agw-backend-health-alert
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-origin-direct-access-detection
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-public-name-resolution-detection
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-aks-audit-log-alerts
+  requirements: [Annex I.1(l), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: det-aks-network-observability
+  requirements: [Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: det-packet-capture-alert
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-vpn-tunnel-diagnostics
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-expressroute-bgp-monitoring
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-traffic-manager-endpoint-alert
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-event-grid-failure-alert
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-appservice-config-read-alert
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-appservice-basic-auth-login-alert
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-function-storage-write-audit
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-acr-push-delete-audit
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-container-apps-log-alerts
+  requirements: [Annex I.1(l), Annex I.1(k)]
+  sufficiency: partial
+- countermeasure: det-redis-client-anomaly-alert
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-update-compliance-alerts
+  requirements: [Annex I.1(l), Annex I.1(b), Annex I.2(b), Art. 10(9)]
+  sufficiency: partial
+- countermeasure: det-windows-security-event-monitoring
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-avd-connection-anomaly-alert
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-ml-job-and-egress-audit
+  requirements: [Annex I.1(j), Annex I.1(k), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-hdinsight-security-log-monitoring
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-service-fabric-endpoint-monitoring
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-sql-privilege-and-classification-audit
+  requirements: [Annex I.1(l), Annex I.1(g)]
+  sufficiency: partial
+- countermeasure: det-cosmosdb-control-plane-alerts
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-backup-critical-operation-alerts
+  requirements: [Annex I.1(l), Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: det-adx-command-audit
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-adls-acl-change-audit
+  requirements: [Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-queue-write-audit
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-files-auth-type-detection
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-domain-services-security-audit
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-iot-hub-connection-anomaly
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-asr-event-alerts
+  requirements: [Annex I.1(l), Annex I.1(h), Annex I.1(f)]
+  sufficiency: partial
+- countermeasure: det-synapse-rbac-audit
+  requirements: [Annex I.1(d), Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-workspace-ingestion-anomaly
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-workspace-query-audit
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-app-insights-ingestion-anomaly
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-sensitive-data-in-logs-scan
+  requirements: [Annex I.1(e), Annex I.1(d), Annex I.1(l), Annex I.1(g)]
+  sufficiency: partial
+- countermeasure: det-ai-services-request-audit
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-ai-search-query-audit
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-apim-subscription-key-anomaly
+  requirements: [Annex I.1(l)]
+  sufficiency: partial
+- countermeasure: det-logic-app-trigger-and-run-alerts
+  requirements: [Annex I.1(l)]
+  sufficiency: partial

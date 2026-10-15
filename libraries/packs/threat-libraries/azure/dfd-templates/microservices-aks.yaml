@@ -77,6 +77,7 @@ canvas_data:
       position: { x: 35, y: 60 }
       data:
         label: "API Management"
+        component_ref: "api-management"
         technology: "Azure API Management"
         description: "API gateway with rate limiting, auth, and routing"
 
@@ -87,6 +88,7 @@ canvas_data:
       position: { x: 30, y: 60 }
       data:
         label: "Ingress Controller"
+        component_ref: "aks"
         technology: "NGINX Ingress"
         description: "Kubernetes ingress for internal routing"
 
@@ -96,6 +98,7 @@ canvas_data:
       position: { x: 30, y: 170 }
       data:
         label: "Orders Service"
+        component_ref: "aks"
         technology: "Container (.NET)"
         description: "Order management microservice"
 
@@ -105,6 +108,7 @@ canvas_data:
       position: { x: 240, y: 170 }
       data:
         label: "Inventory Service"
+        component_ref: "aks"
         technology: "Container (Node.js)"
         description: "Inventory tracking microservice"
 
@@ -114,6 +118,7 @@ canvas_data:
       position: { x: 135, y: 280 }
       data:
         label: "Notification Service"
+        component_ref: "aks"
         technology: "Container (Python)"
         description: "Email and push notification service"
 
@@ -124,6 +129,7 @@ canvas_data:
       position: { x: 330, y: 520 }
       data:
         label: "Service Bus"
+        component_ref: "service-bus"
         technology: "Azure Service Bus"
         description: "Message broker for async communication"
 
@@ -134,6 +140,7 @@ canvas_data:
       position: { x: 50, y: 60 }
       data:
         label: "Cosmos DB"
+        component_ref: "cosmosdb"
         technology: "Azure Cosmos DB"
         description: "NoSQL database for orders and inventory"
         dataSensitivity: "confidential"
@@ -144,6 +151,7 @@ canvas_data:
       position: { x: 50, y: 180 }
       data:
         label: "Redis Cache"
+        component_ref: "cache-redis"
         technology: "Azure Cache for Redis"
         description: "Distributed cache for session and hot data"
 
@@ -153,6 +161,7 @@ canvas_data:
       position: { x: 50, y: 300 }
       data:
         label: "Key Vault"
+        component_ref: "key-vault"
         technology: "Azure Key Vault"
         description: "Secrets and certificate management"
         dataSensitivity: "confidential"
@@ -164,6 +173,7 @@ canvas_data:
       position: { x: 80, y: 520 }
       data:
         label: "Azure Monitor"
+        component_ref: "monitor"
         technology: "Azure Monitor + App Insights"
         description: "Centralized logging and APM"
 

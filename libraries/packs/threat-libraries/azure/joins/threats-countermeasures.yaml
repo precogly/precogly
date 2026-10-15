@@ -1,0 +1,1238 @@
+mappings:
+- threat: azure-storage-account-public-access
+  countermeasures: [cm-disable-public-access, cm-azure-policy-guardrails, cm-iac-security-scanning, cm-defender-for-storage,
+    cm-diagnostic-logging, adls-disable-anonymous-read]
+- threat: azure-storage-account-shared-key-abuse
+  countermeasures: [cm-storage-disable-shared-key, cm-entra-id-authentication, cm-secret-scanning, cm-terraform-state-protection,
+    cm-network-default-deny, cm-diagnostic-logging, azure-files-disable-shared-key, azure-files-short-lived-sas,
+    azure-files-diagnostic-monitoring, policy-storage-accounts-should-prevent-shared-key-access, policy-storage-accounts-should-prevent-shared-key-access-excluding-storage-accounts-created-by-da,
+    queue-entra-rbac, sa-disallow-shared-key]
+- threat: azure-storage-account-sas-token-abuse
+  countermeasures: [cm-storage-user-delegation-sas, cm-storage-sas-expiration-policy, cm-storage-disable-shared-key,
+    cm-secret-scanning, cm-network-default-deny, queue-sas-least-privilege, sa-user-delegation-sas, sa-sas-expiration-policy]
+- threat: azure-storage-account-public-network-exposure
+  countermeasures: [cm-disable-public-network-access, cm-network-default-deny, cm-private-endpoint, cm-azure-policy-guardrails,
+    cm-iac-security-scanning, azure-files-private-endpoint, azure-files-disable-shared-key, policy-storage-account-public-access-should-be-disallowed,
+    policy-storage-accounts-should-disable-public-network-access, policy-storage-accounts-should-restrict-network-access,
+    policy-storage-accounts-should-restrict-network-access-using-virtual-network-rules, policy-storage-accounts-should-restrict-network-access-using-virtual-network-rules-excluding-stor,
+    policy-storage-accounts-should-use-private-link, policy-storage-accounts-should-use-private-link-excluding-storage-accounts-created-by-databricks,
+    policy-storage-accounts-should-use-a-virtual-network-service-endpoint, queue-network-restriction,
+    sa-disable-public-access]
+- threat: azure-storage-account-data-exfiltration
+  countermeasures: [cm-storage-restrict-copy-scope, cm-least-privilege-rbac, cm-private-endpoint, cm-defender-for-storage,
+    cm-diagnostic-logging, sa-restrict-copy-scope]
+- threat: azure-storage-account-insecure-transport
+  countermeasures: [cm-enforce-tls12, cm-azure-policy-guardrails, cm-iac-security-scanning, policy-storage-accounts-should-have-the-specified-minimum-tls-version,
+    sa-secure-transfer-tls12]
+- threat: azure-storage-account-malicious-content-upload
+  countermeasures: [cm-defender-for-storage, cm-least-privilege-rbac, cm-storage-user-delegation-sas]
+- threat: azure-storage-account-data-destruction
+  countermeasures: [cm-storage-soft-delete-versioning, cm-storage-immutability, cm-resource-lock, cm-least-privilege-rbac,
+    cm-activity-log-alerting, policy-storage-accounts-should-prevent-cross-tenant-object-replication,
+    sa-resource-lock, sa-immutability-and-soft-delete]
+- threat: azure-storage-account-cmk-revocation
+  countermeasures: [cm-key-vault-purge-protection, cm-least-privilege-rbac, cm-resource-lock, cm-activity-log-alerting,
+    policy-storage-account-containing-the-container-with-activity-logs-must-be-encrypted-with-byok, policy-storage-account-encryption-scopes-should-use-customer-managed-keys-to-encrypt-data-at-rest,
+    policy-storage-account-encryption-scopes-should-use-double-encryption-for-data-at-rest, policy-storage-accounts-should-have-infrastructure-encryption,
+    policy-storage-accounts-should-use-customer-managed-key-for-encryption]
+- threat: azure-storage-account-missing-audit-logging
+  countermeasures: [cm-diagnostic-logging, cm-storage-disable-shared-key, cm-azure-policy-guardrails,
+    azure-files-diagnostic-monitoring, policy-resource-logs-in-azure-data-lake-store-should-be-enabled,
+    policy-resource-logs-in-data-lake-analytics-should-be-enabled, sa-diagnostic-settings]
+- threat: azure-storage-account-control-plane-key-listing
+  countermeasures: [cm-storage-disable-shared-key, cm-least-privilege-rbac, cm-pim-privileged-access,
+    cm-activity-log-alerting, cm-terraform-state-protection]
+- threat: azure-key-vault-public-network-exposure
+  countermeasures: [cm-disable-public-network-access, cm-network-default-deny, cm-private-endpoint, cm-azure-policy-guardrails,
+    policy-key-vault-should-use-a-virtual-network-service-endpoint, policy-azure-key-vaults-should-use-private-link,
+    kv-firewall-disable-public-access, kv-private-endpoint]
+- threat: azure-key-vault-access-policy-escalation
+  countermeasures: [cm-key-vault-rbac-authorization, cm-least-privilege-rbac, cm-pim-privileged-access,
+    cm-activity-log-alerting, cm-azure-policy-guardrails]
+- threat: azure-key-vault-overprivileged-secret-access
+  countermeasures: [cm-key-vault-per-application, cm-least-privilege-rbac, cm-defender-for-key-vault,
+    cm-entra-id-authentication, kv-least-privilege-rbac]
+- threat: azure-key-vault-secret-tampering
+  countermeasures: [cm-least-privilege-rbac, cm-pim-privileged-access, cm-diagnostic-logging, cm-defender-for-key-vault]
+- threat: azure-key-vault-stale-credentials
+  countermeasures: [cm-key-vault-expiration-rotation, cm-entra-id-authentication, cm-azure-policy-guardrails,
+    kv-key-expiration-policy, kv-key-autorotation]
+- threat: azure-key-vault-secrets-in-terraform-state
+  countermeasures: [cm-secrets-outside-terraform-state, cm-terraform-state-protection, cm-key-vault-expiration-rotation,
+    det-keyvault-access-anomaly-alert, det-terraform-state-access-monitoring, cm-secret-scanning, kv-resource-logs-to-sentinel]
+- threat: azure-key-vault-secret-deletion
+  countermeasures: [cm-key-vault-purge-protection, cm-resource-lock, cm-least-privilege-rbac, cm-activity-log-alerting,
+    kv-soft-delete-purge-protection, kv-backup]
+- threat: azure-key-vault-throttling
+  countermeasures: [cm-secret-caching, cm-key-vault-per-application, det-keyvault-throttling-metric-alert,
+    kv-resource-logs-to-sentinel]
+- threat: azure-key-vault-missing-audit-logging
+  countermeasures: [cm-diagnostic-logging, cm-defender-for-key-vault, cm-azure-policy-guardrails, kv-resource-logs-to-sentinel]
+- threat: azure-managed-identity-token-theft
+  countermeasures: [cm-ssrf-protection, cm-least-privilege-rbac, cm-egress-filtering, cm-private-endpoint,
+    cm-network-default-deny, det-rbac-assignment-alert, det-managed-identity-sign-in-anomaly, managed-identity-review,
+    entra-sp-least-privilege-monitor, appservice-imds-egress-control, appservice-managed-identity-least-privilege]
+- threat: azure-managed-identity-token-replay
+  countermeasures: [cm-private-endpoint, cm-network-default-deny, cm-least-privilege-rbac, cm-diagnostic-logging]
+- threat: azure-managed-identity-overprivileged-role
+  countermeasures: [cm-least-privilege-rbac, cm-azure-policy-guardrails, cm-iac-security-scanning, cm-activity-log-alerting,
+    appservice-managed-identity-least-privilege, managed-identity-review]
+- threat: azure-managed-identity-shared-identity-abuse
+  countermeasures: [cm-dedicated-workload-identities, cm-least-privilege-rbac, cm-activity-log-alerting]
+- threat: azure-managed-identity-federated-credential-abuse
+  countermeasures: [cm-federated-credential-scoping, cm-least-privilege-rbac, cm-activity-log-alerting]
+- threat: azure-managed-identity-deletion-outage
+  countermeasures: [cm-resource-lock, cm-iac-security-scanning, cm-activity-log-alerting]
+- threat: azure-managed-identity-unattributed-actions
+  countermeasures: [cm-diagnostic-logging, cm-dedicated-workload-identities]
+- threat: azure-aks-public-api-server
+  countermeasures: [cm-aks-private-api-server, cm-aks-entra-rbac, cm-conditional-access-mfa, cm-azure-policy-guardrails,
+    policy-kubernetes-cluster-pods-should-only-use-approved-host-network-and-port-list]
+- threat: azure-aks-local-account-abuse
+  countermeasures: [cm-aks-entra-rbac, cm-least-privilege-rbac, cm-activity-log-alerting, policy-azure-kubernetes-service-clusters-should-enable-microsoft-entra-id-integration,
+    policy-azure-kubernetes-service-clusters-should-have-local-authentication-methods-disabled, policy-azure-kubernetes-service-clusters-should-use-managed-identities,
+    policy-kubernetes-clusters-should-disable-automounting-api-credentials]
+- threat: azure-aks-run-command-abuse
+  countermeasures: [cm-aks-disable-run-command, cm-least-privilege-rbac, cm-activity-log-alerting]
+- threat: azure-aks-container-escape
+  countermeasures: [cm-aks-pod-security, cm-defender-for-containers, cm-aks-auto-upgrade, cm-aks-workload-identity]
+- threat: azure-aks-node-identity-abuse
+  countermeasures: [cm-aks-workload-identity, cm-aks-network-policy, cm-least-privilege-rbac, det-managed-identity-sign-in-anomaly,
+    det-aks-audit-log-alerts, managed-identity-review, cm-defender-for-containers]
+- threat: azure-aks-kubernetes-rbac-overprivilege
+  countermeasures: [cm-aks-kubernetes-rbac-least-privilege, cm-aks-entra-rbac, cm-pim-privileged-access,
+    cm-defender-for-containers, policy-kubernetes-cluster-should-not-allow-privileged-containers, policy-kubernetes-clusters-should-ensure-that-the-cluster-admin-role-is-only-used-where-required,
+    policy-kubernetes-clusters-should-minimize-wildcard-use-in-role-and-cluster-role, policy-role-based-access-control-rbac-should-be-used-on-kubernetes-services]
+- threat: azure-aks-flat-pod-network
+  countermeasures: [cm-aks-network-policy, cm-egress-filtering, cm-nsg-segmentation, det-policy-compliance-alerts,
+    det-aks-network-observability, cm-defender-for-containers]
+- threat: azure-aks-untrusted-image
+  countermeasures: [cm-aks-trusted-registries, cm-defender-for-containers, cm-aks-pod-security]
+- threat: azure-aks-secrets-exposure
+  countermeasures: [cm-aks-key-vault-secrets-provider, cm-aks-kms-etcd-encryption, cm-aks-kubernetes-rbac-least-privilege,
+    cm-secrets-outside-terraform-state, det-aks-audit-log-alerts, cm-defender-for-containers]
+- threat: azure-aks-missing-audit-logging
+  countermeasures: [cm-diagnostic-logging, cm-defender-for-containers, policy-resource-logs-in-azure-kubernetes-service-should-be-enabled]
+- threat: azure-aks-resource-exhaustion
+  countermeasures: [cm-aks-resource-limits, cm-defender-for-containers]
+- threat: azure-aks-outdated-components
+  countermeasures: [cm-aks-auto-upgrade, cm-defender-for-containers]
+- threat: azure-app-service-missing-authentication
+  countermeasures: [cm-app-service-authentication, cm-app-service-access-restrictions, cm-conditional-access-mfa,
+    det-appservice-config-read-alert, det-appservice-basic-auth-login-alert, cm-defender-for-app-service,
+    appservice-diagnostic-logging]
+- threat: azure-app-service-direct-origin-access
+  countermeasures: [cm-app-service-access-restrictions, cm-private-endpoint, cm-disable-public-network-access,
+    cm-waf]
+- threat: azure-app-service-insecure-transport
+  countermeasures: [cm-enforce-tls12, cm-app-service-disable-basic-auth, cm-azure-policy-guardrails, appservice-secure-runtime,
+    policy-function-app-slots-should-enable-end-to-end-encryption, policy-function-apps-should-enable-end-to-end-encryption,
+    policy-function-app-slots-should-only-be-accessible-over-https, policy-function-app-slots-should-use-the-latest-tls-version,
+    policy-function-apps-should-only-be-accessible-over-https, policy-function-apps-should-use-the-latest-tls-version]
+- threat: azure-app-service-publishing-credential-abuse
+  countermeasures: [cm-app-service-disable-basic-auth, cm-secret-scanning, cm-app-service-scm-restrictions,
+    cm-diagnostic-logging]
+- threat: azure-app-service-kudu-abuse
+  countermeasures: [cm-app-service-scm-restrictions, cm-least-privilege-rbac, cm-pim-privileged-access,
+    cm-defender-for-app-service, appservice-disable-scm-public]
+- threat: azure-app-service-secrets-in-app-settings
+  countermeasures: [cm-app-service-key-vault-references, cm-entra-id-authentication, cm-secrets-outside-terraform-state,
+    cm-least-privilege-rbac, det-credential-bearing-config-change-alert, det-appservice-config-read-alert,
+    cm-defender-for-app-service, cm-secret-scanning, appservice-app-settings-keyvault]
+- threat: azure-app-service-subdomain-takeover
+  countermeasures: [cm-dangling-dns-protection, cm-defender-for-app-service]
+- threat: azure-app-service-insecure-configuration
+  countermeasures: [cm-app-service-runtime-hardening, cm-defender-for-app-service, cm-iac-security-scanning,
+    policy-function-app-slots-should-not-have-cors-configured-to-allow-every-resource-to-access-your,
+    policy-function-app-slots-that-use-java-should-use-a-specified-java-version, policy-function-apps-should-not-have-cors-configured-to-allow-every-resource-to-access-your-apps,
+    policy-function-apps-that-use-java-should-use-a-specified-java-version, policy-function-apps-that-use-python-should-use-a-specified-python-version]
+- threat: azure-app-service-vnet-pivot
+  countermeasures: [cm-nsg-segmentation, cm-egress-filtering, det-egress-anomaly-detection, cm-vnet-flow-logs]
+- threat: azure-app-service-denial-of-service
+  countermeasures: [cm-waf, cm-app-service-autoscale, cm-app-service-access-restrictions]
+- threat: azure-app-service-missing-logging
+  countermeasures: [cm-diagnostic-logging, cm-defender-for-app-service, appservice-diagnostic-logging]
+- threat: azure-virtual-desktop-weak-user-authentication
+  countermeasures: [cm-conditional-access-mfa, cm-avd-private-link, det-signin-ca-gap-detection, det-avd-connection-anomaly-alert,
+    avd-hostpool-diagnostics, avd-conditional-access-mfa]
+- threat: azure-virtual-desktop-rogue-session-host
+  countermeasures: [cm-avd-registration-token-lifetime, cm-terraform-state-protection, cm-diagnostic-logging,
+    avd-hostpool-token-role-review]
+- threat: azure-virtual-desktop-session-host-exposure
+  countermeasures: [cm-avd-no-inbound-access, cm-nsg-segmentation, cm-defender-for-servers, avd-sh-jit-no-direct-rdp]
+- threat: azure-virtual-desktop-data-exfiltration-redirection
+  countermeasures: [cm-avd-restrict-redirection, cm-conditional-access-mfa, det-policy-compliance-alerts,
+    det-egress-anomaly-detection, det-avd-connection-anomaly-alert]
+- threat: azure-virtual-desktop-profile-and-session-isolation
+  countermeasures: [cm-avd-profile-isolation, cm-defender-for-servers, cm-least-privilege-rbac]
+- threat: azure-virtual-desktop-unpatched-session-hosts
+  countermeasures: [cm-vm-patch-management, cm-defender-for-servers, avd-sh-patch-image]
+- threat: azure-virtual-desktop-public-workspace-access
+  countermeasures: [cm-avd-private-link, cm-conditional-access-mfa, det-policy-compliance-alerts, policy-azure-virtual-desktop-service-should-use-private-link]
+- threat: azure-virtual-desktop-overprivileged-assignments
+  countermeasures: [cm-avd-scoped-app-group-assignments, cm-least-privilege-rbac, cm-avd-profile-isolation,
+    avd-workspace-role-review, avd-appgroup-role-review]
+- threat: azure-virtual-desktop-capacity-exhaustion
+  countermeasures: [cm-avd-scaling-plan, cm-conditional-access-mfa, det-avd-connection-anomaly-alert,
+    avd-hostpool-diagnostics, avd-scaling-plan-max-sessions]
+- threat: azure-virtual-desktop-missing-diagnostics
+  countermeasures: [cm-diagnostic-logging, avd-hostpool-diagnostics]
+- threat: azure-vnet-peering-lateral-movement
+  countermeasures: [cm-vnet-hub-spoke-peering, cm-firewall-least-privilege-rules, cm-nsg-least-privilege-rules,
+    det-network-change-alert, cm-vnet-flow-logs]
+- threat: azure-vnet-unauthorized-network-modification
+  countermeasures: [cm-least-privilege-rbac, cm-activity-log-alerting, cm-resource-lock, cm-iac-drift-detection]
+- threat: azure-vnet-dns-exfiltration
+  countermeasures: [cm-dns-security-policy, cm-egress-filtering]
+- threat: azure-vnet-custom-dns-hijack
+  countermeasures: [cm-dns-security-policy, cm-least-privilege-rbac, cm-activity-log-alerting]
+- threat: azure-vnet-ddos
+  countermeasures: [cm-ddos-protection, cm-waf, policy-virtual-networks-should-be-protected-by-azure-ddos-protection,
+    vnet-ddos-protection]
+- threat: azure-vnet-missing-flow-logs
+  countermeasures: [cm-vnet-flow-logs, cm-diagnostic-logging, policy-enable-logging-by-category-group-for-load-balancers-microsoft-network-loadbalancers-to-eve,
+    policy-enable-logging-by-category-group-for-network-managers-microsoft-network-networkmanagers-to,
+    policy-enable-logging-by-category-group-for-network-security-groups-microsoft-network-networksecu,
+    policy-enable-logging-by-category-group-for-public-ip-prefixes-microsoft-network-publicipprefixes,
+    policy-enable-logging-by-category-group-for-public-ip-addresses-microsoft-network-publicipaddress,
+    policy-enable-logging-by-category-group-for-virtual-networks-microsoft-network-virtualnetworks-to,
+    policy-enable-logging-by-category-group-for-microsoft-network-dnsresolverpolicies-to-event-hub, policy-enable-logging-by-category-group-for-microsoft-network-networkmanagers-ipampools-to-event,
+    policy-enable-logging-by-category-group-for-microsoft-network-networksecurityperimeters-to-event,
+    policy-enable-logging-by-category-group-for-microsoft-networkfunction-azuretrafficcollectors-to-e,
+    policy-audit-flow-logs-configuration-for-every-virtual-network, policy-enable-logging-by-category-group-for-load-balancers-microsoft-network-loadbalancers-to-log,
+    policy-enable-logging-by-category-group-for-microsoft-network-dnsresolverpolicies-to-log-analytic,
+    policy-enable-logging-by-category-group-for-microsoft-network-networkmanagers-ipampools-to-log-an,
+    policy-enable-logging-by-category-group-for-microsoft-network-networksecurityperimeters-to-log-an,
+    policy-enable-logging-by-category-group-for-microsoft-networkfunction-azuretrafficcollectors-to-l,
+    subnet-flow-logs]
+- threat: azure-subnet-missing-nsg
+  countermeasures: [cm-nsg-segmentation, cm-azure-policy-guardrails, cm-iac-security-scanning, subnet-nsg-deny-default]
+- threat: azure-subnet-default-outbound-access
+  countermeasures: [cm-subnet-disable-default-outbound, cm-egress-filtering, det-network-change-alert,
+    det-egress-anomaly-detection, subnet-flow-logs]
+- threat: azure-subnet-route-manipulation
+  countermeasures: [cm-egress-filtering, cm-least-privilege-rbac, cm-activity-log-alerting, cm-iac-drift-detection]
+- threat: azure-subnet-service-endpoint-exfiltration
+  countermeasures: [cm-service-endpoint-policies, cm-private-endpoint, det-network-change-alert, det-egress-anomaly-detection,
+    subnet-flow-logs, vnet-service-endpoint-scope]
+- threat: azure-subnet-address-exhaustion
+  countermeasures: [cm-subnet-capacity-planning, det-retired-sku-service-health-alert, subnet-flow-logs]
+- threat: azure-nsg-permissive-inbound
+  countermeasures: [cm-nsg-least-privilege-rules, cm-bastion-jit-admin-access, cm-azure-policy-guardrails,
+    cm-iac-security-scanning, subnet-restrict-allow-rules]
+- threat: azure-nsg-broad-service-tag
+  countermeasures: [cm-nsg-least-privilege-rules, cm-private-endpoint, cm-iac-security-scanning]
+- threat: azure-nsg-unrestricted-outbound
+  countermeasures: [cm-egress-filtering, cm-nsg-least-privilege-rules, det-network-change-alert, det-egress-anomaly-detection,
+    subnet-flow-logs]
+- threat: azure-nsg-rule-tampering
+  countermeasures: [cm-least-privilege-rbac, cm-activity-log-alerting, cm-azure-policy-guardrails, cm-iac-drift-detection]
+- threat: azure-nsg-terraform-rule-drift
+  countermeasures: [cm-iac-drift-detection, cm-iac-security-scanning]
+- threat: azure-firewall-permissive-rules
+  countermeasures: [cm-firewall-least-privilege-rules, cm-firewall-threat-protection]
+- threat: azure-firewall-threat-detection-disabled
+  countermeasures: [cm-firewall-threat-protection, fw-threat-intel-deny, fw-idps-deny]
+- threat: azure-firewall-dnat-exposure
+  countermeasures: [cm-firewall-least-privilege-rules, cm-bastion-jit-admin-access, det-network-change-alert,
+    fw-diagnostic-logs]
+- threat: azure-firewall-policy-tampering
+  countermeasures: [cm-least-privilege-rbac, cm-activity-log-alerting, cm-resource-lock, cm-iac-drift-detection]
+- threat: azure-firewall-snat-exhaustion
+  countermeasures: [cm-firewall-snat-scaling, det-firewall-health-metric-alerts, fw-diagnostic-logs]
+- threat: azure-firewall-missing-logs
+  countermeasures: [cm-diagnostic-logging, policy-enable-logging-by-category-group-for-firewalls-microsoft-network-azurefirewalls-to-event-h,
+    policy-enable-logging-by-category-group-for-firewall-microsoft-network-azurefirewalls-to-log-anal,
+    policy-enable-logging-by-category-group-for-firewalls-microsoft-network-azurefirewalls-to-log-ana,
+    policy-enable-logging-by-category-group-for-firewalls-microsoft-network-azurefirewalls-to-storage,
+    fw-diagnostic-logs]
+- threat: azure-application-gateway-waf-ineffective
+  countermeasures: [cm-waf, cm-azure-policy-guardrails, agw-waf-v2-prevention]
+- threat: azure-application-gateway-weak-tls
+  countermeasures: [cm-appgw-tls-policy, cm-enforce-tls12, det-policy-compliance-alerts, det-waf-log-analysis,
+    waf-diagnostic-logs, agw-tls-policy]
+- threat: azure-application-gateway-unencrypted-backend
+  countermeasures: [cm-appgw-end-to-end-tls, det-policy-compliance-alerts, det-waf-log-analysis, det-agw-backend-health-alert,
+    agw-end-to-end-tls]
+- threat: azure-application-gateway-certificate-exposure
+  countermeasures: [cm-appgw-key-vault-certificates, cm-terraform-state-protection, cm-secrets-outside-terraform-state,
+    det-keyvault-access-anomaly-alert, det-terraform-state-access-monitoring, det-agw-backend-health-alert,
+    kv-resource-logs-to-sentinel]
+- threat: azure-application-gateway-header-spoofing
+  countermeasures: [cm-header-sanitization, det-waf-log-analysis, waf-diagnostic-logs]
+- threat: azure-application-gateway-ddos
+  countermeasures: [cm-waf, cm-ddos-protection]
+- threat: azure-application-gateway-missing-logs
+  countermeasures: [cm-diagnostic-logging, policy-enable-logging-by-category-group-for-application-gateways-microsoft-network-applicationgat,
+    policy-azure-application-gateway-should-have-resource-logs-enabled]
+- threat: azure-private-endpoint-exfiltration-to-foreign-resource
+  countermeasures: [cm-private-endpoint-governance, cm-least-privilege-rbac]
+- threat: azure-private-endpoint-unreviewed-inbound-connection
+  countermeasures: [cm-private-endpoint-governance, cm-activity-log-alerting]
+- threat: azure-private-endpoint-network-policies-disabled
+  countermeasures: [cm-private-endpoint-network-policies, cm-nsg-segmentation, det-network-change-alert]
+- threat: azure-private-endpoint-public-access-retained
+  countermeasures: [cm-disable-public-network-access, cm-azure-policy-guardrails, cm-iac-security-scanning,
+    policy-azure-arc-private-link-scopes-should-disable-public-network-access, policy-azure-monitor-private-link-scope-should-block-access-to-non-private-link-resources,
+    policy-azure-monitor-private-link-scope-should-use-private-link, policy-azure-arc-private-link-scopes-should-be-configured-with-a-private-endpoint,
+    policy-azure-arc-enabled-kubernetes-clusters-should-be-configured-with-an-azure-arc-private-link,
+    policy-azure-arc-enabled-servers-should-be-configured-with-an-azure-arc-private-link-scope, policy-azure-api-for-fhir-should-use-private-link,
+    policy-azure-health-data-services-de-identification-service-should-use-private-link, policy-azure-health-data-services-workspace-should-use-private-link,
+    policy-azure-purview-accounts-should-use-private-link, policy-azure-signalr-service-should-use-private-link,
+    policy-azure-web-pubsub-service-should-use-a-sku-that-supports-private-link, policy-azure-web-pubsub-service-should-use-private-link,
+    policy-botservice-resources-should-use-private-link, policy-disk-access-resources-should-use-private-link,
+    policy-iot-central-should-use-private-link, policy-vm-image-builder-templates-should-use-private-link]
+- threat: azure-private-endpoint-dns-misconfiguration
+  countermeasures: [cm-private-dns-centralized, cm-iac-security-scanning]
+- threat: azure-private-dns-zone-record-tampering
+  countermeasures: [cm-least-privilege-rbac, cm-activity-log-alerting, cm-resource-lock, cm-private-dns-centralized]
+- threat: azure-private-dns-zone-resolution-failure
+  countermeasures: [cm-private-dns-centralized, cm-resource-lock, det-network-change-alert, det-critical-delete-alert,
+    det-public-name-resolution-detection]
+- threat: azure-private-dns-zone-missing-logging
+  countermeasures: [cm-dns-security-policy, cm-diagnostic-logging]
+- threat: azure-bastion-overprivileged-access
+  countermeasures: [cm-least-privilege-rbac, cm-conditional-access-mfa, cm-vm-entra-login, det-rbac-assignment-alert,
+    cm-bastion-feature-hardening]
+- threat: azure-bastion-feature-abuse
+  countermeasures: [cm-bastion-feature-hardening]
+- threat: azure-bastion-vm-credential-spoofing
+  countermeasures: [cm-vm-entra-login, cm-conditional-access-mfa, cm-bastion-feature-hardening, cm-vm-log-collection,
+    bastion-entra-id-auth]
+- threat: azure-bastion-subnet-nsg-misconfiguration
+  countermeasures: [cm-nsg-least-privilege-rules, cm-conditional-access-mfa, det-network-change-alert]
+- threat: azure-bastion-missing-audit
+  countermeasures: [cm-diagnostic-logging, cm-bastion-feature-hardening, policy-enable-logging-by-category-group-for-bastions-microsoft-network-bastionhosts-to-event-hub,
+    policy-enable-logging-by-category-group-for-bastions-microsoft-network-bastionhosts-to-log-analyt,
+    policy-enable-logging-by-category-group-for-bastions-microsoft-network-bastionhosts-to-storage]
+- threat: azure-sql-database-public-network-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-no-allow-all-azure-services,
+    cm-azure-policy-guardrails, policy-public-network-access-on-azure-sql-database-should-be-disabled,
+    policy-sql-server-should-use-a-virtual-network-service-endpoint]
+- threat: azure-sql-database-sql-authentication
+  countermeasures: [cm-sql-entra-only-auth, cm-secrets-outside-terraform-state, cm-defender-for-databases,
+    policy-azure-sql-database-should-have-microsoft-entra-only-authentication-enabled, policy-azure-sql-database-should-have-microsoft-entra-only-authentication-enabled-during-creation]
+- threat: azure-sql-database-sql-injection
+  countermeasures: [cm-parameterized-queries, cm-defender-for-databases, cm-waf, cm-sql-least-privilege-db-roles]
+- threat: azure-sql-database-excessive-privileges
+  countermeasures: [cm-sql-least-privilege-db-roles, cm-sql-entra-only-auth, det-sql-privilege-and-classification-audit,
+    cm-sql-auditing, cm-defender-for-databases]
+- threat: azure-sql-database-data-exfiltration
+  countermeasures: [cm-sql-outbound-restriction, cm-least-privilege-rbac, cm-defender-for-databases, cm-activity-log-alerting]
+- threat: azure-sql-database-insecure-transport
+  countermeasures: [cm-enforce-tls12, cm-azure-policy-guardrails, policy-azure-sql-database-should-be-running-tls-version-1-2-or-newer,
+    policy-enforce-ssl-connection-should-be-enabled-for-mysql-database-servers, policy-enforce-ssl-connection-should-be-enabled-for-postgresql-database-servers]
+- threat: azure-sql-database-sensitive-data-plaintext
+  countermeasures: [cm-sql-always-encrypted, cm-sql-least-privilege-db-roles, det-sql-privilege-and-classification-audit,
+    cm-sql-auditing]
+- threat: azure-sql-database-destruction
+  countermeasures: [cm-sql-backup-retention, cm-resource-lock, cm-least-privilege-rbac, cm-activity-log-alerting]
+- threat: azure-sql-database-missing-auditing
+  countermeasures: [cm-sql-auditing, cm-azure-policy-guardrails]
+- threat: azure-cosmosdb-account-key-abuse
+  countermeasures: [cm-cosmosdb-disable-local-auth, cm-entra-id-authentication, cm-secret-scanning, policy-cosmos-db-database-accounts-should-have-local-authentication-methods-disabled]
+- threat: azure-cosmosdb-control-plane-key-listing
+  countermeasures: [cm-cosmosdb-disable-local-auth, cm-least-privilege-rbac, cm-activity-log-alerting]
+- threat: azure-cosmosdb-public-network-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-network-default-deny, cm-no-allow-all-azure-services,
+    det-policy-compliance-alerts, policy-azure-cosmos-db-should-disable-public-network-access, policy-azure-cosmos-db-accounts-should-have-firewall-rules,
+    policy-cosmos-db-should-use-a-virtual-network-service-endpoint, policy-cosmosdb-accounts-should-use-private-link]
+- threat: azure-cosmosdb-query-injection
+  countermeasures: [cm-parameterized-queries, cm-defender-for-databases]
+- threat: azure-cosmosdb-data-deletion
+  countermeasures: [cm-cosmosdb-continuous-backup, cm-resource-lock, cm-cosmosdb-disable-local-auth, cm-least-privilege-rbac,
+    det-critical-delete-alert, det-cosmosdb-control-plane-alerts]
+- threat: azure-cosmosdb-throughput-exhaustion
+  countermeasures: [cm-cosmosdb-throughput-limits, cm-waf]
+- threat: azure-cosmosdb-missing-logging
+  countermeasures: [cm-diagnostic-logging, cm-defender-for-databases]
+- threat: azure-ad-application-client-secret-leak
+  countermeasures: [cm-workload-identity-federation, cm-app-credential-management, cm-secrets-outside-terraform-state,
+    cm-secret-scanning]
+- threat: azure-ad-application-credential-backdoor
+  countermeasures: [cm-app-owner-restrictions, cm-entra-audit-alerting, cm-pim-privileged-access]
+- threat: azure-ad-application-excessive-api-permissions
+  countermeasures: [cm-graph-permission-least-privilege, cm-entra-audit-alerting]
+- threat: azure-ad-application-illicit-consent
+  countermeasures: [cm-restrict-user-consent, cm-entra-audit-alerting, entra-user-consent-restriction]
+- threat: azure-ad-application-redirect-uri-hijack
+  countermeasures: [cm-redirect-uri-hygiene, cm-dangling-dns-protection]
+- threat: azure-ad-application-multitenant-misuse
+  countermeasures: [cm-app-tenant-restriction, det-signin-ca-gap-detection, entra-sp-least-privilege-monitor,
+    cm-entra-audit-alerting, cm-app-credential-management]
+- threat: azure-ad-application-insecure-oauth-flows
+  countermeasures: [cm-oauth-secure-flows, cm-conditional-access-mfa, det-signin-ca-gap-detection, cm-entra-audit-alerting,
+    cm-app-credential-management]
+- threat: azure-ad-application-credential-expiry-outage
+  countermeasures: [cm-app-credential-management, cm-workload-identity-federation]
+- threat: azure-ad-application-missing-audit
+  countermeasures: [cm-entra-audit-alerting, cm-diagnostic-logging, cm-log-retention]
+- threat: azure-service-principal-overprivileged-rbac
+  countermeasures: [cm-pipeline-identity-separation, cm-least-privilege-rbac, cm-azure-policy-guardrails]
+- threat: azure-service-principal-credential-theft
+  countermeasures: [cm-workload-identity-federation, cm-conditional-access-workload-identities, cm-secret-scanning,
+    entra-sp-credential-hygiene, entra-sp-least-privilege-monitor, kv-managed-identity]
+- threat: azure-service-principal-directory-role-escalation
+  countermeasures: [cm-graph-permission-least-privilege, cm-entra-audit-alerting, cm-identity-lifecycle-reviews]
+- threat: azure-service-principal-credential-backdoor
+  countermeasures: [cm-entra-audit-alerting, cm-app-owner-restrictions, cm-identity-lifecycle-reviews]
+- threat: azure-service-principal-stale
+  countermeasures: [cm-identity-lifecycle-reviews, cm-app-credential-management]
+- threat: azure-service-principal-third-party-app-abuse
+  countermeasures: [cm-graph-permission-least-privilege, cm-identity-lifecycle-reviews, cm-restrict-user-consent]
+- threat: azure-function-app-function-key-abuse
+  countermeasures: [cm-function-app-entra-auth, cm-function-app-storage-identity, cm-app-service-access-restrictions,
+    det-policy-compliance-alerts, det-appservice-config-read-alert, policy-function-apps-should-have-authentication-enabled,
+    policy-function-apps-should-use-managed-identity]
+- threat: azure-function-app-storage-takeover
+  countermeasures: [cm-function-app-storage-identity, cm-storage-disable-shared-key, cm-least-privilege-rbac,
+    det-function-storage-write-audit, cm-defender-for-storage, sa-diagnostic-settings]
+- threat: azure-function-app-trigger-input-injection
+  countermeasures: [cm-input-validation, cm-least-privilege-rbac, det-queue-write-audit, cm-defender-for-app-service,
+    appservice-diagnostic-logging]
+- threat: azure-function-app-scale-cost-dos
+  countermeasures: [cm-function-app-scale-limits, cm-waf]
+- threat: azure-container-registry-admin-user
+  countermeasures: [cm-acr-disable-admin-user, cm-entra-id-authentication, cm-azure-policy-guardrails,
+    acr-disable-admin-user]
+- threat: azure-container-registry-anonymous-pull
+  countermeasures: [cm-acr-disable-anonymous-pull, cm-azure-policy-guardrails, acr-disable-anonymous-pull]
+- threat: azure-container-registry-public-network-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-network-default-deny, det-policy-compliance-alerts,
+    policy-container-registries-should-use-private-link, acr-private-endpoint]
+- threat: azure-container-registry-image-poisoning
+  countermeasures: [cm-acr-image-signing-and-locking, cm-aks-trusted-registries, cm-least-privilege-rbac,
+    det-acr-push-delete-audit, cm-defender-for-containers, aci-private-registry-scan]
+- threat: azure-container-registry-vulnerable-images
+  countermeasures: [cm-defender-for-containers, cm-secret-scanning]
+- threat: azure-container-registry-tasks-abuse
+  countermeasures: [cm-least-privilege-rbac, cm-activity-log-alerting]
+- threat: azure-container-registry-image-deletion
+  countermeasures: [cm-acr-image-signing-and-locking, cm-resource-lock, cm-least-privilege-rbac, det-critical-delete-alert,
+    det-acr-push-delete-audit]
+- threat: azure-container-registry-missing-logs
+  countermeasures: [cm-diagnostic-logging]
+- threat: azure-virtual-machine-public-management-exposure
+  countermeasures: [cm-bastion-jit-admin-access, cm-nsg-least-privilege-rules, cm-azure-policy-guardrails,
+    vm-restrict-management-ports, vm-brute-force-detection]
+- threat: azure-virtual-machine-password-authentication
+  countermeasures: [cm-vm-entra-login, cm-secrets-outside-terraform-state, det-policy-compliance-alerts,
+    det-terraform-state-access-monitoring, cm-vm-log-collection, vm-brute-force-detection, cm-defender-for-servers,
+    vm-secure-baseline]
+- threat: azure-virtual-machine-run-command-abuse
+  countermeasures: [cm-least-privilege-rbac, cm-activity-log-alerting, cm-pim-privileged-access, vm-extension-allowlist]
+- threat: azure-virtual-machine-disk-exfiltration
+  countermeasures: [cm-disk-access-restriction, cm-least-privilege-rbac, cm-activity-log-alerting, vm-disk-export-control]
+- threat: azure-virtual-machine-disk-encryption-gaps
+  countermeasures: [cm-vm-encryption-at-host, cm-azure-policy-guardrails]
+- threat: azure-virtual-machine-boot-tampering
+  countermeasures: [cm-vm-trusted-launch, cm-defender-for-servers]
+- threat: azure-virtual-machine-unpatched
+  countermeasures: [cm-vm-patch-management, cm-defender-for-servers, vm-patch-management]
+- threat: azure-virtual-machine-ransomware
+  countermeasures: [cm-vm-backup, cm-resource-lock, cm-defender-for-servers, cm-least-privilege-rbac,
+    vm-backup-immutable]
+- threat: azure-virtual-machine-missing-security-logging
+  countermeasures: [cm-vm-log-collection, cm-defender-for-servers]
+- threat: azure-log-analytics-sensitive-data-exposure
+  countermeasures: [cm-log-analytics-access-control, cm-log-data-minimization, det-policy-compliance-alerts,
+    det-sensitive-data-in-logs-scan, policy-log-analytics-agent-should-be-installed-on-your-cloud-services-extended-support-role-insta,
+    la-access-control-mode]
+- threat: azure-log-analytics-local-auth-log-injection
+  countermeasures: [cm-log-analytics-access-control, det-policy-compliance-alerts, det-workspace-ingestion-anomaly]
+- threat: azure-log-analytics-log-tampering
+  countermeasures: [cm-log-immutability, cm-least-privilege-rbac, cm-activity-log-alerting, cm-resource-lock,
+    la-immutable-export]
+- threat: azure-log-analytics-collection-disabled
+  countermeasures: [cm-azure-policy-guardrails, cm-activity-log-alerting, cm-least-privilege-rbac]
+- threat: azure-log-analytics-public-access
+  countermeasures: [cm-log-analytics-private-link, cm-log-analytics-access-control, det-policy-compliance-alerts,
+    policy-log-analytics-workspaces-should-block-log-ingestion-and-querying-from-public-networks, la-private-link]
+- threat: azure-log-analytics-daily-cap-blinding
+  countermeasures: [cm-log-analytics-capacity-alerting]
+- threat: azure-log-analytics-insufficient-retention
+  countermeasures: [cm-log-retention, cm-log-immutability]
+- threat: azure-defender-plans-disabled
+  countermeasures: [cm-defender-plan-coverage, cm-azure-policy-guardrails, policy-azure-defender-for-app-service-should-be-enabled,
+    policy-azure-defender-for-azure-sql-database-servers-should-be-enabled, policy-azure-defender-for-key-vault-should-be-enabled,
+    policy-azure-defender-for-resource-manager-should-be-enabled, policy-azure-defender-for-sql-servers-on-machines-should-be-enabled,
+    policy-azure-defender-for-sql-should-be-enabled-for-unprotected-azure-sql-servers, policy-azure-defender-for-sql-should-be-enabled-for-unprotected-mysql-flexible-servers,
+    policy-azure-defender-for-sql-should-be-enabled-for-unprotected-postgresql-flexible-servers, policy-azure-defender-for-sql-should-be-enabled-for-unprotected-sql-managed-instances,
+    policy-azure-defender-for-open-source-relational-databases-should-be-enabled, policy-azure-defender-for-servers-should-be-enabled,
+    policy-azure-kubernetes-service-clusters-should-have-defender-profile-enabled, policy-azure-registry-container-images-should-have-vulnerabilities-resolved-powered-by-microsoft,
+    policy-azure-running-container-images-should-have-vulnerabilities-resolved-powered-by-microsoft-d,
+    policy-microsoft-defender-cspm-should-be-enabled, policy-microsoft-defender-for-apis-should-be-enabled,
+    policy-microsoft-defender-for-azure-cosmos-db-should-be-enabled, policy-microsoft-defender-for-containers-should-be-enabled,
+    policy-microsoft-defender-for-sql-should-be-enabled-for-unprotected-synapse-workspaces, policy-microsoft-defender-for-storage-should-be-enabled,
+    policy-windows-defender-exploit-guard-should-be-enabled-on-your-machines, policy-windows-machines-should-configure-windows-defender-to-update-protection-signatures-within,
+    policy-windows-machines-should-enable-windows-defender-real-time-protection, defender-enable-on-all-subscriptions,
+    defender-containers-plan]
+- threat: azure-defender-alert-suppression-tampering
+  countermeasures: [cm-least-privilege-rbac, cm-pim-privileged-access, cm-activity-log-alerting]
+- threat: azure-defender-alerts-unrouted
+  countermeasures: [cm-defender-alert-routing]
+- threat: azure-defender-posture-data-exposure
+  countermeasures: [cm-least-privilege-rbac, det-rbac-assignment-alert, det-workspace-query-audit]
+- threat: azure-ai-search-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-network-default-deny, det-policy-compliance-alerts,
+    policy-azure-ai-search-service-should-use-a-sku-that-supports-private-link, policy-azure-ai-search-services-should-disable-public-network-access]
+- threat: azure-ai-search-key-authentication
+  countermeasures: [cm-entra-id-authentication, cm-secret-scanning, cm-least-privilege-rbac, policy-azure-ai-search-services-should-have-local-authentication-methods-disabled]
+- threat: azure-ai-search-index-data-overexposure
+  countermeasures: [cm-ai-search-security-trimming, cm-least-privilege-rbac, det-ai-search-query-audit]
+- threat: azure-ai-search-platform-key-encryption
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts, policy-azure-ai-search-services-should-use-customer-managed-keys-to-encrypt-data-at-rest]
+- threat: azure-ai-search-missing-logging
+  countermeasures: [cm-diagnostic-logging, policy-resource-logs-in-search-services-should-be-enabled]
+- threat: azure-ai-services-public-endpoint
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-network-default-deny, det-policy-compliance-alerts,
+    det-ai-services-request-audit, ai-private-endpoint]
+- threat: azure-ai-services-api-key-exposure
+  countermeasures: [cm-entra-id-authentication, cm-secret-scanning, cm-least-privilege-rbac, cm-ai-services-quota-limits,
+    policy-cognitive-services-accounts-should-use-a-managed-identity, ai-managed-identity-auth]
+- threat: azure-ai-services-prompt-injection
+  countermeasures: [cm-input-validation, det-ai-services-request-audit, ai-content-filtering]
+- threat: azure-ai-services-missing-logging
+  countermeasures: [cm-diagnostic-logging, policy-diagnostic-logs-in-azure-ai-services-resources-should-be-enabled]
+- threat: azure-ai-services-unrestricted-outbound
+  countermeasures: [cm-egress-filtering, det-policy-compliance-alerts, det-egress-anomaly-detection, det-ai-services-request-audit]
+- threat: azure-api-center-test-console-credential-exposure
+  countermeasures: [cm-least-privilege-rbac, det-credential-bearing-config-change-alert, apic-scope-credential-access]
+- threat: azure-api-center-broad-key-vault-access
+  countermeasures: [cm-least-privilege-rbac, cm-key-vault-rbac-authorization, det-rbac-assignment-alert,
+    det-keyvault-access-anomaly-alert, apic-least-privilege-keyvault]
+- threat: azure-api-center-unregistered-api
+  countermeasures: [cm-azure-policy-guardrails, apic-register-all-apis]
+- threat: azure-api-management-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-waf, cm-nsg-segmentation, policy-api-management-services-should-use-a-virtual-network,
+    policy-api-management-should-disable-public-network-access-to-the-service-configuration-endpoints]
+- threat: azure-api-management-weak-tls-protocols
+  countermeasures: [cm-enforce-tls12, det-policy-compliance-alerts, policy-api-management-apis-should-use-only-encrypted-protocols]
+- threat: azure-api-management-legacy-platform-config
+  countermeasures: [cm-azure-policy-guardrails, cm-iac-security-scanning, policy-azure-api-management-platform-version-should-be-stv2]
+- threat: azure-api-management-missing-api-authentication
+  countermeasures: [cm-apim-validate-jwt, cm-input-validation, cm-waf]
+- threat: azure-api-management-subscription-key-and-secret-leakage
+  countermeasures: [cm-secrets-outside-terraform-state, cm-key-vault-expiration-rotation, det-credential-bearing-config-change-alert,
+    det-apim-subscription-key-anomaly]
+- threat: azure-app-configuration-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, det-policy-compliance-alerts,
+    policy-app-configuration-should-use-a-sku-that-supports-private-link, policy-app-configuration-should-use-private-link,
+    policy-app-configuration-should-disable-public-network-access]
+- threat: azure-app-configuration-access-key-authentication
+  countermeasures: [cm-entra-id-authentication, cm-least-privilege-rbac, cm-secret-scanning]
+- threat: azure-app-configuration-platform-key-encryption
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts, policy-app-configuration-should-use-a-customer-managed-key]
+- threat: azure-app-configuration-deletion-without-recovery
+  countermeasures: [cm-resource-lock, cm-app-configuration-purge-protection, det-critical-delete-alert]
+- threat: azure-app-insights-key-and-connection-string-misuse
+  countermeasures: [cm-entra-id-authentication, det-policy-compliance-alerts, det-app-insights-ingestion-anomaly,
+    appi-entra-authentication, appi-secret-references]
+- threat: azure-app-insights-sensitive-telemetry
+  countermeasures: [cm-log-data-minimization, cm-log-analytics-access-control, det-sensitive-data-in-logs-scan,
+    appi-scrub-sensitive-telemetry]
+- threat: azure-app-insights-public-ingestion-and-query
+  countermeasures: [cm-log-analytics-private-link, det-policy-compliance-alerts, policy-azure-monitor-logs-for-application-insights-should-be-linked-to-a-log-analytics-workspace,
+    policy-application-insights-components-should-block-log-ingestion-and-querying-from-public-networ]
+- threat: azure-app-insights-ingestion-flooding
+  countermeasures: [cm-log-analytics-capacity-alerting]
+- threat: azure-arc-managed-identity-key-theft
+  countermeasures: [cm-dedicated-workload-identities, det-managed-identity-sign-in-anomaly, managed-identity-review,
+    cm-defender-for-servers, arc-restrict-himds-group, arc-full-disk-encryption]
+- threat: azure-arc-extension-code-execution
+  countermeasures: [cm-least-privilege-rbac, cm-pim-privileged-access, arc-least-privilege-roles]
+- threat: azure-arc-onboarding-credential-abuse
+  countermeasures: [cm-app-credential-management, cm-workload-identity-federation, arc-onboarding-certificate-sp]
+- threat: azure-automation-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, det-policy-compliance-alerts,
+    policy-automation-accounts-should-disable-public-network-access]
+- threat: azure-automation-plaintext-credentials-and-variables
+  countermeasures: [cm-secrets-outside-terraform-state, cm-key-vault-rbac-authorization, det-policy-compliance-alerts,
+    det-credential-bearing-config-change-alert, policy-automation-account-variables-should-be-encrypted,
+    policy-azure-automation-accounts-should-use-customer-managed-keys-to-encrypt-data-at-rest]
+- threat: azure-automation-local-authentication
+  countermeasures: [cm-entra-id-authentication, cm-dedicated-workload-identities, det-policy-compliance-alerts,
+    policy-azure-automation-account-should-have-local-authentication-method-disabled]
+- threat: azure-automation-runbook-privilege-escalation
+  countermeasures: [cm-least-privilege-rbac, cm-pim-privileged-access, cm-activity-log-alerting]
+- threat: azure-automation-webhook-url-exposure
+  countermeasures: [cm-secret-scanning, cm-app-credential-management]
+- threat: azure-avd-desktop-group-overexposure
+  countermeasures: [cm-avd-scoped-app-group-assignments, det-rbac-assignment-alert, avd-appgroup-role-review,
+    avd-workspace-role-review, avd-appgroup-preferred-type]
+- threat: azure-avd-host-pool-identity-overprivileged
+  countermeasures: [cm-key-vault-rbac-authorization, cm-key-vault-per-application, det-rbac-assignment-alert,
+    det-keyvault-access-anomaly-alert, det-managed-identity-sign-in-anomaly, avd-hostpool-mi-secret-scope]
+- threat: azure-avd-domain-join-account-overprivileged
+  countermeasures: [cm-secrets-outside-terraform-state, cm-least-privilege-rbac, det-keyvault-access-anomaly-alert,
+    det-windows-security-event-monitoring, avd-domain-join-delegation]
+- threat: azure-avd-scaling-plan-excessive-rights
+  countermeasures: [cm-least-privilege-rbac, cm-resource-lock, det-rbac-assignment-alert, avd-scaling-plan-scope]
+- threat: azure-avd-session-host-unrestricted-egress
+  countermeasures: [cm-egress-filtering, cm-subnet-disable-default-outbound, det-egress-anomaly-detection,
+    avd-sh-edr, avd-sh-egress-control]
+- threat: azure-avd-session-host-shared-local-admin
+  countermeasures: [cm-vm-entra-login, det-windows-security-event-monitoring, cm-vm-log-collection, vm-secure-baseline,
+    avd-sh-laps-rotation]
+- threat: azure-avd-session-host-user-admin-rights
+  countermeasures: [cm-least-privilege-rbac, det-rbac-assignment-alert, det-windows-security-event-monitoring,
+    cm-vm-log-collection, avd-sh-no-user-admin]
+- threat: azure-avd-session-host-no-endpoint-protection
+  countermeasures: [cm-defender-for-servers, avd-sh-edr]
+- threat: azure-avd-fslogix-av-exclusion-malware
+  countermeasures: [avd-fslogix-av-exclusions-scoped]
+- threat: azure-avd-idle-session-unlocked
+  countermeasures: [det-policy-compliance-alerts, det-avd-connection-anomaly-alert, avd-hostpool-diagnostics,
+    avd-sh-idle-lock]
+- threat: azure-backup-vault-single-admin-destruction
+  countermeasures: [cm-resource-lock, det-critical-delete-alert, det-backup-critical-operation-alerts,
+    bkp-mua-resource-guard]
+- threat: azure-backup-vault-soft-delete-disabled
+  countermeasures: [det-policy-compliance-alerts, det-backup-critical-operation-alerts, bkp-soft-delete-always-on]
+- threat: azure-backup-vault-mutable-recovery-points
+  countermeasures: [det-policy-compliance-alerts, det-backup-critical-operation-alerts, bkp-immutable-vault-lock]
+- threat: azure-backup-vault-public-network-access
+  countermeasures: [cm-private-endpoint, det-policy-compliance-alerts, det-backup-critical-operation-alerts,
+    bkp-private-endpoint]
+- threat: azure-backup-vault-restore-exfiltration
+  countermeasures: [cm-least-privilege-rbac, cm-activity-log-alerting]
+- threat: azure-backup-vault-unmonitored-failures
+  countermeasures: [cm-activity-log-alerting, cm-diagnostic-logging]
+- threat: azure-batch-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-network-default-deny, det-policy-compliance-alerts,
+    policy-public-network-access-should-be-disabled-for-batch-accounts]
+- threat: azure-batch-shared-key-authentication
+  countermeasures: [cm-entra-id-authentication, cm-secret-scanning]
+- threat: azure-batch-unencrypted-data
+  countermeasures: [det-policy-compliance-alerts, policy-azure-batch-account-should-use-customer-managed-keys-to-encrypt-data,
+    policy-azure-batch-pools-should-have-disk-encryption-enabled]
+- threat: azure-batch-task-privilege-and-secret-exposure
+  countermeasures: [cm-secrets-outside-terraform-state, cm-dedicated-workload-identities, det-credential-bearing-config-change-alert]
+- threat: azure-batch-compute-hijacking
+  countermeasures: [cm-ai-services-quota-limits]
+- threat: azure-batch-missing-logging
+  countermeasures: [cm-diagnostic-logging, policy-resource-logs-in-batch-accounts-should-be-enabled]
+- threat: azure-redis-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-network-default-deny, det-policy-compliance-alerts,
+    policy-azure-cache-for-redis-should-disable-public-network-access, policy-azure-cache-for-redis-enterprise-should-use-private-link,
+    policy-azure-cache-for-redis-should-use-private-link]
+- threat: azure-redis-insecure-transport
+  countermeasures: [cm-enforce-tls12, det-policy-compliance-alerts, det-redis-client-anomaly-alert]
+- threat: azure-redis-access-key-authentication
+  countermeasures: [cm-entra-id-authentication, cm-secret-scanning]
+- threat: azure-redis-persistence-and-key-exposure
+  countermeasures: [cm-secrets-outside-terraform-state, det-policy-compliance-alerts, policy-azure-cache-for-redis-enterprise-should-use-customer-managed-keys-for-encrypting-disk-data]
+- threat: azure-redis-cache-poisoning
+  countermeasures: [cm-input-validation, cm-private-endpoint, det-redis-client-anomaly-alert]
+- threat: azure-container-apps-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-waf, cm-nsg-segmentation, policy-container-apps-environment-should-disable-public-network-access,
+    policy-container-app-environments-should-use-network-injection, policy-container-apps-should-disable-external-network-access]
+- threat: azure-container-apps-insecure-ingress
+  countermeasures: [cm-enforce-tls12, det-policy-compliance-alerts, policy-container-apps-should-only-be-accessible-over-https]
+- threat: azure-container-apps-plaintext-secrets
+  countermeasures: [cm-secrets-outside-terraform-state, cm-key-vault-secret-references, det-credential-bearing-config-change-alert,
+    det-container-apps-log-alerts, cm-secret-scanning]
+- threat: azure-container-apps-unauthenticated-ingress
+  countermeasures: [cm-entra-id-authentication, cm-input-validation, det-container-apps-log-alerts]
+- threat: azure-container-apps-untrusted-image
+  countermeasures: [cm-trusted-registry-only, cm-acr-image-signing-and-locking, det-policy-compliance-alerts,
+    det-acr-push-delete-audit, det-container-apps-log-alerts, cm-defender-for-containers]
+- threat: azure-container-apps-missing-logging
+  countermeasures: [cm-diagnostic-logging]
+- threat: azure-aci-plaintext-credentials
+  countermeasures: [cm-secrets-outside-terraform-state, det-credential-bearing-config-change-alert, cm-secret-scanning,
+    aci-keyvault-secrets]
+- threat: azure-aci-untrusted-images
+  countermeasures: [cm-trusted-registry-only, aci-private-registry-scan]
+- threat: azure-aci-no-network-segmentation
+  countermeasures: [cm-nsg-segmentation, cm-egress-filtering, det-policy-compliance-alerts, policy-azure-container-instance-container-group-should-deploy-into-a-virtual-network,
+    aci-vnet-nsg]
+- threat: azure-aci-privileged-runtime
+  countermeasures: [det-policy-compliance-alerts, cm-defender-for-containers, aci-private-registry-scan,
+    aci-least-privilege-runtime]
+- threat: azure-aci-platform-key-encryption
+  countermeasures: [det-policy-compliance-alerts, policy-azure-container-instance-container-group-should-use-customer-managed-key-for-encryption]
+- threat: azure-data-explorer-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, det-policy-compliance-alerts,
+    policy-azure-data-explorer-cluster-should-use-private-link, policy-azure-data-explorer-should-use-a-sku-that-supports-private-link,
+    policy-public-network-access-on-azure-data-explorer-should-be-disabled]
+- threat: azure-data-explorer-encryption-gaps
+  countermeasures: [det-policy-compliance-alerts, policy-azure-data-explorer-encryption-at-rest-should-use-a-customer-managed-key,
+    policy-disk-encryption-should-be-enabled-on-azure-data-explorer, policy-double-encryption-should-be-enabled-on-azure-data-explorer]
+- threat: azure-data-explorer-overbroad-roles
+  countermeasures: [cm-least-privilege-rbac, det-adx-command-audit]
+- threat: azure-data-explorer-trusted-tenants-and-egress
+  countermeasures: [cm-egress-filtering, det-egress-anomaly-detection, det-adx-command-audit]
+- threat: azure-data-factory-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, det-policy-compliance-alerts,
+    policy-sql-server-integration-services-integration-runtimes-on-azure-data-factory-should-be-joine,
+    policy-azure-data-factory-should-use-private-link, policy-public-network-access-on-azure-data-factory-should-be-disabled]
+- threat: azure-data-factory-linked-service-credentials
+  countermeasures: [cm-dedicated-workload-identities, cm-secrets-outside-terraform-state, det-policy-compliance-alerts,
+    det-credential-bearing-config-change-alert, policy-azure-data-factory-linked-services-should-use-system-assigned-managed-identity-authenticat]
+- threat: azure-data-factory-self-hosted-runtime-compromise
+  countermeasures: [cm-nsg-segmentation, cm-secret-scanning]
+- threat: azure-data-factory-pipeline-tampering
+  countermeasures: [cm-least-privilege-rbac, cm-iac-security-scanning]
+- threat: azure-data-lake-acl-overgrant
+  countermeasures: [det-adls-acl-change-audit, adls-group-based-acls]
+- threat: azure-data-lake-missing-dfs-private-endpoint
+  countermeasures: [cm-private-endpoint, det-network-change-alert, det-policy-compliance-alerts, adls-private-endpoints-blob-dfs]
+- threat: azure-databricks-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-nsg-segmentation, det-policy-compliance-alerts,
+    policy-azure-databricks-workspaces-should-be-in-a-virtual-network, policy-storage-accounts-should-restrict-network-access-using-virtual-network-rules-excluding-stor,
+    policy-azure-databricks-workspaces-should-use-private-link, policy-storage-accounts-should-use-private-link-excluding-storage-accounts-created-by-databricks,
+    policy-azure-databricks-clusters-should-disable-public-ip, policy-azure-databricks-workspaces-should-disable-public-network-access]
+- threat: azure-databricks-platform-key-encryption
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts, policy-azure-databricks-workspaces-should-be-premium-sku-that-supports-features-like-private-link]
+- threat: azure-databricks-storage-credential-exposure
+  countermeasures: [cm-storage-disable-shared-key, cm-secret-scanning, cm-dedicated-workload-identities,
+    policy-storage-accounts-should-prevent-shared-key-access-excluding-storage-accounts-created-by-da]
+- threat: azure-databricks-code-execution-privilege-escalation
+  countermeasures: [cm-least-privilege-rbac, cm-pim-privileged-access]
+- threat: azure-databricks-missing-logging
+  countermeasures: [cm-diagnostic-logging, policy-resource-logs-in-azure-databricks-workspaces-should-be-enabled]
+- threat: azure-ddos-protection-public-ip-unprotected
+  countermeasures: [det-policy-compliance-alerts, ddos-monitoring-telemetry, ddos-protect-every-public-ip]
+- threat: azure-ddos-protection-unsupported-resources
+  countermeasures: [det-policy-compliance-alerts, ddos-monitoring-telemetry, ddos-validate-supported-deployment]
+- threat: azure-ddos-protection-no-attack-telemetry
+  countermeasures: [policy-public-ip-addresses-should-have-resource-logs-enabled-for-azure-ddos-protection,
+    ddos-monitoring-telemetry]
+- threat: azure-dedicated-hsm-default-credentials
+  countermeasures: [cm-nsg-segmentation, det-dedicated-hsm-audit-forwarding, dhsm-change-default-credentials]
+- threat: azure-dedicated-hsm-role-lockout
+  countermeasures: [cm-nsg-segmentation, det-dedicated-hsm-audit-forwarding, dhsm-operational-procedures]
+- threat: azure-dedicated-hsm-no-ha-backup
+  countermeasures: [det-critical-delete-alert, det-dedicated-hsm-audit-forwarding, dhsm-ha-pairs-backup]
+- threat: azure-defender-unremediated-recommendations
+  countermeasures: [defender-review-recommendations]
+- threat: azure-dns-private-zone-link-misconfiguration
+  countermeasures: [cm-private-dns-centralized, det-network-change-alert, det-public-name-resolution-detection,
+    cm-dns-security-policy, dns-review-zone-links]
+- threat: azure-dns-no-dnssec-validation
+  countermeasures: [cm-dns-security-policy, dns-validating-resolver]
+- threat: azure-dns-malicious-domain-resolution
+  countermeasures: [cm-dns-security-policy, cm-egress-filtering, dns-security-policy]
+- threat: azure-dns-dangling-record-takeover
+  countermeasures: [cm-dangling-dns-protection]
+- threat: azure-dns-zone-record-tampering
+  countermeasures: [cm-resource-lock, cm-activity-log-alerting]
+- threat: azure-domain-services-ntlm-hash-sync
+  countermeasures: [det-domain-services-security-audit, dds-disable-ntlm-password-sync]
+- threat: azure-domain-services-weak-protocols
+  countermeasures: [det-policy-compliance-alerts, det-domain-services-security-audit, dds-disable-weak-protocols]
+- threat: azure-domain-services-ldap-relay
+  countermeasures: [det-domain-services-security-audit, dds-ldap-signing-channel-binding]
+- threat: azure-domain-services-ldaps-internet-exposure
+  countermeasures: [cm-nsg-least-privilege-rules, det-domain-services-security-audit]
+- threat: azure-elastic-san-public-network-access
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, det-policy-compliance-alerts,
+    esan-disable-public-access]
+- threat: azure-elastic-san-implicit-subnet-access
+  countermeasures: [cm-private-endpoint-network-policies, cm-nsg-segmentation, det-network-change-alert,
+    cm-vnet-flow-logs, esan-private-endpoint-network-policies]
+- threat: azure-elastic-san-no-transit-encryption-or-soft-delete
+  countermeasures: [cm-resource-lock, det-policy-compliance-alerts, esan-snapshot-recovery]
+- threat: azure-elastic-san-platform-key-encryption
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts]
+- threat: azure-entra-token-theft
+  countermeasures: [entra-phishing-resistant-mfa, entra-token-protection-cae, entra-risk-detection]
+- threat: azure-entra-password-spraying
+  countermeasures: [entra-password-protection, entra-risk-detection]
+- threat: azure-entra-conditional-access-bypass
+  countermeasures: [det-signin-ca-gap-detection, det-entra-privileged-role-alerts, cm-entra-audit-alerting,
+    entra-risk-detection, entra-block-legacy-auth, entra-ca-gap-review]
+- threat: azure-entra-standing-admin-access
+  countermeasures: [det-entra-privileged-role-alerts, cm-entra-audit-alerting, cm-pim-privileged-access,
+    entra-pim-just-in-time]
+- threat: azure-entra-break-glass-misuse
+  countermeasures: [entra-break-glass-accounts, entra-risk-detection]
+- threat: azure-entra-provider-support-access
+  countermeasures: [det-lockbox-request-alerts, cm-entra-audit-alerting, entra-customer-lockbox]
+- threat: azure-entra-guest-and-external-collaboration-overexposure
+  countermeasures: [cm-identity-lifecycle-reviews, cm-conditional-access-mfa]
+- threat: azure-entra-hybrid-identity-compromise
+  countermeasures: [cm-pim-privileged-access]
+- threat: azure-event-grid-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-network-default-deny, det-policy-compliance-alerts,
+    policy-azure-event-grid-domains-should-disable-public-network-access, policy-azure-event-grid-namespaces-should-disable-public-network-access,
+    policy-azure-event-grid-topics-should-disable-public-network-access, policy-azure-event-grid-domains-should-use-private-link,
+    policy-azure-event-grid-namespace-mqtt-broker-should-use-private-link, policy-azure-event-grid-namespace-topic-broker-should-use-private-link,
+    policy-azure-event-grid-topics-should-use-private-link]
+- threat: azure-event-grid-key-authentication
+  countermeasures: [cm-entra-id-authentication, cm-secret-scanning, policy-azure-event-grid-domains-should-have-local-authentication-methods-disabled,
+    policy-azure-event-grid-partner-namespaces-should-have-local-authentication-methods-disabled, policy-azure-event-grid-topics-should-have-local-authentication-methods-disabled]
+- threat: azure-event-grid-unauthenticated-webhook-delivery
+  countermeasures: [cm-entra-id-authentication, cm-input-validation, det-event-grid-failure-alert]
+- threat: azure-event-grid-subscription-exfiltration
+  countermeasures: [cm-least-privilege-rbac, cm-activity-log-alerting]
+- threat: azure-event-hubs-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-network-default-deny, det-policy-compliance-alerts,
+    policy-event-hub-namespaces-should-disable-public-network-access, policy-event-hub-namespaces-should-use-private-link,
+    policy-event-hub-should-use-a-virtual-network-service-endpoint]
+- threat: azure-event-hubs-sas-key-authentication
+  countermeasures: [cm-entra-id-authentication, cm-secret-scanning, cm-least-privilege-rbac, policy-azure-event-hub-namespaces-should-have-local-authentication-methods-disabled]
+- threat: azure-event-hubs-weak-tls
+  countermeasures: [cm-enforce-tls12, det-policy-compliance-alerts]
+- threat: azure-event-hubs-platform-key-encryption
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts, policy-event-hub-namespaces-should-have-double-encryption-enabled,
+    policy-event-hub-namespaces-should-use-a-customer-managed-key-for-encryption]
+- threat: azure-expressroute-unencrypted-private-peering
+  countermeasures: [det-policy-compliance-alerts, det-expressroute-bgp-monitoring, er-ipsec-over-er]
+- threat: azure-expressroute-unauthenticated-bgp
+  countermeasures: [det-policy-compliance-alerts, det-expressroute-bgp-monitoring, er-md5-bgp]
+- threat: azure-expressroute-broad-circuit-rbac
+  countermeasures: [cm-resource-lock, det-rbac-assignment-alert, det-expressroute-bgp-monitoring, er-rbac-circuits]
+- threat: azure-expressroute-authorization-key-abuse
+  countermeasures: [cm-nsg-segmentation, cm-activity-log-alerting]
+- threat: azure-expressroute-missing-logging
+  countermeasures: [cm-diagnostic-logging, policy-enable-logging-by-category-group-for-expressroute-circuits-microsoft-network-expressroutec]
+- threat: azure-file-sync-public-endpoint-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, det-policy-compliance-alerts,
+    policy-azure-file-sync-should-use-private-link, policy-public-network-access-should-be-disabled-for-azure-file-sync,
+    afs-private-endpoints]
+- threat: azure-file-sync-identity-misconfiguration
+  countermeasures: [det-files-auth-type-detection, azure-files-diagnostic-monitoring, afs-ad-ds-identity]
+- threat: azure-file-sync-no-backup
+  countermeasures: [det-critical-delete-alert, det-backup-critical-operation-alerts, azure-files-diagnostic-monitoring,
+    afs-azure-files-backup]
+- threat: azure-file-sync-registered-server-compromise
+  countermeasures: [cm-defender-for-servers]
+- threat: azure-files-rbac-acl-misalignment
+  countermeasures: [azure-files-identity-rbac-with-ntfs, azure-files-diagnostic-monitoring]
+- threat: azure-files-default-share-permission-overgrant
+  countermeasures: [cm-least-privilege-rbac, det-files-auth-type-detection, azure-files-diagnostic-monitoring]
+- threat: azure-files-smb-unencrypted-transfer
+  countermeasures: [det-policy-compliance-alerts, det-files-auth-type-detection, azure-files-diagnostic-monitoring,
+    azure-files-smb-encryption]
+- threat: azure-files-share-destruction
+  countermeasures: [det-critical-delete-alert, det-backup-critical-operation-alerts, det-files-auth-type-detection,
+    azure-files-diagnostic-monitoring, azure-files-backup-soft-delete]
+- threat: azure-firewall-manager-global-policy-change
+  countermeasures: [det-network-change-alert, fwm-policy-hierarchy]
+- threat: azure-firewall-manager-traffic-bypasses-firewall
+  countermeasures: [cm-vnet-hub-spoke-peering, det-network-change-alert, fwm-routing-intent]
+- threat: azure-firewall-manager-fqdn-filter-dns-mismatch
+  countermeasures: [cm-dns-security-policy, fwm-dns-proxy-clients]
+- threat: azure-front-door-weak-tls
+  countermeasures: [cm-enforce-tls12, det-policy-compliance-alerts, policy-azure-front-door-standard-and-premium-should-be-running-minimum-tls-version-of-1-2]
+- threat: azure-front-door-origin-bypass
+  countermeasures: [cm-app-service-access-restrictions, cm-private-endpoint, det-waf-log-analysis, det-origin-direct-access-detection,
+    waf-diagnostic-logs]
+- threat: azure-front-door-waf-ineffective
+  countermeasures: [cm-waf, policy-azure-front-door-profiles-should-use-premium-tier-that-supports-managed-waf-rules-and-priv]
+- threat: azure-front-door-missing-logging
+  countermeasures: [cm-diagnostic-logging, policy-enable-logging-by-category-group-for-endpoints-microsoft-cdn-profiles-endpoints-to-event-h,
+    policy-enable-logging-by-category-group-for-front-door-and-cdn-profiles-microsoft-cdn-profiles-to,
+    policy-enable-logging-by-category-group-for-front-door-and-cdn-profiles-microsoft-network-frontdo,
+    policy-enable-logging-by-category-group-for-microsoft-cdn-cdnwebapplicationfirewallpolicies-to-ev,
+    policy-azure-front-door-standard-or-premium-plus-waf-should-have-resource-logs-enabled, policy-azure-front-door-should-have-resource-logs-enabled,
+    policy-enable-logging-by-category-group-for-endpoints-microsoft-cdn-profiles-endpoints-to-log-ana,
+    policy-enable-logging-by-category-group-for-microsoft-cdn-cdnwebapplicationfirewallpolicies-to-lo]
+- threat: azure-front-door-dangling-custom-domain
+  countermeasures: [cm-dangling-dns-protection]
+- threat: azure-hdinsight-no-esp-authentication
+  countermeasures: [det-hdinsight-security-log-monitoring, hdi-esp-cluster]
+- threat: azure-hdinsight-insecure-transport
+  countermeasures: [det-policy-compliance-alerts, det-hdinsight-security-log-monitoring, hdi-encryption-in-transit]
+- threat: azure-hdinsight-keytab-exposure
+  countermeasures: [det-hdinsight-security-log-monitoring, hdi-keytab-protection]
+- threat: azure-hdinsight-public-gateway-and-ssh
+  countermeasures: [cm-private-endpoint, cm-nsg-least-privilege-rules, det-policy-compliance-alerts, policy-azure-hdinsight-should-use-private-link]
+- threat: azure-hdinsight-encryption-gaps
+  countermeasures: [det-policy-compliance-alerts, policy-azure-hdinsight-clusters-should-use-customer-managed-keys-to-encrypt-data-at-rest,
+    policy-azure-hdinsight-clusters-should-use-encryption-at-host-to-encrypt-data-at-rest, policy-azure-hdinsight-clusters-should-use-encryption-in-transit-to-encrypt-communication-between]
+- threat: azure-iot-hub-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, det-policy-compliance-alerts,
+    policy-azure-device-update-for-iot-hub-accounts-should-use-private-link, policy-iot-hub-device-provisioning-service-instances-should-use-private-link,
+    policy-iot-hub-device-provisioning-service-instances-should-disable-public-network-access, policy-public-network-access-for-azure-device-update-for-iot-hub-accounts-should-be-disabled,
+    policy-public-network-access-on-azure-iot-hub-should-be-disabled]
+- threat: azure-iot-hub-shared-access-policy-abuse
+  countermeasures: [cm-entra-id-authentication, cm-secret-scanning, cm-least-privilege-rbac]
+- threat: azure-iot-hub-device-credential-theft
+  countermeasures: [cm-dedicated-workload-identities, cm-nsg-segmentation, det-iot-hub-connection-anomaly]
+- threat: azure-iot-hub-weak-tls
+  countermeasures: [cm-enforce-tls12, det-policy-compliance-alerts]
+- threat: azure-iot-hub-routing-key-credentials
+  countermeasures: [cm-dedicated-workload-identities, cm-secrets-outside-terraform-state, det-credential-bearing-config-change-alert]
+- threat: azure-iot-hub-missing-logging
+  countermeasures: [cm-diagnostic-logging, policy-resource-logs-in-iot-hub-should-be-enabled]
+- threat: azure-load-balancer-backend-directly-exposed
+  countermeasures: [cm-nsg-least-privilege-rules, cm-waf, lb-protect-backend]
+- threat: azure-load-balancer-retired-basic-sku
+  countermeasures: [det-retired-sku-service-health-alert, lb-standard-sku]
+- threat: azure-load-balancer-unencrypted-application-traffic
+  countermeasures: [cm-appgw-end-to-end-tls, det-policy-compliance-alerts, lb-tls-backend]
+- threat: azure-load-balancer-open-inbound-rules
+  countermeasures: [cm-nsg-least-privilege-rules, cm-bastion-jit-admin-access, det-network-change-alert]
+- threat: azure-logic-apps-secrets-in-workflow
+  countermeasures: [cm-secrets-outside-terraform-state, cm-key-vault-secret-references, det-credential-bearing-config-change-alert,
+    det-keyvault-access-anomaly-alert, det-logic-app-trigger-and-run-alerts, cm-secret-scanning, la-keyvault-app-settings]
+- threat: azure-logic-apps-connection-credentials
+  countermeasures: [det-credential-bearing-config-change-alert, det-logic-app-trigger-and-run-alerts,
+    cm-secret-scanning, la-managed-identity]
+- threat: azure-logic-apps-anonymous-request-trigger
+  countermeasures: [det-logic-app-trigger-and-run-alerts, la-aad-trigger-auth]
+- threat: azure-logic-apps-run-history-data-exposure
+  countermeasures: [cm-log-data-minimization, cm-least-privilege-rbac, det-logic-app-trigger-and-run-alerts]
+- threat: azure-logic-apps-missing-logging
+  countermeasures: [cm-diagnostic-logging, policy-logic-apps-integration-service-environment-should-be-encrypted-with-customer-managed-keys,
+    policy-resource-logs-in-logic-apps-should-be-enabled]
+- threat: azure-logic-apps-standard-public-and-basic-auth
+  countermeasures: [cm-app-service-disable-basic-auth, cm-app-service-scm-restrictions, cm-enforce-tls12,
+    det-policy-compliance-alerts, det-appservice-basic-auth-login-alert, det-logic-app-trigger-and-run-alerts]
+- threat: azure-ml-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-nsg-segmentation, det-policy-compliance-alerts,
+    policy-azure-machine-learning-computes-should-be-in-a-virtual-network, policy-azure-machine-learning-workspaces-should-use-private-link,
+    policy-azure-machine-learning-workspaces-should-disable-public-network-access, policy-azure-machine-learning-workspaces-should-enable-v1legacymode-to-support-network-isolation]
+- threat: azure-ml-compute-local-auth-and-ssh
+  countermeasures: [cm-entra-id-authentication, cm-dedicated-workload-identities, det-policy-compliance-alerts,
+    det-ml-job-and-egress-audit, policy-azure-machine-learning-computes-should-have-local-authentication-methods-disabled,
+    policy-azure-machine-learning-workspaces-should-use-user-assigned-managed-identity]
+- threat: azure-ml-platform-key-encryption
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts, policy-azure-machine-learning-workspaces-should-be-encrypted-with-a-customer-managed-key,
+    policy-azure-machine-learning-workspaces-should-be-encrypted-with-the-use-of-a-customer-managed-k]
+- threat: azure-ml-datastore-credential-exposure
+  countermeasures: [cm-storage-disable-shared-key, cm-dedicated-workload-identities, det-credential-bearing-config-change-alert,
+    det-ml-job-and-egress-audit]
+- threat: azure-ml-untrusted-model-and-environment
+  countermeasures: [cm-egress-filtering, cm-trusted-registry-only, det-egress-anomaly-detection, det-ml-job-and-egress-audit]
+- threat: azure-ml-outdated-compute-instances
+  countermeasures: [cm-vm-patch-management, det-policy-compliance-alerts, policy-azure-machine-learning-compute-instances-should-be-recreated-to-get-the-latest-software-up]
+- threat: azure-ml-missing-logging
+  countermeasures: [cm-diagnostic-logging, policy-resource-logs-in-azure-machine-learning-workspaces-should-be-enabled]
+- threat: azure-managed-grafana-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, det-policy-compliance-alerts,
+    policy-azure-managed-grafana-workspaces-should-use-private-link, policy-azure-managed-grafana-workspaces-should-disable-public-network-access,
+    mg-private-endpoint]
+- threat: azure-managed-grafana-api-keys-and-service-accounts
+  countermeasures: [cm-secret-scanning, mg-disable-api-keys]
+- threat: azure-managed-grafana-datasource-credentials
+  countermeasures: [cm-dedicated-workload-identities, cm-least-privilege-rbac, det-credential-bearing-config-change-alert,
+    mg-managed-identity-datasource]
+- threat: azure-managed-grafana-admin-role-overgrant
+  countermeasures: [cm-least-privilege-rbac, det-rbac-assignment-alert]
+- threat: azure-managed-hsm-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-network-default-deny, det-policy-compliance-alerts,
+    det-managed-hsm-audit-alerts]
+- threat: azure-managed-hsm-purge-protection-disabled
+  countermeasures: [det-policy-compliance-alerts, policy-azure-key-vault-managed-hsm-should-have-purge-protection-enabled,
+    mhsm-purge-protection]
+- threat: azure-managed-hsm-single-custodian-security-domain
+  countermeasures: [det-managed-hsm-audit-alerts, mhsm-security-domain-quorum]
+- threat: azure-managed-hsm-no-key-autorotation
+  countermeasures: [cm-key-vault-expiration-rotation, det-key-expiry-event-alert, det-managed-hsm-audit-alerts,
+    mhsm-key-autorotation]
+- threat: azure-managed-hsm-missing-logging
+  countermeasures: [cm-diagnostic-logging, policy-resource-logs-in-azure-key-vault-managed-hsm-should-be-enabled]
+- threat: azure-managed-hsm-overbroad-local-rbac
+  countermeasures: [cm-least-privilege-rbac, det-managed-hsm-audit-alerts]
+- threat: azure-monitor-public-ingestion-and-query
+  countermeasures: [cm-log-analytics-private-link, det-policy-compliance-alerts, policy-azure-monitor-private-link-scope-should-block-access-to-non-private-link-resources,
+    policy-azure-monitor-private-link-scope-should-use-private-link, policy-azure-monitor-log-profile-should-collect-logs-for-categories-write-delete-and-action,
+    policy-azure-monitor-should-collect-activity-logs-from-all-regions, policy-azure-monitor-solution-security-and-audit-must-be-deployed,
+    policy-linux-arc-enabled-machines-should-have-azure-monitor-agent-installed, policy-linux-virtual-machine-scale-sets-should-have-azure-monitor-agent-installed,
+    policy-linux-virtual-machines-should-have-azure-monitor-agent-installed, policy-windows-arc-enabled-machines-should-have-azure-monitor-agent-installed,
+    policy-windows-virtual-machine-scale-sets-should-have-azure-monitor-agent-installed, policy-windows-virtual-machines-should-have-azure-monitor-agent-installed,
+    mon-private-link-agents]
+- threat: azure-monitor-platform-key-encryption
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts, policy-azure-monitor-logs-clusters-should-be-created-with-infrastructure-encryption-enabled-doubl,
+    policy-azure-monitor-logs-clusters-should-be-encrypted-with-customer-managed-key, policy-saved-queries-in-azure-monitor-should-be-saved-in-customer-storage-account-for-logs-encryp]
+- threat: azure-monitor-not-security-monitoring
+  countermeasures: [mon-security-monitoring-defender]
+- threat: azure-monitor-container-insights-legacy-auth
+  countermeasures: [det-policy-compliance-alerts, mon-managed-identity-auth]
+- threat: azure-monitor-alert-suppression
+  countermeasures: [cm-activity-log-alerting, cm-least-privilege-rbac]
+- threat: azure-mysql-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-no-allow-all-azure-services,
+    det-policy-compliance-alerts, policy-public-network-access-should-be-disabled-for-mysql-flexible-servers,
+    policy-public-network-access-should-be-disabled-for-mysql-servers, policy-mysql-server-should-use-a-virtual-network-service-endpoint]
+- threat: azure-mysql-insecure-transport
+  countermeasures: [cm-enforce-tls12, det-policy-compliance-alerts, policy-enforce-ssl-connection-should-be-enabled-for-mysql-database-servers]
+- threat: azure-mysql-password-authentication
+  countermeasures: [cm-sql-entra-only-auth, cm-secrets-outside-terraform-state, det-policy-compliance-alerts,
+    policy-a-microsoft-entra-administrator-should-be-provisioned-for-mysql-servers, policy-azure-mysql-flexible-server-should-have-microsoft-entra-only-authentication-enabled]
+- threat: azure-mysql-platform-key-encryption
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts, policy-infrastructure-encryption-should-be-enabled-for-azure-database-for-mysql-servers,
+    policy-mysql-servers-should-use-customer-managed-keys-to-encrypt-data-at-rest]
+- threat: azure-mysql-insufficient-backup
+  countermeasures: [cm-sql-backup-retention, cm-resource-lock, det-policy-compliance-alerts, policy-geo-redundant-backup-should-be-enabled-for-azure-database-for-mysql]
+- threat: azure-mysql-no-threat-detection
+  countermeasures: [cm-defender-for-databases, cm-diagnostic-logging, policy-azure-defender-for-sql-should-be-enabled-for-unprotected-mysql-flexible-servers]
+- threat: azure-postgresql-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-no-allow-all-azure-services,
+    det-policy-compliance-alerts, policy-public-network-access-should-be-disabled-for-postgresql-flexible-servers,
+    policy-public-network-access-should-be-disabled-for-postgresql-servers, policy-postgresql-server-should-use-a-virtual-network-service-endpoint]
+- threat: azure-postgresql-insecure-transport
+  countermeasures: [cm-enforce-tls12, det-policy-compliance-alerts, policy-enforce-ssl-connection-should-be-enabled-for-postgresql-database-servers,
+    policy-postgresql-flexible-servers-should-be-running-tls-version-1-2-or-newer]
+- threat: azure-postgresql-password-authentication
+  countermeasures: [cm-sql-entra-only-auth, cm-secrets-outside-terraform-state, det-policy-compliance-alerts,
+    policy-a-microsoft-entra-administrator-should-be-provisioned-for-postgresql-servers]
+- threat: azure-postgresql-platform-key-encryption
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts, policy-infrastructure-encryption-should-be-enabled-for-azure-database-for-postgresql-servers,
+    policy-postgresql-flexible-servers-should-use-customer-managed-keys-to-encrypt-data-at-rest, policy-postgresql-servers-should-use-customer-managed-keys-to-encrypt-data-at-rest]
+- threat: azure-postgresql-insufficient-backup
+  countermeasures: [cm-sql-backup-retention, cm-resource-lock, det-policy-compliance-alerts, policy-geo-redundant-backup-should-be-enabled-for-azure-database-for-postgresql]
+- threat: azure-postgresql-no-threat-detection
+  countermeasures: [cm-defender-for-databases, cm-diagnostic-logging, policy-azure-defender-for-sql-should-be-enabled-for-unprotected-postgresql-flexible-servers]
+- threat: azure-nat-gateway-outbound-unlogged
+  countermeasures: [nat-flow-logs]
+- threat: azure-nat-gateway-snat-exhaustion
+  countermeasures: [nat-snat-alerts]
+- threat: azure-nat-gateway-unrestricted-egress
+  countermeasures: [cm-egress-filtering, cm-subnet-disable-default-outbound, nat-anomaly-alerts]
+- threat: azure-netapp-files-nfs-export-overexposure
+  countermeasures: [anf-diagnostic-logging, anf-export-policy-kerberos, anf-permission-model-review]
+- threat: azure-netapp-files-dual-protocol-permission-mismatch
+  countermeasures: [anf-diagnostic-logging, anf-permission-model-review]
+- threat: azure-netapp-files-snapshot-and-backup-destruction
+  countermeasures: [anf-immutable-backup-lock, anf-snapshot-delete-alert]
+- threat: azure-netapp-files-platform-only-keys
+  countermeasures: [det-policy-compliance-alerts, anf-cmk-encryption]
+- threat: azure-netapp-files-network-activity-unlogged
+  countermeasures: [anf-diagnostic-logging]
+- threat: azure-netapp-files-directory-credential-exposure
+  countermeasures: [cm-secrets-outside-terraform-state, det-credential-bearing-config-change-alert, anf-diagnostic-logging]
+- threat: azure-network-watcher-overbroad-packet-capture
+  countermeasures: [cm-least-privilege-rbac, det-rbac-assignment-alert, det-packet-capture-alert, nw-least-privilege-rbac]
+- threat: azure-network-watcher-flow-log-storage-exposure
+  countermeasures: [cm-private-endpoint, cm-storage-disable-shared-key, cm-defender-for-storage, sa-diagnostic-settings,
+    nw-storage-private-endpoints]
+- threat: azure-network-watcher-nsg-flow-log-retirement-gap
+  countermeasures: [cm-vnet-flow-logs, policy-all-flow-log-resources-should-be-in-enabled-state, policy-audit-flow-logs-configuration-for-every-virtual-network,
+    policy-network-watcher-flow-logs-should-have-traffic-analytics-enabled, nw-migrate-vnet-flow-logs]
+- threat: azure-queue-storage-platform-key-encryption
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts, policy-queue-storage-should-use-customer-managed-key-for-encryption]
+- threat: azure-queue-storage-message-injection
+  countermeasures: [cm-input-validation, cm-least-privilege-rbac, det-queue-write-audit]
+- threat: azure-queue-storage-overbroad-queue-roles
+  countermeasures: [cm-least-privilege-rbac, det-rbac-assignment-alert]
+- threat: azure-sentinel-security-logs-not-ingested
+  countermeasures: [sentinel-connector-coverage]
+- threat: azure-sentinel-analytics-rule-tampering
+  countermeasures: [sentinel-rule-change-control]
+- threat: azure-sentinel-watchlist-data-exposure
+  countermeasures: [det-workspace-query-audit, sentinel-rule-change-control, sentinel-watchlist-hygiene]
+- threat: azure-sentinel-workspace-access-overbroad
+  countermeasures: [cm-log-analytics-access-control, det-rbac-assignment-alert, det-workspace-query-audit]
+- threat: azure-sentinel-automation-privilege-abuse
+  countermeasures: [cm-least-privilege-rbac, cm-activity-log-alerting]
+- threat: azure-service-bus-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-network-default-deny, det-policy-compliance-alerts,
+    policy-service-bus-namespaces-should-disable-public-network-access, policy-azure-service-bus-namespaces-should-use-private-link]
+- threat: azure-service-bus-sas-key-authentication
+  countermeasures: [cm-entra-id-authentication, cm-secret-scanning, cm-least-privilege-rbac, policy-azure-service-bus-namespaces-should-have-local-authentication-methods-disabled]
+- threat: azure-service-bus-weak-tls
+  countermeasures: [cm-enforce-tls12, det-policy-compliance-alerts]
+- threat: azure-service-bus-platform-key-encryption
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts, policy-service-bus-premium-namespaces-should-use-a-customer-managed-key-for-encryption,
+    policy-service-bus-namespaces-should-have-double-encryption-enabled]
+- threat: azure-service-bus-missing-logging
+  countermeasures: [cm-diagnostic-logging, policy-resource-logs-in-service-bus-should-be-enabled]
+- threat: azure-service-fabric-unsecured-cluster
+  countermeasures: [det-service-fabric-endpoint-monitoring, sf-secure-cluster-x509-entra]
+- threat: azure-service-fabric-weak-client-authentication
+  countermeasures: [cm-entra-id-authentication, det-policy-compliance-alerts, policy-service-fabric-clusters-should-only-use-azure-active-directory-for-client-authentication]
+- threat: azure-service-fabric-shared-client-certificate
+  countermeasures: [sf-cert-expiry-monitoring]
+- threat: azure-service-fabric-public-management-endpoints
+  countermeasures: [cm-nsg-least-privilege-rules, cm-bastion-jit-admin-access, det-network-change-alert,
+    det-service-fabric-endpoint-monitoring, sf-network-isolation]
+- threat: azure-service-fabric-reverse-proxy-exposure
+  countermeasures: [cm-nsg-least-privilege-rules, det-service-fabric-endpoint-monitoring]
+- threat: azure-site-recovery-replication-over-public-endpoint
+  countermeasures: [det-policy-compliance-alerts, asr-private-replication]
+- threat: azure-site-recovery-over-privileged-operator
+  countermeasures: [det-rbac-assignment-alert, det-asr-event-alerts, asr-least-privilege-roles]
+- threat: azure-site-recovery-replica-platform-keys
+  countermeasures: [cm-vm-encryption-at-host, det-policy-compliance-alerts, asr-customer-managed-keys]
+- threat: azure-site-recovery-cache-storage-exposure
+  countermeasures: [cm-storage-disable-shared-key, cm-network-default-deny, det-policy-compliance-alerts,
+    cm-defender-for-storage, sa-diagnostic-settings]
+- threat: azure-sql-managed-instance-public-data-endpoint
+  countermeasures: [cm-disable-public-network-access, cm-nsg-least-privilege-rules, det-policy-compliance-alerts,
+    policy-azure-sql-managed-instances-should-disable-public-network-access]
+- threat: azure-sql-managed-instance-sql-authentication
+  countermeasures: [cm-sql-entra-only-auth, cm-secrets-outside-terraform-state, det-policy-compliance-alerts,
+    policy-azure-sql-managed-instance-should-have-microsoft-entra-only-authentication-enabled, policy-azure-sql-managed-instances-should-have-microsoft-entra-only-authentication-enabled-during]
+- threat: azure-sql-managed-instance-weak-tls
+  countermeasures: [cm-enforce-tls12, det-policy-compliance-alerts, policy-sql-managed-instance-should-have-the-minimal-tls-version-of-1-2]
+- threat: azure-sql-managed-instance-platform-key-encryption
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts, policy-customer-managed-key-encryption-must-be-used-as-part-of-cmk-encryption-for-arc-sql-managed,
+    policy-sql-managed-instances-should-use-customer-managed-keys-to-encrypt-data-at-rest]
+- threat: azure-sql-managed-instance-no-threat-detection
+  countermeasures: [cm-defender-for-databases, policy-azure-defender-for-sql-should-be-enabled-for-unprotected-sql-managed-instances]
+- threat: azure-storage-mover-broad-target-rbac
+  countermeasures: [det-rbac-assignment-alert, sm-least-privilege-target]
+- threat: azure-storage-mover-orphaned-agent-roles
+  countermeasures: [det-rbac-assignment-alert, det-orphaned-role-assignment-scan, sm-remove-agent-access]
+- threat: azure-storage-mover-public-control-plane
+  countermeasures: [det-policy-compliance-alerts, sm-private-control-plane]
+- threat: azure-stream-analytics-platform-key-encryption
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts, policy-azure-stream-analytics-jobs-should-use-customer-managed-keys-to-encrypt-data]
+- threat: azure-stream-analytics-connection-string-authentication
+  countermeasures: [cm-dedicated-workload-identities, cm-secrets-outside-terraform-state, det-policy-compliance-alerts,
+    det-credential-bearing-config-change-alert, policy-stream-analytics-job-should-use-managed-identity-to-authenticate-endpoints]
+- threat: azure-stream-analytics-missing-logging
+  countermeasures: [cm-diagnostic-logging, policy-resource-logs-in-azure-stream-analytics-should-be-enabled]
+- threat: azure-stream-analytics-output-redirection
+  countermeasures: [cm-least-privilege-rbac, cm-activity-log-alerting]
+- threat: azure-synapse-public-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-no-allow-all-azure-services,
+    det-policy-compliance-alerts, policy-azure-synapse-workspaces-should-disable-public-network-access,
+    policy-azure-synapse-workspaces-should-use-private-link, policy-ip-firewall-rules-on-azure-synapse-workspaces-should-be-removed,
+    policy-managed-workspace-virtual-network-on-azure-synapse-workspaces-should-be-enabled, policy-synapse-managed-private-endpoints-should-only-connect-to-resources-in-approved-azure-activ]
+- threat: azure-synapse-sql-authentication
+  countermeasures: [cm-sql-entra-only-auth, cm-secrets-outside-terraform-state, det-policy-compliance-alerts,
+    policy-synapse-workspaces-should-have-microsoft-entra-only-authentication-enabled, policy-synapse-workspaces-should-use-only-microsoft-entra-identities-for-authentication-during-wo]
+- threat: azure-synapse-platform-key-encryption
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts, policy-azure-synapse-analytics-dedicated-sql-pools-should-enable-encryption,
+    policy-azure-synapse-workspaces-should-use-customer-managed-keys-to-encrypt-data-at-rest]
+- threat: azure-synapse-weak-tls
+  countermeasures: [cm-enforce-tls12, det-policy-compliance-alerts, policy-azure-synapse-workspace-sql-server-should-be-running-tls-version-1-2-or-newer]
+- threat: azure-synapse-no-threat-detection
+  countermeasures: [cm-defender-for-databases, policy-microsoft-defender-for-sql-should-be-enabled-for-unprotected-synapse-workspaces]
+- threat: azure-synapse-overbroad-roles
+  countermeasures: [cm-least-privilege-rbac, det-synapse-rbac-audit]
+- threat: azure-traffic-manager-unauthorized-profile-change
+  countermeasures: [cm-resource-lock, cm-activity-log-alerting, cm-least-privilege-rbac, tm-rbac-profiles]
+- threat: azure-traffic-manager-dangling-dns-takeover
+  countermeasures: [cm-dangling-dns-protection, tm-alias-records]
+- threat: azure-traffic-manager-http-health-probes
+  countermeasures: [det-policy-compliance-alerts, det-traffic-manager-endpoint-alert, tm-https-monitoring]
+- threat: azure-traffic-manager-missing-logging
+  countermeasures: [cm-diagnostic-logging, policy-enable-logging-by-category-group-for-traffic-manager-profiles-microsoft-network-trafficman]
+- threat: azure-virtual-wan-route-override-bypasses-hub-firewall
+  countermeasures: [det-network-change-alert, vwan-restrict-udr-permissions]
+- threat: azure-virtual-wan-flat-spoke-transit
+  countermeasures: [cm-vnet-hub-spoke-peering, det-network-change-alert, cm-vnet-flow-logs, vwan-custom-route-tables]
+- threat: azure-virtual-wan-p2s-weak-authentication
+  countermeasures: [cm-conditional-access-mfa, det-signin-ca-gap-detection, det-vpn-tunnel-diagnostics,
+    vwan-p2s-entra-auth]
+- threat: azure-vmss-unpatched-instances
+  countermeasures: [cm-vm-patch-management, det-update-compliance-alerts, cm-defender-for-servers, vmss-automatic-os-upgrade]
+- threat: azure-vmss-instance-protection-gaps
+  countermeasures: [det-critical-delete-alert, vmss-instance-protection]
+- threat: azure-vmss-no-application-health
+  countermeasures: [vmss-application-health]
+- threat: azure-vmss-encryption-and-logging-gaps
+  countermeasures: [cm-vm-encryption-at-host, cm-vm-log-collection, policy-virtual-machines-and-virtual-machine-scale-sets-should-have-encryption-at-host-enabled,
+    policy-linux-virtual-machine-scale-sets-should-have-azure-monitor-agent-installed, policy-windows-virtual-machine-scale-sets-should-have-azure-monitor-agent-installed]
+- threat: azure-vnet-public-paas-path
+  countermeasures: [cm-private-endpoint, cm-disable-public-network-access, det-policy-compliance-alerts,
+    policy-mariadb-server-should-use-a-virtual-network-service-endpoint, policy-virtual-machines-should-be-connected-to-an-approved-virtual-network,
+    policy-virtual-networks-should-use-specified-virtual-network-gateway, vnet-private-endpoints]
+- threat: azure-vpn-gateway-weak-p2s-authentication
+  countermeasures: [cm-conditional-access-mfa, det-policy-compliance-alerts, policy-vpn-gateways-should-use-only-azure-active-directory-azure-ad-authentication-for-point-to-s]
+- threat: azure-vpn-gateway-weak-ipsec-policy
+  countermeasures: [det-policy-compliance-alerts, policy-a-custom-ipsec-ike-policy-must-be-applied-to-all-azure-virtual-network-gateway-connections,
+    policy-virtual-networks-should-use-specified-virtual-network-gateway]
+- threat: azure-vpn-gateway-shared-key-exposure
+  countermeasures: [cm-secrets-outside-terraform-state, det-terraform-state-access-monitoring, det-vpn-tunnel-diagnostics,
+    cm-secret-scanning]
+- threat: azure-vpn-gateway-missing-logging
+  countermeasures: [cm-diagnostic-logging, policy-enable-logging-by-category-group-for-virtual-network-gateways-microsoft-network-virtualnet,
+    policy-enable-logging-by-category-group-for-microsoft-network-p2svpngateways-to-event-hub, policy-enable-logging-by-category-group-for-microsoft-network-vpngateways-to-event-hub,
+    policy-enable-logging-by-category-group-for-microsoft-network-p2svpngateways-to-log-analytics, policy-enable-logging-by-category-group-for-microsoft-network-p2svpngateways-to-storage,
+    policy-enable-logging-by-category-group-for-microsoft-network-vpngateways-to-log-analytics, policy-enable-logging-by-category-group-for-microsoft-network-vpngateways-to-storage]
+- threat: azure-waf-detection-mode-in-production
+  countermeasures: [det-waf-log-analysis, waf-diagnostic-logs, waf-prevention-mode]
+- threat: azure-waf-no-rate-limit-or-bot-protection
+  countermeasures: [det-waf-log-analysis, waf-diagnostic-logs, waf-rate-limit-bot]
+- threat: azure-waf-missing-logging
+  countermeasures: [cm-diagnostic-logging, policy-azure-front-door-standard-or-premium-plus-waf-should-have-resource-logs-enabled,
+    waf-diagnostic-logs]
+- threat: azure-waf-exclusions-and-stale-rule-sets
+  countermeasures: [cm-waf, cm-azure-policy-guardrails]
+- threat: azure-app-service-remote-code-execution
+  countermeasures: [cm-waf, cm-defender-for-app-service, cm-app-service-runtime-hardening, appservice-rce-sast,
+    appservice-waf]
+- threat: azure-app-service-public-network-exposure
+  countermeasures: [cm-disable-public-network-access, cm-private-endpoint, cm-app-service-access-restrictions,
+    det-policy-compliance-alerts, policy-function-app-slots-should-disable-public-network-access, policy-function-apps-should-disable-public-network-access,
+    policy-app-service-app-slots-should-be-injected-into-a-virtual-network, policy-app-service-apps-should-be-injected-into-a-virtual-network,
+    policy-app-service-apps-should-use-a-virtual-network-service-endpoint, policy-app-service-apps-should-use-a-sku-that-supports-private-link,
+    policy-app-service-apps-should-use-private-link]
+- threat: azure-managed-identity-role-changes-unmonitored
+  countermeasures: [cm-activity-log-alerting, managed-identity-review]
+- threat: azure-managed-identity-not-used
+  countermeasures: [cm-dedicated-workload-identities, det-policy-compliance-alerts, policy-app-service-app-slots-should-use-managed-identity,
+    policy-app-service-apps-should-use-managed-identity, policy-azure-data-factory-linked-services-should-use-system-assigned-managed-identity-authenticat,
+    policy-azure-kubernetes-service-clusters-should-use-managed-identities, policy-azure-machine-learning-workspaces-should-use-user-assigned-managed-identity,
+    policy-cognitive-services-accounts-should-use-a-managed-identity, policy-communication-service-resource-should-use-a-managed-identity,
+    policy-create-and-assign-a-built-in-user-assigned-managed-identity, policy-function-apps-should-use-managed-identity,
+    policy-stream-analytics-job-should-use-managed-identity-to-authenticate-endpoints, policy-virtual-machines-guest-configuration-extension-should-be-deployed-with-system-assigned-man]
+- threat: azure-virtual-machine-configuration-drift
+  countermeasures: [cm-iac-drift-detection, vm-secure-baseline]
+- threat: azure-virtual-machine-no-endpoint-protection
+  countermeasures: [vm-edr-antimalware]
+- threat: azure-sql-database-insufficient-backup
+  countermeasures: [cm-sql-backup-retention, det-policy-compliance-alerts, policy-long-term-geo-redundant-backup-should-be-enabled-for-azure-sql-databases]
+- threat: azure-sql-database-no-threat-detection
+  countermeasures: [cm-defender-for-databases, policy-azure-defender-for-azure-sql-database-servers-should-be-enabled,
+    policy-sql-databases-should-have-vulnerability-findings-resolved]
+- threat: azure-cosmosdb-platform-key-encryption
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts, policy-azure-cosmos-db-accounts-should-use-customer-managed-keys-to-encrypt-data-at-rest]
+- threat: azure-cosmosdb-no-threat-detection
+  countermeasures: [cm-defender-for-databases, policy-microsoft-defender-for-azure-cosmos-db-should-be-enabled]
+- threat: azure-aks-insecure-ingress-transport
+  countermeasures: [cm-enforce-tls12, cm-aks-pod-security, det-policy-compliance-alerts, policy-kubernetes-clusters-should-be-accessible-only-over-https]
+- threat: azure-aks-insecure-cluster-configuration
+  countermeasures: [cm-aks-auto-upgrade, cm-defender-for-containers, policy-azure-kubernetes-service-clusters-should-have-defender-profile-enabled,
+    policy-kubernetes-services-should-be-upgraded-to-a-non-vulnerable-kubernetes-version]
+- threat: azure-aks-platform-key-encryption
+  countermeasures: [cm-vm-encryption-at-host, det-policy-compliance-alerts, policy-both-operating-systems-and-data-disks-in-azure-kubernetes-service-clusters-should-be-encry,
+    policy-temp-disks-and-cache-for-agent-node-pools-in-azure-kubernetes-service-clusters-should-be-e]
+- threat: azure-application-gateway-broad-management-rbac
+  countermeasures: [cm-least-privilege-rbac, cm-resource-lock, det-rbac-assignment-alert, agw-least-privilege-rbac]
+- threat: azure-firewall-no-tls-inspection
+  countermeasures: [det-egress-anomaly-detection, fw-diagnostic-logs, cm-firewall-threat-protection, fw-tls-inspection]
+- threat: azure-bastion-target-subnet-open-management-ports
+  countermeasures: [cm-nsg-least-privilege-rules, cm-bastion-jit-admin-access, det-network-change-alert,
+    cm-vm-log-collection, vm-brute-force-detection, bastion-nsg-required-rules]
+- threat: azure-bastion-vm-public-ip-bypass
+  countermeasures: [cm-subnet-disable-default-outbound, det-policy-compliance-alerts, bastion-no-public-ip]
+- threat: azure-b2c-password-spraying
+  countermeasures: [det-b2c-spray-and-mfa-monitoring, entra-risk-detection, b2c-user-risk-policy, b2c-smart-lockout]
+- threat: azure-b2c-account-takeover-without-risk-policy
+  countermeasures: [b2c-user-risk-policy]
+- threat: azure-b2c-single-factor-sign-in
+  countermeasures: [det-signin-ca-gap-detection, det-b2c-spray-and-mfa-monitoring, entra-risk-detection,
+    b2c-user-risk-policy, b2c-enable-mfa]
+- threat: azure-key-vault-platform-key-encryption-gap
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts, det-key-expiry-event-alert,
+    kv-cmk-for-regulated-data]
+- threat: azure-key-vault-secrets-copied-into-code
+  countermeasures: [cm-secret-scanning, cm-app-service-key-vault-references, kv-references-not-copies]
+- threat: azure-key-vault-no-conditional-access
+  countermeasures: [cm-conditional-access-mfa, det-keyvault-access-anomaly-alert, det-signin-ca-gap-detection,
+    kv-resource-logs-to-sentinel, kv-conditional-access]
+- threat: azure-key-vault-no-threat-detection
+  countermeasures: [cm-defender-for-key-vault, kv-defender-plan]
+- threat: azure-storage-account-broad-data-plane-role
+  countermeasures: [cm-least-privilege-rbac, det-rbac-assignment-alert, sa-least-privilege-rbac]
+- threat: azure-storage-account-platform-key-encryption
+  countermeasures: [cm-key-vault-purge-protection, det-policy-compliance-alerts, sa-customer-managed-key]
+- threat: azure-storage-account-no-threat-detection
+  countermeasures: [cm-defender-for-storage, sa-defender-for-storage]
+- threat: azure-flow-plaintext-transport
+  countermeasures: [cm-enforce-tls12, det-policy-compliance-alerts, sa-secure-transfer-tls12, policy-postgresql-flexible-servers-should-be-running-tls-version-1-2-or-newer,
+    policy-azure-sql-database-should-be-running-tls-version-1-2-or-newer]
+- threat: azure-flow-mitm-network-path
+  countermeasures: [det-public-name-resolution-detection, cm-vnet-flow-logs, flow-private-connectivity]
+- threat: azure-flow-token-replay
+  countermeasures: [cm-storage-user-delegation-sas, cm-storage-sas-expiration-policy, entra-token-protection-cae,
+    azure-files-short-lived-sas]
+- threat: azure-flow-message-tampering
+  countermeasures: [cm-entra-id-authentication, cm-input-validation, det-policy-compliance-alerts, policy-azure-service-bus-namespaces-should-have-local-authentication-methods-disabled,
+    policy-azure-event-hub-namespaces-should-have-local-authentication-methods-disabled]
+- threat: azure-flow-input-injection
+  countermeasures: [cm-waf, cm-input-validation, appservice-waf, agw-waf-v2-prevention]
+- threat: azure-flow-smb-relay
+  countermeasures: [det-windows-security-event-monitoring, det-files-auth-type-detection, azure-files-diagnostic-monitoring,
+    vm-secure-baseline, azure-files-smb-encryption, anf-export-policy-kerberos]
+- threat: azure-event-hubs-missing-logging
+  countermeasures: [cm-diagnostic-logging, policy-resource-logs-in-event-hub-should-be-enabled]

@@ -1,0 +1,314 @@
+template:
+  slug: azure-vm-three-tier
+  name: "Classic Three-Tier Application on Azure VMs"
+  description: "Traditional web, application and SQL Server tiers on Azure virtual machines behind a load balancer, with network segmentation by subnet and NSG, Bastion administration, Key Vault, Azure Backup, and monitoring"
+  category: cloudInfrastructure
+  diagram_type: level1
+
+canvas_data:
+  nodes:
+    # ---- External actors ----
+    - id: "actor-user"
+      type: "humanActor"
+      position: { x: 50, y: 200 }
+      data:
+        label: "Customer"
+        actorType: "user"
+        description: "Browser user of the web tier"
+
+    - id: "actor-admin"
+      type: "humanActor"
+      position: { x: 50, y: 470 }
+      data:
+        label: "Systems Administrator"
+        actorType: "admin"
+        description: "Patches and configures VMs through Bastion"
+
+    - id: "actor-entra"
+      type: "systemActor"
+      position: { x: 1000, y: 40 }
+      data:
+        label: "Microsoft Entra ID"
+        actorType: "external"
+        component_ref: "entra-id"
+        description: "Administrator sign-in and VM login with Entra ID"
+
+    # ---- System scope ----
+    - id: "sb-vm-app"
+      type: "systemScope"
+      position: { x: 200, y: 30 }
+      style: { width: 780, height: 640 }
+      data:
+        label: "Three-Tier Application Environment"
+        owner: "Application Operations Team"
+        classification: "Production"
+
+    # ---- Trust zones ----
+    - id: "tz-web"
+      type: "trustZone"
+      parentId: "sb-vm-app"
+      position: { x: 30, y: 60 }
+      style: { width: 210, height: 540 }
+      data:
+        label: "Web Subnet"
+        zoneType: "trust"
+        trustLevel: 25
+        technology: "VNet, NSG allows 443 from load balancer only"
+
+    - id: "tz-app"
+      type: "trustZone"
+      parentId: "sb-vm-app"
+      position: { x: 270, y: 60 }
+      style: { width: 210, height: 540 }
+      data:
+        label: "Application Subnet"
+        zoneType: "trust"
+        trustLevel: 50
+        technology: "VNet, NSG allows traffic from web subnet only"
+
+    - id: "tz-data"
+      type: "trustZone"
+      parentId: "sb-vm-app"
+      position: { x: 510, y: 60 }
+      style: { width: 230, height: 300 }
+      data:
+        label: "Database Subnet"
+        zoneType: "trust"
+        trustLevel: 75
+        technology: "VNet, NSG allows 1433 from application subnet only"
+
+    - id: "tz-mgmt"
+      type: "trustZone"
+      parentId: "sb-vm-app"
+      position: { x: 510, y: 390 }
+      style: { width: 230, height: 210 }
+      data:
+        label: "Management Subnet"
+        zoneType: "trust"
+        trustLevel: 75
+        technology: "Azure Bastion subnet"
+
+    # ---- Web tier ----
+    - id: "process-lb"
+      type: "process"
+      parentId: "tz-web"
+      position: { x: 20, y: 60 }
+      data:
+        label: "Load Balancer"
+        component_ref: "load-balancer"
+        technology: "Azure Load Balancer (Standard), public"
+        description: "Distributes HTTPS traffic across web VMs"
+
+    - id: "process-web"
+      type: "process"
+      parentId: "tz-web"
+      position: { x: 20, y: 200 }
+      data:
+        label: "Web Server VM Scale Set"
+        component_ref: "vm-scale-sets"
+        technology: "Windows Server with IIS"
+        description: "Serves static content and forwards dynamic requests"
+
+    # ---- Application tier ----
+    - id: "process-app"
+      type: "process"
+      parentId: "tz-app"
+      position: { x: 20, y: 60 }
+      data:
+        label: "Application Server VMs"
+        component_ref: "virtual-machines"
+        technology: "Windows Server, .NET application"
+        description: "Business logic, runs as a service account"
+        dataSensitivity: "confidential"
+
+    - id: "process-batch"
+      type: "process"
+      parentId: "tz-app"
+      position: { x: 20, y: 300 }
+      data:
+        label: "Batch Server VM"
+        component_ref: "virtual-machines"
+        technology: "Windows Server, scheduled tasks"
+        description: "Nightly jobs and file exchange"
+
+    # ---- Database tier ----
+    - id: "datastore-sql"
+      type: "datastore"
+      parentId: "tz-data"
+      position: { x: 20, y: 60 }
+      data:
+        label: "SQL Server VM"
+        component_ref: "virtual-machines"
+        technology: "SQL Server on Azure VM, always-on availability group"
+        description: "Primary transactional database"
+        dataSensitivity: "confidential"
+
+    - id: "datastore-disks"
+      type: "datastore"
+      parentId: "tz-data"
+      position: { x: 20, y: 200 }
+      data:
+        label: "Managed Data Disks"
+        component_ref: "virtual-machines"
+        technology: "Premium SSD managed disks with encryption at rest"
+        description: "Database files and transaction logs"
+        dataSensitivity: "confidential"
+
+    # ---- Management ----
+    - id: "process-bastion"
+      type: "process"
+      parentId: "tz-mgmt"
+      position: { x: 20, y: 60 }
+      data:
+        label: "Azure Bastion"
+        component_ref: "bastion"
+        technology: "Azure Bastion"
+        description: "RDP and SSH without public IPs on VMs"
+
+    # ---- Supporting services ----
+    - id: "datastore-kv"
+      type: "datastore"
+      position: { x: 800, y: 60 }
+      data:
+        label: "Key Vault"
+        component_ref: "key-vault"
+        technology: "Azure Key Vault"
+        description: "Connection strings, certificates, disk keys"
+        dataSensitivity: "confidential"
+
+    - id: "datastore-backup"
+      type: "datastore"
+      position: { x: 800, y: 220 }
+      data:
+        label: "Recovery Services Vault"
+        component_ref: "backup-vault"
+        technology: "Azure Backup"
+        description: "VM and SQL backups with retention"
+        dataSensitivity: "confidential"
+
+    - id: "process-monitor"
+      type: "process"
+      position: { x: 800, y: 380 }
+      data:
+        label: "Azure Monitor"
+        component_ref: "monitor"
+        technology: "Azure Monitor agent, Log Analytics"
+        description: "Performance counters, event logs, alerts"
+
+  edges:
+    - id: "edge-1"
+      source: "actor-user"
+      target: "process-lb"
+      type: "dataFlow"
+      data:
+        label: "HTTPS requests"
+        protocol: "HTTPS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-2"
+      source: "process-lb"
+      target: "process-web"
+      type: "dataFlow"
+      data:
+        label: "Load-balanced requests"
+        protocol: "HTTPS"
+        encrypted: true
+
+    - id: "edge-3"
+      source: "process-web"
+      target: "process-app"
+      type: "dataFlow"
+      data:
+        label: "Application calls"
+        protocol: "HTTPS (internal certificate)"
+        encrypted: true
+        authentication: ["certificate"]
+
+    - id: "edge-4"
+      source: "process-app"
+      target: "datastore-sql"
+      type: "dataFlow"
+      data:
+        label: "SQL queries"
+        protocol: "TDS over TLS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-5"
+      source: "process-batch"
+      target: "datastore-sql"
+      type: "dataFlow"
+      data:
+        label: "Nightly batch writes"
+        protocol: "TDS over TLS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-6"
+      source: "datastore-sql"
+      target: "datastore-disks"
+      type: "dataFlow"
+      data:
+        label: "Data and log file I/O"
+        protocol: "Storage I/O (encrypted at rest)"
+        encrypted: true
+
+    - id: "edge-7"
+      source: "process-app"
+      target: "datastore-kv"
+      type: "dataFlow"
+      data:
+        label: "Read connection secrets"
+        protocol: "HTTPS (managed identity)"
+        encrypted: true
+        authentication: ["oauth2"]
+
+    - id: "edge-8"
+      source: "actor-admin"
+      target: "process-bastion"
+      type: "dataFlow"
+      data:
+        label: "Admin session"
+        protocol: "HTTPS (Bastion)"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-9"
+      source: "process-bastion"
+      target: "process-web"
+      type: "dataFlow"
+      data:
+        label: "RDP to VM"
+        protocol: "RDP over TLS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-10"
+      source: "actor-admin"
+      target: "actor-entra"
+      type: "dataFlow"
+      data:
+        label: "Administrator sign-in"
+        protocol: "OAuth 2.0 / OIDC"
+        encrypted: true
+        authentication: ["oidc"]
+
+    - id: "edge-11"
+      source: "datastore-sql"
+      target: "datastore-backup"
+      type: "dataFlow"
+      data:
+        label: "Scheduled backups"
+        protocol: "HTTPS (backup extension)"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-12"
+      source: "process-app"
+      target: "process-monitor"
+      type: "dataFlow"
+      data:
+        label: "Logs and metrics"
+        protocol: "HTTPS (Azure Monitor agent)"
+        encrypted: true

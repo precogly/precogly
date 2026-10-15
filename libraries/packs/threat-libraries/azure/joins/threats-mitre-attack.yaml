@@ -1,0 +1,942 @@
+taxonomy: mitre-attack
+mappings:
+- threat: azure-storage-account-public-access
+  entries: [T1530, T1619]
+- threat: azure-storage-account-shared-key-abuse
+  entries: [T1552.001, T1530]
+- threat: azure-storage-account-sas-token-abuse
+  entries: [T1550.001, T1530]
+- threat: azure-storage-account-public-network-exposure
+  entries: [T1530]
+- threat: azure-storage-account-data-exfiltration
+  entries: [T1537, T1530]
+- threat: azure-storage-account-insecure-transport
+  entries: [T1557, T1040]
+- threat: azure-storage-account-malicious-content-upload
+  entries: [T1080]
+- threat: azure-storage-account-data-destruction
+  entries: [T1485, T1486, T1490]
+- threat: azure-storage-account-cmk-revocation
+  entries: [T1486]
+- threat: azure-storage-account-control-plane-key-listing
+  entries: [T1078.004, T1530]
+- threat: azure-key-vault-public-network-exposure
+  entries: [T1555.006]
+- threat: azure-key-vault-access-policy-escalation
+  entries: [T1098.003, T1555.006]
+- threat: azure-key-vault-overprivileged-secret-access
+  entries: [T1555.006]
+- threat: azure-key-vault-secret-tampering
+  entries: [T1565]
+- threat: azure-key-vault-stale-credentials
+  entries: [T1078.004]
+- threat: azure-key-vault-secrets-in-terraform-state
+  entries: [T1552.001]
+- threat: azure-key-vault-secret-deletion
+  entries: [T1485, T1490]
+- threat: azure-key-vault-throttling
+  entries: [T1499.003]
+- threat: azure-managed-identity-token-theft
+  entries: [T1552.005, T1528]
+- threat: azure-managed-identity-token-replay
+  entries: [T1550.001]
+- threat: azure-managed-identity-overprivileged-role
+  entries: [T1078.004]
+- threat: azure-managed-identity-shared-identity-abuse
+  entries: [T1078.004]
+- threat: azure-managed-identity-federated-credential-abuse
+  entries: [T1098.001]
+- threat: azure-managed-identity-deletion-outage
+  entries: [T1531]
+- threat: azure-aks-public-api-server
+  entries: [T1078, T1609]
+- threat: azure-aks-local-account-abuse
+  entries: [T1078.001]
+- threat: azure-aks-run-command-abuse
+  entries: [T1651, T1609]
+- threat: azure-aks-container-escape
+  entries: [T1611, T1610]
+- threat: azure-aks-node-identity-abuse
+  entries: [T1552.005]
+- threat: azure-aks-kubernetes-rbac-overprivilege
+  entries: [T1098.006, T1078]
+- threat: azure-aks-flat-pod-network
+  entries: [T1046]
+- threat: azure-aks-untrusted-image
+  entries: [T1525, T1204.003, T1195]
+- threat: azure-aks-secrets-exposure
+  entries: [T1552.007, T1552.001]
+- threat: azure-aks-resource-exhaustion
+  entries: [T1496.001]
+- threat: azure-aks-outdated-components
+  entries: [T1068]
+- threat: azure-app-service-missing-authentication
+  entries: [T1190]
+- threat: azure-app-service-direct-origin-access
+  entries: [T1190]
+- threat: azure-app-service-insecure-transport
+  entries: [T1557, T1040]
+- threat: azure-app-service-publishing-credential-abuse
+  entries: [T1552.001, T1078]
+- threat: azure-app-service-kudu-abuse
+  entries: [T1651, T1059]
+- threat: azure-app-service-secrets-in-app-settings
+  entries: [T1552]
+- threat: azure-app-service-insecure-configuration
+  entries: [T1190]
+- threat: azure-app-service-vnet-pivot
+  entries: [T1021, T1046]
+- threat: azure-app-service-denial-of-service
+  entries: [T1499.002, T1499.003]
+- threat: azure-virtual-desktop-weak-user-authentication
+  entries: [T1110.003, T1078.004, T1566]
+- threat: azure-virtual-desktop-session-host-exposure
+  entries: [T1021, T1110]
+- threat: azure-virtual-desktop-data-exfiltration-redirection
+  entries: [T1048]
+- threat: azure-virtual-desktop-profile-and-session-isolation
+  entries: [T1539]
+- threat: azure-virtual-desktop-unpatched-session-hosts
+  entries: [T1068, T1204]
+- threat: azure-virtual-desktop-public-workspace-access
+  entries: [T1078.004]
+- threat: azure-virtual-desktop-overprivileged-assignments
+  entries: [T1078.004]
+- threat: azure-virtual-desktop-capacity-exhaustion
+  entries: [T1499]
+- threat: azure-vnet-peering-lateral-movement
+  entries: [T1021]
+- threat: azure-vnet-unauthorized-network-modification
+  entries: [T1078.004]
+- threat: azure-vnet-dns-exfiltration
+  entries: [T1048, T1071]
+- threat: azure-vnet-custom-dns-hijack
+  entries: [T1557]
+- threat: azure-vnet-ddos
+  entries: [T1498]
+- threat: azure-subnet-missing-nsg
+  entries: [T1046, T1021]
+- threat: azure-subnet-default-outbound-access
+  entries: [T1048, T1567]
+- threat: azure-subnet-route-manipulation
+  entries: [T1557]
+- threat: azure-subnet-service-endpoint-exfiltration
+  entries: [T1537]
+- threat: azure-nsg-permissive-inbound
+  entries: [T1190, T1021, T1110]
+- threat: azure-nsg-broad-service-tag
+  entries: [T1190]
+- threat: azure-nsg-unrestricted-outbound
+  entries: [T1048, T1567]
+- threat: azure-nsg-rule-tampering
+  entries: [T1686.001]
+- threat: azure-firewall-permissive-rules
+  entries: [T1567.002, T1537]
+- threat: azure-firewall-threat-detection-disabled
+  entries: [T1071]
+- threat: azure-firewall-dnat-exposure
+  entries: [T1021, T1110]
+- threat: azure-firewall-policy-tampering
+  entries: [T1686.001]
+- threat: azure-firewall-snat-exhaustion
+  entries: [T1499]
+- threat: azure-application-gateway-waf-ineffective
+  entries: [T1190]
+- threat: azure-application-gateway-weak-tls
+  entries: [T1557]
+- threat: azure-application-gateway-unencrypted-backend
+  entries: [T1040]
+- threat: azure-application-gateway-certificate-exposure
+  entries: [T1552.001, T1649]
+- threat: azure-application-gateway-ddos
+  entries: [T1498, T1499.002]
+- threat: azure-private-endpoint-exfiltration-to-foreign-resource
+  entries: [T1537]
+- threat: azure-private-dns-zone-record-tampering
+  entries: [T1557]
+- threat: azure-bastion-overprivileged-access
+  entries: [T1021]
+- threat: azure-bastion-feature-abuse
+  entries: [T1048]
+- threat: azure-bastion-vm-credential-spoofing
+  entries: [T1078.003]
+- threat: azure-sql-database-public-network-exposure
+  entries: [T1190, T1110]
+- threat: azure-sql-database-sql-authentication
+  entries: [T1110, T1078]
+- threat: azure-sql-database-sql-injection
+  entries: [T1190]
+- threat: azure-sql-database-excessive-privileges
+  entries: [T1078]
+- threat: azure-sql-database-data-exfiltration
+  entries: [T1537, T1213.006]
+- threat: azure-sql-database-insecure-transport
+  entries: [T1557]
+- threat: azure-sql-database-sensitive-data-plaintext
+  entries: [T1213.006]
+- threat: azure-sql-database-destruction
+  entries: [T1485, T1490]
+- threat: azure-cosmosdb-account-key-abuse
+  entries: [T1552.001, T1213.006]
+- threat: azure-cosmosdb-control-plane-key-listing
+  entries: [T1078.004, T1213.006]
+- threat: azure-cosmosdb-public-network-exposure
+  entries: [T1213.006]
+- threat: azure-cosmosdb-query-injection
+  entries: [T1190]
+- threat: azure-cosmosdb-data-deletion
+  entries: [T1485]
+- threat: azure-cosmosdb-throughput-exhaustion
+  entries: [T1499.003]
+- threat: azure-ad-application-client-secret-leak
+  entries: [T1552.001, T1078.004]
+- threat: azure-ad-application-credential-backdoor
+  entries: [T1098.001]
+- threat: azure-ad-application-excessive-api-permissions
+  entries: [T1098.003]
+- threat: azure-ad-application-illicit-consent
+  entries: [T1528, T1566.002]
+- threat: azure-ad-application-redirect-uri-hijack
+  entries: [T1528]
+- threat: azure-ad-application-multitenant-misuse
+  entries: [T1078.004]
+- threat: azure-ad-application-insecure-oauth-flows
+  entries: [T1528]
+- threat: azure-ad-application-credential-expiry-outage
+  entries: [T1531]
+- threat: azure-service-principal-overprivileged-rbac
+  entries: [T1078.004, T1098.003]
+- threat: azure-service-principal-credential-theft
+  entries: [T1552.001, T1078.004]
+- threat: azure-service-principal-directory-role-escalation
+  entries: [T1098.003]
+- threat: azure-service-principal-credential-backdoor
+  entries: [T1098.001]
+- threat: azure-service-principal-stale
+  entries: [T1078.004]
+- threat: azure-service-principal-third-party-app-abuse
+  entries: [T1199]
+- threat: azure-function-app-function-key-abuse
+  entries: [T1552.001, T1648]
+- threat: azure-function-app-storage-takeover
+  entries: [T1648, T1552.001]
+- threat: azure-function-app-scale-cost-dos
+  entries: [T1499.003, T1496]
+- threat: azure-container-registry-admin-user
+  entries: [T1078.001]
+- threat: azure-container-registry-anonymous-pull
+  entries: [T1530]
+- threat: azure-container-registry-image-poisoning
+  entries: [T1525, T1195]
+- threat: azure-container-registry-vulnerable-images
+  entries: [T1552.001]
+- threat: azure-container-registry-tasks-abuse
+  entries: [T1612, T1528]
+- threat: azure-container-registry-image-deletion
+  entries: [T1485]
+- threat: azure-virtual-machine-public-management-exposure
+  entries: [T1110, T1021]
+- threat: azure-virtual-machine-password-authentication
+  entries: [T1078.003, T1110]
+- threat: azure-virtual-machine-run-command-abuse
+  entries: [T1651]
+- threat: azure-virtual-machine-disk-exfiltration
+  entries: [T1578.001, T1537]
+- threat: azure-virtual-machine-boot-tampering
+  entries: [T1542]
+- threat: azure-virtual-machine-unpatched
+  entries: [T1190, T1068]
+- threat: azure-virtual-machine-ransomware
+  entries: [T1486, T1490]
+- threat: azure-log-analytics-sensitive-data-exposure
+  entries: [T1654]
+- threat: azure-log-analytics-local-auth-log-injection
+  entries: [T1565]
+- threat: azure-log-analytics-log-tampering
+  entries: [T1070]
+- threat: azure-log-analytics-collection-disabled
+  entries: [T1685.002]
+- threat: azure-log-analytics-public-access
+  entries: [T1654]
+- threat: azure-defender-alert-suppression-tampering
+  entries: [T1685]
+- threat: azure-defender-posture-data-exposure
+  entries: [T1526, T1580]
+- threat: azure-ai-search-public-exposure
+  entries: [T1530]
+- threat: azure-ai-search-key-authentication
+  entries: [T1078.004, T1552.001]
+- threat: azure-ai-search-index-data-overexposure
+  entries: [T1213]
+- threat: azure-ai-search-platform-key-encryption
+  entries: [T1530]
+- threat: azure-ai-search-missing-logging
+  entries: [T1070]
+- threat: azure-ai-services-public-endpoint
+  entries: [T1530]
+- threat: azure-ai-services-api-key-exposure
+  entries: [T1552.001, T1496.004]
+- threat: azure-ai-services-prompt-injection
+  entries: [T1190]
+- threat: azure-ai-services-missing-logging
+  entries: [T1070]
+- threat: azure-ai-services-unrestricted-outbound
+  entries: [T1567]
+- threat: azure-api-center-test-console-credential-exposure
+  entries: [T1078.004]
+- threat: azure-api-center-broad-key-vault-access
+  entries: [T1078.004, T1555]
+- threat: azure-api-center-unregistered-api
+  entries: [T1190]
+- threat: azure-api-management-public-exposure
+  entries: [T1190, T1530]
+- threat: azure-api-management-weak-tls-protocols
+  entries: [T1040, T1557]
+- threat: azure-api-management-legacy-platform-config
+  entries: [T1190]
+- threat: azure-api-management-missing-api-authentication
+  entries: [T1190]
+- threat: azure-api-management-subscription-key-and-secret-leakage
+  entries: [T1552.001]
+- threat: azure-app-configuration-public-exposure
+  entries: [T1530]
+- threat: azure-app-configuration-access-key-authentication
+  entries: [T1552.001, T1078.004]
+- threat: azure-app-configuration-platform-key-encryption
+  entries: [T1530]
+- threat: azure-app-configuration-deletion-without-recovery
+  entries: [T1485]
+- threat: azure-app-insights-key-and-connection-string-misuse
+  entries: [T1078.004, T1565]
+- threat: azure-app-insights-sensitive-telemetry
+  entries: [T1530]
+- threat: azure-app-insights-public-ingestion-and-query
+  entries: [T1530]
+- threat: azure-app-insights-ingestion-flooding
+  entries: [T1499]
+- threat: azure-arc-managed-identity-key-theft
+  entries: [T1078.004, T1552]
+- threat: azure-arc-extension-code-execution
+  entries: [T1651, T1078.004]
+- threat: azure-arc-onboarding-credential-abuse
+  entries: [T1078.004, T1136.003]
+- threat: azure-automation-public-exposure
+  entries: [T1530, T1190]
+- threat: azure-automation-plaintext-credentials-and-variables
+  entries: [T1552.001]
+- threat: azure-automation-local-authentication
+  entries: [T1078.004]
+- threat: azure-automation-runbook-privilege-escalation
+  entries: [T1078.004, T1098]
+- threat: azure-automation-webhook-url-exposure
+  entries: [T1552.001, T1651]
+- threat: azure-avd-desktop-group-overexposure
+  entries: [T1078]
+- threat: azure-avd-host-pool-identity-overprivileged
+  entries: [T1552.001, T1555]
+- threat: azure-avd-domain-join-account-overprivileged
+  entries: [T1078.002]
+- threat: azure-avd-scaling-plan-excessive-rights
+  entries: [T1489, T1078.004]
+- threat: azure-avd-session-host-unrestricted-egress
+  entries: [T1071, T1567]
+- threat: azure-avd-session-host-shared-local-admin
+  entries: [T1078.003]
+- threat: azure-avd-session-host-user-admin-rights
+  entries: [T1078.003, T1548]
+- threat: azure-avd-session-host-no-endpoint-protection
+  entries: [T1204]
+- threat: azure-avd-fslogix-av-exclusion-malware
+  entries: [T1204]
+- threat: azure-avd-idle-session-unlocked
+  entries: [T1078]
+- threat: azure-backup-vault-single-admin-destruction
+  entries: [T1485, T1490]
+- threat: azure-backup-vault-soft-delete-disabled
+  entries: [T1485]
+- threat: azure-backup-vault-mutable-recovery-points
+  entries: [T1490, T1485]
+- threat: azure-backup-vault-public-network-access
+  entries: [T1530]
+- threat: azure-backup-vault-restore-exfiltration
+  entries: [T1530, T1537]
+- threat: azure-backup-vault-unmonitored-failures
+  entries: [T1490]
+- threat: azure-batch-public-exposure
+  entries: [T1530, T1190]
+- threat: azure-batch-shared-key-authentication
+  entries: [T1078.004, T1552.001]
+- threat: azure-batch-unencrypted-data
+  entries: [T1530]
+- threat: azure-batch-task-privilege-and-secret-exposure
+  entries: [T1552.001]
+- threat: azure-batch-compute-hijacking
+  entries: [T1496.001]
+- threat: azure-batch-missing-logging
+  entries: [T1070]
+- threat: azure-redis-public-exposure
+  entries: [T1530, T1021]
+- threat: azure-redis-insecure-transport
+  entries: [T1040, T1557]
+- threat: azure-redis-access-key-authentication
+  entries: [T1078.004, T1552.001]
+- threat: azure-redis-persistence-and-key-exposure
+  entries: [T1530, T1552.001]
+- threat: azure-redis-cache-poisoning
+  entries: [T1565]
+- threat: azure-container-apps-public-exposure
+  entries: [T1190]
+- threat: azure-container-apps-insecure-ingress
+  entries: [T1040, T1557]
+- threat: azure-container-apps-plaintext-secrets
+  entries: [T1552.001, T1552.007]
+- threat: azure-container-apps-unauthenticated-ingress
+  entries: [T1190]
+- threat: azure-container-apps-untrusted-image
+  entries: [T1195, T1525]
+- threat: azure-container-apps-missing-logging
+  entries: [T1070]
+- threat: azure-aci-plaintext-credentials
+  entries: [T1552.001, T1552.007]
+- threat: azure-aci-untrusted-images
+  entries: [T1195, T1525]
+- threat: azure-aci-no-network-segmentation
+  entries: [T1021, T1190]
+- threat: azure-aci-privileged-runtime
+  entries: [T1068, T1611]
+- threat: azure-aci-platform-key-encryption
+  entries: [T1530]
+- threat: azure-data-explorer-public-exposure
+  entries: [T1530, T1190]
+- threat: azure-data-explorer-encryption-gaps
+  entries: [T1530]
+- threat: azure-data-explorer-overbroad-roles
+  entries: [T1078.004, T1485]
+- threat: azure-data-explorer-trusted-tenants-and-egress
+  entries: [T1567, T1537]
+- threat: azure-data-factory-public-exposure
+  entries: [T1530, T1190]
+- threat: azure-data-factory-linked-service-credentials
+  entries: [T1552.001, T1078.004]
+- threat: azure-data-factory-self-hosted-runtime-compromise
+  entries: [T1078.004, T1199]
+- threat: azure-data-factory-pipeline-tampering
+  entries: [T1677, T1537]
+- threat: azure-data-lake-acl-overgrant
+  entries: [T1078.004]
+- threat: azure-data-lake-missing-dfs-private-endpoint
+  entries: [T1530]
+- threat: azure-databricks-public-exposure
+  entries: [T1190, T1530]
+- threat: azure-databricks-platform-key-encryption
+  entries: [T1530]
+- threat: azure-databricks-storage-credential-exposure
+  entries: [T1552.001]
+- threat: azure-databricks-code-execution-privilege-escalation
+  entries: [T1078.004, T1059]
+- threat: azure-databricks-missing-logging
+  entries: [T1070]
+- threat: azure-ddos-protection-public-ip-unprotected
+  entries: [T1498, T1499]
+- threat: azure-ddos-protection-unsupported-resources
+  entries: [T1498]
+- threat: azure-ddos-protection-no-attack-telemetry
+  entries: [T1498]
+- threat: azure-dedicated-hsm-default-credentials
+  entries: [T1078.001]
+- threat: azure-dedicated-hsm-role-lockout
+  entries: [T1110, T1485]
+- threat: azure-dedicated-hsm-no-ha-backup
+  entries: [T1485]
+- threat: azure-defender-unremediated-recommendations
+  entries: [T1190]
+- threat: azure-dns-private-zone-link-misconfiguration
+  entries: [T1584.003]
+- threat: azure-dns-no-dnssec-validation
+  entries: [T1557]
+- threat: azure-dns-malicious-domain-resolution
+  entries: [T1071]
+- threat: azure-dns-dangling-record-takeover
+  entries: [T1584.003, T1583.003]
+- threat: azure-dns-zone-record-tampering
+  entries: [T1584.003, T1565]
+- threat: azure-domain-services-ntlm-hash-sync
+  entries: [T1110.002]
+- threat: azure-domain-services-weak-protocols
+  entries: [T1040]
+- threat: azure-domain-services-ldap-relay
+  entries: [T1557]
+- threat: azure-domain-services-ldaps-internet-exposure
+  entries: [T1110, T1190]
+- threat: azure-elastic-san-public-network-access
+  entries: [T1530]
+- threat: azure-elastic-san-implicit-subnet-access
+  entries: [T1021]
+- threat: azure-elastic-san-no-transit-encryption-or-soft-delete
+  entries: [T1040, T1485]
+- threat: azure-elastic-san-platform-key-encryption
+  entries: [T1530]
+- threat: azure-entra-token-theft
+  entries: [T1539, T1528]
+- threat: azure-entra-password-spraying
+  entries: [T1110.003, T1110.004]
+- threat: azure-entra-conditional-access-bypass
+  entries: [T1078.004, T1550]
+- threat: azure-entra-standing-admin-access
+  entries: [T1078.004, T1098]
+- threat: azure-entra-break-glass-misuse
+  entries: [T1078.004]
+- threat: azure-entra-provider-support-access
+  entries: [T1078.004]
+- threat: azure-entra-guest-and-external-collaboration-overexposure
+  entries: [T1078.004, T1199]
+- threat: azure-entra-hybrid-identity-compromise
+  entries: [T1078.004, T1098]
+- threat: azure-event-grid-public-exposure
+  entries: [T1530, T1190]
+- threat: azure-event-grid-key-authentication
+  entries: [T1078.004, T1552.001]
+- threat: azure-event-grid-unauthenticated-webhook-delivery
+  entries: [T1190]
+- threat: azure-event-grid-subscription-exfiltration
+  entries: [T1537, T1567]
+- threat: azure-event-hubs-public-exposure
+  entries: [T1530, T1190]
+- threat: azure-event-hubs-sas-key-authentication
+  entries: [T1078.004, T1552.001]
+- threat: azure-event-hubs-weak-tls
+  entries: [T1040, T1557]
+- threat: azure-event-hubs-platform-key-encryption
+  entries: [T1530]
+- threat: azure-expressroute-unencrypted-private-peering
+  entries: [T1040, T1557]
+- threat: azure-expressroute-unauthenticated-bgp
+  entries: [T1557]
+- threat: azure-expressroute-broad-circuit-rbac
+  entries: [T1078.004, T1489]
+- threat: azure-expressroute-authorization-key-abuse
+  entries: [T1199]
+- threat: azure-expressroute-missing-logging
+  entries: [T1070]
+- threat: azure-file-sync-public-endpoint-exposure
+  entries: [T1530, T1190]
+- threat: azure-file-sync-identity-misconfiguration
+  entries: [T1078.004]
+- threat: azure-file-sync-no-backup
+  entries: [T1486, T1490]
+- threat: azure-file-sync-registered-server-compromise
+  entries: [T1080, T1565]
+- threat: azure-files-rbac-acl-misalignment
+  entries: [T1078.004]
+- threat: azure-files-default-share-permission-overgrant
+  entries: [T1078.004]
+- threat: azure-files-smb-unencrypted-transfer
+  entries: [T1040]
+- threat: azure-files-share-destruction
+  entries: [T1485, T1486]
+- threat: azure-firewall-manager-global-policy-change
+  entries: [T1078.004, T1686.001]
+- threat: azure-firewall-manager-traffic-bypasses-firewall
+  entries: [T1021]
+- threat: azure-firewall-manager-fqdn-filter-dns-mismatch
+  entries: [T1071]
+- threat: azure-front-door-weak-tls
+  entries: [T1040, T1557]
+- threat: azure-front-door-origin-bypass
+  entries: [T1190]
+- threat: azure-front-door-waf-ineffective
+  entries: [T1190]
+- threat: azure-front-door-missing-logging
+  entries: [T1070]
+- threat: azure-front-door-dangling-custom-domain
+  entries: [T1584.003]
+- threat: azure-hdinsight-no-esp-authentication
+  entries: [T1078.004, T1190]
+- threat: azure-hdinsight-insecure-transport
+  entries: [T1040]
+- threat: azure-hdinsight-keytab-exposure
+  entries: [T1552]
+- threat: azure-hdinsight-public-gateway-and-ssh
+  entries: [T1190, T1021]
+- threat: azure-hdinsight-encryption-gaps
+  entries: [T1530]
+- threat: azure-iot-hub-public-exposure
+  entries: [T1530, T1190]
+- threat: azure-iot-hub-shared-access-policy-abuse
+  entries: [T1078.004, T1552.001]
+- threat: azure-iot-hub-device-credential-theft
+  entries: [T1078, T1552]
+- threat: azure-iot-hub-weak-tls
+  entries: [T1040]
+- threat: azure-iot-hub-routing-key-credentials
+  entries: [T1552.001]
+- threat: azure-iot-hub-missing-logging
+  entries: [T1070]
+- threat: azure-load-balancer-backend-directly-exposed
+  entries: [T1190]
+- threat: azure-load-balancer-retired-basic-sku
+  entries: [T1499]
+- threat: azure-load-balancer-unencrypted-application-traffic
+  entries: [T1040]
+- threat: azure-load-balancer-open-inbound-rules
+  entries: [T1021, T1190]
+- threat: azure-logic-apps-secrets-in-workflow
+  entries: [T1552.001]
+- threat: azure-logic-apps-connection-credentials
+  entries: [T1552.001, T1078.004]
+- threat: azure-logic-apps-anonymous-request-trigger
+  entries: [T1190]
+- threat: azure-logic-apps-run-history-data-exposure
+  entries: [T1530]
+- threat: azure-logic-apps-missing-logging
+  entries: [T1070]
+- threat: azure-logic-apps-standard-public-and-basic-auth
+  entries: [T1190, T1078]
+- threat: azure-ml-public-exposure
+  entries: [T1530, T1190]
+- threat: azure-ml-compute-local-auth-and-ssh
+  entries: [T1078.004, T1021]
+- threat: azure-ml-platform-key-encryption
+  entries: [T1530]
+- threat: azure-ml-datastore-credential-exposure
+  entries: [T1552.001]
+- threat: azure-ml-untrusted-model-and-environment
+  entries: [T1195, T1059]
+- threat: azure-ml-outdated-compute-instances
+  entries: [T1190]
+- threat: azure-ml-missing-logging
+  entries: [T1070]
+- threat: azure-managed-grafana-public-exposure
+  entries: [T1530, T1190]
+- threat: azure-managed-grafana-api-keys-and-service-accounts
+  entries: [T1078.004, T1552.001]
+- threat: azure-managed-grafana-datasource-credentials
+  entries: [T1552.001, T1213]
+- threat: azure-managed-grafana-admin-role-overgrant
+  entries: [T1078.004]
+- threat: azure-managed-hsm-public-exposure
+  entries: [T1552, T1530]
+- threat: azure-managed-hsm-purge-protection-disabled
+  entries: [T1485]
+- threat: azure-managed-hsm-single-custodian-security-domain
+  entries: [T1078.004]
+- threat: azure-managed-hsm-no-key-autorotation
+  entries: [T1552]
+- threat: azure-managed-hsm-missing-logging
+  entries: [T1070]
+- threat: azure-managed-hsm-overbroad-local-rbac
+  entries: [T1078.004, T1552]
+- threat: azure-monitor-public-ingestion-and-query
+  entries: [T1530, T1040]
+- threat: azure-monitor-platform-key-encryption
+  entries: [T1530]
+- threat: azure-monitor-not-security-monitoring
+  entries: [T1070]
+- threat: azure-monitor-container-insights-legacy-auth
+  entries: [T1552]
+- threat: azure-monitor-alert-suppression
+  entries: [T1685, T1070]
+- threat: azure-mysql-public-exposure
+  entries: [T1530, T1190]
+- threat: azure-mysql-insecure-transport
+  entries: [T1040, T1557]
+- threat: azure-mysql-password-authentication
+  entries: [T1078.004, T1552.001]
+- threat: azure-mysql-platform-key-encryption
+  entries: [T1530]
+- threat: azure-mysql-insufficient-backup
+  entries: [T1485]
+- threat: azure-mysql-no-threat-detection
+  entries: [T1070, T1110]
+- threat: azure-postgresql-public-exposure
+  entries: [T1530, T1190]
+- threat: azure-postgresql-insecure-transport
+  entries: [T1040, T1557]
+- threat: azure-postgresql-password-authentication
+  entries: [T1078.004, T1552.001]
+- threat: azure-postgresql-platform-key-encryption
+  entries: [T1530]
+- threat: azure-postgresql-insufficient-backup
+  entries: [T1485]
+- threat: azure-postgresql-no-threat-detection
+  entries: [T1070, T1110]
+- threat: azure-nat-gateway-outbound-unlogged
+  entries: [T1070, T1048]
+- threat: azure-nat-gateway-snat-exhaustion
+  entries: [T1499]
+- threat: azure-nat-gateway-unrestricted-egress
+  entries: [T1048, T1567]
+- threat: azure-netapp-files-nfs-export-overexposure
+  entries: [T1021]
+- threat: azure-netapp-files-dual-protocol-permission-mismatch
+  entries: [T1078.004]
+- threat: azure-netapp-files-snapshot-and-backup-destruction
+  entries: [T1490, T1485]
+- threat: azure-netapp-files-platform-only-keys
+  entries: [T1530]
+- threat: azure-netapp-files-network-activity-unlogged
+  entries: [T1070]
+- threat: azure-netapp-files-directory-credential-exposure
+  entries: [T1552.001, T1078.002]
+- threat: azure-network-watcher-overbroad-packet-capture
+  entries: [T1040]
+- threat: azure-network-watcher-flow-log-storage-exposure
+  entries: [T1530, T1580]
+- threat: azure-network-watcher-nsg-flow-log-retirement-gap
+  entries: [T1070]
+- threat: azure-queue-storage-platform-key-encryption
+  entries: [T1530]
+- threat: azure-queue-storage-message-injection
+  entries: [T1190, T1565]
+- threat: azure-queue-storage-overbroad-queue-roles
+  entries: [T1078.004, T1485]
+- threat: azure-sentinel-security-logs-not-ingested
+  entries: [T1070]
+- threat: azure-sentinel-analytics-rule-tampering
+  entries: [T1685, T1070]
+- threat: azure-sentinel-watchlist-data-exposure
+  entries: [T1530]
+- threat: azure-sentinel-workspace-access-overbroad
+  entries: [T1530]
+- threat: azure-sentinel-automation-privilege-abuse
+  entries: [T1685, T1098]
+- threat: azure-service-bus-public-exposure
+  entries: [T1530, T1190]
+- threat: azure-service-bus-sas-key-authentication
+  entries: [T1078.004, T1552.001]
+- threat: azure-service-bus-weak-tls
+  entries: [T1040, T1557]
+- threat: azure-service-bus-platform-key-encryption
+  entries: [T1530]
+- threat: azure-service-bus-missing-logging
+  entries: [T1070]
+- threat: azure-service-fabric-unsecured-cluster
+  entries: [T1190]
+- threat: azure-service-fabric-weak-client-authentication
+  entries: [T1078.004]
+- threat: azure-service-fabric-shared-client-certificate
+  entries: [T1552]
+- threat: azure-service-fabric-public-management-endpoints
+  entries: [T1190]
+- threat: azure-service-fabric-reverse-proxy-exposure
+  entries: [T1190]
+- threat: azure-site-recovery-replication-over-public-endpoint
+  entries: [T1040, T1530]
+- threat: azure-site-recovery-over-privileged-operator
+  entries: [T1078.004, T1489]
+- threat: azure-site-recovery-replica-platform-keys
+  entries: [T1530]
+- threat: azure-site-recovery-cache-storage-exposure
+  entries: [T1530]
+- threat: azure-sql-managed-instance-public-data-endpoint
+  entries: [T1530, T1190]
+- threat: azure-sql-managed-instance-sql-authentication
+  entries: [T1078.004, T1552.001]
+- threat: azure-sql-managed-instance-weak-tls
+  entries: [T1040, T1557]
+- threat: azure-sql-managed-instance-platform-key-encryption
+  entries: [T1530]
+- threat: azure-sql-managed-instance-no-threat-detection
+  entries: [T1110, T1190]
+- threat: azure-storage-mover-broad-target-rbac
+  entries: [T1078.004, T1485]
+- threat: azure-storage-mover-orphaned-agent-roles
+  entries: [T1078.004]
+- threat: azure-storage-mover-public-control-plane
+  entries: [T1040]
+- threat: azure-stream-analytics-platform-key-encryption
+  entries: [T1530]
+- threat: azure-stream-analytics-connection-string-authentication
+  entries: [T1552.001]
+- threat: azure-stream-analytics-missing-logging
+  entries: [T1070]
+- threat: azure-stream-analytics-output-redirection
+  entries: [T1537, T1567]
+- threat: azure-synapse-public-exposure
+  entries: [T1530, T1567]
+- threat: azure-synapse-sql-authentication
+  entries: [T1078.004, T1552.001]
+- threat: azure-synapse-platform-key-encryption
+  entries: [T1530]
+- threat: azure-synapse-weak-tls
+  entries: [T1040, T1557]
+- threat: azure-synapse-no-threat-detection
+  entries: [T1110, T1190]
+- threat: azure-synapse-overbroad-roles
+  entries: [T1078.004, T1530]
+- threat: azure-traffic-manager-unauthorized-profile-change
+  entries: [T1565, T1584.003]
+- threat: azure-traffic-manager-dangling-dns-takeover
+  entries: [T1584.003]
+- threat: azure-traffic-manager-http-health-probes
+  entries: [T1557]
+- threat: azure-traffic-manager-missing-logging
+  entries: [T1070]
+- threat: azure-virtual-wan-route-override-bypasses-hub-firewall
+  entries: [T1078.004, T1686.001]
+- threat: azure-virtual-wan-flat-spoke-transit
+  entries: [T1021]
+- threat: azure-virtual-wan-p2s-weak-authentication
+  entries: [T1078.004, T1021]
+- threat: azure-vmss-unpatched-instances
+  entries: [T1068, T1190]
+- threat: azure-vmss-instance-protection-gaps
+  entries: [T1565]
+- threat: azure-vmss-no-application-health
+  entries: [T1499]
+- threat: azure-vmss-encryption-and-logging-gaps
+  entries: [T1530, T1070]
+- threat: azure-vnet-public-paas-path
+  entries: [T1190, T1530]
+- threat: azure-vpn-gateway-weak-p2s-authentication
+  entries: [T1078.004, T1021]
+- threat: azure-vpn-gateway-weak-ipsec-policy
+  entries: [T1040]
+- threat: azure-vpn-gateway-shared-key-exposure
+  entries: [T1552.001, T1021]
+- threat: azure-vpn-gateway-missing-logging
+  entries: [T1070]
+- threat: azure-waf-detection-mode-in-production
+  entries: [T1190]
+- threat: azure-waf-no-rate-limit-or-bot-protection
+  entries: [T1499, T1110.004]
+- threat: azure-waf-missing-logging
+  entries: [T1070]
+- threat: azure-waf-exclusions-and-stale-rule-sets
+  entries: [T1190]
+- threat: azure-app-service-remote-code-execution
+  entries: [T1190, T1059]
+- threat: azure-app-service-public-network-exposure
+  entries: [T1190, T1530]
+- threat: azure-managed-identity-role-changes-unmonitored
+  entries: [T1098, T1070]
+- threat: azure-managed-identity-not-used
+  entries: [T1552.001, T1078.004]
+- threat: azure-virtual-machine-configuration-drift
+  entries: [T1059]
+- threat: azure-virtual-machine-no-endpoint-protection
+  entries: [T1059, T1685]
+- threat: azure-sql-database-insufficient-backup
+  entries: [T1485]
+- threat: azure-sql-database-no-threat-detection
+  entries: [T1110, T1190]
+- threat: azure-cosmosdb-platform-key-encryption
+  entries: [T1530]
+- threat: azure-cosmosdb-no-threat-detection
+  entries: [T1530, T1190]
+- threat: azure-aks-insecure-ingress-transport
+  entries: [T1040, T1557]
+- threat: azure-aks-insecure-cluster-configuration
+  entries: [T1190, T1611]
+- threat: azure-aks-platform-key-encryption
+  entries: [T1530]
+- threat: azure-application-gateway-broad-management-rbac
+  entries: [T1078.004, T1557]
+- threat: azure-firewall-no-tls-inspection
+  entries: [T1071, T1567]
+- threat: azure-bastion-target-subnet-open-management-ports
+  entries: [T1021, T1110]
+- threat: azure-bastion-vm-public-ip-bypass
+  entries: [T1190, T1021]
+- threat: azure-b2c-password-spraying
+  entries: [T1110.003, T1110.004]
+- threat: azure-b2c-account-takeover-without-risk-policy
+  entries: [T1078.004]
+- threat: azure-b2c-single-factor-sign-in
+  entries: [T1078.004, T1110]
+- threat: azure-key-vault-platform-key-encryption-gap
+  entries: [T1530]
+- threat: azure-key-vault-secrets-copied-into-code
+  entries: [T1552.001]
+- threat: azure-key-vault-no-conditional-access
+  entries: [T1078.004, T1528]
+- threat: azure-key-vault-no-threat-detection
+  entries: [T1555, T1552]
+- threat: azure-storage-account-broad-data-plane-role
+  entries: [T1078.004, T1485]
+- threat: azure-storage-account-platform-key-encryption
+  entries: [T1530]
+- threat: azure-storage-account-no-threat-detection
+  entries: [T1530, T1567]
+- threat: azure-flow-plaintext-transport
+  entries: [T1040]
+- threat: azure-flow-mitm-network-path
+  entries: [T1557]
+- threat: azure-flow-token-replay
+  entries: [T1528, T1550]
+- threat: azure-flow-message-tampering
+  entries: [T1565, T1078.004]
+- threat: azure-flow-input-injection
+  entries: [T1190]
+- threat: azure-flow-smb-relay
+  entries: [T1557]
+- threat: azure-event-hubs-missing-logging
+  entries: [T1070]
+- threat: azure-storage-account-missing-audit-logging
+  entries: [T1070]
+- threat: azure-key-vault-missing-audit-logging
+  entries: [T1070]
+- threat: azure-managed-identity-unattributed-actions
+  entries: [T1078.004]
+- threat: azure-aks-missing-audit-logging
+  entries: [T1070]
+- threat: azure-app-service-subdomain-takeover
+  entries: [T1584.003]
+- threat: azure-app-service-missing-logging
+  entries: [T1070]
+- threat: azure-virtual-desktop-rogue-session-host
+  entries: [T1557]
+- threat: azure-virtual-desktop-missing-diagnostics
+  entries: [T1070]
+- threat: azure-vnet-missing-flow-logs
+  entries: [T1070]
+- threat: azure-subnet-address-exhaustion
+  entries: [T1499]
+- threat: azure-nsg-terraform-rule-drift
+  entries: [T1686.001]
+- threat: azure-firewall-missing-logs
+  entries: [T1070]
+- threat: azure-application-gateway-header-spoofing
+  entries: [T1190]
+- threat: azure-application-gateway-missing-logs
+  entries: [T1070]
+- threat: azure-private-endpoint-unreviewed-inbound-connection
+  entries: [T1199]
+- threat: azure-private-endpoint-network-policies-disabled
+  entries: [T1021]
+- threat: azure-private-endpoint-public-access-retained
+  entries: [T1530]
+- threat: azure-private-endpoint-dns-misconfiguration
+  entries: [T1557]
+- threat: azure-private-dns-zone-resolution-failure
+  entries: [T1489]
+- threat: azure-private-dns-zone-missing-logging
+  entries: [T1070]
+- threat: azure-bastion-subnet-nsg-misconfiguration
+  entries: [T1021]
+- threat: azure-bastion-missing-audit
+  entries: [T1070]
+- threat: azure-sql-database-missing-auditing
+  entries: [T1070]
+- threat: azure-cosmosdb-missing-logging
+  entries: [T1070]
+- threat: azure-ad-application-missing-audit
+  entries: [T1070]
+- threat: azure-function-app-trigger-input-injection
+  entries: [T1190]
+- threat: azure-container-registry-public-network-exposure
+  entries: [T1530]
+- threat: azure-container-registry-missing-logs
+  entries: [T1070]
+- threat: azure-virtual-machine-disk-encryption-gaps
+  entries: [T1530]
+- threat: azure-virtual-machine-missing-security-logging
+  entries: [T1070]
+- threat: azure-log-analytics-daily-cap-blinding
+  entries: [T1685]
+- threat: azure-log-analytics-insufficient-retention
+  entries: [T1070]
+- threat: azure-defender-plans-disabled
+  entries: [T1685]
+- threat: azure-defender-alerts-unrouted
+  entries: [T1685]

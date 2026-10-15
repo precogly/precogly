@@ -1,371 +1,943 @@
-# Azure Components
 components:
-  # DATABASES
-  - slug: sql-database
-    icon: icons/sql-database.svg
-    name: "Azure SQL Database"
-    category: datastore
-    component_type: database
-    provider: azure
-    description: "Managed SQL Server database service"
+- slug: sql-database
+  icon: icons/sql-database.svg
+  name: Azure SQL Database
+  category: datastore
+  component_type: database
+  provider: azure
+  description: |
+    Managed SQL Server database service (azurerm_mssql_server, azurerm_mssql_database).
 
-  - slug: cosmosdb
-    icon: icons/cosmosdb.svg
-    name: "Azure Cosmos DB"
-    category: datastore
-    component_type: database
-    provider: azure
-    description: "Globally distributed multi-model database"
+    Resource criticality: Critical. Typically stores the system of record,
+    including PII and financial data.
 
-  - slug: postgresql
-    icon: icons/postgresql.svg
-    name: "Azure Database for PostgreSQL"
-    category: datastore
-    component_type: database
-    provider: azure
-    description: "Managed PostgreSQL database service"
+    Security-relevant properties: public_network_access_enabled,
+    azurerm_mssql_firewall_rule (0.0.0.0 "Allow Azure services" rule),
+    azurerm_mssql_virtual_network_rule, minimum_tls_version,
+    administrator_login / administrator_login_password,
+    azuread_administrator (azuread_authentication_only, login_username),
+    outbound_network_restriction_enabled, identity,
+    transparent_data_encryption_key_vault_key_id,
+    azurerm_mssql_server_extended_auditing_policy,
+    azurerm_mssql_server_security_alert_policy,
+    short_term_retention_policy, long_term_retention_policy,
+    azurerm_private_endpoint.
+- slug: cosmosdb
+  icon: icons/cosmosdb.svg
+  name: Azure Cosmos DB
+  category: datastore
+  component_type: database
+  provider: azure
+  description: |
+    Globally distributed multi-model database (azurerm_cosmosdb_account).
 
-  - slug: mysql
-    icon: icons/mysql.svg
-    name: "Azure Database for MySQL"
-    category: datastore
-    component_type: database
-    provider: azure
-    description: "Managed MySQL database service"
+    Resource criticality: High. Stores application data, often PII, accessed
+    directly by many services.
 
-  - slug: synapse
-    icon: icons/synapse.svg
-    name: "Azure Synapse Analytics"
-    category: datastore
-    component_type: database
-    provider: azure
-    description: "Analytics and data warehouse service"
+    Security-relevant properties: public_network_access_enabled, ip_range_filter
+    (including 0.0.0.0 "Azure datacenters"), is_virtual_network_filter_enabled,
+    virtual_network_rule, local_authentication_enabled,
+    access_key_metadata_writes_enabled, network_acl_bypass_for_azure_services,
+    minimal_tls_version, key_vault_key_id, backup (type Periodic/Continuous),
+    capacity.total_throughput_limit, identity,
+    azurerm_cosmosdb_sql_role_assignment, azurerm_monitor_diagnostic_setting,
+    azurerm_private_endpoint.
+- {slug: postgresql, icon: icons/postgresql.svg, name: Azure Database for PostgreSQL, category: datastore,
+  component_type: database, provider: azure, description: Managed PostgreSQL database service}
+- {slug: mysql, icon: icons/mysql.svg, name: Azure Database for MySQL, category: datastore, component_type: database,
+  provider: azure, description: Managed MySQL database service}
+- {slug: synapse, icon: icons/synapse.svg, name: Azure Synapse Analytics, category: datastore, component_type: database,
+  provider: azure, description: Analytics and data warehouse service}
+- slug: storage-account
+  icon: icons/storage-account.svg
+  name: Azure Storage Account
+  category: datastore
+  component_type: storage
+  provider: azure
+  description: |
+    Storage account hosting Blob, Data Lake Gen2, Files, Queue and Table services
+    behind shared control-plane and network settings (azurerm_storage_account).
 
-  # STORAGE
-  - slug: blob-storage
-    icon: icons/blob-storage.svg
-    name: "Azure Blob Storage"
-    category: datastore
-    component_type: storage
-    provider: azure
-    description: "Object storage for unstructured data"
+    Resource criticality: High. Frequently holds business data, backups, logs,
+    Terraform state and Function App content.
 
-  - slug: files
-    icon: icons/files.svg
-    name: "Azure Files"
-    category: datastore
-    component_type: storage
-    provider: azure
-    description: "Managed file shares (SMB/NFS)"
+    Security-relevant properties: public_network_access_enabled,
+    network_rules (default_action, bypass, ip_rules, virtual_network_subnet_ids),
+    allow_nested_items_to_be_public, shared_access_key_enabled,
+    default_to_oauth_authentication, https_traffic_only_enabled, min_tls_version,
+    cross_tenant_replication_enabled, allowed_copy_scope, sas_policy,
+    infrastructure_encryption_enabled, customer_managed_key,
+    blob_properties (versioning_enabled, delete_retention_policy,
+    container_delete_retention_policy), immutability_policy,
+    azurerm_storage_container.container_access_type,
+    azurerm_monitor_diagnostic_setting, azurerm_private_endpoint.
+- {slug: blob-storage, icon: icons/blob-storage.svg, name: Azure Blob Storage, category: datastore, component_type: storage,
+  provider: azure, description: Object storage for unstructured data}
+- {slug: files, icon: icons/files.svg, name: Azure Files, category: datastore, component_type: storage,
+  provider: azure, description: Managed file shares (SMB/NFS)}
+- {slug: data-lake, icon: icons/data-lake.svg, name: Azure Data Lake Storage, category: datastore, component_type: storage,
+  provider: azure, description: Big data analytics storage}
+- {slug: queue-storage, icon: icons/queue-storage.svg, name: Azure Queue Storage, category: datastore,
+  component_type: storage, provider: azure, description: Message queue storage service}
+- {slug: cache-redis, icon: icons/cache-redis.svg, name: Azure Cache for Redis, category: datastore, component_type: cache,
+  provider: azure, description: Managed Redis in-memory cache}
+- slug: functions
+  icon: icons/functions.svg
+  name: Azure Functions
+  category: process
+  component_type: compute
+  provider: azure
+  description: |
+    Serverless function execution (azurerm_linux_function_app,
+    azurerm_windows_function_app, azurerm_function_app_flex_consumption).
 
-  - slug: data-lake
-    icon: icons/data-lake.svg
-    name: "Azure Data Lake Storage"
-    category: datastore
-    component_type: storage
-    provider: azure
-    description: "Big data analytics storage"
+    Resource criticality: High. Functions process events from queues, HTTP and
+    storage, and usually hold a managed identity and connection strings.
 
-  - slug: queue-storage
-    icon: icons/queue-storage.svg
-    name: "Azure Queue Storage"
-    category: datastore
-    component_type: storage
-    provider: azure
-    description: "Message queue storage service"
+    Security-relevant properties: all App Service site settings (https_only,
+    public_network_access_enabled, ftp/webdeploy basic auth, ip_restriction,
+    scm_ip_restriction, minimum_tls_version, ftps_state, auth_settings_v2,
+    virtual_network_subnet_id), storage_account_name /
+    storage_uses_managed_identity / storage_account_access_key,
+    app_settings (AzureWebJobsStorage, AzureWebJobsSecretStorageType,
+    WEBSITE_RUN_FROM_PACKAGE), function authLevel, app_scale_limit /
+    function_app_scale_limit, identity.
+- slug: aks
+  icon: icons/aks.svg
+  name: Azure AKS
+  category: process
+  component_type: compute
+  provider: azure
+  description: |
+    Azure Kubernetes Service - managed Kubernetes (azurerm_kubernetes_cluster).
 
-  # CACHE
-  - slug: cache-redis
-    icon: icons/cache-redis.svg
-    name: "Azure Cache for Redis"
-    category: datastore
-    component_type: cache
-    provider: azure
-    description: "Managed Redis in-memory cache"
+    Resource criticality: Critical. Runs production workloads and holds
+    kubelet and workload identities with access to ACR, Key Vault and data stores.
 
-  # COMPUTE
-  - slug: functions
-    icon: icons/functions.svg
-    name: "Azure Functions"
-    category: process
-    component_type: compute
-    provider: azure
-    description: "Serverless function execution"
+    Security-relevant properties: private_cluster_enabled,
+    api_server_access_profile.authorized_ip_ranges, local_account_disabled,
+    azure_active_directory_role_based_access_control (azure_rbac_enabled,
+    admin_group_object_ids), role_based_access_control_enabled,
+    run_command_enabled, oidc_issuer_enabled, workload_identity_enabled,
+    kubelet_identity, network_profile (network_plugin, network_policy,
+    outbound_type), azure_policy_enabled, microsoft_defender,
+    key_vault_secrets_provider, key_management_service,
+    automatic_upgrade_channel, node_os_upgrade_channel, kubernetes_version,
+    oms_agent, default_node_pool (node_public_ip_enabled, host_encryption_enabled).
+- slug: app-service
+  icon: icons/app-service.svg
+  name: Azure App Service
+  category: process
+  component_type: compute
+  provider: azure
+  description: |
+    PaaS for web apps and APIs (azurerm_linux_web_app, azurerm_windows_web_app,
+    azurerm_service_plan).
 
-  - slug: aks
-    icon: icons/aks.svg
-    name: "Azure AKS"
-    category: process
-    component_type: compute
-    provider: azure
-    description: "Azure Kubernetes Service - managed Kubernetes"
+    Resource criticality: High. Usually internet-facing and holding app settings,
+    connection strings and a managed identity.
 
-  - slug: app-service
-    icon: icons/app-service.svg
-    name: "Azure App Service"
-    category: process
-    component_type: compute
-    provider: azure
-    description: "PaaS for web apps and APIs"
+    Security-relevant properties: https_only, public_network_access_enabled,
+    client_certificate_enabled, auth_settings_v2, identity,
+    ftp_publish_basic_authentication_enabled,
+    webdeploy_publish_basic_authentication_enabled, key_vault_reference_identity_id,
+    virtual_network_subnet_id, site_config (minimum_tls_version,
+    scm_minimum_tls_version, ftps_state, ip_restriction,
+    ip_restriction_default_action, scm_ip_restriction,
+    scm_use_main_ip_restriction, remote_debugging_enabled,
+    vnet_route_all_enabled, application_stack, http2_enabled),
+    app_settings, connection_string, logs, azurerm_monitor_diagnostic_setting.
+- {slug: container-apps, icon: icons/container-apps.svg, name: Azure Container Apps, category: process,
+  component_type: compute, provider: azure, description: Serverless container platform}
+- {slug: container-instances, icon: icons/container-instances.svg, name: Azure Container Instances, category: process,
+  component_type: compute, provider: azure, description: Run containers without managing servers}
+- slug: container-registry
+  icon: icons/container-registry.svg
+  name: Azure Container Registry
+  category: datastore
+  component_type: storage
+  provider: azure
+  description: |
+    Private OCI registry for container images and Helm charts
+    (azurerm_container_registry).
 
-  - slug: container-apps
-    icon: icons/container-apps.svg
-    name: "Azure Container Apps"
-    category: process
-    component_type: compute
-    provider: azure
-    description: "Serverless container platform"
+    Resource criticality: High. Every image deployed to AKS, App Service and
+    Container Apps comes from here, so it is a supply-chain chokepoint.
 
-  - slug: container-instances
-    icon: icons/container-instances.svg
-    name: "Azure Container Instances"
-    category: process
-    component_type: compute
-    provider: azure
-    description: "Run containers without managing servers"
+    Security-relevant properties: sku (Premium needed for private endpoints),
+    admin_enabled, anonymous_pull_enabled, public_network_access_enabled,
+    network_rule_set, network_rule_bypass_option, data_endpoint_enabled,
+    export_policy_enabled, quarantine_policy_enabled, trust_policy_enabled /
+    signature verification, retention_policy_in_days, encryption,
+    azurerm_container_registry_task, AcrPush/AcrPull/AcrDelete role
+    assignments, azurerm_monitor_diagnostic_setting.
+- slug: virtual-machines
+  icon: icons/virtual-machines.svg
+  name: Azure Virtual Machines
+  category: process
+  component_type: compute
+  provider: azure
+  description: |
+    IaaS virtual servers (azurerm_linux_virtual_machine,
+    azurerm_windows_virtual_machine, azurerm_managed_disk).
 
-  - slug: virtual-machines
-    icon: icons/virtual-machines.svg
-    name: "Azure Virtual Machines"
-    category: process
-    component_type: compute
-    provider: azure
-    description: "IaaS virtual servers"
+    Resource criticality: High. Full OS control, often hosts legacy workloads
+    with local credentials and broad network reach.
 
-  - slug: batch
-    icon: icons/batch.svg
-    name: "Azure Batch"
-    category: process
-    component_type: compute
-    provider: azure
-    description: "Large-scale parallel batch processing"
+    Security-relevant properties: admin_password, admin_ssh_key,
+    disable_password_authentication, public IP association, NSG rules,
+    identity, encryption_at_host_enabled, os_disk.disk_encryption_set_id,
+    secure_boot_enabled, vtpm_enabled, patch_mode, patch_assessment_mode,
+    extensions (CustomScript, AADLoginForWindows/AADSSHLoginForLinux,
+    AzureMonitorAgent, MDE), managed disk network_access_policy and
+    public_network_access_enabled, azurerm_backup_protected_vm.
+- {slug: batch, icon: icons/batch.svg, name: Azure Batch, category: process, component_type: compute,
+  provider: azure, description: Large-scale parallel batch processing}
+- {slug: service-bus, icon: icons/service-bus.svg, name: Azure Service Bus, category: process, component_type: messaging,
+  provider: azure, description: Enterprise message broker}
+- {slug: event-hubs, icon: icons/event-hubs.svg, name: Azure Event Hubs, category: process, component_type: messaging,
+  provider: azure, description: Big data streaming platform}
+- {slug: event-grid, icon: icons/event-grid.svg, name: Azure Event Grid, category: process, component_type: messaging,
+  provider: azure, description: Event routing service}
+- slug: vnet
+  icon: icons/vnet.svg
+  name: Azure Virtual Network
+  category: process
+  component_type: networking
+  provider: azure
+  description: |
+    Isolated virtual network (azurerm_virtual_network).
 
-  # MESSAGING
-  - slug: service-bus
-    icon: icons/service-bus.svg
-    name: "Azure Service Bus"
-    category: process
-    component_type: messaging
-    provider: azure
-    description: "Enterprise message broker"
+    Resource criticality: High. Defines the network trust boundary for every
+    workload, private endpoint and peering.
 
-  - slug: event-hubs
-    icon: icons/event-hubs.svg
-    name: "Azure Event Hubs"
-    category: process
-    component_type: messaging
-    provider: azure
-    description: "Big data streaming platform"
+    Security-relevant properties: address_space, dns_servers,
+    ddos_protection_plan, azurerm_virtual_network_peering
+    (allow_forwarded_traffic, allow_gateway_transit, use_remote_gateways,
+    remote VNet in another subscription/tenant), flow logs
+    (azurerm_network_watcher_flow_log), encryption, subnet definitions.
+- slug: subnet
+  icon: icons/subnet.svg
+  name: Azure Subnet
+  category: process
+  component_type: networking
+  provider: azure
+  description: |
+    Network subnet within VNet (azurerm_subnet).
 
-  - slug: event-grid
-    icon: icons/event-grid.svg
-    name: "Azure Event Grid"
-    category: process
-    component_type: messaging
-    provider: azure
-    description: "Event routing service"
+    Resource criticality: Medium. Segmentation unit to which NSGs, route tables,
+    service endpoints and delegations are applied.
 
-  # NETWORKING
-  - slug: vnet
-    icon: icons/vnet.svg
-    name: "Azure Virtual Network"
-    category: process
-    component_type: networking
-    provider: azure
-    description: "Isolated virtual network"
+    Security-relevant properties: address_prefixes,
+    azurerm_subnet_network_security_group_association,
+    azurerm_subnet_route_table_association (and route table
+    bgp_route_propagation_enabled), default_outbound_access_enabled,
+    service_endpoints, service_endpoint_policy_ids, delegation,
+    private_endpoint_network_policies, private_link_service_network_policies_enabled.
+- slug: nsg
+  icon: icons/nsg.svg
+  name: Azure Network Security Group
+  category: process
+  component_type: security
+  provider: azure
+  description: |
+    Stateful L3/L4 packet filter attached to subnets or NICs
+    (azurerm_network_security_group, azurerm_network_security_rule).
 
-  - slug: subnet
-    icon: icons/subnet.svg
-    name: "Azure Subnet"
-    category: process
-    component_type: networking
-    provider: azure
-    description: "Network subnet within VNet"
+    Resource criticality: High. Primary control for east-west and inbound
+    segmentation in most Azure landing zones.
 
-  - slug: private-endpoint
-    icon: icons/private-endpoint.svg
-    name: "Azure Private Endpoint"
-    category: process
-    component_type: networking
-    provider: azure
-    description: "Private connectivity to Azure services"
+    Security-relevant properties: security_rule (direction, access, priority,
+    source_address_prefix(es), source service tags such as Internet / AzureCloud /
+    VirtualNetwork, destination_port_range(s), protocol), inline vs standalone
+    rule resources, application security groups, subnet/NIC associations,
+    flow logs.
+- slug: private-endpoint
+  icon: icons/private-endpoint.svg
+  name: Azure Private Endpoint
+  category: process
+  component_type: networking
+  provider: azure
+  description: |
+    Private connectivity to Azure services (azurerm_private_endpoint).
 
-  - slug: virtual-wan
-    icon: icons/virtual-wan.svg
-    name: "Azure Virtual WAN"
-    category: process
-    component_type: networking
-    provider: azure
-    description: "Network transit hub"
+    Resource criticality: High. Provides the private data path to PaaS
+    resources. It is only effective together with correct DNS and with
+    public access disabled on the target.
 
-  - slug: application-gateway
-    icon: icons/application-gateway.svg
-    name: "Azure Application Gateway"
-    category: process
-    component_type: networking
-    provider: azure
-    description: "Layer 7 load balancer with WAF"
+    Security-relevant properties: private_service_connection
+    (private_connection_resource_id, subresource_names,
+    is_manual_connection, request_message), private_dns_zone_group,
+    subnet private_endpoint_network_policies, target resource
+    public_network_access_enabled, connection approval state.
+- slug: private-dns-zone
+  icon: icons/private-dns-zone.svg
+  name: Azure Private DNS Zone
+  category: process
+  component_type: networking
+  provider: azure
+  description: |
+    Private DNS zones for name resolution inside VNets, notably
+    privatelink.* zones for private endpoints (azurerm_private_dns_zone).
 
-  - slug: front-door
-    icon: icons/front-door.svg
-    name: "Azure Front Door"
-    category: process
-    component_type: networking
-    provider: azure
-    description: "Global load balancer and CDN"
+    Resource criticality: High. Controls where every workload connects when
+    resolving PaaS hostnames.
 
-  - slug: load-balancer
-    icon: icons/load-balancer.svg
-    name: "Azure Load Balancer"
-    category: process
-    component_type: networking
-    provider: azure
-    description: "Layer 4 load balancer"
+    Security-relevant properties: zone name, azurerm_private_dns_a_record /
+    cname records, azurerm_private_dns_zone_virtual_network_link
+    (registration_enabled, resolution_policy), zone placement (central hub vs
+    per spoke), RBAC on the zone (Private DNS Zone Contributor).
+- {slug: virtual-wan, icon: icons/virtual-wan.svg, name: Azure Virtual WAN, category: process, component_type: networking,
+  provider: azure, description: Network transit hub}
+- slug: application-gateway
+  icon: icons/application-gateway.svg
+  name: Azure Application Gateway
+  category: process
+  component_type: networking
+  provider: azure
+  description: |
+    Layer 7 load balancer with WAF (azurerm_application_gateway,
+    azurerm_web_application_firewall_policy).
 
-  - slug: traffic-manager
-    icon: icons/traffic-manager.svg
-    name: "Azure Traffic Manager"
-    category: process
-    component_type: networking
-    provider: azure
-    description: "DNS-based traffic routing"
+    Resource criticality: High. Internet-facing ingress terminating TLS for
+    backend applications.
 
-  - slug: dns
-    icon: icons/dns.svg
-    name: "Azure DNS"
-    category: process
-    component_type: networking
-    provider: azure
-    description: "DNS hosting service"
+    Security-relevant properties: sku (WAF_v2), firewall_policy_id / waf_configuration
+    (enabled, firewall_mode, rule_set_version), ssl_policy (policy_type,
+    policy_name, min_protocol_version), ssl_certificate (data/password vs
+    key_vault_secret_id), backend_http_settings (protocol, host_name,
+    pick_host_name_from_backend_address, trusted_root_certificate_names),
+    rewrite_rule_set, autoscale_configuration, identity, public IP and
+    DDoS protection, azurerm_monitor_diagnostic_setting.
+- {slug: front-door, icon: icons/front-door.svg, name: Azure Front Door, category: process, component_type: networking,
+  provider: azure, description: Global load balancer and CDN}
+- {slug: load-balancer, icon: icons/load-balancer.svg, name: Azure Load Balancer, category: process, component_type: networking,
+  provider: azure, description: Layer 4 load balancer}
+- {slug: traffic-manager, icon: icons/traffic-manager.svg, name: Azure Traffic Manager, category: process,
+  component_type: networking, provider: azure, description: DNS-based traffic routing}
+- {slug: dns, icon: icons/dns.svg, name: Azure DNS, category: process, component_type: networking, provider: azure,
+  description: DNS hosting service}
+- {slug: waf, icon: icons/waf.svg, name: Azure WAF, category: process, component_type: security, provider: azure,
+  description: Web Application Firewall}
+- {slug: ddos-protection, icon: icons/ddos-protection.svg, name: Azure DDoS Protection, category: process,
+  component_type: security, provider: azure, description: DDoS attack mitigation}
+- slug: firewall
+  icon: icons/firewall.svg
+  name: Azure Firewall
+  category: process
+  component_type: security
+  provider: azure
+  description: |
+    Cloud-native network firewall (azurerm_firewall, azurerm_firewall_policy,
+    azurerm_firewall_policy_rule_collection_group).
 
-  # SECURITY
-  - slug: waf
-    icon: icons/waf.svg
-    name: "Azure WAF"
-    category: process
-    component_type: security
-    provider: azure
-    description: "Web Application Firewall"
+    Resource criticality: Critical. Central egress/ingress inspection point
+    for hub-and-spoke networks.
 
-  - slug: ddos-protection
-    icon: icons/ddos-protection.svg
-    name: "Azure DDoS Protection"
-    category: process
-    component_type: security
-    provider: azure
-    description: "DDoS attack mitigation"
+    Security-relevant properties: sku_tier (Standard/Premium),
+    threat_intelligence_mode, intrusion_detection (mode), tls_certificate,
+    dns (proxy_enabled, servers), application/network/NAT rule collections
+    (source_addresses, destination_fqdns, wildcard FQDNs, ports),
+    public IP count / NAT gateway, zones, azurerm_monitor_diagnostic_setting
+    (resource-specific tables).
+- slug: defender
+  icon: icons/defender.svg
+  name: Microsoft Defender for Cloud
+  category: process
+  component_type: security
+  provider: azure
+  description: |
+    Cloud security posture management and workload protection
+    (azurerm_security_center_subscription_pricing,
+    azurerm_security_center_contact, azurerm_security_center_automation).
 
-  - slug: firewall
-    icon: icons/firewall.svg
-    name: "Azure Firewall"
-    category: process
-    component_type: security
-    provider: azure
-    description: "Cloud-native network firewall"
+    Resource criticality: High. Primary detection layer for Azure workloads;
+    its configuration decides what is monitored.
 
-  - slug: defender
-    icon: icons/defender.svg
-    name: "Microsoft Defender for Cloud"
-    category: process
-    component_type: security
-    provider: azure
-    description: "Cloud security posture management"
+    Security-relevant properties: tier and subplan per resource_type,
+    extensions (agentless scanning, sensitive data discovery),
+    security contacts and alert notifications, continuous export /
+    workflow automation, alert suppression rules, Security Admin role holders.
+- {slug: sentinel, icon: icons/sentinel.svg, name: Microsoft Sentinel, category: process, component_type: security,
+  provider: azure, description: Cloud-native SIEM and SOAR}
+- slug: key-vault
+  icon: icons/key-vault.svg
+  name: Azure Key Vault
+  category: process
+  component_type: security
+  provider: azure
+  description: |
+    Secrets, keys, and certificate management (azurerm_key_vault).
 
-  - slug: sentinel
-    icon: icons/sentinel.svg
-    name: "Microsoft Sentinel"
-    category: process
-    component_type: security
-    provider: azure
-    description: "Cloud-native SIEM and SOAR"
+    Resource criticality: Critical. Compromise exposes credentials and encryption
+    keys for every dependent workload and data store.
 
-  - slug: key-vault
-    icon: icons/key-vault.svg
-    name: "Azure Key Vault"
-    category: process
-    component_type: security
-    provider: azure
-    description: "Secrets, keys, and certificate management"
+    Security-relevant properties: rbac_authorization_enabled
+    (enable_rbac_authorization in azurerm < 4.x), access_policy,
+    public_network_access_enabled, network_acls (default_action, bypass,
+    ip_rules, virtual_network_subnet_ids), purge_protection_enabled,
+    soft_delete_retention_days, sku_name (standard / premium HSM-backed keys),
+    azurerm_key_vault_secret (value, expiration_date, content_type),
+    azurerm_key_vault_key (rotation_policy, expiration_date),
+    azurerm_role_assignment scope, azurerm_private_endpoint,
+    azurerm_monitor_diagnostic_setting (AuditEvent).
+- {slug: dedicated-hsm, icon: icons/dedicated-hsm.svg, name: Azure Dedicated HSM, category: process, component_type: security,
+  provider: azure, description: Hardware Security Module}
+- slug: bastion
+  icon: icons/bastion.svg
+  name: Azure Bastion
+  category: process
+  component_type: security
+  provider: azure
+  description: |
+    Secure RDP/SSH access to VMs (azurerm_bastion_host).
 
-  - slug: dedicated-hsm
-    icon: icons/dedicated-hsm.svg
-    name: "Azure Dedicated HSM"
-    category: process
-    component_type: security
-    provider: azure
-    description: "Hardware Security Module"
+    Resource criticality: High. Administrative entry point into VNets and
+    peered VNets.
 
-  - slug: bastion
-    icon: icons/bastion.svg
-    name: "Azure Bastion"
-    category: process
-    component_type: security
-    provider: azure
-    description: "Secure RDP/SSH access to VMs"
+    Security-relevant properties: sku, tunneling_enabled, file_copy_enabled,
+    shareable_link_enabled, ip_connect_enabled, session_recording_enabled,
+    kerberos_enabled, AzureBastionSubnet NSG rules, RBAC on Bastion/VM/NIC,
+    azurerm_monitor_diagnostic_setting (BastionAuditLogs).
+- {slug: vpn-gateway, icon: icons/vpn-gateway.svg, name: Azure VPN Gateway, category: process, component_type: security,
+  provider: azure, description: Site-to-site and point-to-site VPN}
+- {slug: active-directory, icon: icons/active-directory.svg, name: Microsoft Entra ID, category: process,
+  component_type: auth, provider: azure, description: Cloud identity and access management (formerly Azure
+    AD)}
+- slug: entra-app-registration
+  icon: icons/entra-app-registration.svg
+  name: Microsoft Entra Application Registration
+  category: process
+  component_type: auth
+  provider: azure
+  description: |
+    Application object in Microsoft Entra ID (formerly Azure AD Application),
+    defining credentials, redirect URIs and requested permissions
+    (azuread_application, azuread_application_password,
+    azuread_application_certificate, azuread_application_federated_identity_credential).
 
-  - slug: vpn-gateway
-    icon: icons/vpn-gateway.svg
-    name: "Azure VPN Gateway"
-    category: process
-    component_type: security
-    provider: azure
-    description: "Site-to-site and point-to-site VPN"
+    Resource criticality: High. Apps with application permissions on Microsoft
+    Graph can control the whole tenant.
 
-  # AUTH / IDENTITY
-  - slug: active-directory
-    icon: icons/active-directory.svg
-    name: "Microsoft Entra ID"
-    category: process
-    component_type: auth
-    provider: azure
-    description: "Cloud identity and access management (formerly Azure AD)"
+    Security-relevant properties: sign_in_audience, owners,
+    required_resource_access (application vs delegated permissions),
+    web/spa/public_client redirect_uris, implicit_grant
+    (access_token_issuance_enabled, id_token_issuance_enabled),
+    fallback_public_client_enabled, password end_date, certificates,
+    federated identity credentials, app_role_assignment_required.
+- slug: service-principal
+  icon: icons/service-principal.svg
+  name: Microsoft Entra Service Principal
+  category: process
+  component_type: auth
+  provider: azure
+  description: |
+    Tenant-local identity of an application (enterprise application) used for
+    sign-in and authorization (azuread_service_principal,
+    azuread_service_principal_password, azuread_app_role_assignment).
 
-  - slug: ad-b2c
-    icon: icons/ad-b2c.svg
-    name: "Azure AD B2C"
-    category: process
-    component_type: auth
-    provider: azure
-    description: "Customer identity management"
+    Resource criticality: Critical when used by CI/CD or Terraform, since it
+    often holds Owner or User Access Administrator on subscriptions.
 
-  - slug: managed-identity
-    icon: icons/managed-identity.svg
-    name: "Azure Managed Identity"
-    category: process
-    component_type: auth
-    provider: azure
-    description: "Automatic credential management for Azure resources"
+    Security-relevant properties: app_role_assignment_required, owners,
+    service principal credentials (separate from app credentials),
+    azurerm_role_assignment scope and role, directory role assignments,
+    Graph app role assignments, account_enabled, multi-tenant (third-party)
+    origin, Conditional Access for workload identities coverage.
+- {slug: ad-b2c, icon: icons/ad-b2c.svg, name: Azure AD B2C, category: process, component_type: auth,
+  provider: azure, description: Customer identity management}
+- slug: managed-identity
+  icon: icons/managed-identity.svg
+  name: Azure Managed Identity
+  category: process
+  component_type: auth
+  provider: azure
+  description: |
+    Automatic credential management for Azure resources: system-assigned
+    identities (identity block on a resource) and user-assigned identities
+    (azurerm_user_assigned_identity).
 
-  # MONITORING
-  - slug: monitor
-    icon: icons/monitor.svg
-    name: "Azure Monitor"
-    category: process
-    component_type: monitoring
-    provider: azure
-    description: "Full-stack monitoring service"
+    Resource criticality: High. A managed identity holds whatever Azure RBAC
+    and Entra ID permissions are assigned to it. Any code running on the
+    host resource can use them.
 
-  - slug: app-insights
-    icon: icons/app-insights.svg
-    name: "Azure Application Insights"
-    category: process
-    component_type: monitoring
-    provider: azure
-    description: "Application performance monitoring"
+    Security-relevant properties: identity.type, identity.identity_ids,
+    azurerm_role_assignment (role_definition_name, scope, principal_id),
+    azurerm_federated_identity_credential (issuer, subject, audience),
+    number of resources sharing one user-assigned identity,
+    Managed Identity Operator / Contributor assignments on the identity itself.
+- slug: virtual-desktop
+  icon: icons/virtual-desktop.svg
+  name: Azure Virtual Desktop
+  category: process
+  component_type: compute
+  provider: azure
+  description: |
+    Desktop and app virtualization service (azurerm_virtual_desktop_host_pool,
+    azurerm_virtual_desktop_workspace, azurerm_virtual_desktop_application_group,
+    session host VMs, FSLogix profile storage).
 
-  - slug: log-analytics
-    icon: icons/log-analytics.svg
-    name: "Azure Log Analytics"
-    category: process
-    component_type: monitoring
-    provider: azure
-    description: "Log collection and analysis"
+    Resource criticality: High. Gives interactive user access to the internal
+    network and often to sensitive data and line-of-business apps.
 
-  # API MANAGEMENT
-  - slug: api-management
-    icon: icons/api-management.svg
-    name: "Azure API Management"
-    category: process
-    component_type: networking
-    provider: azure
-    description: "API gateway and developer portal"
+    Security-relevant properties: host pool type (Pooled / Personal),
+    custom_rdp_properties (drivestoredirect, redirectclipboard, devicestoredirect,
+    redirectprinters, usbdevicestoredirect), maximum_sessions_allowed,
+    start_vm_on_connect, public_network_access (host pool and workspace),
+    azurerm_virtual_desktop_host_pool_registration_info.expiration_date,
+    azurerm_virtual_desktop_scaling_plan, session host public IPs and NSG rules,
+    Entra ID join vs AD DS join, FSLogix share permissions,
+    Desktop Virtualization User / Virtual Machine User Login assignments,
+    azurerm_monitor_diagnostic_setting (WVDConnections, WVDErrors, WVDCheckpoints).
+- {slug: monitor, icon: icons/monitor.svg, name: Azure Monitor, category: process, component_type: monitoring,
+  provider: azure, description: Full-stack monitoring service}
+- slug: app-insights
+  icon: icons/app-insights.svg
+  name: Azure Application Insights
+  category: process
+  component_type: monitoring
+  provider: azure
+  description: |
+    Azure Application Insights, application performance monitoring that ingests telemetry, traces and exceptions into a Log Analytics workspace (azurerm_application_insights).
+
+    Resource criticality: Medium. Telemetry often includes request URLs, user identifiers and exception data.
+
+    Security-relevant properties: workspace_id, local_authentication_enabled, internet_ingestion_enabled, internet_query_enabled, ip_masking_enabled, sampling_percentage, retention_in_days, daily_data_cap_in_gb, connection_string and instrumentation_key (sensitive outputs), azurerm_monitor_private_link_scope.
+- slug: log-analytics
+  icon: icons/log-analytics.svg
+  name: Azure Log Analytics
+  category: process
+  component_type: monitoring
+  provider: azure
+  description: |
+    Log collection and analysis (azurerm_log_analytics_workspace).
+
+    Resource criticality: High. Holds security evidence and often sensitive
+    data that was logged. It is the backend for Sentinel and Defender.
+
+    Security-relevant properties: retention_in_days, daily_quota_gb,
+    local_authentication_enabled (local_authentication_disabled in older
+    azurerm), internet_ingestion_enabled, internet_query_enabled,
+    allow_resource_only_permissions, azurerm_log_analytics_workspace_table
+    (retention, plan), data export rules, AMPLS
+    (azurerm_monitor_private_link_scope), RBAC (Log Analytics Contributor,
+    Data Purger), azurerm_management_lock.
+- slug: api-management
+  icon: icons/api-management.svg
+  name: Azure API Management
+  category: process
+  component_type: networking
+  provider: azure
+  description: |
+    Azure API Management, a managed API gateway, developer portal and management plane (azurerm_api_management, azurerm_api_management_api, azurerm_api_management_policy, azurerm_api_management_subscription, azurerm_api_management_named_value).
+
+    Resource criticality: High. It is the internet-facing front door for backend APIs and enforces authentication, rate limiting and request validation through policies.
+
+    Security-relevant properties: public_network_access_enabled, virtual_network_type, virtual_network_configuration, sku_name, min_api_version, client_certificate_enabled, gateway_disabled, protocols, security (frontend_tls10_enabled, backend_tls10_enabled, triple_des_ciphers_enabled), azurerm_api_management_api.subscription_required, policy XML (validate-jwt, rate-limit, ip-filter), azurerm_api_management_subscription.allow_tracing, named values with value_from_key_vault, identity.
+- slug: entra-id
+  name: Microsoft Entra ID
+  category: process
+  component_type: auth
+  provider: azure
+  description: |
+    Microsoft Entra ID, the cloud identity provider and directory for users, groups, devices, applications and Conditional Access, managed through the Terraform azuread provider (azuread_user, azuread_group, azuread_conditional_access_policy, azuread_named_location, azuread_directory_role_assignment, azuread_privileged_access_group_eligibility_schedule).
+
+    Resource criticality: Critical. Tenant-wide authentication and authorization decisions for Azure, Microsoft 365 and connected applications depend on it.
+
+    Security-relevant properties: azuread_conditional_access_policy (conditions.client_app_types, conditions.users excluded_users, grant_controls.authentication_strength_policy_id, grant_controls.built_in_controls, session_controls.sign_in_frequency, state), azuread_named_location.ip.trusted, azuread_directory_role_assignment (permanent) versus azuread_directory_role_eligibility_schedule_request (PIM eligible), azuread_group.assignable_to_role, emergency access accounts, guest user_type, Identity Protection risk policies, user consent settings.
+- slug: netapp-files
+  name: Azure NetApp Files
+  category: datastore
+  component_type: storage
+  provider: azure
+  description: |
+    Azure NetApp Files, an enterprise file storage service for NFS, SMB and dual-protocol volumes with snapshots and backup vaults (azurerm_netapp_account, azurerm_netapp_pool, azurerm_netapp_volume, azurerm_netapp_backup_vault).
+
+    Resource criticality: High. It commonly hosts databases, SAP and shared enterprise data.
+
+    Security-relevant properties: azurerm_netapp_volume.export_policy_rule (allowed_clients, protocol, unix_read_write, root_access_enabled, kerberos_5_read_only_enabled), security_style, kerberos_enabled, smb3_protocol_encryption_enabled, encryption_key_source, data_protection_snapshot_policy, data_protection_backup_policy, azurerm_netapp_account.active_directory (password, ldap_signing_enabled, ldap_over_tls_enabled), delegated subnet NSGs, azurerm_management_lock.
+- slug: azure-virtual-desktop-host-pool
+  name: Azure Virtual Desktop Host Pool
+  category: process
+  component_type: virtual-desktop
+  provider: azure
+  description: |
+    Azure Virtual Desktop host pool, a collection of session hosts with registration, load balancing, RDP properties and domain-join configuration (azurerm_virtual_desktop_host_pool, azurerm_virtual_desktop_host_pool_registration_info).
+
+    Resource criticality: High. It controls which VMs may serve user sessions and what redirection is allowed.
+
+    Security-relevant properties: type, load_balancer_type, maximum_sessions_allowed, custom_rdp_properties (drivestoredirect, clipboardredirection, usbdevicestoredirect), public_network_access, preferred_app_group_type, registration_info.expiration_date, identity, diagnostic settings, azurerm_role_assignment (Desktop Virtualization Host Pool Contributor, Desktop Virtualization Virtual Machine Contributor).
+- slug: azure-virtual-desktop-session-host
+  name: Azure Virtual Desktop Session Host
+  category: process
+  component_type: virtual-machine
+  provider: azure
+  description: |
+    Azure Virtual Desktop session host, a VM running the AVD agent on which user sessions execute, joined to Active Directory or Microsoft Entra ID (azurerm_windows_virtual_machine, azurerm_virtual_machine_extension).
+
+    Resource criticality: High. Pooled hosts share memory, disk and network between users.
+
+    Security-relevant properties: azurerm_windows_virtual_machine.admin_password, identity, encryption_at_host_enabled, patch_mode, secure_boot_enabled, vtpm_enabled, subnet default_outbound_access_enabled and route table, azurerm_network_security_rule (RDP 3389), extensions for Defender for Endpoint, domain join and AVD agent, azurerm_role_assignment (Virtual Machine User Login, Virtual Machine Administrator Login).
+- slug: azure-virtual-desktop-workspace
+  name: Azure Virtual Desktop Workspace
+  category: process
+  component_type: virtual-desktop
+  provider: azure
+  description: |
+    Azure Virtual Desktop workspace, the feed that publishes application groups to users and is the sign-in entry point (azurerm_virtual_desktop_workspace).
+
+    Resource criticality: Medium. Together with Conditional Access it decides who can obtain a session.
+
+    Security-relevant properties: public_network_access_enabled, azurerm_virtual_desktop_workspace_application_group_association, azurerm_private_endpoint (subresource feed or global), Conditional Access policies targeting Azure Virtual Desktop and Windows Cloud Login, azurerm_role_assignment (Desktop Virtualization Workspace Contributor, Desktop Virtualization Workspace Reader).
+- slug: azure-virtual-desktop-application-group
+  name: Azure Virtual Desktop Application Group
+  category: process
+  component_type: virtual-desktop
+  provider: azure
+  description: |
+    Azure Virtual Desktop application group, a Desktop or RemoteApp group of published resources whose user assignment is controlled with Azure RBAC (azurerm_virtual_desktop_application_group).
+
+    Resource criticality: Medium. It defines which users reach a full desktop or individual applications on a host pool.
+
+    Security-relevant properties: type (Desktop or RemoteApp), host_pool_id, azurerm_role_assignment with Desktop Virtualization User, Desktop Virtualization Application Group Contributor and Desktop Virtualization Application Group Reader roles, azurerm_virtual_desktop_workspace_application_group_association.
+- slug: azure-virtual-desktop-scaling-plan
+  name: Azure Virtual Desktop Scaling Plan
+  category: process
+  component_type: virtual-desktop
+  provider: azure
+  description: |
+    Azure Virtual Desktop autoscale plan that starts, stops and deallocates session hosts according to schedules and load (azurerm_virtual_desktop_scaling_plan).
+
+    Resource criticality: Medium. The service principal behind it holds VM power and delete permissions.
+
+    Security-relevant properties: host_pool association, schedule (ramp_down_force_logoff_users, ramp_down_stop_hosts_when), exclusion_tag, scaling_plan_enabled, azurerm_role_assignment of Desktop Virtualization Power On Off Contributor and Virtual Machine Contributor to the Azure Virtual Desktop service principal.
+- slug: azure-virtual-desktop-fslogix-profiles
+  name: Azure Virtual Desktop FSLogix Profile Containers
+  category: datastore
+  component_type: file-share
+  provider: azure
+  description: |
+    FSLogix profile containers on Azure Files or Azure NetApp Files that are mounted at sign-in so users keep their profile across pooled session hosts (azurerm_storage_account, azurerm_storage_share).
+
+    Resource criticality: High. Every user's profile data, browser tokens and cached credentials are stored in these containers.
+
+    Security-relevant properties: azurerm_storage_account.public_network_access, shared_access_key_enabled, azurerm_storage_account.azure_files_authentication (Entra Kerberos or AD DS), azurerm_storage_share.acl, azurerm_private_endpoint (subresource file), azurerm_role_assignment (Storage File Data SMB Share Contributor), antivirus exclusions for *.vhd and *.vhdx.
+- slug: backup-vault
+  name: Azure Backup
+  category: datastore
+  component_type: backup
+  provider: azure
+  description: |
+    Azure Backup vaults, the Recovery Services vault and Backup vault that store recovery points for VMs, databases, files, disks and blobs (azurerm_recovery_services_vault, azurerm_data_protection_backup_vault, azurerm_data_protection_resource_guard, azurerm_backup_policy_vm).
+
+    Resource criticality: Critical. Backups are the last line of defence against ransomware and destructive administrators, and they hold full copies of production data.
+
+    Security-relevant properties: azurerm_recovery_services_vault.immutability, public_network_access_enabled, cross_region_restore_enabled, storage_mode_type, encryption, monitoring (alerts_for_all_job_failures_enabled), azurerm_data_protection_backup_vault.soft_delete, retention_duration_in_days, immutability, Resource Guard association for multi-user authorization, azurerm_private_endpoint (subresource AzureBackup), azurerm_role_assignment (Backup Contributor, Backup Operator, Backup Reader).
+- slug: site-recovery
+  name: Azure Site Recovery
+  category: process
+  component_type: disaster-recovery
+  provider: azure
+  description: |
+    Azure Site Recovery, a disaster recovery service that replicates VMs and physical servers to a secondary region or site and orchestrates failover (azurerm_site_recovery_replicated_vm, azurerm_site_recovery_replication_policy, azurerm_site_recovery_fabric, azurerm_site_recovery_protection_container).
+
+    Resource criticality: High. Replicas contain full copies of production disks and failover changes production routing.
+
+    Security-relevant properties: azurerm_site_recovery_replicated_vm.managed_disk (target_disk_encryption_set_id, target_disk_encryption), staging_storage_account_id, target_network_id, azurerm_private_endpoint for replication, Recovery Services vault public_network_access_enabled and immutability, azurerm_role_assignment (Site Recovery Contributor, Site Recovery Operator, Site Recovery Reader).
+- slug: data-factory
+  name: Azure Data Factory
+  category: process
+  component_type: data-integration
+  provider: azure
+  description: |
+    Azure Data Factory, a managed data integration service that orchestrates pipelines, linked services and integration runtimes across cloud and on-premises sources (azurerm_data_factory, azurerm_data_factory_linked_service_*, azurerm_data_factory_integration_runtime_*).
+
+    Resource criticality: High. Pipelines hold credentials to many data stores and move sensitive data between them.
+
+    Security-relevant properties: public_network_enabled, managed_virtual_network_enabled, identity, customer_managed_key_id, github_configuration or vsts_configuration, linked service credentials (connection_string, key_vault_password, use_managed_identity), self-hosted integration runtime authorization keys, azurerm_private_endpoint (subresource dataFactory), azurerm_role_assignment (Data Factory Contributor).
+- slug: databricks
+  name: Azure Databricks
+  category: process
+  component_type: analytics
+  provider: azure
+  description: |
+    Azure Databricks, a managed Apache Spark and lakehouse analytics platform with a control plane in Microsoft's subscription and a compute plane in the customer's subscription (azurerm_databricks_workspace, azurerm_databricks_access_connector).
+
+    Resource criticality: High. Workspaces run arbitrary user code against production data lakes with cluster-attached credentials.
+
+    Security-relevant properties: sku (premium for private link and customer-managed keys), public_network_access_enabled, network_security_group_rules_required, custom_parameters (no_public_ip, virtual_network_id, public_subnet_name, private_subnet_name), customer_managed_key_enabled, managed_services_cmk_key_vault_key_id, managed_disk_cmk_key_vault_key_id, default_storage_firewall_enabled, access_connector_id, enhanced_security_compliance, azurerm_private_endpoint (subresource databricks_ui_api), diagnostic settings.
+- slug: machine-learning
+  name: Azure Machine Learning
+  category: process
+  component_type: ai-ml
+  provider: azure
+  description: |
+    Azure Machine Learning, a workspace-based service for training, registering and deploying machine learning models with managed compute (azurerm_machine_learning_workspace, azurerm_machine_learning_compute_instance, azurerm_machine_learning_compute_cluster, azurerm_machine_learning_datastore_blobstorage).
+
+    Resource criticality: High. Workspaces run user code on compute against training data and hold the credentials of linked storage, registries and key vaults.
+
+    Security-relevant properties: public_network_access_enabled, v1_legacy_mode_enabled, managed_network.isolation_mode, encryption.key_id, high_business_impact, identity, key_vault_id, storage_account_id, compute local_auth_enabled, node_public_ip_enabled, ssh_public_access_enabled, subnet_resource_id, datastore account_key or shared_access_signature, azurerm_private_endpoint (subresource amlworkspace).
+- slug: ai-services
+  name: Azure AI Services
+  category: process
+  component_type: ai-ml
+  provider: azure
+  description: |
+    Azure AI Services and Azure OpenAI, hosted model inference APIs for language, vision, speech and generative AI (azurerm_cognitive_account, azurerm_cognitive_deployment).
+
+    Resource criticality: High. Accounts process prompts and documents that may contain confidential data, and unauthorized use incurs direct cost.
+
+    Security-relevant properties: public_network_access_enabled, network_acls (default_action, ip_rules, virtual_network_rules, bypass), local_auth_enabled, custom_subdomain_name, identity, customer_managed_key, outbound_network_access_restricted, fqdns, azurerm_cognitive_deployment (rai_policy_name, sku.capacity), azurerm_private_endpoint (subresource account), azurerm_monitor_diagnostic_setting.
+- slug: ai-search
+  name: Azure AI Search
+  category: datastore
+  component_type: search
+  provider: azure
+  description: |
+    Azure AI Search, formerly Cognitive Search, a managed search and vector retrieval service that indexes enterprise content for applications and RAG workloads (azurerm_search_service).
+
+    Resource criticality: High. Indexes frequently hold copies of internal documents, and query keys are often embedded in client applications.
+
+    Security-relevant properties: public_network_access_enabled, allowed_ips, network_rule_bypass_option, local_authentication_enabled, authentication_failure_mode, customer_managed_key_enforcement_enabled, identity, azurerm_private_endpoint (subresource searchService), azurerm_monitor_diagnostic_setting, azurerm_role_assignment (Search Service Contributor, Search Index Data Contributor, Search Index Data Reader).
+- slug: logic-apps
+  name: Azure Logic Apps
+  category: process
+  component_type: integration
+  provider: azure
+  description: |
+    Azure Logic Apps, low-code workflow automation in Consumption and Standard flavours that connects SaaS and Azure services with triggers, actions and managed connectors (azurerm_logic_app_workflow, azurerm_logic_app_standard, azurerm_logic_app_trigger_http_request, azurerm_api_connection).
+
+    Resource criticality: High. Workflows frequently hold connector credentials with broad rights to mail, files and databases.
+
+    Security-relevant properties: azurerm_logic_app_workflow.access_control (trigger allowed_caller_ip_address_range and open_authentication_policy, content, action, workflow_management), identity, azurerm_api_connection.parameter_values, azurerm_logic_app_standard (https_only, public_network_access, ftp_publish_basic_authentication_enabled, site_config.min_tls_version, key_vault_reference_identity_id), run history inputs and outputs, diagnostic settings.
+- slug: automation
+  name: Azure Automation
+  category: process
+  component_type: automation
+  provider: azure
+  description: |
+    Azure Automation, a runbook and configuration management service that runs PowerShell, Python and graphical runbooks against Azure and hybrid resources (azurerm_automation_account, azurerm_automation_runbook, azurerm_automation_webhook, azurerm_automation_credential, azurerm_automation_variable_string).
+
+    Resource criticality: High. Runbooks execute with the identity of the account and typically hold broad rights on subscriptions or servers.
+
+    Security-relevant properties: public_network_access_enabled, local_authentication_enabled, identity, encryption (key_vault_key_id), azurerm_automation_variable_string.encrypted, azurerm_automation_credential.password, azurerm_automation_webhook.uri and expiry_time, runbook content, azurerm_role_assignment (Automation Contributor, Automation Operator).
+- slug: network-watcher
+  name: Azure Network Watcher
+  category: process
+  component_type: networking
+  provider: azure
+  description: |
+    Azure Network Watcher, a regional service for network diagnostics, packet capture, connection monitor and flow logs (azurerm_network_watcher, azurerm_network_watcher_flow_log, azurerm_network_connection_monitor).
+
+    Resource criticality: Medium. Flow logs and packet captures are the main network forensic data sources.
+
+    Security-relevant properties: azurerm_network_watcher_flow_log (target_resource_id, version, retention_policy.days, traffic_analytics, storage_account_id), NSG flow logs retiring on 30 September 2027, packet capture storage and roles, azurerm_role_assignment (Network Contributor, Reader), storage account network rules for log containers.
+- slug: firewall-manager
+  name: Azure Firewall Manager
+  category: process
+  component_type: networking
+  provider: azure
+  description: |
+    Azure Firewall Manager, central management of Azure Firewall policies, secured virtual hubs and routing intent across subscriptions and regions (azurerm_firewall_policy, azurerm_firewall_policy_rule_collection_group, azurerm_virtual_hub_routing_intent, azurerm_firewall).
+
+    Resource criticality: High. A policy change affects every firewall that inherits from it.
+
+    Security-relevant properties: azurerm_firewall_policy.base_policy_id (parent and child hierarchy), threat_intelligence_mode, dns.proxy_enabled, intrusion_detection.mode, azurerm_virtual_hub_routing_intent.routing_policy (Internet, PrivateTraffic), azurerm_firewall_policy_rule_collection_group.priority, azurerm_role_assignment (Network Contributor, Contributor) on policies, diagnostic settings.
+- slug: managed-hsm
+  name: Azure Key Vault Managed HSM
+  category: datastore
+  component_type: key-management
+  provider: azure
+  description: |
+    Azure Key Vault Managed HSM, a single-tenant FIPS 140-3 Level 3 validated HSM service for cryptographic keys with local RBAC and a customer-controlled security domain (azurerm_key_vault_managed_hardware_security_module, azurerm_key_vault_managed_hardware_security_module_key).
+
+    Resource criticality: Critical. It protects root keys for other encryption services.
+
+    Security-relevant properties: purge_protection_enabled, soft_delete_retention_days, public_network_access_enabled, network_acls, admin_object_ids, security_domain_key_vault_certificate_ids, security_domain_quorum, key expiration_date and rotation, local RBAC role assignments (Managed HSM Administrator, Crypto Officer, Crypto User), diagnostic settings.
+- slug: elastic-san
+  name: Azure Elastic SAN
+  category: datastore
+  component_type: storage
+  provider: azure
+  description: |
+    Azure Elastic SAN, a managed block storage service that presents iSCSI volumes to VMs, AKS and Azure VMware Solution (azurerm_elastic_san, azurerm_elastic_san_volume_group).
+
+    Resource criticality: High. Volumes usually back databases and application servers.
+
+    Security-relevant properties: azurerm_elastic_san_volume_group.network_rule (subnet_id, action), encryption_type, encryption.key_vault_key_id, identity, azurerm_private_endpoint (subresource volumegroup), private endpoint network policies on the subnet, no soft delete and no encryption in transit, snapshot and Azure Backup configuration.
+- slug: file-sync
+  name: Azure File Sync
+  category: process
+  component_type: file-services
+  provider: azure
+  description: |
+    Azure File Sync, a hybrid service that synchronizes on-premises Windows file servers with Azure Files shares and optionally tiers cold data to the cloud (azurerm_storage_sync, azurerm_storage_sync_group, azurerm_storage_sync_cloud_endpoint, azurerm_storage_sync_server_endpoint).
+
+    Resource criticality: High. Registered servers hold synchronized copies of file data and a server identity in Azure.
+
+    Security-relevant properties: azurerm_storage_sync.incoming_traffic_policy, azurerm_private_endpoint (subresource afs), registered server identity, azurerm_storage_account.azure_files_authentication, azurerm_storage_account.shared_access_key_enabled, Azure Backup protection of the cloud share, cloud tiering and tiering policies.
+- slug: storage-mover
+  name: Azure Storage Mover
+  category: process
+  component_type: data-migration
+  provider: azure
+  description: |
+    Azure Storage Mover, a managed migration service that copies data from on-premises NFS and SMB sources to Azure Storage through agents registered via Azure Arc (azurerm_storage_mover, azurerm_storage_mover_agent, azurerm_storage_mover_job_definition).
+
+    Resource criticality: Medium. Agents read entire source shares and hold write rights on migration targets for the duration of jobs.
+
+    Security-relevant properties: azurerm_storage_mover_agent.arc_virtual_machine_id, agent managed identity role assignments on target containers and shares, azurerm_storage_mover_job_definition.copy_mode, source and target endpoints, public endpoint dependencies, ExpressRoute or Private Link connectivity.
+- slug: expressroute
+  name: Azure ExpressRoute
+  category: process
+  component_type: networking
+  provider: azure
+  description: |
+    Azure ExpressRoute, private layer-3 connectivity between on-premises networks and Azure through a connectivity provider (azurerm_express_route_circuit, azurerm_express_route_circuit_peering, azurerm_express_route_circuit_authorization, azurerm_express_route_port, azurerm_express_route_connection).
+
+    Resource criticality: High. Circuits carry production traffic between data centres and Azure and are a single point of failure for hybrid workloads.
+
+    Security-relevant properties: azurerm_express_route_circuit_peering.shared_key (BGP MD5), peering_type, azurerm_express_route_port link macsec settings (macsec_cipher, macsec_ckn_keyvault_secret_id, macsec_cak_keyvault_secret_id), azurerm_express_route_circuit.allow_classic_operations, azurerm_express_route_circuit_authorization, IPsec VPN over private peering, azurerm_role_assignment (Network Contributor), diagnostic settings.
+- slug: domain-services
+  name: Microsoft Entra Domain Services
+  category: process
+  component_type: identity
+  provider: azure
+  description: |
+    Microsoft Entra Domain Services, a managed Active Directory domain that provides LDAP, Kerberos and NTLM to workloads that cannot use Entra ID directly (azurerm_active_directory_domain_service, azurerm_active_directory_domain_service_replica_set).
+
+    Resource criticality: High. It holds password hashes synchronized from Entra ID and authenticates legacy workloads.
+
+    Security-relevant properties: security (ntlm_v1_enabled, sync_ntlm_passwords, tls_v1_enabled, kerberos_rc4_encryption_enabled, kerberos_armoring_enabled, sync_kerberos_passwords, sync_on_prem_passwords), secure_ldap (enabled, external_access_enabled, pfx_certificate), initial_replica_set subnet, NSG rules for ports 389, 636 and 3389, notifications, domain_configuration_type, filtered_sync_enabled.
+- slug: service-fabric
+  name: Azure Service Fabric
+  category: process
+  component_type: compute
+  provider: azure
+  description: |
+    Azure Service Fabric, a distributed systems platform for packaging and operating microservices and stateful services on clusters of VMs (azurerm_service_fabric_cluster, azurerm_service_fabric_managed_cluster).
+
+    Resource criticality: High. A cluster runs application code on many nodes and exposes management endpoints that can deploy and remove services.
+
+    Security-relevant properties: certificate and certificate_common_names, client_certificate_thumbprint and client_certificate_common_name (is_admin), azure_active_directory (tenant_id, cluster_application_id, client_application_id), reverse_proxy_certificate, management_endpoint, node_type endpoints, upgrade_mode, diagnostics_config, NSG rules for ports 19000 and 19080, security set at creation time only.
+- slug: sql-managed-instance
+  name: Azure SQL Managed Instance
+  category: datastore
+  component_type: database
+  provider: azure
+  description: |
+    Azure SQL Managed Instance, a near-complete SQL Server instance as a managed service deployed into a delegated subnet (azurerm_mssql_managed_instance, azurerm_mssql_managed_instance_transparent_data_encryption, azurerm_mssql_managed_instance_security_alert_policy, azurerm_mssql_managed_instance_failover_group).
+
+    Resource criticality: Critical. It usually hosts system-of-record databases migrated from on-premises SQL Server.
+
+    Security-relevant properties: public_data_endpoint_enabled, minimum_tls_version, azure_active_directory_administrator.azuread_authentication_only_enabled, administrator_login_password, identity, proxy_override, azurerm_mssql_managed_instance_transparent_data_encryption.key_vault_key_id, security alert policy, vulnerability assessment, NSG and route table of the delegated subnet.
+- slug: data-explorer
+  name: Azure Data Explorer
+  category: datastore
+  component_type: database
+  provider: azure
+  description: |
+    Azure Data Explorer, a managed analytics cluster for log, telemetry and time-series data queried with Kusto Query Language (azurerm_kusto_cluster, azurerm_kusto_database, azurerm_kusto_database_principal_assignment).
+
+    Resource criticality: High. Clusters commonly aggregate security logs and business telemetry from many sources.
+
+    Security-relevant properties: public_network_access_enabled, allowed_ip_ranges, allowed_fqdns, outbound_network_access_restricted, trusted_external_tenants, disk_encryption_enabled, double_encryption_enabled, streaming_ingestion_enabled, purge_enabled, identity, azurerm_kusto_cluster_principal_assignment and azurerm_kusto_database_principal_assignment roles, azurerm_private_endpoint (subresource cluster).
+- slug: stream-analytics
+  name: Azure Stream Analytics
+  category: process
+  component_type: analytics
+  provider: azure
+  description: |
+    Azure Stream Analytics, a managed real-time analytics service that runs SQL-like queries over streaming inputs and writes results to outputs (azurerm_stream_analytics_job, azurerm_stream_analytics_stream_input_eventhub, azurerm_stream_analytics_output_blob, azurerm_stream_analytics_cluster).
+
+    Resource criticality: Medium. Jobs hold credentials to inputs and outputs and process streaming business data.
+
+    Security-relevant properties: identity, content_storage_policy and job_storage_account.authentication_mode, input and output authentication_mode (Msi or ConnectionString), shared_access_policy_key, customer managed key for job data, azurerm_stream_analytics_cluster with private endpoints, diagnostic settings.
+- slug: vm-scale-sets
+  name: Azure Virtual Machine Scale Sets
+  category: process
+  component_type: compute
+  provider: azure
+  description: |
+    Azure Virtual Machine Scale Sets, groups of identical VMs that scale automatically and are updated by rolling upgrades (azurerm_linux_virtual_machine_scale_set, azurerm_windows_virtual_machine_scale_set, azurerm_orchestrated_virtual_machine_scale_set).
+
+    Resource criticality: High. Scale sets typically host production web and batch tiers and are replaced instance by instance.
+
+    Security-relevant properties: upgrade_mode, automatic_os_upgrade_policy, rolling_upgrade_policy, health_probe_id, automatic_instance_repair, encryption_at_host_enabled, secure_boot_enabled, vtpm_enabled, admin_password and disable_password_authentication, identity, extension (Azure Monitor Agent, Defender for Endpoint), network_interface public IP settings, instance protection (protect_from_scale_in).
+- slug: nat-gateway
+  name: Azure NAT Gateway
+  category: process
+  component_type: networking
+  provider: azure
+  description: |
+    Azure NAT Gateway, a managed outbound connectivity service that translates private subnet addresses to static public IP addresses (azurerm_nat_gateway, azurerm_nat_gateway_public_ip_association, azurerm_subnet_nat_gateway_association).
+
+    Resource criticality: Medium. It is the exit path of subnets and often the address that partners allow-list.
+
+    Security-relevant properties: idle_timeout_in_minutes, sku_name, associated public IPs and prefixes, subnet association, NAT gateway flow log diagnostics, SNAT metrics and alerts.
+- slug: app-configuration
+  name: Azure App Configuration
+  category: datastore
+  component_type: configuration
+  provider: azure
+  description: |
+    Azure App Configuration, a managed store for application settings, feature flags and Key Vault references (azurerm_app_configuration).
+
+    Resource criticality: Medium to High. Settings often contain endpoints and connection strings, and tampering changes application behaviour at runtime.
+
+    Security-relevant properties: public_network_access, local_auth_enabled, sku, purge_protection_enabled, soft_delete_retention_days, encryption (key_vault_key_identifier), identity, replica, data_plane_proxy_authentication_mode, azurerm_private_endpoint (subresource configurationStores), azurerm_role_assignment (App Configuration Data Reader, App Configuration Data Owner).
+- slug: managed-grafana
+  name: Azure Managed Grafana
+  category: process
+  component_type: monitoring
+  provider: azure
+  description: |
+    Azure Managed Grafana, a managed Grafana service for dashboards over Azure Monitor, Prometheus and other data sources (azurerm_dashboard_grafana).
+
+    Resource criticality: Medium. Dashboards expose operational and security telemetry and hold data source credentials.
+
+    Security-relevant properties: public_network_access_enabled, api_key_enabled, deterministic_outbound_ip_enabled, identity, azure_monitor_workspace_integrations, smtp, zone_redundancy_enabled, azurerm_private_endpoint (subresource grafana), azurerm_role_assignment (Grafana Admin, Grafana Editor, Grafana Viewer).
+- slug: hdinsight
+  name: Azure HDInsight
+  category: process
+  component_type: analytics
+  provider: azure
+  description: |
+    Azure HDInsight, managed open-source analytics clusters for Hadoop, Spark, Kafka, HBase and Interactive Query (azurerm_hdinsight_hadoop_cluster, azurerm_hdinsight_spark_cluster, azurerm_hdinsight_kafka_cluster).
+
+    Resource criticality: High. Clusters run distributed code against data lakes with shared service credentials.
+
+    Security-relevant properties: tls_min_version, security_profile (Enterprise Security Package with Microsoft Entra Domain Services), network.private_link_enabled and connection_direction, disk_encryption (encryption_at_host_enabled, key_vault_key_id), gateway credentials, ssh_keys, script_actions, storage_account_gen2 identity, subnet_id and NSG rules for the management ports.
+- slug: iot-hub
+  name: Azure IoT Hub
+  category: process
+  component_type: iot
+  provider: azure
+  description: |
+    Azure IoT Hub and Device Provisioning Service, the cloud gateway that authenticates devices, ingests telemetry and routes messages to backend endpoints (azurerm_iothub, azurerm_iothub_dps, azurerm_iothub_shared_access_policy, azurerm_iothub_device_update_account).
+
+    Resource criticality: High. It is the trust anchor for large fleets of devices and a bidirectional control channel.
+
+    Security-relevant properties: public_network_access_enabled, network_rule_set, min_tls_version, local_authentication_enabled, shared_access_policy permissions, endpoint authentication_type, route and fallback_route targets, azurerm_iothub_dps.ip_filter_rule and public_network_access_enabled, device identities with symmetric keys versus X.509 certificates, diagnostic settings.
+- slug: arc-servers
+  name: Azure Arc-enabled Servers
+  category: process
+  component_type: hybrid-management
+  provider: azure
+  description: |
+    Azure Arc-enabled servers, which project on-premises and multicloud servers into Azure so they can be governed and managed with Azure services (azurerm_arc_machine, azurerm_arc_machine_extension).
+
+    Resource criticality: High. The Connected Machine agent runs with local privileges and each machine holds a managed identity credential.
+
+    Security-relevant properties: identity (system-assigned), azurerm_arc_machine_extension (protected_settings, automatic_upgrade_enabled), onboarding service principal credentials (azuread_service_principal_password, azuread_application_certificate), azurerm_role_assignment (Azure Connected Machine Onboarding, Azure Connected Machine Resource Administrator, Contributor), local himds and Hybrid Agent Extension Applications group membership.
+- slug: api-center
+  name: Azure API Center
+  category: datastore
+  component_type: api-catalog
+  provider: azure
+  description: |
+    Azure API Center, an inventory and governance catalog for an organization's APIs across gateways and environments (azapi_resource type Microsoft.ApiCenter/services; no azurerm resource exists).
+
+    Resource criticality: Medium. It holds API metadata, specifications and the portal's test console, which can be configured with credentials.
+
+    Security-relevant properties: managed identity, Key Vault secret references for API key and OAuth 2.0 authentication configurations, API Center Credential Access Reader and API Center Data Reader role assignments (azurerm_role_assignment), portal access and Entra ID sign-in settings, API definition registration and linked environments.

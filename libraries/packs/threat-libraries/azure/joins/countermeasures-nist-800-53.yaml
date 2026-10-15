@@ -1,0 +1,2111 @@
+framework: nist-800-53-r5
+mappings:
+- countermeasure: cm-disable-public-network-access
+  requirements: [SC-7]
+  sufficiency: partial
+- countermeasure: cm-network-default-deny
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: cm-private-endpoint
+  requirements: [SC-7]
+  sufficiency: partial
+- countermeasure: cm-enforce-tls12
+  requirements: [SC-8, SC-13]
+  sufficiency: partial
+- countermeasure: cm-entra-id-authentication
+  requirements: [IA-2, IA-9]
+  sufficiency: partial
+- countermeasure: cm-least-privilege-rbac
+  requirements: [AC-6, AC-3]
+  sufficiency: partial
+- countermeasure: cm-pim-privileged-access
+  requirements: [AC-2, AC-6]
+  sufficiency: partial
+- countermeasure: cm-conditional-access-mfa
+  requirements: [IA-2, AC-17]
+  sufficiency: partial
+- countermeasure: cm-diagnostic-logging
+  requirements: [AU-12, AU-11]
+  sufficiency: partial
+- countermeasure: cm-activity-log-alerting
+  requirements: [SI-4, AU-6]
+  sufficiency: partial
+- countermeasure: cm-resource-lock
+  requirements: [CM-5]
+  sufficiency: partial
+- countermeasure: cm-terraform-state-protection
+  requirements: [SC-28, AC-3]
+  sufficiency: partial
+- countermeasure: cm-secrets-outside-terraform-state
+  requirements: [IA-5, SC-28]
+  sufficiency: partial
+- countermeasure: cm-iac-security-scanning
+  requirements: [CM-6, SA-11]
+  sufficiency: partial
+- countermeasure: cm-azure-policy-guardrails
+  requirements: [CM-6, CM-7]
+  sufficiency: partial
+- countermeasure: cm-secret-scanning
+  requirements: [IA-5]
+  sufficiency: partial
+- countermeasure: cm-egress-filtering
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: cm-nsg-segmentation
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: cm-waf
+  requirements: [SC-7, SC-5]
+  sufficiency: partial
+- countermeasure: cm-ssrf-protection
+  requirements: [SI-10]
+  sufficiency: partial
+- countermeasure: cm-defender-for-storage
+  requirements: [SI-4, SI-3]
+  sufficiency: partial
+- countermeasure: cm-defender-for-key-vault
+  requirements: [SI-4]
+  sufficiency: partial
+- countermeasure: cm-defender-for-containers
+  requirements: [SI-4, RA-5]
+  sufficiency: partial
+- countermeasure: cm-defender-for-app-service
+  requirements: [SI-4]
+  sufficiency: partial
+- countermeasure: cm-defender-for-servers
+  requirements: [SI-4, SI-3, RA-5]
+  sufficiency: partial
+- countermeasure: cm-disable-public-access
+  requirements: [AC-3, AC-14]
+  sufficiency: partial
+- countermeasure: cm-storage-disable-shared-key
+  requirements: [AC-3, IA-5]
+  sufficiency: partial
+- countermeasure: cm-storage-user-delegation-sas
+  requirements: [IA-5]
+  sufficiency: partial
+- countermeasure: cm-storage-sas-expiration-policy
+  requirements: [IA-5]
+  sufficiency: partial
+- countermeasure: cm-storage-restrict-copy-scope
+  requirements: [AC-4]
+  sufficiency: partial
+- countermeasure: cm-storage-soft-delete-versioning
+  requirements: [CP-9, CP-10]
+  sufficiency: partial
+- countermeasure: cm-storage-immutability
+  requirements: [AU-9, CP-9, SI-7]
+  sufficiency: partial
+- countermeasure: cm-key-vault-rbac-authorization
+  requirements: [AC-3, AC-6]
+  sufficiency: partial
+- countermeasure: cm-key-vault-purge-protection
+  requirements: [SC-12, CP-9]
+  sufficiency: partial
+- countermeasure: cm-key-vault-expiration-rotation
+  requirements: [SC-12, IA-5]
+  sufficiency: partial
+- countermeasure: cm-key-vault-per-application
+  requirements: [AC-6]
+  sufficiency: partial
+- countermeasure: cm-secret-caching
+  requirements: [SC-5]
+  sufficiency: partial
+- countermeasure: cm-dedicated-workload-identities
+  requirements: [AC-6, IA-9]
+  sufficiency: partial
+- countermeasure: cm-federated-credential-scoping
+  requirements: [IA-9]
+  sufficiency: partial
+- countermeasure: cm-aks-private-api-server
+  requirements: [SC-7]
+  sufficiency: partial
+- countermeasure: cm-aks-entra-rbac
+  requirements: [IA-2, AC-2]
+  sufficiency: partial
+- countermeasure: cm-aks-disable-run-command
+  requirements: [AC-6, CM-7]
+  sufficiency: partial
+- countermeasure: cm-aks-pod-security
+  requirements: [CM-7, CM-6, SC-39]
+  sufficiency: partial
+- countermeasure: cm-aks-workload-identity
+  requirements: [IA-9, AC-6]
+  sufficiency: partial
+- countermeasure: cm-aks-network-policy
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: cm-aks-trusted-registries
+  requirements: [CM-14, SR-11]
+  sufficiency: partial
+- countermeasure: cm-aks-key-vault-secrets-provider
+  requirements: [SC-28, IA-5]
+  sufficiency: partial
+- countermeasure: cm-aks-kms-etcd-encryption
+  requirements: [SC-28, SC-12]
+  sufficiency: partial
+- countermeasure: cm-aks-resource-limits
+  requirements: [SC-6]
+  sufficiency: partial
+- countermeasure: cm-aks-auto-upgrade
+  requirements: [SI-2]
+  sufficiency: partial
+- countermeasure: cm-aks-kubernetes-rbac-least-privilege
+  requirements: [AC-6]
+  sufficiency: partial
+- countermeasure: cm-app-service-authentication
+  requirements: [IA-2, AC-3]
+  sufficiency: partial
+- countermeasure: cm-app-service-access-restrictions
+  requirements: [SC-7]
+  sufficiency: partial
+- countermeasure: cm-app-service-disable-basic-auth
+  requirements: [IA-2, CM-7]
+  sufficiency: partial
+- countermeasure: cm-app-service-scm-restrictions
+  requirements: [AC-17, SC-7]
+  sufficiency: partial
+- countermeasure: cm-app-service-key-vault-references
+  requirements: [IA-5, SC-28]
+  sufficiency: partial
+- countermeasure: cm-dangling-dns-protection
+  requirements: [CM-8]
+  sufficiency: partial
+- countermeasure: cm-app-service-runtime-hardening
+  requirements: [CM-6, CM-7, SI-2]
+  sufficiency: partial
+- countermeasure: cm-app-service-autoscale
+  requirements: [SC-5, SC-6]
+  sufficiency: partial
+- countermeasure: cm-avd-restrict-redirection
+  requirements: [AC-4, SC-41]
+  sufficiency: partial
+- countermeasure: cm-avd-no-inbound-access
+  requirements: [SC-7, AC-17]
+  sufficiency: partial
+- countermeasure: cm-avd-registration-token-lifetime
+  requirements: [IA-5, IA-3]
+  sufficiency: partial
+- countermeasure: cm-avd-profile-isolation
+  requirements: [AC-6, SC-4]
+  sufficiency: partial
+- countermeasure: cm-vm-patch-management
+  requirements: [SI-2]
+  sufficiency: partial
+- countermeasure: cm-avd-private-link
+  requirements: [SC-7, AC-17]
+  sufficiency: partial
+- countermeasure: cm-avd-scaling-plan
+  requirements: [AC-12, SC-6]
+  sufficiency: partial
+- countermeasure: cm-avd-scoped-app-group-assignments
+  requirements: [AC-6, AC-3]
+  sufficiency: partial
+- countermeasure: cm-vnet-hub-spoke-peering
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: cm-dns-security-policy
+  requirements: [SC-22, SI-4]
+  sufficiency: partial
+- countermeasure: cm-ddos-protection
+  requirements: [SC-5]
+  sufficiency: partial
+- countermeasure: cm-vnet-flow-logs
+  requirements: [AU-12, SI-4]
+  sufficiency: partial
+- countermeasure: cm-subnet-disable-default-outbound
+  requirements: [SC-7]
+  sufficiency: partial
+- countermeasure: cm-service-endpoint-policies
+  requirements: [AC-4]
+  sufficiency: partial
+- countermeasure: cm-subnet-capacity-planning
+  requirements: [SC-6]
+  sufficiency: partial
+- countermeasure: cm-nsg-least-privilege-rules
+  requirements: [SC-7, CM-7]
+  sufficiency: partial
+- countermeasure: cm-bastion-jit-admin-access
+  requirements: [AC-17, SC-7]
+  sufficiency: partial
+- countermeasure: cm-iac-drift-detection
+  requirements: [CM-3, CM-6]
+  sufficiency: partial
+- countermeasure: cm-firewall-least-privilege-rules
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: cm-firewall-threat-protection
+  requirements: [SI-4, SC-7]
+  sufficiency: partial
+- countermeasure: cm-firewall-snat-scaling
+  requirements: [SC-6]
+  sufficiency: partial
+- countermeasure: cm-private-endpoint-governance
+  requirements: [AC-4]
+  sufficiency: partial
+- countermeasure: cm-private-endpoint-network-policies
+  requirements: [SC-7]
+  sufficiency: partial
+- countermeasure: cm-private-dns-centralized
+  requirements: [SC-22]
+  sufficiency: partial
+- countermeasure: cm-appgw-tls-policy
+  requirements: [SC-8, SC-13]
+  sufficiency: partial
+- countermeasure: cm-appgw-end-to-end-tls
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: cm-appgw-key-vault-certificates
+  requirements: [SC-17, SC-12]
+  sufficiency: partial
+- countermeasure: cm-header-sanitization
+  requirements: [SI-10]
+  sufficiency: partial
+- countermeasure: cm-bastion-feature-hardening
+  requirements: [AC-17, CM-7]
+  sufficiency: partial
+- countermeasure: cm-vm-entra-login
+  requirements: [IA-2, IA-5]
+  sufficiency: partial
+- countermeasure: cm-disk-access-restriction
+  requirements: [AC-3, AC-4]
+  sufficiency: partial
+- countermeasure: cm-vm-encryption-at-host
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: cm-vm-trusted-launch
+  requirements: [SI-7]
+  sufficiency: partial
+- countermeasure: cm-vm-backup
+  requirements: [CP-9, CP-10]
+  sufficiency: partial
+- countermeasure: cm-vm-log-collection
+  requirements: [AU-12, SI-4]
+  sufficiency: partial
+- countermeasure: cm-no-allow-all-azure-services
+  requirements: [SC-7]
+  sufficiency: partial
+- countermeasure: cm-sql-entra-only-auth
+  requirements: [IA-2]
+  sufficiency: partial
+- countermeasure: cm-parameterized-queries
+  requirements: [SI-10]
+  sufficiency: partial
+- countermeasure: cm-defender-for-databases
+  requirements: [SI-4]
+  sufficiency: partial
+- countermeasure: cm-sql-auditing
+  requirements: [AU-12]
+  sufficiency: partial
+- countermeasure: cm-sql-outbound-restriction
+  requirements: [AC-4]
+  sufficiency: partial
+- countermeasure: cm-sql-backup-retention
+  requirements: [CP-9]
+  sufficiency: partial
+- countermeasure: cm-sql-least-privilege-db-roles
+  requirements: [AC-6]
+  sufficiency: partial
+- countermeasure: cm-sql-always-encrypted
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: cm-cosmosdb-disable-local-auth
+  requirements: [AC-3, IA-9]
+  sufficiency: partial
+- countermeasure: cm-cosmosdb-continuous-backup
+  requirements: [CP-9]
+  sufficiency: partial
+- countermeasure: cm-cosmosdb-throughput-limits
+  requirements: [SC-5, SC-6]
+  sufficiency: partial
+- countermeasure: cm-workload-identity-federation
+  requirements: [IA-5, IA-9]
+  sufficiency: partial
+- countermeasure: cm-app-credential-management
+  requirements: [IA-5]
+  sufficiency: partial
+- countermeasure: cm-app-owner-restrictions
+  requirements: [AC-2, AC-6]
+  sufficiency: partial
+- countermeasure: cm-entra-audit-alerting
+  requirements: [AU-6, SI-4]
+  sufficiency: partial
+- countermeasure: cm-graph-permission-least-privilege
+  requirements: [AC-6]
+  sufficiency: partial
+- countermeasure: cm-restrict-user-consent
+  requirements: [AC-6]
+  sufficiency: partial
+- countermeasure: cm-redirect-uri-hygiene
+  requirements: [SC-23]
+  sufficiency: partial
+- countermeasure: cm-app-tenant-restriction
+  requirements: [AC-3]
+  sufficiency: partial
+- countermeasure: cm-oauth-secure-flows
+  requirements: [SC-23]
+  sufficiency: partial
+- countermeasure: cm-pipeline-identity-separation
+  requirements: [AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: cm-conditional-access-workload-identities
+  requirements: [IA-9]
+  sufficiency: partial
+- countermeasure: cm-identity-lifecycle-reviews
+  requirements: [AC-2]
+  sufficiency: partial
+- countermeasure: cm-function-app-entra-auth
+  requirements: [AC-3, IA-9]
+  sufficiency: partial
+- countermeasure: cm-function-app-storage-identity
+  requirements: [IA-5]
+  sufficiency: partial
+- countermeasure: cm-input-validation
+  requirements: [SI-10]
+  sufficiency: partial
+- countermeasure: cm-function-app-scale-limits
+  requirements: [SC-5, SC-6]
+  sufficiency: partial
+- countermeasure: cm-acr-disable-admin-user
+  requirements: [AC-2, IA-5]
+  sufficiency: partial
+- countermeasure: cm-acr-disable-anonymous-pull
+  requirements: [AC-14, AC-3]
+  sufficiency: partial
+- countermeasure: cm-acr-image-signing-and-locking
+  requirements: [CM-14, SI-7, SR-11]
+  sufficiency: partial
+- countermeasure: cm-log-analytics-access-control
+  requirements: [AC-6, AU-9]
+  sufficiency: partial
+- countermeasure: cm-log-data-minimization
+  requirements: [RA-2, SC-28]
+  sufficiency: partial
+- countermeasure: cm-log-immutability
+  requirements: [AU-9, AU-11]
+  sufficiency: partial
+- countermeasure: cm-log-analytics-private-link
+  requirements: [SC-7]
+  sufficiency: partial
+- countermeasure: cm-log-analytics-capacity-alerting
+  requirements: [AU-4, AU-5]
+  sufficiency: partial
+- countermeasure: cm-log-retention
+  requirements: [AU-11]
+  sufficiency: partial
+- countermeasure: cm-defender-plan-coverage
+  requirements: [SI-4, CA-7]
+  sufficiency: partial
+- countermeasure: cm-defender-alert-routing
+  requirements: [IR-6]
+  sufficiency: partial
+- countermeasure: aci-keyvault-secrets
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: aci-least-privilege-runtime
+  requirements: [CM-2, CM-6, SC-28]
+  sufficiency: partial
+- countermeasure: aci-private-registry-scan
+  requirements: [CM-2, CM-3, SI-2, SI-7]
+  sufficiency: partial
+- countermeasure: aci-vnet-nsg
+  requirements: [SC-7, SC-32, AC-4, CM-7]
+  sufficiency: partial
+- countermeasure: adls-group-based-acls
+  requirements: [AC-2, AC-6, IA-4, AC-3]
+  sufficiency: partial
+- countermeasure: adls-private-endpoints-blob-dfs
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: afs-ad-ds-identity
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: afs-azure-files-backup
+  requirements: [CP-9, CP-10, SC-12, SC-13]
+  sufficiency: partial
+- countermeasure: afs-private-endpoints
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: agw-least-privilege-rbac
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: agw-waf-v2-prevention
+  requirements: [SC-7, SI-10, SI-11, CM-2]
+  sufficiency: partial
+- countermeasure: ai-content-filtering
+  requirements: [SI-3, SI-4, AC-2, SA-8]
+  sufficiency: partial
+- countermeasure: ai-managed-identity-auth
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: ai-private-endpoint
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: anf-cmk-encryption
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: anf-diagnostic-logging
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: anf-export-policy-kerberos
+  requirements: [SC-7, AC-4, AC-2, AC-3]
+  sufficiency: partial
+- countermeasure: anf-immutable-backup-lock
+  requirements: [CP-9, SC-12, SC-13, SC-28]
+  sufficiency: partial
+- countermeasure: anf-permission-model-review
+  requirements: [AC-2, AC-3, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: anf-snapshot-delete-alert
+  requirements: [SI-4, AU-6]
+  sufficiency: partial
+- countermeasure: apic-least-privilege-keyvault
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: apic-register-all-apis
+  requirements: [CM-7, SA-3, SA-8]
+  sufficiency: partial
+- countermeasure: apic-scope-credential-access
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: appi-entra-authentication
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: appi-scrub-sensitive-telemetry
+  requirements: [AC-4, SI-4, RA-2, SC-28]
+  sufficiency: partial
+- countermeasure: appi-secret-references
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: appservice-app-settings-keyvault
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: appservice-diagnostic-logging
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: appservice-disable-scm-public
+  requirements: [SC-7, AC-4, IA-9, SC-8]
+  sufficiency: partial
+- countermeasure: appservice-imds-egress-control
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: appservice-managed-identity-least-privilege
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: appservice-rce-sast
+  requirements: [SI-2, RA-5]
+  sufficiency: partial
+- countermeasure: appservice-secure-runtime
+  requirements: [SC-8, CM-2, CM-6, SC-28]
+  sufficiency: partial
+- countermeasure: appservice-waf
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: arc-full-disk-encryption
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: arc-least-privilege-roles
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: arc-onboarding-certificate-sp
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: arc-restrict-himds-group
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: asr-customer-managed-keys
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: asr-least-privilege-roles
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: asr-private-replication
+  requirements: [SC-7, AC-4, SC-8]
+  sufficiency: partial
+- countermeasure: avd-appgroup-preferred-type
+  requirements: [AC-2, AC-3, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: avd-appgroup-role-review
+  requirements: [AC-2, AC-3, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: avd-domain-join-delegation
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: avd-fslogix-av-exclusions-scoped
+  requirements: [SI-3, SI-2]
+  sufficiency: partial
+- countermeasure: avd-hostpool-diagnostics
+  requirements: [CM-2, CM-6, SC-28]
+  sufficiency: partial
+- countermeasure: avd-hostpool-mi-secret-scope
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: avd-scaling-plan-scope
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: avd-sh-edr
+  requirements: [SC-7, AC-4, SI-4, SC-32]
+  sufficiency: partial
+- countermeasure: avd-sh-egress-control
+  requirements: [SC-7, AC-4, SI-4, SC-32]
+  sufficiency: partial
+- countermeasure: avd-sh-idle-lock
+  requirements: [CM-2, CM-6, SC-28]
+  sufficiency: partial
+- countermeasure: avd-sh-laps-rotation
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: avd-sh-no-user-admin
+  requirements: [AC-2, AC-5, AC-6, AC-3]
+  sufficiency: partial
+- countermeasure: avd-workspace-role-review
+  requirements: [AC-2, AC-3, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: azure-files-backup-soft-delete
+  requirements: [CP-9, CP-10, SC-12, SC-13]
+  sufficiency: partial
+- countermeasure: azure-files-diagnostic-monitoring
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: azure-files-disable-shared-key
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: azure-files-identity-rbac-with-ntfs
+  requirements: [AC-2, AC-3, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: azure-files-private-endpoint
+  requirements: [SC-7, AC-4, SC-8]
+  sufficiency: partial
+- countermeasure: azure-files-short-lived-sas
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: azure-files-smb-encryption
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: b2c-enable-mfa
+  requirements: [AC-2, AC-3, IA-2, IA-5]
+  sufficiency: partial
+- countermeasure: b2c-smart-lockout
+  requirements: [AC-2, AC-3, IA-2, IA-5]
+  sufficiency: partial
+- countermeasure: b2c-user-risk-policy
+  requirements: [AC-2, AC-3, IA-2, IA-5]
+  sufficiency: partial
+- countermeasure: bastion-no-public-ip
+  requirements: [SC-7, SC-32, AC-4, CM-7]
+  sufficiency: partial
+- countermeasure: bastion-nsg-required-rules
+  requirements: [SC-7, SC-32, AC-4, CM-7]
+  sufficiency: partial
+- countermeasure: bkp-immutable-vault-lock
+  requirements: [CP-9, SC-12, SC-13, SC-28]
+  sufficiency: partial
+- countermeasure: bkp-mua-resource-guard
+  requirements: [CP-9, SC-12, SC-13, SC-28]
+  sufficiency: partial
+- countermeasure: bkp-private-endpoint
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: bkp-soft-delete-always-on
+  requirements: [CP-9, SC-12, SC-13, SC-28]
+  sufficiency: partial
+- countermeasure: ddos-monitoring-telemetry
+  requirements: [SC-5, SI-4, AU-2, AU-3]
+  sufficiency: partial
+- countermeasure: ddos-protect-every-public-ip
+  requirements: [SC-5, SI-4]
+  sufficiency: partial
+- countermeasure: ddos-validate-supported-deployment
+  requirements: [SC-5, SI-4]
+  sufficiency: partial
+- countermeasure: dds-disable-ntlm-password-sync
+  requirements: [AC-2, AC-3, IA-2, IA-5]
+  sufficiency: partial
+- countermeasure: dds-disable-weak-protocols
+  requirements: [SC-8, SC-13, IA-5]
+  sufficiency: partial
+- countermeasure: dds-ldap-signing-channel-binding
+  requirements: [AC-2, AC-3, IA-2, IA-5]
+  sufficiency: partial
+- countermeasure: defender-review-recommendations
+  requirements: [RA-3, RA-5, SI-2]
+  sufficiency: partial
+- countermeasure: dhsm-change-default-credentials
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: dhsm-ha-pairs-backup
+  requirements: [CP-9, CP-10, IA-5, SC-12]
+  sufficiency: partial
+- countermeasure: dhsm-operational-procedures
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: dns-review-zone-links
+  requirements: [SC-7, SI-4]
+  sufficiency: partial
+- countermeasure: dns-security-policy
+  requirements: [SC-7, SI-4]
+  sufficiency: partial
+- countermeasure: dns-validating-resolver
+  requirements: [SC-7, SI-4]
+  sufficiency: partial
+- countermeasure: entra-block-legacy-auth
+  requirements: [AC-2, AC-3, IA-2, IA-5]
+  sufficiency: partial
+- countermeasure: entra-break-glass-accounts
+  requirements: [AC-2, CP-2, CP-9, IR-4]
+  sufficiency: partial
+- countermeasure: entra-ca-gap-review
+  requirements: [AC-2, AC-3, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: entra-customer-lockbox
+  requirements: [AC-2, AC-3, AC-6, AU-6]
+  sufficiency: partial
+- countermeasure: entra-password-protection
+  requirements: [AC-2, AC-3, IA-2, IA-5]
+  sufficiency: partial
+- countermeasure: entra-phishing-resistant-mfa
+  requirements: [AC-2, AC-3, IA-2, IA-5]
+  sufficiency: partial
+- countermeasure: entra-pim-just-in-time
+  requirements: [AC-2, AC-5, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: entra-risk-detection
+  requirements: [AU-2, AU-6, IA-4, SI-4]
+  sufficiency: partial
+- countermeasure: entra-sp-credential-hygiene
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: entra-sp-least-privilege-monitor
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: entra-token-protection-cae
+  requirements: [AC-2, AC-3, IA-2, IA-5]
+  sufficiency: partial
+- countermeasure: entra-user-consent-restriction
+  requirements: [IA-2, IA-4, IA-8, AC-2]
+  sufficiency: partial
+- countermeasure: er-ipsec-over-er
+  requirements: [SC-8, SC-7]
+  sufficiency: partial
+- countermeasure: er-md5-bgp
+  requirements: [SC-8, SC-13, IA-5, SC-7]
+  sufficiency: partial
+- countermeasure: er-rbac-circuits
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: esan-disable-public-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: esan-private-endpoint-network-policies
+  requirements: [SC-7, SC-32, AC-4, CM-7]
+  sufficiency: partial
+- countermeasure: esan-snapshot-recovery
+  requirements: [SC-8, CP-9, CP-10]
+  sufficiency: partial
+- countermeasure: flow-private-connectivity
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: fw-diagnostic-logs
+  requirements: [SI-4, SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: fw-tls-inspection
+  requirements: [SI-4, SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: fwm-dns-proxy-clients
+  requirements: [SC-7, AC-4, SI-4]
+  sufficiency: partial
+- countermeasure: fwm-policy-hierarchy
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: fwm-routing-intent
+  requirements: [SC-7, SC-32, AC-4, CM-7]
+  sufficiency: partial
+- countermeasure: hdi-encryption-in-transit
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: hdi-esp-cluster
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: hdi-keytab-protection
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: kv-backup
+  requirements: [CP-9, CP-10]
+  sufficiency: partial
+- countermeasure: kv-cmk-for-regulated-data
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: kv-conditional-access
+  requirements: [AC-2, AC-3, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: kv-defender-plan
+  requirements: [SI-4, AU-6]
+  sufficiency: partial
+- countermeasure: kv-firewall-disable-public-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: kv-key-autorotation
+  requirements: [IA-5, SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: kv-key-expiration-policy
+  requirements: [IA-5, SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: kv-least-privilege-rbac
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: kv-managed-identity
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: kv-private-endpoint
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: kv-references-not-copies
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: kv-resource-logs-to-sentinel
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: kv-soft-delete-purge-protection
+  requirements: [CP-9, CP-10]
+  sufficiency: partial
+- countermeasure: la-aad-trigger-auth
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: la-keyvault-app-settings
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: la-managed-identity
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: lb-protect-backend
+  requirements: [SC-7, SC-32, AC-4, CM-7]
+  sufficiency: partial
+- countermeasure: lb-standard-sku
+  requirements: [CM-2, CM-6, CM-7, SA-3]
+  sufficiency: partial
+- countermeasure: lb-tls-backend
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: managed-identity-review
+  requirements: [AC-2, AC-6, IA-4, SI-4]
+  sufficiency: partial
+- countermeasure: mg-disable-api-keys
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: mg-managed-identity-datasource
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: mg-private-endpoint
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: mhsm-key-autorotation
+  requirements: [IA-5, SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: mhsm-purge-protection
+  requirements: [IA-5, SC-12, SC-28, CP-9]
+  sufficiency: partial
+- countermeasure: mhsm-security-domain-quorum
+  requirements: [AC-2, AC-5, AC-6, IA-5]
+  sufficiency: partial
+- countermeasure: mon-managed-identity-auth
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: mon-private-link-agents
+  requirements: [SC-7, AC-4, AU-2, AU-3]
+  sufficiency: partial
+- countermeasure: mon-security-monitoring-defender
+  requirements: [SI-4, AU-6, AU-2, IA-4]
+  sufficiency: partial
+- countermeasure: nat-anomaly-alerts
+  requirements: [SC-7, AC-4, SI-4]
+  sufficiency: partial
+- countermeasure: nat-flow-logs
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: nat-snat-alerts
+  requirements: [SC-5, SI-4, AU-6]
+  sufficiency: partial
+- countermeasure: nw-least-privilege-rbac
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: nw-migrate-vnet-flow-logs
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: nw-storage-private-endpoints
+  requirements: [SC-7, AC-4, SI-4]
+  sufficiency: partial
+- countermeasure: policy-a-custom-ipsec-ike-policy-must-be-applied-to-all-azure-virtual-network-gateway-connections
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-a-microsoft-entra-administrator-should-be-provisioned-for-mysql-servers
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: policy-a-microsoft-entra-administrator-should-be-provisioned-for-postgresql-servers
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-all-flow-log-resources-should-be-in-enabled-state
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-api-management-apis-should-use-only-encrypted-protocols
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-api-management-services-should-use-a-virtual-network
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-api-management-should-disable-public-network-access-to-the-service-configuration-endpoints
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-app-configuration-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-app-configuration-should-use-a-customer-managed-key
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-app-configuration-should-use-a-sku-that-supports-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-app-configuration-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-app-service-app-slots-should-be-injected-into-a-virtual-network
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-app-service-app-slots-should-use-managed-identity
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: policy-app-service-apps-should-be-injected-into-a-virtual-network
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-app-service-apps-should-use-a-sku-that-supports-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-app-service-apps-should-use-a-virtual-network-service-endpoint
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-app-service-apps-should-use-managed-identity
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: policy-app-service-apps-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-application-insights-components-should-block-log-ingestion-and-querying-from-public-networ
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-audit-flow-logs-configuration-for-every-virtual-network
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-automation-account-variables-should-be-encrypted
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: policy-automation-accounts-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-ai-search-service-should-use-a-sku-that-supports-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-ai-search-services-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-ai-search-services-should-have-local-authentication-methods-disabled
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-azure-ai-search-services-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-api-for-fhir-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-api-management-platform-version-should-be-stv2
+  requirements: [CM-7, SA-3, SA-8, CM-2]
+  sufficiency: partial
+- countermeasure: policy-azure-application-gateway-should-have-resource-logs-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-azure-arc-enabled-kubernetes-clusters-should-be-configured-with-an-azure-arc-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-arc-enabled-servers-should-be-configured-with-an-azure-arc-private-link-scope
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-arc-private-link-scopes-should-be-configured-with-a-private-endpoint
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-arc-private-link-scopes-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-automation-account-should-have-local-authentication-method-disabled
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-azure-automation-accounts-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-batch-account-should-use-customer-managed-keys-to-encrypt-data
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-batch-pools-should-have-disk-encryption-enabled
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-azure-cache-for-redis-enterprise-should-use-customer-managed-keys-for-encrypting-disk-data
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-cache-for-redis-enterprise-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-cache-for-redis-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-cache-for-redis-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-container-instance-container-group-should-deploy-into-a-virtual-network
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-container-instance-container-group-should-use-customer-managed-key-for-encryption
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-cosmos-db-accounts-should-have-firewall-rules
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-cosmos-db-accounts-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-cosmos-db-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-data-explorer-cluster-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-data-explorer-encryption-at-rest-should-use-a-customer-managed-key
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-data-explorer-should-use-a-sku-that-supports-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-data-factory-linked-services-should-use-system-assigned-managed-identity-authenticat
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: policy-azure-data-factory-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-databricks-clusters-should-disable-public-ip
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-databricks-workspaces-should-be-in-a-virtual-network
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-databricks-workspaces-should-be-premium-sku-that-supports-features-like-private-link
+  requirements: [SC-12, SC-28, SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-databricks-workspaces-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-databricks-workspaces-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-app-service-should-be-enabled
+  requirements: [SI-4, IR-4, IR-5, RA-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-azure-sql-database-servers-should-be-enabled
+  requirements: [AC-4, SI-4, IR-4, IR-5]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-key-vault-should-be-enabled
+  requirements: [IA-5, SC-12, SC-17, SI-4]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-open-source-relational-databases-should-be-enabled
+  requirements: [AC-4, SI-4, IR-4, IR-5]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-resource-manager-should-be-enabled
+  requirements: [SI-4, IR-4, IR-5, RA-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-servers-should-be-enabled
+  requirements: [SI-4, IR-4, IR-5, RA-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-sql-servers-on-machines-should-be-enabled
+  requirements: [AC-4, SI-4, IR-4, IR-5]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-sql-should-be-enabled-for-unprotected-azure-sql-servers
+  requirements: [SI-4, IR-4, IR-5, RA-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-sql-should-be-enabled-for-unprotected-mysql-flexible-servers
+  requirements: [SI-4, IR-4, IR-5, RA-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-sql-should-be-enabled-for-unprotected-postgresql-flexible-servers
+  requirements: [SI-4, IR-4, IR-5, RA-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-sql-should-be-enabled-for-unprotected-sql-managed-instances
+  requirements: [AC-4, SI-4, IR-4, IR-5]
+  sufficiency: partial
+- countermeasure: policy-azure-device-update-for-iot-hub-accounts-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-domains-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-domains-should-have-local-authentication-methods-disabled
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-domains-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-namespace-mqtt-broker-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-namespace-topic-broker-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-namespaces-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-partner-namespaces-should-have-local-authentication-methods-disabled
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-topics-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-topics-should-have-local-authentication-methods-disabled
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-topics-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-event-hub-namespaces-should-have-local-authentication-methods-disabled
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-azure-file-sync-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-front-door-profiles-should-use-premium-tier-that-supports-managed-waf-rules-and-priv
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-front-door-should-have-resource-logs-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-azure-front-door-standard-and-premium-should-be-running-minimum-tls-version-of-1-2
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-azure-front-door-standard-or-premium-plus-waf-should-have-resource-logs-enabled
+  requirements: [SC-7, SI-10, SI-11]
+  sufficiency: partial
+- countermeasure: policy-azure-hdinsight-clusters-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-hdinsight-clusters-should-use-encryption-at-host-to-encrypt-data-at-rest
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-hdinsight-clusters-should-use-encryption-in-transit-to-encrypt-communication-between
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-azure-hdinsight-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-health-data-services-de-identification-service-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-health-data-services-workspace-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-key-vault-managed-hsm-should-have-purge-protection-enabled
+  requirements: [IA-5, SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-key-vaults-should-use-private-link
+  requirements: [IA-5, SC-12, SC-17, SC-7]
+  sufficiency: partial
+- countermeasure: policy-azure-kubernetes-service-clusters-should-enable-microsoft-entra-id-integration
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-azure-kubernetes-service-clusters-should-have-defender-profile-enabled
+  requirements: [SI-4, AU-6, AU-2, IA-4]
+  sufficiency: partial
+- countermeasure: policy-azure-kubernetes-service-clusters-should-have-local-authentication-methods-disabled
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-azure-kubernetes-service-clusters-should-use-managed-identities
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-compute-instances-should-be-recreated-to-get-the-latest-software-up
+  requirements: [CM-2, CM-3, CM-6, CM-7]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-computes-should-be-in-a-virtual-network
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-computes-should-have-local-authentication-methods-disabled
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-be-encrypted-with-a-customer-managed-key
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-be-encrypted-with-the-use-of-a-customer-managed-k
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-enable-v1legacymode-to-support-network-isolation
+  requirements: [CM-2, CM-3, CM-6, CM-7]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-use-user-assigned-managed-identity
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: policy-azure-managed-grafana-workspaces-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-managed-grafana-workspaces-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-log-profile-should-collect-logs-for-categories-write-delete-and-action
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-logs-clusters-should-be-created-with-infrastructure-encryption-enabled-doubl
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-logs-clusters-should-be-encrypted-with-customer-managed-key
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-logs-for-application-insights-should-be-linked-to-a-log-analytics-workspace
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-private-link-scope-should-block-access-to-non-private-link-resources
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-private-link-scope-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-should-collect-activity-logs-from-all-regions
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-solution-security-and-audit-must-be-deployed
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-azure-mysql-flexible-server-should-have-microsoft-entra-only-authentication-enabled
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-purview-accounts-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-registry-container-images-should-have-vulnerabilities-resolved-powered-by-microsoft
+  requirements: [CM-2, CM-3, SI-2, SI-7]
+  sufficiency: partial
+- countermeasure: policy-azure-running-container-images-should-have-vulnerabilities-resolved-powered-by-microsoft-d
+  requirements: [CM-2, CM-3, SI-2, SI-7]
+  sufficiency: partial
+- countermeasure: policy-azure-service-bus-namespaces-should-have-local-authentication-methods-disabled
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-azure-service-bus-namespaces-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-signalr-service-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-database-should-be-running-tls-version-1-2-or-newer
+  requirements: [SC-8, IA-9, SC-13, SC-23]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-database-should-have-microsoft-entra-only-authentication-enabled
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-database-should-have-microsoft-entra-only-authentication-enabled-during-creation
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-managed-instance-should-have-microsoft-entra-only-authentication-enabled
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-managed-instances-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-managed-instances-should-have-microsoft-entra-only-authentication-enabled-during
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-azure-stream-analytics-jobs-should-use-customer-managed-keys-to-encrypt-data
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-synapse-analytics-dedicated-sql-pools-should-enable-encryption
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-synapse-workspace-sql-server-should-be-running-tls-version-1-2-or-newer
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-azure-synapse-workspaces-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-synapse-workspaces-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-azure-synapse-workspaces-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-virtual-desktop-service-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-web-pubsub-service-should-use-a-sku-that-supports-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-azure-web-pubsub-service-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-both-operating-systems-and-data-disks-in-azure-kubernetes-service-clusters-should-be-encry
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-botservice-resources-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-cognitive-services-accounts-should-use-a-managed-identity
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: policy-communication-service-resource-should-use-a-managed-identity
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: policy-container-app-environments-should-use-network-injection
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-container-apps-environment-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-container-apps-should-disable-external-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-container-apps-should-only-be-accessible-over-https
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-container-registries-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-cosmos-db-database-accounts-should-have-local-authentication-methods-disabled
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-cosmos-db-should-use-a-virtual-network-service-endpoint
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-cosmosdb-accounts-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-create-and-assign-a-built-in-user-assigned-managed-identity
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: policy-customer-managed-key-encryption-must-be-used-as-part-of-cmk-encryption-for-arc-sql-managed
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-diagnostic-logs-in-azure-ai-services-resources-should-be-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-disk-access-resources-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-disk-encryption-should-be-enabled-on-azure-data-explorer
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: policy-double-encryption-should-be-enabled-on-azure-data-explorer
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-application-gateways-microsoft-network-applicationgat
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-bastions-microsoft-network-bastionhosts-to-event-hub
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-bastions-microsoft-network-bastionhosts-to-log-analyt
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-bastions-microsoft-network-bastionhosts-to-storage
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-endpoints-microsoft-cdn-profiles-endpoints-to-event-h
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-endpoints-microsoft-cdn-profiles-endpoints-to-log-ana
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-expressroute-circuits-microsoft-network-expressroutec
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-firewall-microsoft-network-azurefirewalls-to-log-anal
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-firewalls-microsoft-network-azurefirewalls-to-event-h
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-firewalls-microsoft-network-azurefirewalls-to-log-ana
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-firewalls-microsoft-network-azurefirewalls-to-storage
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-front-door-and-cdn-profiles-microsoft-cdn-profiles-to
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-front-door-and-cdn-profiles-microsoft-network-frontdo
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-load-balancers-microsoft-network-loadbalancers-to-eve
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-load-balancers-microsoft-network-loadbalancers-to-log
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-cdn-cdnwebapplicationfirewallpolicies-to-ev
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-cdn-cdnwebapplicationfirewallpolicies-to-lo
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-dnsresolverpolicies-to-event-hub
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-dnsresolverpolicies-to-log-analytic
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-networkmanagers-ipampools-to-event
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-networkmanagers-ipampools-to-log-an
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-networksecurityperimeters-to-event
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-networksecurityperimeters-to-log-an
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-p2svpngateways-to-event-hub
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-p2svpngateways-to-log-analytics
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-p2svpngateways-to-storage
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-vpngateways-to-event-hub
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-vpngateways-to-log-analytics
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-vpngateways-to-storage
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-networkfunction-azuretrafficcollectors-to-e
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-networkfunction-azuretrafficcollectors-to-l
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-network-managers-microsoft-network-networkmanagers-to
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-network-security-groups-microsoft-network-networksecu
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-public-ip-addresses-microsoft-network-publicipaddress
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-public-ip-prefixes-microsoft-network-publicipprefixes
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-traffic-manager-profiles-microsoft-network-trafficman
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-virtual-network-gateways-microsoft-network-virtualnet
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-virtual-networks-microsoft-network-virtualnetworks-to
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-enforce-ssl-connection-should-be-enabled-for-mysql-database-servers
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-enforce-ssl-connection-should-be-enabled-for-postgresql-database-servers
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-event-hub-namespaces-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-event-hub-namespaces-should-have-double-encryption-enabled
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: policy-event-hub-namespaces-should-use-a-customer-managed-key-for-encryption
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-event-hub-namespaces-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-event-hub-should-use-a-virtual-network-service-endpoint
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-should-enable-end-to-end-encryption
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-should-not-have-cors-configured-to-allow-every-resource-to-access-your
+  requirements: [CM-2, CM-3, CM-6, CM-7]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-should-only-be-accessible-over-https
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-should-use-the-latest-tls-version
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-that-use-java-should-use-a-specified-java-version
+  requirements: [CM-2, CM-3, CM-6, CM-7]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-enable-end-to-end-encryption
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-have-authentication-enabled
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-not-have-cors-configured-to-allow-every-resource-to-access-your-apps
+  requirements: [CM-2, CM-3, CM-6, CM-7]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-only-be-accessible-over-https
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-use-managed-identity
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-use-the-latest-tls-version
+  requirements: [SC-8, SC-13, IA-5]
+  sufficiency: partial
+- countermeasure: policy-function-apps-that-use-java-should-use-a-specified-java-version
+  requirements: [CM-2, CM-3, CM-6, CM-7]
+  sufficiency: partial
+- countermeasure: policy-function-apps-that-use-python-should-use-a-specified-python-version
+  requirements: [CM-2, CM-3, CM-6, CM-7]
+  sufficiency: partial
+- countermeasure: policy-geo-redundant-backup-should-be-enabled-for-azure-database-for-mysql
+  requirements: [CP-9, CP-10, SC-12, SC-13]
+  sufficiency: partial
+- countermeasure: policy-geo-redundant-backup-should-be-enabled-for-azure-database-for-postgresql
+  requirements: [CP-9, CP-10, SC-12, SC-13]
+  sufficiency: partial
+- countermeasure: policy-infrastructure-encryption-should-be-enabled-for-azure-database-for-mysql-servers
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: policy-infrastructure-encryption-should-be-enabled-for-azure-database-for-postgresql-servers
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: policy-iot-central-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-iot-hub-device-provisioning-service-instances-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-iot-hub-device-provisioning-service-instances-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-ip-firewall-rules-on-azure-synapse-workspaces-should-be-removed
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-key-vault-should-use-a-virtual-network-service-endpoint
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-cluster-pods-should-only-use-approved-host-network-and-port-list
+  requirements: [CM-2, CM-3, CM-6, CM-7]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-cluster-should-not-allow-privileged-containers
+  requirements: [CM-2, CM-3, CM-6, CM-7]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-clusters-should-be-accessible-only-over-https
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-clusters-should-disable-automounting-api-credentials
+  requirements: [CM-2, CM-3, CM-6, CM-7]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-clusters-should-ensure-that-the-cluster-admin-role-is-only-used-where-required
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-clusters-should-minimize-wildcard-use-in-role-and-cluster-role
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-services-should-be-upgraded-to-a-non-vulnerable-kubernetes-version
+  requirements: [SI-2, RA-5]
+  sufficiency: partial
+- countermeasure: policy-linux-arc-enabled-machines-should-have-azure-monitor-agent-installed
+  requirements: [AU-2, AU-3, AU-6, AU-7]
+  sufficiency: partial
+- countermeasure: policy-linux-virtual-machine-scale-sets-should-have-azure-monitor-agent-installed
+  requirements: [AU-2, AU-3, AU-6, AU-7]
+  sufficiency: partial
+- countermeasure: policy-linux-virtual-machines-should-have-azure-monitor-agent-installed
+  requirements: [AU-2, AU-3, AU-6, AU-7]
+  sufficiency: partial
+- countermeasure: policy-log-analytics-agent-should-be-installed-on-your-cloud-services-extended-support-role-insta
+  requirements: [AU-2, AU-3, AU-6, AU-7]
+  sufficiency: partial
+- countermeasure: policy-log-analytics-workspaces-should-block-log-ingestion-and-querying-from-public-networks
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-logic-apps-integration-service-environment-should-be-encrypted-with-customer-managed-keys
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-long-term-geo-redundant-backup-should-be-enabled-for-azure-sql-databases
+  requirements: [CP-9, CP-10]
+  sufficiency: partial
+- countermeasure: policy-managed-workspace-virtual-network-on-azure-synapse-workspaces-should-be-enabled
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-mariadb-server-should-use-a-virtual-network-service-endpoint
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-cspm-should-be-enabled
+  requirements: [SI-4, IR-4, IR-5, RA-2]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-for-apis-should-be-enabled
+  requirements: [RA-2, SC-28, AC-4, SI-4]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-for-azure-cosmos-db-should-be-enabled
+  requirements: [SI-4, AU-6]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-for-containers-should-be-enabled
+  requirements: [SI-4, IR-4, IR-5, RA-2]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-for-sql-should-be-enabled-for-unprotected-synapse-workspaces
+  requirements: [SI-4, IR-4, IR-5, RA-2]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-for-storage-should-be-enabled
+  requirements: [AC-4, SI-4, IR-4, IR-5]
+  sufficiency: partial
+- countermeasure: policy-mysql-server-should-use-a-virtual-network-service-endpoint
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-mysql-servers-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-network-watcher-flow-logs-should-have-traffic-analytics-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-postgresql-flexible-servers-should-be-running-tls-version-1-2-or-newer
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-postgresql-flexible-servers-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-postgresql-server-should-use-a-virtual-network-service-endpoint
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-postgresql-servers-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-public-ip-addresses-should-have-resource-logs-enabled-for-azure-ddos-protection
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-for-azure-device-update-for-iot-hub-accounts-should-be-disabled
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-on-azure-data-explorer-should-be-disabled
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-on-azure-data-factory-should-be-disabled
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-on-azure-iot-hub-should-be-disabled
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-on-azure-sql-database-should-be-disabled
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-azure-file-sync
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-batch-accounts
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-mysql-flexible-servers
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-mysql-servers
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-postgresql-flexible-servers
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-postgresql-servers
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-queue-storage-should-use-customer-managed-key-for-encryption
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-data-lake-store-should-be-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-databricks-workspaces-should-be-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-key-vault-managed-hsm-should-be-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-kubernetes-service-should-be-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-machine-learning-workspaces-should-be-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-stream-analytics-should-be-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-batch-accounts-should-be-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-data-lake-analytics-should-be-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-event-hub-should-be-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-iot-hub-should-be-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-logic-apps-should-be-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-search-services-should-be-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-service-bus-should-be-enabled
+  requirements: [AU-2, AU-3, AU-6, AU-12]
+  sufficiency: partial
+- countermeasure: policy-role-based-access-control-rbac-should-be-used-on-kubernetes-services
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: policy-saved-queries-in-azure-monitor-should-be-saved-in-customer-storage-account-for-logs-encryp
+  requirements: [AU-2, AU-3, AU-6, AU-7]
+  sufficiency: partial
+- countermeasure: policy-service-bus-namespaces-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-service-bus-namespaces-should-have-double-encryption-enabled
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: policy-service-bus-premium-namespaces-should-use-a-customer-managed-key-for-encryption
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-service-fabric-clusters-should-only-use-azure-active-directory-for-client-authentication
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-sql-databases-should-have-vulnerability-findings-resolved
+  requirements: [SI-2, RA-5]
+  sufficiency: partial
+- countermeasure: policy-sql-managed-instance-should-have-the-minimal-tls-version-of-1-2
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-sql-managed-instances-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-sql-server-integration-services-integration-runtimes-on-azure-data-factory-should-be-joine
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-sql-server-should-use-a-virtual-network-service-endpoint
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-storage-account-containing-the-container-with-activity-logs-must-be-encrypted-with-byok
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-storage-account-encryption-scopes-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-storage-account-encryption-scopes-should-use-double-encryption-for-data-at-rest
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-storage-account-public-access-should-be-disallowed
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-disable-public-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-have-infrastructure-encryption
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-have-the-specified-minimum-tls-version
+  requirements: [SC-8]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-prevent-cross-tenant-object-replication
+  requirements: [CM-2, CM-3, CM-6, CM-7]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-prevent-shared-key-access
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-prevent-shared-key-access-excluding-storage-accounts-created-by-da
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-restrict-network-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-restrict-network-access-using-virtual-network-rules
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-restrict-network-access-using-virtual-network-rules-excluding-stor
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-use-a-virtual-network-service-endpoint
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-use-customer-managed-key-for-encryption
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-use-private-link-excluding-storage-accounts-created-by-databricks
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-stream-analytics-job-should-use-managed-identity-to-authenticate-endpoints
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: policy-synapse-managed-private-endpoints-should-only-connect-to-resources-in-approved-azure-activ
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-synapse-workspaces-should-have-microsoft-entra-only-authentication-enabled
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-synapse-workspaces-should-use-only-microsoft-entra-identities-for-authentication-during-wo
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-temp-disks-and-cache-for-agent-node-pools-in-azure-kubernetes-service-clusters-should-be-e
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: policy-virtual-machines-and-virtual-machine-scale-sets-should-have-encryption-at-host-enabled
+  requirements: [SC-28]
+  sufficiency: partial
+- countermeasure: policy-virtual-machines-guest-configuration-extension-should-be-deployed-with-system-assigned-man
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: policy-virtual-machines-should-be-connected-to-an-approved-virtual-network
+  requirements: [SC-7, SC-32, AC-4, CM-7]
+  sufficiency: partial
+- countermeasure: policy-virtual-networks-should-be-protected-by-azure-ddos-protection
+  requirements: [SC-5, SI-4]
+  sufficiency: partial
+- countermeasure: policy-virtual-networks-should-use-specified-virtual-network-gateway
+  requirements: [SC-7, SC-32, AC-4, CM-7]
+  sufficiency: partial
+- countermeasure: policy-vm-image-builder-templates-should-use-private-link
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: policy-vpn-gateways-should-use-only-azure-active-directory-azure-ad-authentication-for-point-to-s
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: policy-windows-arc-enabled-machines-should-have-azure-monitor-agent-installed
+  requirements: [AU-2, AU-3, AU-6, AU-7]
+  sufficiency: partial
+- countermeasure: policy-windows-defender-exploit-guard-should-be-enabled-on-your-machines
+  requirements: [SI-3, SI-4, AU-6, AU-2]
+  sufficiency: partial
+- countermeasure: policy-windows-machines-should-configure-windows-defender-to-update-protection-signatures-within
+  requirements: [CM-3, CM-6, SI-2]
+  sufficiency: partial
+- countermeasure: policy-windows-machines-should-enable-windows-defender-real-time-protection
+  requirements: [CM-3, CM-6, SI-2]
+  sufficiency: partial
+- countermeasure: policy-windows-virtual-machine-scale-sets-should-have-azure-monitor-agent-installed
+  requirements: [AU-2, AU-3, AU-6, AU-7]
+  sufficiency: partial
+- countermeasure: policy-windows-virtual-machines-should-have-azure-monitor-agent-installed
+  requirements: [AU-2, AU-3, AU-6, AU-7]
+  sufficiency: partial
+- countermeasure: sa-customer-managed-key
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: sa-defender-for-storage
+  requirements: [SI-4, AU-6, AU-2, AU-3]
+  sufficiency: partial
+- countermeasure: sa-diagnostic-settings
+  requirements: [SI-4, AU-6, AU-2, AU-3]
+  sufficiency: partial
+- countermeasure: sa-disable-public-access
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: sa-disallow-shared-key
+  requirements: [AC-2, AC-3, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: sa-immutability-and-soft-delete
+  requirements: [CP-9, SC-12, SC-13, SC-28]
+  sufficiency: partial
+- countermeasure: sa-least-privilege-rbac
+  requirements: [AC-2, AC-3, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: sa-resource-lock
+  requirements: [SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: sa-restrict-copy-scope
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: sa-sas-expiration-policy
+  requirements: [AC-2, AC-3, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: sa-secure-transfer-tls12
+  requirements: [SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: sa-user-delegation-sas
+  requirements: [AC-2, AC-3, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: sentinel-connector-coverage
+  requirements: [SI-4, AU-6, AU-2, AU-3]
+  sufficiency: partial
+- countermeasure: sentinel-rule-change-control
+  requirements: [SI-4, AU-6, AC-2, AC-3]
+  sufficiency: partial
+- countermeasure: sentinel-watchlist-hygiene
+  requirements: [AC-4, SI-4, AC-2, AC-3]
+  sufficiency: partial
+- countermeasure: sf-cert-expiry-monitoring
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: sf-network-isolation
+  requirements: [SC-7, SC-32, AC-4, CM-7]
+  sufficiency: partial
+- countermeasure: sf-secure-cluster-x509-entra
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: sm-least-privilege-target
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: sm-private-control-plane
+  requirements: [SC-7, AC-4, SC-8]
+  sufficiency: partial
+- countermeasure: sm-remove-agent-access
+  requirements: [AC-2, AC-6, IA-4]
+  sufficiency: partial
+- countermeasure: tm-alias-records
+  requirements: [SC-7, SI-4]
+  sufficiency: partial
+- countermeasure: tm-https-monitoring
+  requirements: [SC-8, SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: tm-rbac-profiles
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: vm-backup-immutable
+  requirements: [CP-9, CP-10, SC-12, SC-13]
+  sufficiency: partial
+- countermeasure: vm-brute-force-detection
+  requirements: [SI-4, AU-6, SC-8, SC-13]
+  sufficiency: partial
+- countermeasure: vm-disk-export-control
+  requirements: [SC-28, SC-12]
+  sufficiency: partial
+- countermeasure: vm-edr-antimalware
+  requirements: [SI-4, IR-4, SI-3]
+  sufficiency: partial
+- countermeasure: vm-extension-allowlist
+  requirements: [CM-3, CM-6, SI-2, CM-7]
+  sufficiency: partial
+- countermeasure: vm-patch-management
+  requirements: [RA-3, RA-5, SI-2]
+  sufficiency: partial
+- countermeasure: vm-restrict-management-ports
+  requirements: [SC-8, SC-13, IA-5, SC-7]
+  sufficiency: partial
+- countermeasure: vm-secure-baseline
+  requirements: [CM-2, CM-6, SC-28, CM-3]
+  sufficiency: partial
+- countermeasure: vmss-application-health
+  requirements: [CM-3, CM-6, SI-2, SI-4]
+  sufficiency: partial
+- countermeasure: vmss-automatic-os-upgrade
+  requirements: [SI-2, RA-5, CM-2, CM-6]
+  sufficiency: partial
+- countermeasure: vmss-instance-protection
+  requirements: [CP-9, CP-10]
+  sufficiency: partial
+- countermeasure: vnet-private-endpoints
+  requirements: [SC-7, AC-4, SC-32, CM-7]
+  sufficiency: partial
+- countermeasure: vwan-custom-route-tables
+  requirements: [SC-7, SC-32, AC-4, CM-7]
+  sufficiency: partial
+- countermeasure: vwan-p2s-entra-auth
+  requirements: [AC-2, AC-3, IA-2, IA-5]
+  sufficiency: partial
+- countermeasure: vwan-restrict-udr-permissions
+  requirements: [SC-7, SC-32, AC-4, CM-7]
+  sufficiency: partial
+- countermeasure: waf-diagnostic-logs
+  requirements: [SC-7, AC-4, SI-10, SI-11]
+  sufficiency: partial
+- countermeasure: waf-prevention-mode
+  requirements: [SC-7, SI-10, SI-11]
+  sufficiency: partial
+- countermeasure: waf-rate-limit-bot
+  requirements: [SC-7, SI-10, SI-11, SC-5]
+  sufficiency: partial
+- countermeasure: cm-ai-search-security-trimming
+  requirements: [AC-2, AC-3, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: cm-ai-services-quota-limits
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: cm-apim-validate-jwt
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: cm-app-configuration-purge-protection
+  requirements: [CP-9, SC-12, SC-13, SC-28]
+  sufficiency: partial
+- countermeasure: cm-key-vault-secret-references
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: cm-trusted-registry-only
+  requirements: [CM-2, CM-3, SI-2, SI-7]
+  sufficiency: partial
+- countermeasure: det-rbac-assignment-alert
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: det-network-change-alert
+  requirements: [SC-7, AC-4, SI-4, SC-32]
+  sufficiency: partial
+- countermeasure: det-critical-delete-alert
+  requirements: [CP-9, SC-12, SC-13, SC-28]
+  sufficiency: partial
+- countermeasure: det-policy-compliance-alerts
+  requirements: [SC-7, AC-4, SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: det-retired-sku-service-health-alert
+  requirements: [CM-2, CM-6, CM-7, SA-3]
+  sufficiency: partial
+- countermeasure: det-credential-bearing-config-change-alert
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: det-orphaned-role-assignment-scan
+  requirements: [AC-2, AC-6, IA-4]
+  sufficiency: partial
+- countermeasure: det-keyvault-access-anomaly-alert
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: det-terraform-state-access-monitoring
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: det-key-expiry-event-alert
+  requirements: [IA-5, SC-12, SC-28]
+  sufficiency: partial
+- countermeasure: det-managed-hsm-audit-alerts
+  requirements: [SC-7, AC-4, IA-5, SC-12]
+  sufficiency: partial
+- countermeasure: det-dedicated-hsm-audit-forwarding
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: det-managed-identity-sign-in-anomaly
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: det-signin-ca-gap-detection
+  requirements: [AC-2, AC-3, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: det-entra-privileged-role-alerts
+  requirements: [AC-2, AC-3, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: det-lockbox-request-alerts
+  requirements: [AC-2, AC-3, AC-6, AU-6]
+  sufficiency: partial
+- countermeasure: det-b2c-spray-and-mfa-monitoring
+  requirements: [AC-2, AC-3, IA-2, IA-5]
+  sufficiency: partial
+- countermeasure: det-egress-anomaly-detection
+  requirements: [SC-7, AC-4, SI-4, SC-32]
+  sufficiency: partial
+- countermeasure: det-waf-log-analysis
+  requirements: [SC-7, AC-4, SI-10, SI-11]
+  sufficiency: partial
+- countermeasure: det-origin-direct-access-detection
+  requirements: [SC-7, AC-4, SI-10, SI-11]
+  sufficiency: partial
+- countermeasure: det-public-name-resolution-detection
+  requirements: [SC-7, SI-4, AC-4, SC-8]
+  sufficiency: partial
+- countermeasure: det-packet-capture-alert
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: det-vpn-tunnel-diagnostics
+  requirements: [AC-2, AC-3, IA-2, IA-5]
+  sufficiency: partial
+- countermeasure: det-expressroute-bgp-monitoring
+  requirements: [SC-8, SC-7, SC-13, IA-5]
+  sufficiency: partial
+- countermeasure: det-traffic-manager-endpoint-alert
+  requirements: [SC-8, SC-7, AC-4]
+  sufficiency: partial
+- countermeasure: det-event-grid-failure-alert
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: det-appservice-basic-auth-login-alert
+  requirements: [SC-7, AC-4, AC-2, AC-3]
+  sufficiency: partial
+- countermeasure: det-acr-push-delete-audit
+  requirements: [CM-2, CM-3, SI-2, SI-7]
+  sufficiency: partial
+- countermeasure: det-container-apps-log-alerts
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: det-redis-client-anomaly-alert
+  requirements: [SC-8, SC-7, AC-4, AC-2]
+  sufficiency: partial
+- countermeasure: det-update-compliance-alerts
+  requirements: [SI-2, RA-5, CM-2, CM-6]
+  sufficiency: partial
+- countermeasure: det-windows-security-event-monitoring
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: det-avd-connection-anomaly-alert
+  requirements: [CM-2, CM-6, SC-28]
+  sufficiency: partial
+- countermeasure: det-ml-job-and-egress-audit
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: det-hdinsight-security-log-monitoring
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: det-service-fabric-endpoint-monitoring
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: det-backup-critical-operation-alerts
+  requirements: [CP-9, SC-12, SC-13, SC-28]
+  sufficiency: partial
+- countermeasure: det-adx-command-audit
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: det-adls-acl-change-audit
+  requirements: [AC-2, AC-6, IA-4, AC-3]
+  sufficiency: partial
+- countermeasure: det-queue-write-audit
+  requirements: [AC-2, AC-3, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: det-files-auth-type-detection
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: det-domain-services-security-audit
+  requirements: [AC-2, AC-3, IA-2, IA-5]
+  sufficiency: partial
+- countermeasure: det-iot-hub-connection-anomaly
+  requirements: [AC-2, AC-3, IA-2, IA-4]
+  sufficiency: partial
+- countermeasure: det-asr-event-alerts
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: det-synapse-rbac-audit
+  requirements: [AC-2, AC-3, AC-5, AC-6]
+  sufficiency: partial
+- countermeasure: det-workspace-query-audit
+  requirements: [AC-4, SI-4, AC-2, AC-3]
+  sufficiency: partial
+- countermeasure: det-app-insights-ingestion-anomaly
+  requirements: [AC-2, AC-3, AC-4, AC-6]
+  sufficiency: partial
+- countermeasure: det-sensitive-data-in-logs-scan
+  requirements: [AC-4, SI-4, RA-2, SC-28]
+  sufficiency: partial
+- countermeasure: det-ai-services-request-audit
+  requirements: [SC-7, AC-4, SI-3, SI-4]
+  sufficiency: partial
+- countermeasure: det-ai-search-query-audit
+  requirements: [AC-2, AC-3, AC-6, AC-16]
+  sufficiency: partial
+- countermeasure: det-apim-subscription-key-anomaly
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial
+- countermeasure: det-logic-app-trigger-and-run-alerts
+  requirements: [IA-5, SI-4, RA-5, SC-12]
+  sufficiency: partial

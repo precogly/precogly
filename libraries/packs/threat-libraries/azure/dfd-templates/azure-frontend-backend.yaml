@@ -1,0 +1,293 @@
+template:
+  slug: azure-frontend-backend
+  name: "Frontend and Backend Application"
+  description: "Layered web system with a static single-page frontend, a private API tier, Entra ID authentication, a private SQL data tier, blob storage for uploads, Key Vault for secrets, and central monitoring"
+  category: webApplication
+  diagram_type: level1
+
+canvas_data:
+  nodes:
+    # ---- External actors ----
+    - id: "actor-user"
+      type: "humanActor"
+      position: { x: 50, y: 200 }
+      data:
+        label: "Browser User"
+        actorType: "user"
+        description: "Signs in and uses the application"
+
+    - id: "actor-admin"
+      type: "humanActor"
+      position: { x: 50, y: 470 }
+      data:
+        label: "Application Administrator"
+        actorType: "admin"
+        description: "Manages the application and its configuration"
+
+    - id: "actor-entra"
+      type: "systemActor"
+      position: { x: 1000, y: 40 }
+      data:
+        label: "Microsoft Entra ID"
+        actorType: "external"
+        component_ref: "entra-id"
+        description: "Issues tokens for the frontend and the API"
+
+    # ---- System scope ----
+    - id: "sb-app"
+      type: "systemScope"
+      position: { x: 200, y: 30 }
+      style: { width: 780, height: 640 }
+      data:
+        label: "Frontend and Backend Application"
+        owner: "Web Team"
+        classification: "Production"
+
+    # ---- Trust zones ----
+    - id: "tz-edge"
+      type: "trustZone"
+      parentId: "sb-app"
+      position: { x: 30, y: 60 }
+      style: { width: 170, height: 260 }
+      data:
+        label: "Edge"
+        zoneType: "trust"
+        trustLevel: 25
+        technology: "Azure Front Door with WAF"
+
+    - id: "tz-frontend"
+      type: "trustZone"
+      parentId: "sb-app"
+      position: { x: 230, y: 60 }
+      style: { width: 170, height: 260 }
+      data:
+        label: "Frontend Hosting"
+        zoneType: "trust"
+        trustLevel: 0
+        technology: "Static website storage"
+
+    - id: "tz-backend"
+      type: "trustZone"
+      parentId: "sb-app"
+      position: { x: 430, y: 60 }
+      style: { width: 170, height: 540 }
+      data:
+        label: "Backend Subnet"
+        zoneType: "trust"
+        trustLevel: 50
+        technology: "App Service VNet integration"
+
+    - id: "tz-data"
+      type: "trustZone"
+      parentId: "sb-app"
+      position: { x: 630, y: 60 }
+      style: { width: 140, height: 540 }
+      data:
+        label: "Data Subnet"
+        zoneType: "trust"
+        trustLevel: 75
+        technology: "Private Endpoints"
+
+    # ---- Edge and frontend ----
+    - id: "process-frontdoor"
+      type: "process"
+      parentId: "tz-edge"
+      position: { x: 20, y: 60 }
+      data:
+        label: "Front Door and WAF"
+        component_ref: "front-door"
+        technology: "Azure Front Door Premium with WAF policy"
+        description: "Routes / to the frontend and /api to the backend"
+
+    - id: "process-spa"
+      type: "process"
+      parentId: "tz-frontend"
+      position: { x: 20, y: 60 }
+      data:
+        label: "Single-Page Frontend"
+        component_ref: "blob-storage"
+        technology: "Static website on Azure Storage"
+        description: "Static HTML, CSS and JavaScript bundles"
+
+    # ---- Backend ----
+    - id: "process-api"
+      type: "process"
+      parentId: "tz-backend"
+      position: { x: 20, y: 60 }
+      data:
+        label: "Backend API"
+        component_ref: "app-service"
+        technology: "Azure App Service (Linux)"
+        description: "REST API that validates Entra access tokens"
+        dataSensitivity: "confidential"
+
+    - id: "process-worker"
+      type: "process"
+      parentId: "tz-backend"
+      position: { x: 20, y: 240 }
+      data:
+        label: "Background Jobs"
+        component_ref: "functions"
+        technology: "Azure Functions (timer and queue triggers)"
+        description: "Report generation and file processing"
+
+    - id: "process-identity"
+      type: "process"
+      parentId: "tz-backend"
+      position: { x: 20, y: 400 }
+      data:
+        label: "Managed Identity"
+        component_ref: "managed-identity"
+        technology: "System-assigned managed identity"
+        description: "Used for Key Vault, SQL and Storage access"
+
+    # ---- Data ----
+    - id: "datastore-sql"
+      type: "datastore"
+      parentId: "tz-data"
+      position: { x: 15, y: 60 }
+      data:
+        label: "Azure SQL Database"
+        component_ref: "sql-database"
+        technology: "Azure SQL Database, private endpoint"
+        description: "Business records"
+        dataSensitivity: "confidential"
+
+    - id: "datastore-uploads"
+      type: "datastore"
+      parentId: "tz-data"
+      position: { x: 15, y: 200 }
+      data:
+        label: "Upload Storage"
+        component_ref: "storage-account"
+        technology: "Azure Blob Storage, private endpoint"
+        description: "User-uploaded files"
+        dataSensitivity: "confidential"
+
+    - id: "datastore-kv"
+      type: "datastore"
+      parentId: "tz-data"
+      position: { x: 15, y: 340 }
+      data:
+        label: "Key Vault"
+        component_ref: "key-vault"
+        technology: "Azure Key Vault, private endpoint"
+        description: "Connection secrets and certificates"
+        dataSensitivity: "confidential"
+
+    # ---- Outside the scope ----
+    - id: "process-appinsights"
+      type: "process"
+      position: { x: 1000, y: 200 }
+      data:
+        label: "Application Insights"
+        component_ref: "app-insights"
+        technology: "Application Insights"
+        description: "Requests, dependencies and exceptions"
+
+  edges:
+    - id: "edge-1"
+      source: "actor-user"
+      target: "process-frontdoor"
+      type: "dataFlow"
+      data:
+        label: "Load application"
+        protocol: "HTTPS"
+        encrypted: true
+
+    - id: "edge-2"
+      source: "process-frontdoor"
+      target: "process-spa"
+      type: "dataFlow"
+      data:
+        label: "Static assets"
+        protocol: "HTTPS"
+        encrypted: true
+
+    - id: "edge-3"
+      source: "actor-user"
+      target: "actor-entra"
+      type: "dataFlow"
+      data:
+        label: "Sign-in (OIDC, PKCE)"
+        protocol: "OAuth 2.0 / OIDC"
+        encrypted: true
+        authentication: ["oidc"]
+
+    - id: "edge-4"
+      source: "process-frontdoor"
+      target: "process-api"
+      type: "dataFlow"
+      data:
+        label: "API calls with bearer token"
+        protocol: "HTTPS"
+        encrypted: true
+        authentication: ["bearer"]
+
+    - id: "edge-5"
+      source: "process-api"
+      target: "actor-entra"
+      type: "dataFlow"
+      data:
+        label: "Token validation keys"
+        protocol: "HTTPS"
+        encrypted: true
+
+    - id: "edge-6"
+      source: "process-api"
+      target: "datastore-sql"
+      type: "dataFlow"
+      data:
+        label: "Queries"
+        protocol: "TDS over TLS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-7"
+      source: "process-api"
+      target: "datastore-uploads"
+      type: "dataFlow"
+      data:
+        label: "Upload and read files"
+        protocol: "HTTPS (Entra ID)"
+        encrypted: true
+        authentication: ["oauth2"]
+
+    - id: "edge-8"
+      source: "process-identity"
+      target: "datastore-kv"
+      type: "dataFlow"
+      data:
+        label: "Read secrets via managed identity"
+        protocol: "HTTPS"
+        encrypted: true
+        authentication: ["oauth2"]
+
+    - id: "edge-9"
+      source: "process-worker"
+      target: "datastore-sql"
+      type: "dataFlow"
+      data:
+        label: "Batch updates"
+        protocol: "TDS over TLS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-10"
+      source: "process-api"
+      target: "process-appinsights"
+      type: "dataFlow"
+      data:
+        label: "Telemetry"
+        protocol: "HTTPS"
+        encrypted: true
+
+    - id: "edge-11"
+      source: "actor-admin"
+      target: "process-api"
+      type: "dataFlow"
+      data:
+        label: "Configuration changes"
+        protocol: "HTTPS (Entra ID, PIM)"
+        encrypted: true
+        authentication: ["oauth2"]

@@ -1,0 +1,279 @@
+template:
+  slug: azure-database-cluster
+  name: "Highly Available Database Cluster"
+  description: "Zone-redundant Azure Database for PostgreSQL flexible server with a standby in a second zone, a cross-region read replica, private access from the application subnet, customer-managed keys, long-term backup, and administrative access through Bastion"
+  category: cloudInfrastructure
+  diagram_type: level1
+
+canvas_data:
+  nodes:
+    # ---- External actors ----
+    - id: "actor-app"
+      type: "systemActor"
+      position: { x: 50, y: 200 }
+      data:
+        label: "Application Clients"
+        actorType: "system"
+        description: "Services that connect to the database"
+
+    - id: "actor-dba"
+      type: "humanActor"
+      position: { x: 50, y: 470 }
+      data:
+        label: "Database Administrator"
+        actorType: "admin"
+        description: "Maintains schemas, roles and restores"
+
+    - id: "actor-reporting"
+      type: "humanActor"
+      position: { x: 1100, y: 200 }
+      data:
+        label: "Reporting Users"
+        actorType: "user"
+        description: "Read-only analytics on the replica"
+
+    # ---- System scope: primary region ----
+    - id: "sb-primary"
+      type: "systemScope"
+      position: { x: 200, y: 30 }
+      style: { width: 540, height: 640 }
+      data:
+        label: "Primary Region Database Cluster"
+        owner: "Data Platform Team"
+        classification: "Production"
+
+    - id: "tz-app"
+      type: "trustZone"
+      parentId: "sb-primary"
+      position: { x: 30, y: 60 }
+      style: { width: 160, height: 540 }
+      data:
+        label: "Application Subnet"
+        zoneType: "trust"
+        trustLevel: 50
+        technology: "Azure VNet"
+
+    - id: "tz-db-zone1"
+      type: "trustZone"
+      parentId: "sb-primary"
+      position: { x: 220, y: 60 }
+      style: { width: 130, height: 300 }
+      data:
+        label: "Availability Zone 1"
+        zoneType: "trust"
+        trustLevel: 75
+        technology: "Private access, delegated subnet"
+
+    - id: "tz-db-zone2"
+      type: "trustZone"
+      parentId: "sb-primary"
+      position: { x: 370, y: 60 }
+      style: { width: 130, height: 300 }
+      data:
+        label: "Availability Zone 2"
+        zoneType: "trust"
+        trustLevel: 75
+        technology: "Private access, delegated subnet"
+
+    - id: "tz-mgmt"
+      type: "trustZone"
+      parentId: "sb-primary"
+      position: { x: 220, y: 390 }
+      style: { width: 280, height: 210 }
+      data:
+        label: "Management Subnet"
+        zoneType: "trust"
+        trustLevel: 75
+        technology: "Azure Bastion"
+
+    # ---- Primary cluster ----
+    - id: "process-appservices"
+      type: "process"
+      parentId: "tz-app"
+      position: { x: 15, y: 60 }
+      data:
+        label: "Application Services"
+        component_ref: "container-apps"
+        technology: "Container Apps or App Service"
+        description: "Connect with Entra ID authentication and TLS"
+
+    - id: "datastore-primary"
+      type: "datastore"
+      parentId: "tz-db-zone1"
+      position: { x: 15, y: 60 }
+      data:
+        label: "PostgreSQL Primary"
+        component_ref: "postgresql"
+        technology: "Azure Database for PostgreSQL flexible server"
+        description: "Accepts reads and writes"
+        dataSensitivity: "confidential"
+
+    - id: "datastore-standby"
+      type: "datastore"
+      parentId: "tz-db-zone2"
+      position: { x: 15, y: 60 }
+      data:
+        label: "PostgreSQL Standby"
+        component_ref: "postgresql"
+        technology: "Synchronous zone-redundant standby"
+        description: "Takes over automatically on zone failure"
+        dataSensitivity: "confidential"
+
+    - id: "process-bastion"
+      type: "process"
+      parentId: "tz-mgmt"
+      position: { x: 15, y: 60 }
+      data:
+        label: "Azure Bastion"
+        component_ref: "bastion"
+        technology: "Azure Bastion"
+        description: "Browser-based admin access without public IPs"
+
+    # ---- Supporting services ----
+    - id: "datastore-kv"
+      type: "datastore"
+      position: { x: 800, y: 60 }
+      data:
+        label: "Key Vault (CMK)"
+        component_ref: "key-vault"
+        technology: "Azure Key Vault, customer-managed key"
+        description: "Encryption key for data at rest"
+        dataSensitivity: "confidential"
+
+    - id: "datastore-backup"
+      type: "datastore"
+      position: { x: 800, y: 220 }
+      data:
+        label: "Backup Vault"
+        component_ref: "backup-vault"
+        technology: "Azure Backup vault"
+        description: "Long-term backup with immutability"
+        dataSensitivity: "confidential"
+
+    - id: "process-monitor"
+      type: "process"
+      position: { x: 800, y: 380 }
+      data:
+        label: "Log Analytics"
+        component_ref: "log-analytics"
+        technology: "Azure Monitor, diagnostic settings"
+        description: "Query, connection and audit logs"
+
+    # ---- Secondary region ----
+    - id: "sb-secondary"
+      type: "systemScope"
+      position: { x: 800, y: 540 }
+      style: { width: 220, height: 130 }
+      data:
+        label: "Secondary Region"
+        owner: "Data Platform Team"
+        classification: "Production"
+
+    - id: "datastore-replica"
+      type: "datastore"
+      parentId: "sb-secondary"
+      position: { x: 20, y: 60 }
+      data:
+        label: "Read Replica"
+        component_ref: "postgresql"
+        technology: "Azure Database for PostgreSQL read replica"
+        description: "Asynchronous replica for reporting and DR"
+        dataSensitivity: "confidential"
+
+  edges:
+    - id: "edge-1"
+      source: "actor-app"
+      target: "process-appservices"
+      type: "dataFlow"
+      data:
+        label: "Application connections"
+        protocol: "PostgreSQL over TLS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-2"
+      source: "process-appservices"
+      target: "datastore-primary"
+      type: "dataFlow"
+      data:
+        label: "Reads and writes"
+        protocol: "PostgreSQL over TLS (private access)"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-3"
+      source: "datastore-primary"
+      target: "datastore-standby"
+      type: "dataFlow"
+      data:
+        label: "Synchronous WAL replication"
+        protocol: "PostgreSQL replication over TLS"
+        encrypted: true
+
+    - id: "edge-4"
+      source: "datastore-primary"
+      target: "datastore-replica"
+      type: "dataFlow"
+      data:
+        label: "Asynchronous WAL replication"
+        protocol: "PostgreSQL replication over TLS"
+        encrypted: true
+
+    - id: "edge-5"
+      source: "actor-reporting"
+      target: "datastore-replica"
+      type: "dataFlow"
+      data:
+        label: "Read-only queries"
+        protocol: "PostgreSQL over TLS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-6"
+      source: "datastore-primary"
+      target: "datastore-kv"
+      type: "dataFlow"
+      data:
+        label: "Fetch CMK for encryption"
+        protocol: "HTTPS (managed identity)"
+        encrypted: true
+        authentication: ["oauth2"]
+
+    - id: "edge-7"
+      source: "datastore-primary"
+      target: "datastore-backup"
+      type: "dataFlow"
+      data:
+        label: "Scheduled and long-term backup"
+        protocol: "HTTPS (backup extension)"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-8"
+      source: "actor-dba"
+      target: "process-bastion"
+      type: "dataFlow"
+      data:
+        label: "Admin session"
+        protocol: "HTTPS (Bastion)"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-9"
+      source: "process-bastion"
+      target: "datastore-primary"
+      type: "dataFlow"
+      data:
+        label: "Schema and role changes"
+        protocol: "PostgreSQL over TLS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-10"
+      source: "datastore-primary"
+      target: "process-monitor"
+      type: "dataFlow"
+      data:
+        label: "Diagnostic and audit logs"
+        protocol: "HTTPS (diagnostic settings)"
+        encrypted: true

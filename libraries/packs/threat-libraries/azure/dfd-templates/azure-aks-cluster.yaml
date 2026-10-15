@@ -1,0 +1,281 @@
+template:
+  slug: azure-aks-cluster
+  name: "Azure Kubernetes Service Cluster Platform"
+  description: "AKS cluster with private API server, system and user node pools, Application Gateway ingress, workload identity, Key Vault CSI driver, Azure Container Registry, Defender for Containers and monitoring. Complements the microservices template with the cluster infrastructure view"
+  category: microservices
+  diagram_type: level1
+
+canvas_data:
+  nodes:
+    # ---- External actors ----
+    - id: "actor-user"
+      type: "humanActor"
+      position: { x: 50, y: 200 }
+      data:
+        label: "Client"
+        actorType: "user"
+        description: "End user calling the cluster ingress"
+
+    - id: "actor-operator"
+      type: "humanActor"
+      position: { x: 50, y: 470 }
+      data:
+        label: "Cluster Operator"
+        actorType: "admin"
+        description: "Runs kubectl and manages node pools through Entra ID"
+
+    - id: "actor-pipeline"
+      type: "humanActor"
+      position: { x: 1040, y: 470 }
+      data:
+        label: "GitOps Pipeline"
+        actorType: "developer"
+        description: "Deploys manifests and images to the cluster"
+
+    # ---- System scope ----
+    - id: "sb-aks"
+      type: "systemScope"
+      position: { x: 200, y: 30 }
+      style: { width: 800, height: 640 }
+      data:
+        label: "AKS Cluster Platform"
+        owner: "Platform Team"
+        classification: "Production"
+
+    # ---- Trust zones ----
+    - id: "tz-ingress"
+      type: "trustZone"
+      parentId: "sb-aks"
+      position: { x: 30, y: 60 }
+      style: { width: 180, height: 260 }
+      data:
+        label: "Ingress Subnet"
+        zoneType: "trust"
+        trustLevel: 25
+        technology: "Application Gateway with WAF v2"
+
+    - id: "tz-cluster"
+      type: "trustZone"
+      parentId: "sb-aks"
+      position: { x: 240, y: 60 }
+      style: { width: 310, height: 540 }
+      data:
+        label: "Node Subnet"
+        zoneType: "trust"
+        trustLevel: 50
+        technology: "Azure CNI, private cluster"
+
+    - id: "tz-platform"
+      type: "trustZone"
+      parentId: "sb-aks"
+      position: { x: 580, y: 60 }
+      style: { width: 200, height: 540 }
+      data:
+        label: "Platform Services"
+        zoneType: "trust"
+        trustLevel: 75
+        technology: "Private Endpoints"
+
+    # ---- Ingress ----
+    - id: "process-appgw"
+      type: "process"
+      parentId: "tz-ingress"
+      position: { x: 20, y: 60 }
+      data:
+        label: "Application Gateway"
+        component_ref: "application-gateway"
+        technology: "Application Gateway WAF v2"
+        description: "Terminates TLS and forwards to the ingress controller"
+
+    # ---- Cluster ----
+    - id: "process-apiserver"
+      type: "process"
+      parentId: "tz-cluster"
+      position: { x: 20, y: 60 }
+      data:
+        label: "Kubernetes API Server"
+        component_ref: "aks"
+        technology: "AKS managed control plane, private endpoint"
+        description: "Entra ID authenticated, RBAC-authorized API"
+
+    - id: "process-systempool"
+      type: "process"
+      parentId: "tz-cluster"
+      position: { x: 20, y: 200 }
+      data:
+        label: "System Node Pool"
+        component_ref: "aks"
+        technology: "AKS system node pool"
+        description: "Core add-ons, CoreDNS, ingress controller"
+
+    - id: "process-userpool"
+      type: "process"
+      parentId: "tz-cluster"
+      position: { x: 20, y: 340 }
+      data:
+        label: "User Node Pool"
+        component_ref: "aks"
+        technology: "AKS user node pool"
+        description: "Runs application pods"
+        dataSensitivity: "confidential"
+
+    - id: "process-workloadid"
+      type: "process"
+      parentId: "tz-cluster"
+      position: { x: 20, y: 470 }
+      data:
+        label: "Workload Identity"
+        component_ref: "managed-identity"
+        technology: "Entra workload identity (OIDC federation)"
+        description: "Gives pods Entra tokens without stored secrets"
+
+    # ---- Platform services ----
+    - id: "datastore-acr"
+      type: "datastore"
+      parentId: "tz-platform"
+      position: { x: 20, y: 60 }
+      data:
+        label: "Container Registry"
+        component_ref: "container-registry"
+        technology: "Azure Container Registry, private endpoint"
+        description: "Signed images pulled by node pools"
+
+    - id: "datastore-kv"
+      type: "datastore"
+      parentId: "tz-platform"
+      position: { x: 20, y: 200 }
+      data:
+        label: "Key Vault"
+        component_ref: "key-vault"
+        technology: "Key Vault with CSI driver"
+        description: "Secrets mounted into pods"
+        dataSensitivity: "confidential"
+
+    - id: "datastore-cosmos"
+      type: "datastore"
+      parentId: "tz-platform"
+      position: { x: 20, y: 340 }
+      data:
+        label: "Application Database"
+        component_ref: "cosmosdb"
+        technology: "Azure Cosmos DB, private endpoint"
+        description: "Document store used by services"
+        dataSensitivity: "confidential"
+
+    - id: "process-defender"
+      type: "process"
+      parentId: "tz-platform"
+      position: { x: 20, y: 470 }
+      data:
+        label: "Defender for Containers"
+        component_ref: "defender"
+        technology: "Microsoft Defender for Containers"
+        description: "Image scanning, runtime threat detection"
+
+    # ---- Outside the scope ----
+    - id: "process-monitor"
+      type: "process"
+      position: { x: 1040, y: 200 }
+      data:
+        label: "Azure Monitor"
+        component_ref: "monitor"
+        technology: "Container insights, Log Analytics"
+        description: "Node, pod and control plane logs"
+
+  edges:
+    - id: "edge-1"
+      source: "actor-user"
+      target: "process-appgw"
+      type: "dataFlow"
+      data:
+        label: "HTTPS requests"
+        protocol: "HTTPS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-2"
+      source: "process-appgw"
+      target: "process-userpool"
+      type: "dataFlow"
+      data:
+        label: "Ingress traffic"
+        protocol: "HTTP over TLS (re-encrypted)"
+        encrypted: true
+
+    - id: "edge-3"
+      source: "actor-operator"
+      target: "process-apiserver"
+      type: "dataFlow"
+      data:
+        label: "kubectl commands"
+        protocol: "HTTPS (Entra ID, PIM)"
+        encrypted: true
+        authentication: ["oauth2"]
+
+    - id: "edge-4"
+      source: "actor-pipeline"
+      target: "process-apiserver"
+      type: "dataFlow"
+      data:
+        label: "Apply manifests"
+        protocol: "HTTPS (workload identity)"
+        encrypted: true
+        authentication: ["oauth2"]
+
+    - id: "edge-5"
+      source: "process-userpool"
+      target: "process-apiserver"
+      type: "dataFlow"
+      data:
+        label: "Node and pod registration"
+        protocol: "HTTPS (kubelet TLS bootstrap)"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-6"
+      source: "datastore-acr"
+      target: "process-userpool"
+      type: "dataFlow"
+      data:
+        label: "Image pull"
+        protocol: "HTTPS (kubelet identity)"
+        encrypted: true
+        authentication: ["oauth2"]
+
+    - id: "edge-7"
+      source: "process-workloadid"
+      target: "datastore-kv"
+      type: "dataFlow"
+      data:
+        label: "Read secrets via CSI driver"
+        protocol: "HTTPS"
+        encrypted: true
+        authentication: ["oauth2"]
+
+    - id: "edge-8"
+      source: "process-userpool"
+      target: "datastore-cosmos"
+      type: "dataFlow"
+      data:
+        label: "Application data access"
+        protocol: "HTTPS over private endpoint"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-9"
+      source: "process-defender"
+      target: "process-userpool"
+      type: "dataFlow"
+      data:
+        label: "Runtime sensor telemetry"
+        protocol: "HTTPS"
+        encrypted: true
+
+    - id: "edge-10"
+      source: "process-userpool"
+      target: "process-monitor"
+      type: "dataFlow"
+      data:
+        label: "Container logs and metrics"
+        protocol: "HTTPS (Azure Monitor agent)"
+        encrypted: true

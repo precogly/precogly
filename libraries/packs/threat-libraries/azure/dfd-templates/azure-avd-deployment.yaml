@@ -1,0 +1,303 @@
+template:
+  slug: azure-avd-deployment
+  name: "Azure Virtual Desktop Deployment"
+  description: "Azure Virtual Desktop with workspace, host pool, session hosts in a private subnet, FSLogix profiles on Azure Files, Entra ID sign-in, AD DS domain join, and central egress and monitoring"
+  category: cloudInfrastructure
+  diagram_type: level1
+
+canvas_data:
+  nodes:
+    # ---- External actors (outside all boundaries) ----
+    - id: "actor-user"
+      type: "humanActor"
+      position: { x: 50, y: 200 }
+      data:
+        label: "Remote User"
+        actorType: "user"
+        description: "Employee on a managed or unmanaged device"
+
+    - id: "actor-admin"
+      type: "humanActor"
+      position: { x: 50, y: 420 }
+      data:
+        label: "Desktop Administrator"
+        actorType: "admin"
+        description: "Administers host pools, session hosts and images"
+
+    - id: "actor-entra"
+      type: "systemActor"
+      position: { x: 1000, y: 40 }
+      data:
+        label: "Microsoft Entra ID"
+        actorType: "external"
+        component_ref: "entra-id"
+        description: "Identity provider for sign-in, MFA and Conditional Access"
+
+    # ---- System scope ----
+    - id: "sb-avd"
+      type: "systemScope"
+      position: { x: 220, y: 30 }
+      style: { width: 740, height: 620 }
+      data:
+        label: "Azure Virtual Desktop Environment"
+        owner: "End User Computing Team"
+        classification: "Production"
+
+    # ---- Trust zones inside the scope ----
+    - id: "tz-control"
+      type: "trustZone"
+      parentId: "sb-avd"
+      position: { x: 30, y: 60 }
+      style: { width: 200, height: 260 }
+      data:
+        label: "AVD Control Plane"
+        zoneType: "trust"
+        trustLevel: 0
+        technology: "Azure Virtual Desktop service"
+
+    - id: "tz-session"
+      type: "trustZone"
+      parentId: "sb-avd"
+      position: { x: 260, y: 60 }
+      style: { width: 230, height: 520 }
+      data:
+        label: "Session Host Subnet"
+        zoneType: "trust"
+        trustLevel: 50
+        technology: "Azure Virtual Network, delegated subnet"
+
+    - id: "tz-platform"
+      type: "trustZone"
+      parentId: "sb-avd"
+      position: { x: 510, y: 60 }
+      style: { width: 210, height: 520 }
+      data:
+        label: "Platform Subnet"
+        zoneType: "trust"
+        trustLevel: 75
+        technology: "Private Endpoints"
+
+    - id: "tz-egress"
+      type: "trustZone"
+      parentId: "sb-avd"
+      position: { x: 30, y: 350 }
+      style: { width: 200, height: 230 }
+      data:
+        label: "Egress Zone"
+        zoneType: "trust"
+        trustLevel: 25
+        technology: "Azure Firewall"
+
+    # ---- Control plane components ----
+    - id: "process-workspace"
+      type: "process"
+      parentId: "tz-control"
+      position: { x: 20, y: 60 }
+      data:
+        label: "Workspace"
+        component_ref: "azure-virtual-desktop-workspace"
+        technology: "AVD Workspace"
+        description: "Publishes application groups as a user feed"
+
+    - id: "process-hostpool"
+      type: "process"
+      parentId: "tz-control"
+      position: { x: 20, y: 150 }
+      data:
+        label: "Host Pool"
+        component_ref: "azure-virtual-desktop-host-pool"
+        technology: "AVD Host Pool"
+        description: "Groups session hosts and holds the registration token"
+
+    - id: "process-appgroup"
+      type: "process"
+      parentId: "tz-control"
+      position: { x: 20, y: 0 }
+      data:
+        label: "Application Group"
+        component_ref: "azure-virtual-desktop-application-group"
+        technology: "AVD Application Group"
+        description: "Desktop or RemoteApp assignments"
+
+    - id: "process-scaling"
+      type: "process"
+      parentId: "tz-control"
+      position: { x: 20, y: 215 }
+      data:
+        label: "Scaling Plan"
+        component_ref: "azure-virtual-desktop-scaling-plan"
+        technology: "AVD Autoscale"
+        description: "Starts and stops session hosts on schedule"
+
+    # ---- Session host subnet ----
+    - id: "process-sessionhosts"
+      type: "process"
+      parentId: "tz-session"
+      position: { x: 20, y: 60 }
+      data:
+        label: "Session Hosts"
+        component_ref: "azure-virtual-desktop-session-host"
+        technology: "Azure VM with AVD agent"
+        description: "Multi-session Windows VMs running user sessions"
+        dataSensitivity: "confidential"
+
+    - id: "process-addc"
+      type: "process"
+      parentId: "tz-session"
+      position: { x: 20, y: 290 }
+      data:
+        label: "AD DS Domain Controllers"
+        technology: "Windows Server AD DS (Azure VM or on-premises)"
+        description: "Kerberos authentication and computer account join"
+        dataSensitivity: "confidential"
+
+    # ---- Platform subnet ----
+    - id: "datastore-fslogix"
+      type: "datastore"
+      parentId: "tz-platform"
+      position: { x: 20, y: 60 }
+      data:
+        label: "FSLogix Profiles"
+        component_ref: "azure-virtual-desktop-fslogix-profiles"
+        technology: "Azure Files (SMB, private endpoint)"
+        description: "User profile containers mounted at sign-in"
+        dataSensitivity: "confidential"
+
+    - id: "datastore-keyvault"
+      type: "datastore"
+      parentId: "tz-platform"
+      position: { x: 20, y: 200 }
+      data:
+        label: "Key Vault"
+        component_ref: "key-vault"
+        technology: "Azure Key Vault"
+        description: "Holds local admin and domain join secrets"
+        dataSensitivity: "confidential"
+
+    - id: "process-loganalytics"
+      type: "process"
+      parentId: "tz-platform"
+      position: { x: 20, y: 340 }
+      data:
+        label: "Log Analytics and Sentinel"
+        component_ref: "log-analytics"
+        technology: "Azure Monitor, Microsoft Sentinel"
+        description: "Host pool diagnostics and session host security logs"
+
+    # ---- Egress ----
+    - id: "process-firewall"
+      type: "process"
+      parentId: "tz-egress"
+      position: { x: 20, y: 60 }
+      data:
+        label: "Azure Firewall"
+        component_ref: "firewall"
+        technology: "Azure Firewall"
+        description: "Controls outbound internet access of session hosts"
+
+  edges:
+    - id: "edge-1"
+      source: "actor-user"
+      target: "process-workspace"
+      type: "dataFlow"
+      data:
+        label: "Discover desktops"
+        protocol: "HTTPS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-2"
+      source: "process-workspace"
+      target: "actor-entra"
+      type: "dataFlow"
+      data:
+        label: "Sign-in and Conditional Access"
+        protocol: "OAuth 2.0 / OIDC"
+        encrypted: true
+        authentication: ["oidc"]
+
+    - id: "edge-3"
+      source: "actor-user"
+      target: "process-sessionhosts"
+      type: "dataFlow"
+      data:
+        label: "Session stream (reverse connect)"
+        protocol: "HTTPS / RDP over TLS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-4"
+      source: "process-hostpool"
+      target: "process-sessionhosts"
+      type: "dataFlow"
+      data:
+        label: "Agent registration and control"
+        protocol: "HTTPS"
+        encrypted: true
+
+    - id: "edge-5"
+      source: "process-sessionhosts"
+      target: "process-addc"
+      type: "dataFlow"
+      data:
+        label: "Domain join and Kerberos"
+        protocol: "Kerberos / LDAP"
+        encrypted: true
+
+    - id: "edge-6"
+      source: "process-sessionhosts"
+      target: "datastore-fslogix"
+      type: "dataFlow"
+      data:
+        label: "Mount profile container"
+        protocol: "SMB 3.x over private endpoint"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-7"
+      source: "process-hostpool"
+      target: "datastore-keyvault"
+      type: "dataFlow"
+      data:
+        label: "Read join and admin secrets"
+        protocol: "HTTPS (managed identity)"
+        encrypted: true
+        authentication: ["oauth2"]
+
+    - id: "edge-8"
+      source: "process-sessionhosts"
+      target: "process-firewall"
+      type: "dataFlow"
+      data:
+        label: "Outbound internet traffic"
+        protocol: "HTTPS"
+        encrypted: true
+
+    - id: "edge-9"
+      source: "process-sessionhosts"
+      target: "process-loganalytics"
+      type: "dataFlow"
+      data:
+        label: "Session and security events"
+        protocol: "HTTPS (Azure Monitor agent)"
+        encrypted: true
+
+    - id: "edge-10"
+      source: "process-scaling"
+      target: "process-hostpool"
+      type: "dataFlow"
+      data:
+        label: "Power state and capacity"
+        protocol: "HTTPS (service identity)"
+        encrypted: true
+        authentication: ["oauth2"]
+
+    - id: "edge-11"
+      source: "actor-admin"
+      target: "process-hostpool"
+      type: "dataFlow"
+      data:
+        label: "Manage host pool and images"
+        protocol: "HTTPS (Entra ID, PIM)"
+        encrypted: true
+        authentication: ["oauth2"]

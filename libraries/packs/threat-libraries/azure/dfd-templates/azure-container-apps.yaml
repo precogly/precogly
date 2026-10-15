@@ -1,0 +1,275 @@
+template:
+  slug: azure-container-apps
+  name: "Azure Container Apps Environment"
+  description: "Container Apps environment injected into a VNet, with Front Door and WAF at the edge, an API and a queue worker, managed identities, private data services, and a container registry"
+  category: microservices
+  diagram_type: level1
+
+canvas_data:
+  nodes:
+    # ---- External actors ----
+    - id: "actor-user"
+      type: "humanActor"
+      position: { x: 50, y: 200 }
+      data:
+        label: "Web Client"
+        actorType: "user"
+        description: "Browser or mobile client calling the API"
+
+    - id: "actor-developer"
+      type: "humanActor"
+      position: { x: 50, y: 470 }
+      data:
+        label: "Developer and CI Pipeline"
+        actorType: "developer"
+        description: "Builds and deploys container images"
+
+    # ---- System scope ----
+    - id: "sb-aca"
+      type: "systemScope"
+      position: { x: 200, y: 30 }
+      style: { width: 800, height: 640 }
+      data:
+        label: "Container Apps Platform"
+        owner: "Platform Team"
+        classification: "Production"
+
+    # ---- Trust zones ----
+    - id: "tz-edge"
+      type: "trustZone"
+      parentId: "sb-aca"
+      position: { x: 30, y: 60 }
+      style: { width: 170, height: 260 }
+      data:
+        label: "Edge"
+        zoneType: "trust"
+        trustLevel: 25
+        technology: "Azure Front Door with WAF"
+
+    - id: "tz-env"
+      type: "trustZone"
+      parentId: "sb-aca"
+      position: { x: 230, y: 60 }
+      style: { width: 300, height: 540 }
+      data:
+        label: "Container Apps Environment Subnet"
+        zoneType: "trust"
+        trustLevel: 50
+        technology: "Azure VNet, workload profile subnet"
+
+    - id: "tz-data"
+      type: "trustZone"
+      parentId: "sb-aca"
+      position: { x: 560, y: 60 }
+      style: { width: 220, height: 540 }
+      data:
+        label: "Data Subnet"
+        zoneType: "trust"
+        trustLevel: 75
+        technology: "Private Endpoints"
+
+    # ---- Edge ----
+    - id: "process-frontdoor"
+      type: "process"
+      parentId: "tz-edge"
+      position: { x: 20, y: 60 }
+      data:
+        label: "Front Door and WAF"
+        component_ref: "front-door"
+        technology: "Azure Front Door Premium with WAF policy"
+        description: "Global entry point, TLS termination and WAF rules"
+
+    # ---- Environment ----
+    - id: "process-api"
+      type: "process"
+      parentId: "tz-env"
+      position: { x: 20, y: 60 }
+      data:
+        label: "API Container App"
+        component_ref: "container-apps"
+        technology: "Azure Container Apps"
+        description: "HTTP ingress, scales on request load"
+
+    - id: "process-worker"
+      type: "process"
+      parentId: "tz-env"
+      position: { x: 20, y: 220 }
+      data:
+        label: "Worker Container App"
+        component_ref: "container-apps"
+        technology: "Azure Container Apps"
+        description: "Processes messages, scales on queue length"
+
+    - id: "process-identity"
+      type: "process"
+      parentId: "tz-env"
+      position: { x: 20, y: 380 }
+      data:
+        label: "User-Assigned Managed Identity"
+        component_ref: "managed-identity"
+        technology: "Microsoft Entra managed identity"
+        description: "Used by apps for Key Vault, Service Bus and database access"
+
+    - id: "process-registry"
+      type: "process"
+      parentId: "tz-env"
+      position: { x: 160, y: 380 }
+      data:
+        label: "Container Registry"
+        component_ref: "container-registry"
+        technology: "Azure Container Registry"
+        description: "Stores signed images that the environment pulls"
+
+    # ---- Data ----
+    - id: "datastore-db"
+      type: "datastore"
+      parentId: "tz-data"
+      position: { x: 20, y: 60 }
+      data:
+        label: "PostgreSQL"
+        component_ref: "postgresql"
+        technology: "Azure Database for PostgreSQL"
+        description: "Transactional application data"
+        dataSensitivity: "confidential"
+
+    - id: "datastore-cache"
+      type: "datastore"
+      parentId: "tz-data"
+      position: { x: 20, y: 200 }
+      data:
+        label: "Redis Cache"
+        component_ref: "cache-redis"
+        technology: "Azure Cache for Redis"
+        description: "Session and response cache"
+        dataSensitivity: "internal"
+
+    - id: "datastore-bus"
+      type: "datastore"
+      parentId: "tz-data"
+      position: { x: 20, y: 340 }
+      data:
+        label: "Service Bus"
+        component_ref: "service-bus"
+        technology: "Azure Service Bus"
+        description: "Queue between API and worker"
+        dataSensitivity: "confidential"
+
+    - id: "datastore-kv"
+      type: "datastore"
+      parentId: "tz-data"
+      position: { x: 20, y: 470 }
+      data:
+        label: "Key Vault"
+        component_ref: "key-vault"
+        technology: "Azure Key Vault"
+        description: "Secrets and keys referenced by apps"
+        dataSensitivity: "confidential"
+
+    # ---- Outside the scope ----
+    - id: "process-monitor"
+      type: "process"
+      position: { x: 1050, y: 200 }
+      data:
+        label: "Azure Monitor"
+        component_ref: "app-insights"
+        technology: "Application Insights and Log Analytics"
+        description: "Traces, metrics and container logs"
+
+  edges:
+    - id: "edge-1"
+      source: "actor-user"
+      target: "process-frontdoor"
+      type: "dataFlow"
+      data:
+        label: "API requests"
+        protocol: "HTTPS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-2"
+      source: "process-frontdoor"
+      target: "process-api"
+      type: "dataFlow"
+      data:
+        label: "Forwarded request"
+        protocol: "HTTPS"
+        encrypted: true
+
+    - id: "edge-3"
+      source: "process-api"
+      target: "datastore-db"
+      type: "dataFlow"
+      data:
+        label: "Queries"
+        protocol: "PostgreSQL over TLS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-4"
+      source: "process-api"
+      target: "datastore-cache"
+      type: "dataFlow"
+      data:
+        label: "Cache reads and writes"
+        protocol: "TLS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-5"
+      source: "process-api"
+      target: "datastore-bus"
+      type: "dataFlow"
+      data:
+        label: "Publish job message"
+        protocol: "AMQP over TLS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-6"
+      source: "datastore-bus"
+      target: "process-worker"
+      type: "dataFlow"
+      data:
+        label: "Deliver job message"
+        protocol: "AMQP over TLS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-7"
+      source: "process-identity"
+      target: "datastore-kv"
+      type: "dataFlow"
+      data:
+        label: "Read secrets via managed identity"
+        protocol: "HTTPS"
+        encrypted: true
+        authentication: ["oauth2"]
+
+    - id: "edge-8"
+      source: "process-registry"
+      target: "process-api"
+      type: "dataFlow"
+      data:
+        label: "Pull image"
+        protocol: "HTTPS"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    - id: "edge-9"
+      source: "actor-developer"
+      target: "process-registry"
+      type: "dataFlow"
+      data:
+        label: "Push signed image"
+        protocol: "HTTPS (Entra ID)"
+        encrypted: true
+        authentication: ["oauth2"]
+
+    - id: "edge-10"
+      source: "process-api"
+      target: "process-monitor"
+      type: "dataFlow"
+      data:
+        label: "Telemetry"
+        protocol: "HTTPS (OpenTelemetry)"
+        encrypted: true

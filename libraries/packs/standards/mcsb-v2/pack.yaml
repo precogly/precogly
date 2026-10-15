@@ -1,0 +1,187 @@
+pack:
+  schema_version: 1
+  slug: mcsb-v2
+  name: Microsoft Cloud Security Benchmark v2
+  version: 1.0.0
+  pack_type: compliance
+  author: Precogly
+  description: 'Microsoft cloud security benchmark v2 (preview): 81 security controls across network security, identity management,
+    privileged access, data protection, asset management, logging and threat detection, incident response, posture and vulnerability
+    management, endpoint security, backup and recovery, DevOps security and AI security. Control titles taken from Microsoft
+    Learn.'
+  tags:
+  - compliance
+  - security
+  - cloud
+  - microsoft
+  - azure
+frameworks:
+- slug: mcsb-v2
+  name: Microsoft cloud security benchmark
+  version: 2 (preview)
+  issuer: Microsoft
+  description: Microsoft cloud security benchmark v2 control set. Each requirement is one control; the benchmark maps controls
+    to NIST SP 800-53 Rev. 5, CIS Controls, ISO 27001, PCI DSS and SOC 2.
+  requirements:
+  - section_code: AI-1
+    description: 'AI security: Ensure use of approved models'
+  - section_code: AI-2
+    description: 'AI security: Implement multi-layered content filtering'
+  - section_code: AI-3
+    description: 'AI security: Adopt safety meta-prompts'
+  - section_code: AI-4
+    description: 'AI security: Apply least privilege for agent functions'
+  - section_code: AI-5
+    description: 'AI security: Ensure human-in-the-loop'
+  - section_code: AI-6
+    description: 'AI security: Establish monitoring and detection'
+  - section_code: AI-7
+    description: 'AI security: Perform continuous AI Red Teaming'
+  - section_code: AM-1
+    description: 'Asset management: Track asset inventory and their risks'
+  - section_code: AM-2
+    description: 'Asset management: Use only approved services'
+  - section_code: AM-3
+    description: 'Asset management: Ensure security of asset lifecycle management'
+  - section_code: AM-4
+    description: 'Asset management: Limit access to asset management'
+  - section_code: AM-5
+    description: 'Asset management: Use only approved applications in virtual machine'
+  - section_code: BR-1
+    description: 'Backup and recovery: Ensure regular automated backups'
+  - section_code: BR-2
+    description: 'Backup and recovery: Protect backup and recovery data'
+  - section_code: BR-3
+    description: 'Backup and recovery: Monitor backups'
+  - section_code: BR-4
+    description: 'Backup and recovery: Regularly test backup'
+  - section_code: DP-1
+    description: 'Data protection: Discover, classify, and label sensitive data'
+  - section_code: DP-2
+    description: 'Data protection: Monitor anomalies and threats targeting sensitive data'
+  - section_code: DP-3
+    description: 'Data protection: Encrypt sensitive data in transit'
+  - section_code: DP-4
+    description: 'Data protection: Enable data at rest encryption by default'
+  - section_code: DP-5
+    description: 'Data protection: Use customer-managed key option in data at rest encryption when required'
+  - section_code: DP-6
+    description: 'Data protection: Use a secure key management process'
+  - section_code: DP-7
+    description: 'Data protection: Use a secure certificate management process'
+  - section_code: DP-8
+    description: 'Data protection: Ensure security of key and certificate repository'
+  - section_code: DS-1
+    description: 'DevOps security: Conduct threat modeling'
+  - section_code: DS-2
+    description: 'DevOps security: Secure the software supply chain'
+  - section_code: DS-3
+    description: 'DevOps security: Secure the DevOps infrastructure'
+  - section_code: DS-4
+    description: 'DevOps security: Integrate Static Application Security Testing (SAST)'
+  - section_code: DS-5
+    description: 'DevOps security: Integrate Dynamic Application Security Testing (DAST)'
+  - section_code: DS-6
+    description: 'DevOps security: Secure the workload lifecycle'
+  - section_code: DS-7
+    description: 'DevOps security: Implement DevOps logging and monitoring'
+  - section_code: ES-1
+    description: 'Endpoint security: Use Endpoint Detection and Response (EDR)'
+  - section_code: ES-2
+    description: 'Endpoint security: Use modern anti-malware software'
+  - section_code: ES-3
+    description: 'Endpoint security: Ensure anti-malware software and signatures are updated'
+  - section_code: IM-1
+    description: 'Identity management: Centralize identity and authentication while ensuring isolation'
+  - section_code: IM-2
+    description: 'Identity management: Protect identity and authentication systems'
+  - section_code: IM-3
+    description: 'Identity management: Manage application identities securely and automatically'
+  - section_code: IM-4
+    description: 'Identity management: Authenticate server and services'
+  - section_code: IM-5
+    description: 'Identity management: Use single sign-on (SSO) for application access'
+  - section_code: IM-6
+    description: 'Identity management: Use strong authentication controls'
+  - section_code: IM-7
+    description: 'Identity management: Restrict resource access based on conditions'
+  - section_code: IM-8
+    description: 'Identity management: Restrict the exposure of credentials and secrets'
+  - section_code: IR-1
+    description: 'Incident response: Preparation - update incident response plan and handling process'
+  - section_code: IR-2
+    description: 'Incident response: Preparation - setup incident notification'
+  - section_code: IR-3
+    description: 'Incident response: Detection and analysis - create incidents based on high-quality alerts'
+  - section_code: IR-4
+    description: 'Incident response: Detection and analysis - investigate an incident'
+  - section_code: IR-5
+    description: 'Incident response: Detection and analysis - prioritize incidents'
+  - section_code: IR-6
+    description: 'Incident response: Containment, eradication and recovery - automate the incident handling'
+  - section_code: IR-7
+    description: 'Incident response: Post-incident activity - conduct lessons learned and retain evidence'
+  - section_code: LT-1
+    description: 'Logging and threat detection: Enable threat detection capabilities'
+  - section_code: LT-2
+    description: 'Logging and threat detection: Enable threat detection for identity and access management'
+  - section_code: LT-3
+    description: 'Logging and threat detection: Enable logging for security investigation'
+  - section_code: LT-4
+    description: 'Logging and threat detection: Enable network logging for security investigation'
+  - section_code: LT-5
+    description: 'Logging and threat detection: Centralize security log management and analysis'
+  - section_code: LT-6
+    description: 'Logging and threat detection: Configure log storage retention'
+  - section_code: LT-7
+    description: 'Logging and threat detection: Use approved time synchronization sources'
+  - section_code: NS-1
+    description: 'Network security: Establish network segmentation boundaries'
+  - section_code: NS-2
+    description: 'Network security: Secure cloud native services with network controls'
+  - section_code: NS-3
+    description: 'Network security: Deploy firewall at the edge of enterprise network'
+  - section_code: NS-4
+    description: 'Network security: Deploy intrusion detection/intrusion prevention systems (IDS/IPS)'
+  - section_code: NS-5
+    description: 'Network security: Deploy DDoS protection'
+  - section_code: NS-6
+    description: 'Network security: Deploy web application firewall'
+  - section_code: NS-7
+    description: 'Network security: Manage network security centrally and effectively'
+  - section_code: NS-8
+    description: 'Network security: Detect and disable insecure services and protocols'
+  - section_code: NS-9
+    description: 'Network security: Connect on-premises or cloud network privately'
+  - section_code: NS-10
+    description: 'Network security: Ensure Domain Name System (DNS) security'
+  - section_code: PV-1
+    description: 'Posture and vulnerability management: Define and establish secure configurations'
+  - section_code: PV-2
+    description: 'Posture and vulnerability management: Audit and enforce secure configurations'
+  - section_code: PV-3
+    description: 'Posture and vulnerability management: Define and establish secure configurations for compute resources'
+  - section_code: PV-4
+    description: 'Posture and vulnerability management: Audit and enforce secure configurations for compute resources'
+  - section_code: PV-5
+    description: 'Posture and vulnerability management: Perform vulnerability assessments'
+  - section_code: PV-6
+    description: 'Posture and vulnerability management: Rapidly and automatically remediate vulnerabilities'
+  - section_code: PV-7
+    description: 'Posture and vulnerability management: Conduct regular red team operations'
+  - section_code: PA-1
+    description: 'Privileged access: Separate and limit highly privileged/administrative users'
+  - section_code: PA-2
+    description: 'Privileged access: Avoid standing access for user accounts and permissions'
+  - section_code: PA-3
+    description: 'Privileged access: Manage lifecycle of identities and entitlements'
+  - section_code: PA-4
+    description: 'Privileged access: Review and reconcile user access regularly'
+  - section_code: PA-5
+    description: 'Privileged access: Set up emergency access'
+  - section_code: PA-6
+    description: 'Privileged access: Use privileged access solution'
+  - section_code: PA-7
+    description: 'Privileged access: Follow just enough administration (least privilege) principle'
+  - section_code: PA-8
+    description: 'Privileged access: Determine access process for cloud provider support'
