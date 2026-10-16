@@ -68,5 +68,9 @@
     "typescript-eslint": "^8.70.1",
     "vite": "^7.2.4",
     "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "@parcel/watcher": "2.6.0",
+    "source-map-js": "1.2.2"
   }
 }
