@@ -3,6 +3,8 @@ import { api } from '@/lib/api'
 
 export interface OutOfScopeItem {
   id: number
+  /** The blueprint the item belongs to (plan J8). */
+  blueprint: number
   threatModel: number
   name: string
   reason: string
@@ -27,7 +29,14 @@ export function useCreateOutOfScopeItem() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ threatModelId, data }: { threatModelId: string; data: { name: string; reason: string } }) =>
+    mutationFn: ({
+      threatModelId,
+      data,
+    }: {
+      threatModelId: string
+      /** `blueprint` defaults to the model's first blueprint when left out. */
+      data: { name: string; reason: string; blueprint?: number }
+    }) =>
       api.post<OutOfScopeItem>(`/threat-models/${threatModelId}/out-of-scope-items/`, data),
     onSuccess: (_, { threatModelId }) => {
       queryClient.invalidateQueries({ queryKey: ['out-of-scope-items', threatModelId] })

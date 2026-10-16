@@ -86,12 +86,12 @@ From the **Threat Models** page, click **Create Threat Model**.
 
 ![Create threat model dialog](../assets/images/creating-tm-create-dialog.png)
 
-Enter a descriptive name (e.g., "Payment Processing Service" or "Customer Data Pipeline"). If you belong to multiple teams, select the owning team.
+Enter a descriptive name (e.g., "Payment Processing Service" or "Customer Data Pipeline"). If you belong to multiple teams, select the owning team. Pick the **methodologies** the model follows (STRIDE is the default; PASTA, LINDDUN, and others are available, as is a custom name). The **primary system** is chosen afterwards, on the **Details** tab of the **System** dialog.
 
 !!! note
     If you belong to exactly one team, the threat model is automatically assigned to that team.
 
-After creation, you land on the **Overview** tab, which shows the progress checklist and summary cards.
+After creation, you land on the **Overview** tab. Each tab of a threat model has its own address (for example `/threat-models/<id>/overview`), so reloading the page keeps the tab and the browser Back and Forward buttons move between tabs. The three views of Threat Analysis have their own addresses too: `/threat-analysis/components`, `/threat-analysis/use-cases` and `/threat-analysis/table`. The Overview opens with the **Diagrams and completion** section, which holds the diagram thumbnails, the **+ New DFD** button, and the progress checklist. Below it are the Review row (state, dates, **Mark reviewed**, **Approve**, and an **Advanced** link for lifecycle and review dates), a row of three buttons (**System**, **Business objectives**, **Use cases**), the **Connections** section, and **Reference images**. Sections other than Diagrams and completion start collapsed to one header row.
 
 ![Overview tab after creation](../assets/images/creating-tm-overview-empty.png)
 
@@ -99,7 +99,7 @@ After creation, you land on the **Overview** tab, which shows the progress check
 
 ## Step 2. Define the system context
 
-Click the **pencil icon** on the System Context card to open the System Context dialog. This is where you establish what is (and isn't) in scope.
+Click the **System** button on the Overview tab and open its **Context** tab. (The **Edit** link beside the description on the **Details** tab switches to it.) This is where you establish what is (and isn't) in scope.
 
 ![System context dialog](../assets/images/creating-tm-system-context-dialog.png)
 
@@ -121,7 +121,7 @@ Document what is explicitly excluded, with justification. This prevents scope cr
 
 ### Assumptions
 
-Record architectural or operational assumptions (e.g., "TLS 1.3 is enforced at the load balancer"). Each assumption can be marked as **unconfirmed**, **confirmed**, or **rejected** as the model matures.
+Record architectural or operational assumptions (e.g., "TLS 1.3 is enforced at the load balancer"). Each assumption has a validity: **unverified** (the default), **verified**, **invalid**, or **unknown**. Under **More** you can add a topic, an owner, what happens if the assumption turns out false, how it is checked, when it was last checked, and the components it relates to. Unverified and invalid assumptions are listed before a model is approved.
 
 ---
 
@@ -129,9 +129,9 @@ Record architectural or operational assumptions (e.g., "TLS 1.3 is enforced at t
 
 Before diving into analysis, associate the threat model with the relevant context.
 
-### Link systems
+### Choose the primary system
 
-Click **Manage Systems** to associate existing organizational systems with the threat model. This provides traceability between business systems and their threat analysis.
+On the **Details** tab of the **System** dialog, choose the **primary system** the model is about, or create one in place. This provides traceability between business systems and their threat analysis and names the subject of the exported document. A model with no primary system still works. Other systems the design touches are drawn as System Scope boxes on the diagram. See [Systems and Related Threat Models](../concepts/connected-systems-tm.md).
 
 ### Link compliance frameworks
 
@@ -139,7 +139,7 @@ Click **Manage Frameworks** to associate compliance frameworks (e.g., PCI-DSS, S
 
 ### Reference other threat models
 
-If this system depends on or relates to other threat models, link them via **Manage Threat Models**. Relationship types include: depends on, subsystem of, related to, and superseded by.
+If this system depends on or relates to other threat models, link them via **Manage Threat Models**. Choose the relationship type: depends on, is a subsystem of, is related to, or is superseded by.
 
 ---
 
@@ -171,7 +171,7 @@ How you model the architecture depends on your approach:
 
 #### Create a DFD
 
-From the Overview tab, click **Manage DFDs** and create a new diagram. The first diagram becomes the **primary DFD**, which syncs components and data flows to the threat analysis workspace.
+From the Overview tab, click **+ New DFD** in the Diagrams and completion section and create a new diagram. The first diagram becomes the **primary DFD**, which syncs components and data flows to the threat analysis workspace.
 
 #### Draw the architecture
 
@@ -183,17 +183,18 @@ The DFD editor provides a visual canvas. Use the toolbar to add:
 | Data Store   | Databases, file systems, caches                 | Database       |
 | Human Actor  | End users, administrators                       | User           |
 | System Actor | External services, third-party APIs             | Building       |
-| Trust Zone   | Security boundary (e.g., DMZ, internal network) | Colored region |
+| Zone         | A region with a type (e.g., DMZ, internal network) | Colored region |
+| Boundary     | A crossing between two zones                    | Dashed edge    |
 
 ![DFD editor with sample architecture](../assets/images/creating-tm-dfd-editor-architecture.png)
 
-Connect components with **data flows** by clicking a component's connection handle and dragging to another component. For each data flow, specify:
+Connect components with **flows** by clicking a component's connection handle and dragging to another component. For each flow, specify:
 
 - Label and description
-- Protocol and port
-- Whether it is encrypted and authenticated
-- Whether it carries sensitive data
-- Data classification
+- Type (data by default; message, event, control, signal, energy, physical, process, or financial)
+- Protocol, port, and whether it is encrypted (data-like types only)
+- The authentication methods, or "Authenticated, method not specified"
+- The data assets it carries and their classification
 
 #### Use a DFD template
 
@@ -201,11 +202,11 @@ Instead of starting from a blank canvas, you can select a pre-built template fro
 
 ![Select DFD template](../assets/images/creating-tm-select-template.png)
 
-#### Add trust zones and boundaries
+#### Add zones and boundaries
 
-Trust zones represent security regions with different trust levels (0-100 scale). Place components inside zones, and Precogly will automatically detect when data flows cross trust boundaries.
+Zones group components by network, site, tenant, or trust; trust and network zones can carry a trust level (0 to 100). Draw a boundary between two zones to record what a crossing requires. Precogly marks the flows that cross a boundary.
 
-For more on trust zones, see [Zone Protections](../concepts/zone-protections.md).
+For more, see [Zones and Boundaries](../concepts/zones-and-boundaries.md).
 
 ### Option B: Add components directly (Approach 2 only)
 
@@ -216,7 +217,7 @@ If you are building from scratch, you can skip the DFD editor and go straight to
 For each component, specify:
 
 - Name and type (process, data store, external entity, etc.)
-- Trust zone assignment
+- Zone assignment
 
 This is faster when you already know the system architecture and want to focus on threat enumeration.
 
@@ -224,11 +225,11 @@ This is faster when you already know the system architecture and want to focus o
 
 ## Step 6. Analyze threats
 
-Navigate to the **Threat Analysis** tab. This workspace has three columns that map to the core threat modeling questions:
+Navigate to the **Threat Analysis** tab. The tab opens with a node already selected: the first row that has threats (the system for whole-system threats, otherwise the first component in tree order). **Analyze Threats** in the DFD editor opens this tab on the node or flow you selected on the canvas. This workspace has three columns that map to the core threat modeling questions:
 
 | Column              | Question                   | Contains                                                       |
 | ------------------- | -------------------------- | -------------------------------------------------------------- |
-| 1 - Components      | "What are we working on?"  | Components and data flows                                      |
+| 1 - Tree            | "What are we working on?"  | The system, zones, components, flows, and boundaries           |
 | 2 - Threats         | "What can go wrong?"       | Threats with taxonomy links (STRIDE, CAPEC, CWE, MITRE ATT&CK) |
 | 3 - Countermeasures | "What can we do about it?" | Countermeasures with compliance mappings                       |
 
@@ -238,23 +239,29 @@ Navigate to the **Threat Analysis** tab. This workspace has three columns that m
 
 The workspace offers two views:
 
-- **Component View**: hierarchical tree showing threats nested under each component
-- **Table View**: flat table of all threats across all components, sortable and filterable
+- **Tree**: System, zones, components, flows, and boundaries, with threats nested under each target
+- **Table**: flat table of all threats with their numbers and targets, sortable and searchable (`T7` finds threat 7). The open icon on a row switches to the component view and opens that threat's modal. **By Use Case** shows the chain in four numbered columns (use cases, abuse cases, threats, countermeasures) and uses the same rows and modals
 
 ### Adding threats: library vs. custom
 
-**Using library packs (Approach 1):** Select a component to see threats pre-mapped from the library. Threats arrive with taxonomy links already attached. You can triage them, accept them as-is, or reorder them.
+**Using library packs (Approach 1):** Select a component to see threats pre-mapped from the library. Threats arrive with taxonomy links already attached. You can triage them, accept them as-is, or reorder them. Library threats appear when a node or flow is first placed, not on every save; a threat you delete stays deleted unless you add it back from the library with **+ Add** in the Threats column.
 
-**From scratch (Approach 2):** Click **Add Custom Threat** to create a threat manually. You write the name and description, then optionally link it to taxonomy entries (STRIDE categories, CAPEC IDs, CWE IDs, etc.).
+**From scratch (Approach 2):** Click **Add threat** to create a threat manually. You write the name and description, choose what it applies to (one or more components, flows, zones, or boundaries, or the whole system), then optionally pick its **Categories**. The categories of the model's methodologies are one click away (STRIDE's six by default); **More categories** searches every installed taxonomy, such as CAPEC, CWE or ATT&CK, by id or name. You can pick several, and change them later in the threat modal.
+
+Every threat gets a number such as `T7`, and every countermeasure a number such as `C3`. Numbers are never reused.
 
 In both cases, you can:
 
-- **Triage threats** that don't apply by setting a decision status: Accept (risk is tolerable), Mitigate (add countermeasures), Delegate (transfer to another party), or Eliminate (remove the threat source). Each triaged decision requires a rationale, preserved for audit.
+- **Triage threats** that don't apply by setting the **State** in the threat modal: Open, Accept (risk is tolerable), Mitigate (add countermeasures), Delegate (transfer to another party), or Eliminate (remove the threat source). Accept, Delegate, and Eliminate ask for a rationale before saving, and the rationale is preserved for audit. Triaged threats move to a collapsed **Triaged threats** group at the bottom of the list, where **Reopen** brings one back.
 - **Reorder threats** by dragging to set priority
 
-### Set threat severity
+### Open a threat
 
-For each threat, set the **inherent severity** (before countermeasures): low, medium, high, or critical. The scoring method configured on the threat model determines how severity is calculated.
+A threat row shows only its number (such as `T16`), its title, and a state pill (exposed, addressable, or mitigated). Click a row to open the threat modal. The Countermeasures column then shows that threat's countermeasures, and they stay there after you close the modal. The modal has the name (click to rename), State, Description, Severity, Categories (saved as you pick), Threat actor (with **Manage threat actors**), the read-only Decision rationale, Threat sources, Attacker impact, Business objectives (once the model has one), and Targets. Click another target to select it in the tree, or **Edit targets** to change them. Use **Save** to keep your changes and **Delete threat** to remove the threat. Close the modal with **Close** or Escape. While it is open the address carries `?threat=T16`, so a link to it opens the same modal.
+
+### Rate the threat
+
+In the **Severity** part of the threat modal, set a **rating**: pick likelihood and impact on the qualitative matrix, or pick a **Severity** directly. Severities are info, low, medium, high, and critical. The server computes the score and level. Residual risk is tracked on risks, not on threats.
 
 ---
 
@@ -262,11 +269,15 @@ For each threat, set the **inherent severity** (before countermeasures): low, me
 
 ### Using library packs (Approach 1)
 
-Select a threat to see **suggested countermeasures** from the library. These are countermeasures that the library pack has pre-mapped to this threat type. Click **Apply** to add one. Each arrives with compliance mappings already attached.
+Select a threat to see **suggested countermeasures** from the library in the Countermeasures column. These are countermeasures that the library pack has pre-mapped to this threat type. Click **Apply** to add one. Each arrives with compliance mappings already attached.
 
 ### From scratch (Approach 2)
 
-Click **Add Custom Countermeasure** to create one manually. You write the name and description, then optionally add compliance mappings to framework requirements.
+Click **Add countermeasure** to create one manually. You write the name and description, say what it applies to (empty means the whole system), then optionally add compliance mappings to framework requirements. Under Advanced you can name who implements it and where it came from.
+
+### Open a countermeasure
+
+A countermeasure row shows its status dot with the status word (Gap, Planned, Verified, Platform, or Waived), its number (such as `C5`), and its name. Click a row to open the countermeasure modal; the address carries `?countermeasure=C5`. The modal has the Status buttons (Planned asks for an owner if there is none, Waived asks for a reason), Description and type, Tracking, Compliance coverage, Advanced, Mitigates, and Applies to (with **Edit**). Mitigates lists the threats the control covers, and each one opens that threat. For a control shared with other threats the modal offers **Remove from this threat**. Otherwise it offers **Delete countermeasure**. When no threat is selected, the column lists **Controls not linked to any threat**, with **Link to threat** and **Delete** on each.
 
 ### Countermeasure statuses
 
@@ -296,68 +307,60 @@ The threat's overall status is derived from its countermeasures:
 
 ### Assign owners
 
-Assign each countermeasure to a responsible owner. This drives the progress checklist and provides accountability.
+Assign each countermeasure to a responsible owner in the **Tracking** part of the countermeasure modal, together with a due date, priority, and ticket link. This drives the progress checklist and provides accountability. A countermeasure whose due date has passed and that is not yet implemented, verified or platform is overdue: the Countermeasures column shows an **N overdue** chip, and clicking it lists only those.
 
 ### Track compliance mappings
 
-Countermeasures show their mappings to compliance framework requirements (e.g., PCI-DSS 6.5.1, ASVS 5.3.4). For library-driven countermeasures, these mappings come pre-attached. For custom countermeasures, add them manually.
+The **Compliance coverage** part of the countermeasure modal shows its mappings to compliance framework requirements (e.g., PCI-DSS 6.5.1, ASVS 5.3.4). Use the pencil icon or **Add compliance mapping** to change them. For library-driven countermeasures, these mappings come pre-attached. For custom countermeasures, add them manually.
 
 ---
 
-## Step 8. Review zone protections
-
-If you used trust zones in your DFD, review the zone-level protections.
-
-Click **Zone Protections** in the threat analysis toolbar to open the review dialog. This shows which countermeasures are inherited from zone-level security controls (e.g., network segmentation, firewall rules).
-
-For full details, see [Zone Protections](../concepts/zone-protections.md).
-
----
-
-## Step 9. Score risks
+## Step 8. Score risks
 
 Navigate to the **Risk Analysis** tab to aggregate threats into business-level risks.
 
 ### Select a scoring method
 
-Choose the risk scoring methodology for this threat model. The selector shows planned methods as disabled until their scoring engines are available:
+Choose the risk scoring methodology for this threat model. The selector shows planned methods as disabled until their scoring engines are available. The method cannot be changed once the model has risks.
 
-| Method                  | Availability | Description                             |
-| ----------------------- | ------------ | --------------------------------------- |
-| TM Library (5x5 Matrix) | Available    | Likelihood x Impact grid                |
-| FAIR                    | Coming soon  | Factor Analysis of Information Risk     |
-| OWASP Risk Rating       | Coming soon  | OWASP methodology with multiple factors |
-| Mozilla RRA             | Coming soon  | Mozilla Rapid Risk Assessment           |
-| Custom                  | Coming soon  | Manual score assignment                 |
+| Method             | Availability | Description                             |
+| ------------------ | ------------ | --------------------------------------- |
+| Qualitative matrix | Available    | Likelihood x Impact grid, 1 to 25       |
+| OWASP Risk Rating  | Available    | Sixteen OWASP factors, likelihood and impact out of 9 |
+| FAIR               | Coming soon  | Factor Analysis of Information Risk     |
+| Mozilla RRA        | Coming soon  | Mozilla Rapid Risk Assessment           |
 
 ### Create and score risks
 
-Create named risks (e.g., "Customer data breach", "Service availability loss") and link them to specific threats. Precogly computes both inherent and residual risk scores based on threat severity and countermeasure effectiveness.
+Create named risks (e.g., "Customer data breach", "Service availability loss"), write a one-sentence **statement** (source, event, and impact), and link them to specific threats by number. Rate the inherent risk with the model's method; Precogly recalculates the residual rating from countermeasure effectiveness. Each risk has a **status** (identified, assessed, mitigated, accepted, transferred, retired), a read-only **exposure** derived from its linked threats, domains (including safety), and a list of **responses** (reduce, accept, transfer, or avoid) with a description, status, owner, and target date.
 
-Use **Table View** to compare scores, owners, responses, and linked-threat counts. Select multiple rows to update their owner or response together. Use **Kanban View** to organize risks by response: Unresponded, Mitigate, Transfer, Accept, or Avoid. Drag a risk between columns to change its response.
+Use **Table View** to compare ratings, owners, statuses, and linked-threat counts. Select multiple rows to update their owner or status together. Use **Kanban View** to organize risks by status. Drag a risk between columns to change its status.
 
 ![Risk Analysis](../assets/images/creating-tm-risk-analysis.png)
 
 ---
 
-## Step 10. Track progress and finalize
+## Step 9. Track progress and finalize
 
-Return to the **Overview** tab to check the progress checklist. Precogly automatically tracks:
+Return to the **Overview** tab to check the progress checklist in the Diagrams and completion section. Precogly automatically tracks:
 
-- [x] Data assets defined
+- [x] Primary assets defined
 - [x] Components identified
 - [x] Trust boundaries identified
 - [x] Data flows defined
-- [x] Threats linked to components
-- [x] Threats linked to data flows
-- [x] Countermeasure owners assigned
+- [x] Threats linked to components and flows
 - [x] Countermeasures assigned
+- [x] Owners assigned
 
 ![Completed progress checklist](../assets/images/creating-tm-progress-complete.png)
 
 ### Upload reference images
 
-Add architecture diagrams, whiteboard photos, or other reference materials via the **Reference Images** section on the Overview tab.
+Add architecture diagrams, whiteboard photos, or other reference materials via the **Reference images** section on the Overview tab. It opens by default when the model already has an image.
+
+### Review and approve
+
+The **Review** card records who reviewed and who approved the model. Reviewers click **Mark reviewed**; a Security Team member clicks **Approve**, after a sign-off view that lists unverified assumptions and open risks. Later edits show **Changed since approval**. See [Collaborative Review and Handoff](collaborative-review-and-handoff.md).
 
 ### Share for review
 
@@ -376,7 +379,7 @@ Use **magic links** to share a read-only view of the threat model with external 
 - [DFD Editor](../concepts/dfd-editor.md): toolbar, keyboard shortcuts, and canvas features
 - [Threat Analysis](../concepts/threat-analysis.md): deep dive into the three-column workspace
 - [Library Packs](../concepts/library-packs.md): browsing, importing, and customizing packs
-- [Zone Protections](../concepts/zone-protections.md): trust zones and inherited countermeasures
+- [Zones and Boundaries](../concepts/zones-and-boundaries.md): zone and boundary types, trust levels, crossing requirements
 - [Platform Controls](../concepts/platform-controls.md): managing org-wide security controls
-- [Importing & Exporting](importing-exporting.md): threat model as code (JSON format)
+- [Importing & Exporting](importing-exporting.md): threat model as code (CycloneDX TM-BOM)
 - [Compliance Mapping](compliance-mapping.md): mapping countermeasures to framework requirements

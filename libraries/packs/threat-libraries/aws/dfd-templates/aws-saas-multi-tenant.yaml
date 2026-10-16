@@ -32,7 +32,8 @@ canvas_data:
       style: { width: 280, height: 310 }
       data:
         label: "Public Edge"
-        zoneType: "zoneInternet"
+        zoneType: "trust"
+        trustLevel: 0
 
     - id: "tz-identity"
       type: "trustZone"
@@ -41,7 +42,8 @@ canvas_data:
       style: { width: 340, height: 310 }
       data:
         label: "Identity Tier"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-app"
       type: "trustZone"
@@ -50,7 +52,8 @@ canvas_data:
       style: { width: 360, height: 310 }
       data:
         label: "Application Tier"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-data"
       type: "trustZone"
@@ -59,7 +62,8 @@ canvas_data:
       style: { width: 730, height: 350 }
       data:
         label: "Data Tier (Tenant-Partitioned)"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     # ---- Processes: Public Edge ----
     - id: "process-waf"
@@ -165,7 +169,6 @@ canvas_data:
         label: "HTTPS request"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false
 
     # WAF → API Gateway
     - id: "edge-waf-to-apigw"
@@ -176,7 +179,6 @@ canvas_data:
         label: "Filtered request"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false
 
     # API Gateway → Cognito (token validation)
     - id: "edge-apigw-to-cognito"
@@ -187,7 +189,6 @@ canvas_data:
         label: "Token validation"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false
 
     # Cognito → API Gateway (auth result with tenant ID)
     - id: "edge-cognito-to-apigw"
@@ -198,7 +199,7 @@ canvas_data:
         label: "Auth result + tenant ID"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["jwt"]
 
     # Tenant User → Cognito (login)
     - id: "edge-tenant-to-cognito"
@@ -209,7 +210,6 @@ canvas_data:
         label: "Login / sign-up"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false
 
     # API Gateway → Lambda (with tenant context)
     - id: "edge-apigw-to-lambda"
@@ -220,7 +220,7 @@ canvas_data:
         label: "Request with tenant context"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Lambda → API Gateway (response)
     - id: "edge-lambda-to-apigw"
@@ -231,7 +231,7 @@ canvas_data:
         label: "API response"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Lambda → IAM (assume tenant-scoped role)
     - id: "edge-lambda-to-iam"
@@ -242,7 +242,7 @@ canvas_data:
         label: "Assume tenant-scoped role"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # IAM → Lambda (scoped credentials)
     - id: "edge-iam-to-lambda"
@@ -253,7 +253,7 @@ canvas_data:
         label: "Tenant-scoped credentials"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Lambda → DynamoDB (tenant-partitioned)
     - id: "edge-lambda-to-dynamodb"
@@ -264,7 +264,7 @@ canvas_data:
         label: "Tenant-partitioned queries"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Lambda → RDS (row-level security)
     - id: "edge-lambda-to-rds"
@@ -275,7 +275,7 @@ canvas_data:
         label: "Tenant-scoped SQL queries"
         protocol: "SQL"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     # KMS → DynamoDB (encryption)
     - id: "edge-kms-to-dynamodb"
@@ -286,7 +286,7 @@ canvas_data:
         label: "Per-tenant encryption"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # KMS → RDS (encryption)
     - id: "edge-kms-to-rds"
@@ -297,7 +297,7 @@ canvas_data:
         label: "Per-tenant encryption"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # API Gateway → Tenant User (response)
     - id: "edge-apigw-to-tenant"
@@ -308,4 +308,4 @@ canvas_data:
         label: "HTTPS response"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["jwt"]

@@ -50,7 +50,8 @@ canvas_data:
       style: { width: 280, height: 300 }
       data:
         label: "API Gateway Zone"
-        zoneType: "dmz"
+        zoneType: "trust"
+        trustLevel: 25
         technology: "DMZ Network"
 
     # Trust boundary - Open Banking Services
@@ -61,7 +62,8 @@ canvas_data:
       style: { width: 280, height: 480 }
       data:
         label: "Open Banking Services"
-        zoneType: "privateSecured"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "Internal Network"
 
     # Trust boundary - Core Banking
@@ -72,7 +74,8 @@ canvas_data:
       style: { width: 240, height: 480 }
       data:
         label: "Core Banking Zone"
-        zoneType: "internal"
+        zoneType: "trust"
+        trustLevel: 50
         technology: "Secured Internal"
 
     # API Gateway Zone components
@@ -191,7 +194,7 @@ canvas_data:
         label: "Consent Authorization"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["oauth2"]
 
     - id: "edge-customer-oauth"
       source: "actor-customer"
@@ -212,7 +215,7 @@ canvas_data:
         label: "API Requests"
         protocol: "HTTPS + mTLS"
         encrypted: true
-        authenticated: true
+        authentication: ["mtls"]
         description: "eIDAS certificate authentication"
 
     - id: "edge-tpp-oauth"

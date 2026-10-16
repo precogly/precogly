@@ -1,0 +1,394 @@
+{
+  "specFormat": "CycloneDX",
+  "specVersion": "2.0",
+  "serialNumber": "urn:uuid:546b14f2-5a49-49fc-9b88-4c5a1254142d",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-10-14T00:54:42.948Z",
+    "tools": {
+      "components": [
+        {
+          "type": "application",
+          "name": "Precogly Guest Editor",
+          "version": "1.0.0"
+        }
+      ]
+    }
+  },
+  "blueprints": [
+    {
+      "bom-ref": "blueprint-online-shop-1",
+      "name": "Online shop",
+      "modelTypes": [
+        "data-flow"
+      ],
+      "description": "Online shop",
+      "zones": [
+        {
+          "bom-ref": "zone-internet-1",
+          "name": "Internet",
+          "type": "trust",
+          "trustLevel": 0
+        },
+        {
+          "bom-ref": "zone-dmz-2",
+          "name": "DMZ",
+          "type": "trust",
+          "trustLevel": 50
+        }
+      ],
+      "assets": [
+        {
+          "bom-ref": "asset-customer-1",
+          "name": "Customer",
+          "type": "actor",
+          "description": "Shops online",
+          "zone": "zone-internet-1"
+        },
+        {
+          "bom-ref": "asset-web-server-2",
+          "name": "Web Server",
+          "type": "component",
+          "description": "Serves the shop",
+          "zone": "zone-dmz-2"
+        },
+        {
+          "bom-ref": "asset-orders-db-3",
+          "name": "Orders DB",
+          "type": "data-store",
+          "zone": "zone-dmz-2"
+        }
+      ],
+      "flows": [
+        {
+          "bom-ref": "flow-checkout-1",
+          "source": "asset-customer-1",
+          "destination": "asset-web-server-2",
+          "type": "data",
+          "name": "Checkout",
+          "protocols": [
+            "HTTPS"
+          ],
+          "encrypted": true,
+          "authenticated": true
+        },
+        {
+          "bom-ref": "flow-save-order-2",
+          "source": "asset-web-server-2",
+          "destination": "asset-orders-db-3",
+          "type": "data",
+          "name": "Save order"
+        }
+      ],
+      "boundaries": [
+        {
+          "zones": [
+            "zone-internet-1",
+            "zone-dmz-2"
+          ],
+          "name": "Perimeter"
+        }
+      ],
+      "dataSets": [
+        {
+          "bom-ref": "dataset-card-data-1",
+          "name": "Card data",
+          "description": "PAN and expiry",
+          "classification": "restricted"
+        }
+      ],
+      "assumptions": [
+        {
+          "bom-ref": "as-tls",
+          "description": "TLS terminates at the load balancer",
+          "validity": "confirmed",
+          "topic": "network"
+        },
+        {
+          "bom-ref": "as-ops",
+          "description": "Ops patches monthly",
+          "validity": "rejected"
+        }
+      ],
+      "visualizations": [
+        {
+          "type": "precogly-dfd",
+          "name": "Online shop",
+          "data": {
+            "nodes": [
+              {
+                "id": "zone-internet",
+                "type": "trustZone",
+                "position": {
+                  "x": 20,
+                  "y": 40
+                },
+                "style": {
+                  "width": 300,
+                  "height": 260
+                },
+                "data": {
+                  "label": "Internet",
+                  "zoneColor": "#ef4444",
+                  "trustLevel": 0
+                }
+              },
+              {
+                "id": "zone-dmz",
+                "type": "trustZone",
+                "position": {
+                  "x": 420,
+                  "y": 40
+                },
+                "style": {
+                  "width": 420,
+                  "height": 320
+                },
+                "data": {
+                  "label": "DMZ",
+                  "zoneColor": "#22c55e",
+                  "trustLevel": 50
+                }
+              },
+              {
+                "id": "actor-customer",
+                "type": "humanActor",
+                "position": {
+                  "x": 60,
+                  "y": 90
+                },
+                "parentId": "zone-internet",
+                "data": {
+                  "label": "Customer",
+                  "description": "Shops online"
+                }
+              },
+              {
+                "id": "process-web",
+                "type": "process",
+                "position": {
+                  "x": 80,
+                  "y": 100
+                },
+                "parentId": "zone-dmz",
+                "data": {
+                  "label": "Web Server",
+                  "description": "Serves the shop"
+                }
+              },
+              {
+                "id": "store-orders",
+                "type": "datastore",
+                "position": {
+                  "x": 260,
+                  "y": 200
+                },
+                "parentId": "zone-dmz",
+                "data": {
+                  "label": "Orders DB"
+                }
+              }
+            ],
+            "edges": [
+              {
+                "id": "flow-checkout",
+                "type": "dataFlow",
+                "source": "actor-customer",
+                "target": "process-web",
+                "data": {
+                  "label": "Checkout",
+                  "protocol": "HTTPS",
+                  "encrypted": true,
+                  "authenticated": true
+                }
+              },
+              {
+                "id": "flow-save",
+                "type": "dataFlow",
+                "source": "process-web",
+                "target": "store-orders",
+                "data": {
+                  "label": "Save order",
+                  "encrypted": false,
+                  "authenticated": false
+                }
+              },
+              {
+                "id": "boundary-edge",
+                "type": "trustBoundary",
+                "source": "zone-internet",
+                "target": "zone-dmz",
+                "data": {
+                  "label": "Perimeter"
+                }
+              }
+            ],
+            "notationStyle": "yourdon",
+            "systemContext": {
+              "session": {
+                "facilitator": "Alice",
+                "participants": [
+                  "Bob",
+                  "Chen"
+                ],
+                "meetingDate": "2026-09-01"
+              },
+              "systemInfo": {
+                "description": "Online shop",
+                "criticality": "high"
+              },
+              "dataAssets": [
+                {
+                  "id": "da-card",
+                  "name": "Card data",
+                  "description": "PAN and expiry",
+                  "classification": "restricted",
+                  "confidentiality": "high",
+                  "integrity": "high",
+                  "availability": "medium",
+                  "complianceTags": [
+                    "PCI DSS"
+                  ],
+                  "dataSensitivity": [
+                    "financial"
+                  ]
+                }
+              ],
+              "assumptions": [
+                {
+                  "id": "as-tls",
+                  "description": "TLS terminates at the load balancer",
+                  "validity": "confirmed",
+                  "topics": [
+                    "network"
+                  ]
+                },
+                {
+                  "id": "as-ops",
+                  "description": "Ops patches monthly",
+                  "validity": "rejected",
+                  "topics": []
+                }
+              ],
+              "outOfScopeItems": [
+                {
+                  "id": "oos-1",
+                  "name": "Payment provider",
+                  "reason": "Third party"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "bom-ref": "control-parameterised-queries-1",
+      "name": "Parameterised queries",
+      "status": "recommended",
+      "description": "Use bound parameters",
+      "category": "preventive",
+      "properties": [
+        {
+          "name": "precogly:control-functions",
+          "value": "preventive"
+        },
+        {
+          "name": "precogly:control-nature",
+          "value": "technical"
+        }
+      ],
+      "mitigations": [
+        "threat-sql-injection-1"
+      ]
+    }
+  ],
+  "threats": {
+    "threats": [
+      {
+        "bom-ref": "threat-sql-injection-1",
+        "name": "SQL Injection",
+        "description": "Crafted input reaches the database",
+        "categories": [
+          {
+            "taxonomy": "stride",
+            "id": "tampering",
+            "name": "Tampering"
+          }
+        ],
+        "affectedAssets": [
+          "asset-web-server-2"
+        ],
+        "mitigations": [
+          "control-parameterised-queries-1"
+        ]
+      },
+      {
+        "bom-ref": "threat-card-data-sniffed-2",
+        "name": "Card data sniffed",
+        "description": "",
+        "affectedAssets": [
+          "flow-checkout-1"
+        ]
+      },
+      {
+        "bom-ref": "threat-denial-of-service-3",
+        "name": "Denial of service",
+        "description": "",
+        "affectedAssets": [
+          "asset-web-server-2"
+        ]
+      }
+    ],
+    "scenarios": [
+      {
+        "bom-ref": "scenario-sql-injection-1",
+        "threat": "threat-sql-injection-1",
+        "affectedAssets": [
+          "asset-web-server-2"
+        ],
+        "riskScore": {
+          "level": "high"
+        },
+        "properties": [
+          {
+            "name": "precogly:threat-status",
+            "value": "mitigate"
+          }
+        ]
+      },
+      {
+        "bom-ref": "scenario-card-data-sniffed-2",
+        "threat": "threat-card-data-sniffed-2",
+        "affectedAssets": [
+          "flow-checkout-1"
+        ],
+        "riskScore": {
+          "level": "critical"
+        }
+      },
+      {
+        "bom-ref": "scenario-denial-of-service-3",
+        "threat": "threat-denial-of-service-3",
+        "affectedAssets": [
+          "asset-web-server-2"
+        ],
+        "riskScore": {
+          "level": "medium"
+        },
+        "properties": [
+          {
+            "name": "precogly:threat-status",
+            "value": "accept"
+          },
+          {
+            "name": "precogly:decision-rationale",
+            "value": "CDN absorbs it"
+          }
+        ]
+      }
+    ]
+  }
+}

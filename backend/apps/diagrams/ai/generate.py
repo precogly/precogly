@@ -5,26 +5,39 @@ from __future__ import annotations
 import json
 import logging
 import math
+from contextlib import suppress
 
 from apps.ai.providers.base import AIProviderError
 from apps.ai.resolver import resolve_provider
 from apps.ai.utils import extract_json_object
+from apps.systems.crossing import (
+    ASSET_TYPES,
+    BOUNDARY_TYPES,
+    FLOW_TYPES,
+    ZONE_TYPES,
+    is_data_like,
+)
 
-logger = logging.getLogger(__name__)
-
+from .analyze import clean_authentication, clean_authorization
 from .prompts import (
     DEFAULT_NODE_SIZES,
+    EDITOR_DATA_STORE_TYPES,
     GENERATE_SYSTEM_PROMPT,
     MAX_COMPONENT_LIBRARY_ENTRIES,
     NODE_TYPE_TO_CATEGORY,
     VALID_NODE_TYPES,
 )
 
+logger = logging.getLogger(__name__)
+
 # Node types that act as containers (can have children).
 _CONTAINER_TYPES = frozenset({"trustZone", "systemScope"})
 
 # Node types that are external actors and belong outside the system scope.
 _ACTOR_TYPES = frozenset({"humanActor", "systemActor"})
+
+# Edge types the canvas draws; anything else the model writes is dropped.
+_VALID_EDGE_TYPES = frozenset({"dataFlow", "trustBoundary"})
 
 # Padding inside containers around the bounding box of their children.
 _CONTAINER_PADDING = 40
@@ -52,9 +65,7 @@ def generate_dfd_from_analysis(
 
     Returns ``{"nodes": [...], "edges": [...]}``.
     """
-    provider = resolve_provider(
-        organization, feature="generate_dfd", user=user
-    )
+    provider = resolve_provider(organization, feature="generate_dfd", user=user)
 
     library_lines = _build_component_library_prompt(threat_model)
 
@@ -116,14 +127,19 @@ def _build_component_library_prompt(threat_model) -> str:
         threat_model=threat_model
     ).values_list("library_pack_id", flat=True)
 
-    entries = ComponentLibrary.objects.filter(
-        source_pack_id__in=connected_pack_ids
-    ).select_related("source_pack").order_by("name")[:MAX_COMPONENT_LIBRARY_ENTRIES]
+    entries = (
+        ComponentLibrary.objects.filter(source_pack_id__in=connected_pack_ids)
+        .select_related("source_pack")
+        .order_by("name")[:MAX_COMPONENT_LIBRARY_ENTRIES]
+    )
 
     lines = []
     for entry in entries:
         slug = entry.qualified_slug or entry.slug
-        line = f"slug={slug} | {entry.name} ({entry.category}, {entry.component_type}, {entry.provider})"
+        line = (
+            f"slug={slug} | {entry.name} ({entry.category}, kind {entry.kind}, "
+            f"{entry.component_type}, {entry.provider})"
+        )
         lines.append(line)
 
     return "\n".join(lines)
@@ -138,9 +154,9 @@ def _validate_and_resolve(
 
     # Build a lookup of available component library entries.
     connected_pack_ids = list(
-        ThreatModelLibraryPack.objects.filter(
-            threat_model=threat_model
-        ).values_list("library_pack_id", flat=True)
+        ThreatModelLibraryPack.objects.filter(threat_model=threat_model).values_list(
+            "library_pack_id", flat=True
+        )
     )
 
     library_by_qualified_slug: dict[str, ComponentLibrary] = {}
@@ -157,6 +173,7 @@ def _validate_and_resolve(
 
     valid_nodes = []
     valid_node_ids: set[str] = set()
+    node_types: dict[str, str] = {}
 
     for node in nodes:
         if not isinstance(node, dict):
@@ -191,18 +208,19 @@ def _validate_and_resolve(
         data = node["data"]
         component_ref = data.get("component_ref")
         if component_ref and node_type in NODE_TYPE_TO_CATEGORY:
-            resolved = (
-                library_by_qualified_slug.get(component_ref)
-                or library_by_slug.get(component_ref)
-            )
+            resolved = library_by_qualified_slug.get(
+                component_ref
+            ) or library_by_slug.get(component_ref)
             if resolved:
                 data["component_library_id"] = resolved.id
                 data["component_library_name"] = resolved.name
             # Strip component_ref regardless — it served its purpose.
             data.pop("component_ref", None)
 
+        _clean_node_data(node_type, data)
         valid_nodes.append(node)
         valid_node_ids.add(node_id)
+        node_types[node_id] = node_type
 
     # Second pass: validate parentId references.
     for node in valid_nodes:
@@ -229,14 +247,107 @@ def _validate_and_resolve(
         # Ensure edge has type.
         if "type" not in edge:
             edge["type"] = "dataFlow"
+        if edge["type"] not in _VALID_EDGE_TYPES:
+            continue
+
+        # A boundary joins two zones and nothing else.
+        if edge["type"] == "trustBoundary" and (
+            node_types.get(source) != "trustZone"
+            or node_types.get(target) != "trustZone"
+            or source == target
+        ):
+            continue
 
         # Ensure edge has data dict.
         if "data" not in edge or not isinstance(edge.get("data"), dict):
             edge["data"] = {}
+        if edge["type"] == "dataFlow":
+            _clean_edge_data(edge["data"])
+        else:
+            # Zone nodes have unnamed handles and the editor draws boundaries
+            # without handle names; a named handle would leave the edge undrawn.
+            edge.pop("sourceHandle", None)
+            edge.pop("targetHandle", None)
+            _clean_boundary_edge_data(edge["data"])
 
         valid_edges.append(edge)
 
     return valid_nodes, valid_edges
+
+
+def _pop_either(data: dict, camel: str, snake: str):
+    """A value the model may have written under either spelling; both go."""
+    value = data.pop(camel, None)
+    snake_value = data.pop(snake, None)
+    return value if value is not None else snake_value
+
+
+def _clean_node_data(node_type: str, data: dict) -> None:
+    """Keep the zone type, trust level and kind the canvas understands (section 8).
+
+    Written in the canvas's own keys (``zone_type``, ``trust_level``,
+    ``kind``, ``data_store_type``), which DFD sync reads; an unknown value is
+    dropped, so sync applies its default.
+    """
+    zone_type = _pop_either(data, "zoneType", "zone_type")
+    trust_level = _pop_either(data, "trustLevel", "trust_level")
+    data_store_type = _pop_either(data, "dataStoreType", "data_store_type")
+    kind = data.pop("kind", None)
+    if node_type == "trustZone":
+        if zone_type in ZONE_TYPES:
+            data["zone_type"] = zone_type
+        with suppress(TypeError, ValueError):
+            data["trust_level"] = max(0, min(100, int(trust_level)))
+    elif node_type in NODE_TYPE_TO_CATEGORY and kind in ASSET_TYPES:
+        data["kind"] = kind
+    if node_type == "datastore" and data_store_type in EDITOR_DATA_STORE_TYPES:
+        data["data_store_type"] = data_store_type
+
+
+def _clean_edge_data(data: dict) -> None:
+    """A data flow edge in the canvas's keys: ``flow_type`` and ``authentication``.
+
+    The old ``authenticated`` boolean is read once and dropped (I9); protocol
+    and encryption go on flow types that are not data-like, as sync does.
+    """
+    flow_type = _pop_either(data, "flowType", "flow_type")
+    if flow_type in FLOW_TYPES:
+        data["flow_type"] = flow_type
+    authentication = clean_authentication(data)
+    data.pop("authenticated", None)
+    data.pop("authentication", None)
+    if authentication:
+        data["authentication"] = authentication
+    if not is_data_like(data.get("flow_type") or "data"):
+        data.pop("protocol", None)
+        data.pop("encrypted", None)
+
+
+def _clean_boundary_edge_data(data: dict) -> None:
+    """A boundary edge in the canvas's keys, the ones DFD sync reads:
+    ``boundary_type``, ``authentication_methods``, ``access_control_methods``.
+    """
+    boundary_type = _pop_either(data, "boundaryType", "boundary_type")
+    if boundary_type in BOUNDARY_TYPES:
+        data["boundary_type"] = boundary_type
+    authentication_raw = _pop_either(
+        data, "authenticationMethods", "authentication_methods"
+    )
+    if authentication_raw is None:
+        authentication_raw = data.pop("authentication", None)
+    data.pop("authentication", None)
+    authentication = clean_authentication({"authentication": authentication_raw})
+    if authentication:
+        data["authentication_methods"] = authentication
+    authorization_raw = _pop_either(
+        data, "accessControlMethods", "access_control_methods"
+    )
+    if authorization_raw is None:
+        authorization_raw = data.pop("authorization", None)
+    data.pop("authorization", None)
+    authorization = clean_authorization(authorization_raw)
+    if authorization:
+        data["access_control_methods"] = authorization
 
 
 # ---------------------------------------------------------------------------
@@ -253,7 +364,7 @@ def _fix_layout(
     with precise coordinates. This function:
 
     1. Recovers orphaned nodes by matching them to trust zones via the
-       analysis's component→trustZone mapping.
+       analysis's component→zone mapping.
     2. Re-lays out children inside each container in a compact grid.
     3. Auto-sizes containers (bottom-up) to fit their children with padding.
     4. Places external actors outside the system scope.
@@ -263,15 +374,15 @@ def _fix_layout(
 
     # Find the system scope and trust zone nodes.
     system_scope_id = _find_system_scope(nodes)
-    trust_zone_ids = {n["id"] for n in nodes if n["type"] == "trustZone"}
+    zone_ids = {n["id"] for n in nodes if n["type"] == "trustZone"}
 
     # Step 1: Orphan recovery — assign parentId to nodes that should be inside
     # a container but aren't.
-    _recover_orphans(nodes, by_id, analysis, system_scope_id, trust_zone_ids)
+    _recover_orphans(nodes, by_id, analysis, system_scope_id, zone_ids)
 
     # Step 2: Re-layout children inside each container (bottom-up: trust zones
     # first, then system scope).
-    for zone_id in trust_zone_ids:
+    for zone_id in zone_ids:
         _layout_children(nodes, by_id, zone_id)
 
     if system_scope_id:
@@ -300,24 +411,24 @@ def _recover_orphans(
     by_id: dict[str, dict],
     analysis: dict,
     system_scope_id: str | None,
-    trust_zone_ids: set[str],
+    zone_ids: set[str],
 ) -> None:
     """Assign parentId to leaf nodes that lost their container reference.
 
-    Uses the analysis's component→trustZone name mapping to match nodes to
+    Uses the analysis's component→zone name mapping to match nodes to
     the trust zone node whose label best matches.
     """
-    # Build component name → trustZone name from the analysis.
+    # Build component name → zone name from the analysis.
     component_zone_map: dict[str, str] = {}
     for comp in analysis.get("components", []):
         name = comp.get("name", "")
-        zone = comp.get("trustZone", "")
+        zone = comp.get("zone") or comp.get("trustZone", "")
         if name and zone:
             component_zone_map[name.lower()] = zone.lower()
 
     # Build zone label → zone id lookup.
     zone_label_to_id: dict[str, str] = {}
-    for zone_id in trust_zone_ids:
+    for zone_id in zone_ids:
         zone_node = by_id.get(zone_id)
         if zone_node:
             label = zone_node.get("data", {}).get("label", "").lower()
@@ -355,15 +466,15 @@ def _recover_orphans(
 
         if matched_zone_id:
             node["parentId"] = matched_zone_id
-        elif trust_zone_ids:
+        elif zone_ids:
             # Fall back to the first trust zone.
-            node["parentId"] = next(iter(trust_zone_ids))
+            node["parentId"] = next(iter(zone_ids))
         elif system_scope_id:
             node["parentId"] = system_scope_id
 
     # Ensure trust zones are parented to the system scope.
     if system_scope_id:
-        for zone_id in trust_zone_ids:
+        for zone_id in zone_ids:
             zone_node = by_id.get(zone_id)
             if zone_node:
                 zone_node["parentId"] = system_scope_id
@@ -399,10 +510,17 @@ def _layout_children(
     child_sizes = []
     for child in children:
         style = child.get("style", {})
-        child_sizes.append({
-            "w": style.get("width", DEFAULT_NODE_SIZES.get(child["type"], {}).get("width", 150)),
-            "h": style.get("height", DEFAULT_NODE_SIZES.get(child["type"], {}).get("height", 70)),
-        })
+        child_sizes.append(
+            {
+                "w": style.get(
+                    "width", DEFAULT_NODE_SIZES.get(child["type"], {}).get("width", 150)
+                ),
+                "h": style.get(
+                    "height",
+                    DEFAULT_NODE_SIZES.get(child["type"], {}).get("height", 70),
+                ),
+            }
+        )
 
     # Determine grid columns based on number of children.
     num_children = len(children)
@@ -411,7 +529,7 @@ def _layout_children(
     elif num_children <= 8:
         cols = 3
     else:
-        cols = int(math.ceil(math.sqrt(num_children)))
+        cols = math.ceil(math.sqrt(num_children))
 
     # Place children in grid rows, each row packed by actual child widths.
     cursor_x = _CONTAINER_PADDING
@@ -419,7 +537,7 @@ def _layout_children(
     row_max_height = 0
     max_row_right = 0
 
-    for i, (child, size) in enumerate(zip(children, child_sizes)):
+    for i, (child, size) in enumerate(zip(children, child_sizes, strict=True)):
         col_index = i % cols
         if col_index == 0 and i > 0:
             # New row.
@@ -479,9 +597,7 @@ def _place_actors_outside(
         actor_y += size["height"] + _ACTOR_GAP
 
 
-def _get_absolute_position(
-    node: dict, by_id: dict[str, dict]
-) -> tuple[float, float]:
+def _get_absolute_position(node: dict, by_id: dict[str, dict]) -> tuple[float, float]:
     """Compute a node's absolute position by walking the parent chain."""
     abs_x = node.get("position", {}).get("x", 0)
     abs_y = node.get("position", {}).get("y", 0)
@@ -500,9 +616,7 @@ def _get_absolute_position(
     return abs_x, abs_y
 
 
-def _get_node_center(
-    node: dict, by_id: dict[str, dict]
-) -> tuple[float, float]:
+def _get_node_center(node: dict, by_id: dict[str, dict]) -> tuple[float, float]:
     """Compute the absolute center point of a node."""
     abs_x, abs_y = _get_absolute_position(node, by_id)
     style = node.get("style", {})
@@ -515,8 +629,14 @@ def _get_node_center(
 def _recompute_handles(
     edges: list[dict], nodes: list[dict], by_id: dict[str, dict]
 ) -> None:
-    """Set sourceHandle/targetHandle based on actual relative positions."""
+    """Set sourceHandle/targetHandle based on actual relative positions.
+
+    Data flows only: zone nodes have no named handles, so a boundary edge
+    must stay without them (the editor draws them that way too).
+    """
     for edge in edges:
+        if edge.get("type") == "trustBoundary":
+            continue
         source_node = by_id.get(edge.get("source", ""))
         target_node = by_id.get(edge.get("target", ""))
         if not source_node or not target_node:

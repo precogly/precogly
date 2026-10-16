@@ -1,21 +1,22 @@
 from django.contrib import admin
 
 from .models import (
-    ComponentInstanceThreat,
     ComponentLibraryThreat,
     CountermeasureLibrary,
-    DataFlowInstanceThreat,
     ExternalTaxonomy,
     InstanceCountermeasure,
+    InstanceThreat,
+    InstanceThreatTarget,
     InstanceThreatTaxonomyEntry,
     PentestFinding,
+    Rating,
     Risk,
+    RiskResponse,
     RiskThreat,
     TaxonomyEntry,
     ThreatLibrary,
     ThreatLibraryTaxonomyEntry,
     ThreatPersona,
-    ThreatPersonaLink,
     ThreatSource,
     ThreatSourceLink,
     VerificationTest,
@@ -34,10 +35,10 @@ class ComponentLibraryThreatAdmin(admin.ModelAdmin):
     list_display = [
         "component_library",
         "threat_library",
-        "default_severity",
+        "default_level",
         "applies_to",
     ]
-    list_filter = ["applies_to", "default_severity"]
+    list_filter = ["applies_to", "default_level"]
 
 
 @admin.register(CountermeasureLibrary)
@@ -47,29 +48,26 @@ class CountermeasureLibraryAdmin(admin.ModelAdmin):
     search_fields = ["name", "description"]
 
 
-@admin.register(ComponentInstanceThreat)
-class ComponentInstanceThreatAdmin(admin.ModelAdmin):
-    list_display = [
-        "component",
-        "threat_name",
-        "threat_library",
-        "status",
-        "inherent_severity",
-        "residual_severity",
-    ]
-    list_filter = ["status", "inherent_severity"]
+class InstanceThreatTargetInline(admin.TabularInline):
+    model = InstanceThreatTarget
+    extra = 0
 
 
-@admin.register(DataFlowInstanceThreat)
-class DataFlowInstanceThreatAdmin(admin.ModelAdmin):
+@admin.register(InstanceThreat)
+class InstanceThreatAdmin(admin.ModelAdmin):
     list_display = [
-        "data_flow",
+        "display_number",
+        "threat_model",
         "threat_name",
         "threat_library",
+        "whole_system",
         "status",
-        "inherent_severity",
+        "rating",
+        "auto_generated",
     ]
-    list_filter = ["status", "inherent_severity"]
+    list_filter = ["status", "rating__level", "whole_system", "auto_generated"]
+    search_fields = ["threat_name", "number"]
+    inlines = [InstanceThreatTargetInline]
 
 
 @admin.register(InstanceCountermeasure)
@@ -119,16 +117,28 @@ class PentestFindingAdmin(admin.ModelAdmin):
     list_filter = ["reconciliation_status", "severity"]
 
 
+@admin.register(Rating)
+class RatingAdmin(admin.ModelAdmin):
+    list_display = ["id", "organization", "methodology", "level", "score"]
+    list_filter = ["methodology", "level"]
+
+
 @admin.register(Risk)
 class RiskAdmin(admin.ModelAdmin):
-    list_display = ["name", "threat_model", "inherent_level", "residual_level", "owner"]
-    list_filter = ["inherent_level", "residual_level"]
+    list_display = ["name", "threat_model", "status", "inherent", "residual", "owner"]
+    list_filter = ["status", "inherent__level", "residual__level"]
     search_fields = ["name", "description"]
+
+
+@admin.register(RiskResponse)
+class RiskResponseAdmin(admin.ModelAdmin):
+    list_display = ["risk", "strategy", "status", "priority", "owner", "target_date"]
+    list_filter = ["strategy", "status", "priority"]
 
 
 @admin.register(RiskThreat)
 class RiskThreatAdmin(admin.ModelAdmin):
-    list_display = ["risk", "component_threat", "flow_threat"]
+    list_display = ["risk", "threat"]
     list_filter = ["risk__threat_model"]
 
 
@@ -145,11 +155,6 @@ class ThreatPersonaAdmin(admin.ModelAdmin):
     search_fields = ["name", "symbolic_name"]
 
 
-@admin.register(ThreatPersonaLink)
-class ThreatPersonaLinkAdmin(admin.ModelAdmin):
-    list_display = ["persona", "component_threat", "flow_threat"]
-
-
 @admin.register(ThreatSource)
 class ThreatSourceAdmin(admin.ModelAdmin):
     list_display = ["name", "slug"]
@@ -158,10 +163,10 @@ class ThreatSourceAdmin(admin.ModelAdmin):
 
 @admin.register(ThreatSourceLink)
 class ThreatSourceLinkAdmin(admin.ModelAdmin):
-    list_display = ["source", "component_threat", "flow_threat"]
+    list_display = ["source", "threat"]
 
 
 @admin.register(InstanceThreatTaxonomyEntry)
 class InstanceThreatTaxonomyEntryAdmin(admin.ModelAdmin):
-    list_display = ["taxonomy_entry", "component_threat", "flow_threat"]
+    list_display = ["taxonomy_entry", "threat"]
     list_filter = ["taxonomy_entry__taxonomy"]

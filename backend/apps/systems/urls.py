@@ -6,29 +6,33 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from .views import (
+    BoundaryViewSet,
     ComponentDataAssetViewSet,
     ComponentLibraryViewSet,
     DataAssetViewSet,
-    DataFlowAssetViewSet,
-    DataFlowViewSet,
+    FlowAssetViewSet,
+    FlowViewSet,
     IntegrationSourceViewSet,
     OrgsystemComponentViewSet,
     OrgsystemViewSet,
-    TrustBoundaryViewSet,
-    TrustZoneViewSet,
+    ZoneViewSet,
 )
 
 router = DefaultRouter()
 router.register(r"systems", OrgsystemViewSet, basename="orgsystem")
-router.register(r"trust-zones", TrustZoneViewSet, basename="trust-zone")
-router.register(r"trust-boundaries", TrustBoundaryViewSet, basename="trust-boundary")
-router.register(r"component-library", ComponentLibraryViewSet, basename="component-library")
+router.register(r"zones", ZoneViewSet, basename="zone")
+router.register(r"boundaries", BoundaryViewSet, basename="boundary")
+router.register(
+    r"component-library", ComponentLibraryViewSet, basename="component-library"
+)
 router.register(r"components", OrgsystemComponentViewSet, basename="component")
 router.register(r"data-assets", DataAssetViewSet, basename="data-asset")
-router.register(r"data-flows", DataFlowViewSet, basename="data-flow")
+router.register(r"flows", FlowViewSet, basename="flow")
 router.register(r"integrations", IntegrationSourceViewSet, basename="integration")
-router.register(r"component-data-assets", ComponentDataAssetViewSet, basename="component-data-asset")
-router.register(r"data-flow-assets", DataFlowAssetViewSet, basename="data-flow-asset")
+router.register(
+    r"component-data-assets", ComponentDataAssetViewSet, basename="component-data-asset"
+)
+router.register(r"flow-assets", FlowAssetViewSet, basename="flow-asset")
 
 urlpatterns = [
     path("", include(router.urls)),

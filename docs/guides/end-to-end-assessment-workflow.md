@@ -36,7 +36,8 @@ prevents a model from becoming difficult to find or being reviewed by the wrong 
 
 ## 2. Establish context and scope
 
-Start on the **Overview** tab. Record the business purpose, criticality, assumptions, and
+Start on the **Overview** tab. Use the **System** and **Business objectives**
+buttons to record the business purpose, criticality, assumptions, and
 boundaries before drawing implementation details. A reviewer should be able to answer:
 
 - What system or service is being assessed?
@@ -55,8 +56,9 @@ as context and model the security-relevant relationships explicitly on the DFD.
 ## 3. Build the primary DFD
 
 Open the primary DFD from the DFD carousel. Add the components that participate in the
-system boundary, then connect them with data flows. Use trust zones to show meaningful
-changes in trust level, deployment boundary, or administrative control.
+system boundary, then connect them with flows. Use zones to show meaningful changes in
+trust level, network, deployment boundary, or administrative control, and draw boundaries
+where a crossing has requirements.
 
 ![DFD editor showing a completed architecture](../assets/images/dfd-food-app-diagram.png)
 
@@ -69,8 +71,8 @@ For each element, capture enough detail for another person to understand its bou
 - Use **Human Actor** and **System Actor** for external users and services.
 - Use **Process** for executable or logical processing units.
 - Use **Data Store** for persistent storage and queues where stored data matters.
-- Label data flows with the operation or exchange they represent.
-- Add trust zones when the crossing changes the security assumptions.
+- Label flows with the operation or exchange they represent, and give them a type.
+- Add zones when the crossing changes the security assumptions, and a boundary between them.
 - Add data assets to components and flows that handle them.
 
 Avoid using the DFD as a decorative infrastructure diagram. A single node representing an
@@ -83,19 +85,19 @@ changes the visual symbols, not the underlying components or flows.
 ## 4. Review threat analysis
 
 After the primary DFD is saved, open **Threat Analysis**. Select components and flows to
-review their threats. Library packs provide reusable threat knowledge, taxonomy mappings,
+review their threats, and click a threat to open it. Library packs provide reusable threat knowledge, taxonomy mappings,
 and countermeasure suggestions; treat them as a starting point for review.
 
 ![Threat analysis workspace](../assets/images/threat-analysis-overview.png)
 
 For every relevant threat, review:
 
-- The description and affected component or flow.
-- Inherent severity and its rationale.
+- The description and the targets: components, flows, zones, boundaries, or the whole system.
+- The rating and its rationale.
 - STRIDE and other taxonomy mappings where available.
-- Threat actor, persona, or source information.
+- The threat actor and the business objectives at risk.
 - Existing controls and their current status.
-- Whether the threat should be dismissed and why.
+- Whether the threat should be triaged out and why.
 
 Use the component and flow context while reviewing. A control appropriate for an internet-
 facing API may not be sufficient for an internal service, and a control protecting one
@@ -105,7 +107,7 @@ data flow does not automatically protect another flow with a similar label.
 
 Countermeasures are the actionable part of the assessment. Add controls from the library
 when a reusable definition is appropriate, then record instance-specific details such as
-owner, priority, due date, ticket URL, evidence, and status.
+owner, priority, due date, ticket URL, evidence, and status in the countermeasure modal.
 
 ![Assigning a countermeasure during threat analysis](../assets/images/threat-analysis-countermeasure-assignment.png)
 
@@ -122,30 +124,35 @@ Use the lifecycle consistently:
 
 Keep instance-specific names and descriptions when they reflect the actual implementation.
 Where a control mitigates multiple threats, review each link independently and confirm that
-the control is relevant at every location.
+the control is relevant at every location. Check its scope (Applies to) and, where another
+team or a provider implements it, record that under Implemented by.
 
 ## 6. Review risks and decisions
 
 Use the **Risks** workspace to turn technical findings into business decisions. Link the
-threats that contribute to a risk, review inherent and residual scores, and record the
-response, owner, due date, or other available decision metadata.
+threats that contribute to a risk, write its statement, review the inherent and residual
+ratings, set its status, and record each response with its strategy, owner, and target date.
 
 Review risks after meaningful changes to threats or countermeasures. The risk register is
 not a replacement for threat analysis; it prioritizes the consequences of the findings.
 
 Before sign-off, check that:
 
-- High-impact risks have an explicit response.
-- Residual scores reflect currently active controls.
+- High-impact risks have at least one response and are no longer merely Identified.
+- Residual ratings reflect currently active controls.
 - Linked threats belong to the same assessment context.
 - Accepted or waived exposures have an owner and rationale.
-- Assumptions and out-of-scope items remain accurate.
+- Assumptions are verified where they can be, and out-of-scope items remain accurate.
+
+The sign-off view lists unverified assumptions and Identified risks before the Approve
+button, so this check is built into approval.
 
 ## 7. Prepare a penetration-testing handoff
 
 Open **Pentests** and select the **Scope** sub-tab after the DFD and threat analysis are
-reviewed. The scope is derived from the current model and includes components, trust zones,
-data assets, threat-based test cases, priorities, compliance context, and linked risks.
+reviewed. The scope is derived from the current model and includes components, zones,
+boundaries, data assets, threat-based test cases with their numbers, priorities, compliance
+context, and linked risks.
 
 ![Pentest scope derived from a threat model](../assets/images/pentests-scope.png)
 
@@ -175,12 +182,13 @@ Before sharing a report, verify the model is saved and review the report itself 
 - Complete architecture and data-asset coverage.
 - Threats grouped under the correct components and flows.
 - Countermeasure status, ownership, and evidence.
-- Risk responses and residual-risk context.
+- Risk statuses, responses, and residual ratings.
+- The review and approval state.
 - Compliance mappings and completion status.
 
 Use CSV exports for structured data. Use the Word report for offline review with the report
-sections and DFD visualization. Keep a JSON or CycloneDX export with the report when you
-need a machine-readable snapshot for version control or later comparison.
+sections and DFD visualization. Keep a CycloneDX export with the report when you need a
+machine-readable snapshot for version control or later comparison.
 
 ![Report export menu](../assets/images/report-export-menu.png)
 
@@ -189,11 +197,12 @@ need a machine-readable snapshot for version control or later comparison.
 - [ ] The model has the correct owner and owning team.
 - [ ] Context, assumptions, and scope are current.
 - [ ] The primary DFD represents the assessed architecture.
-- [ ] Trust zones and boundary crossings are intentional.
+- [ ] Zones, boundaries, and boundary crossings are intentional.
 - [ ] Sensitive data assets are placed on relevant components and flows.
 - [ ] Threats have been reviewed for applicability and severity.
 - [ ] Countermeasures have owners, statuses, and evidence where applicable.
-- [ ] Risks have explicit responses and contributing threats.
+- [ ] Risks have a status, responses, and contributing threats.
+- [ ] The model is marked reviewed and, where required, approved.
 - [ ] Pentest scope and exclusions match the engagement.
 - [ ] The selected report has been reviewed for completeness.
 - [ ] A structured export is retained when reproducibility matters.

@@ -14,20 +14,18 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { ThreatModelsTable } from '@/features/threat-models/components'
-import { useThreatModels, useImportTmLibrary, useImportCycloneDx, type ImportTmLibraryResponse } from '@/features/threat-models/api/threat-models'
+import { useThreatModels, useImportCycloneDx, type ImportCycloneDxResponse } from '@/features/threat-models/api/threat-models'
 import { useSharedWithMe, useRemoveSharedWithMe } from '@/features/organization/api/organizations'
 
 export function ThreatModels() {
   const { data: threatModels, isLoading } = useThreatModels()
   const { data: sharedModels, isLoading: isLoadingShared } = useSharedWithMe()
   const removeSharedMutation = useRemoveSharedWithMe()
-  const importTmLibraryMutation = useImportTmLibrary()
   const importCycloneDxMutation = useImportCycloneDx()
   const navigate = useNavigate()
 
   const [importDialogOpen, setImportDialogOpen] = useState(false)
-  const [importFormat, setImportFormat] = useState<'tm-library' | 'cyclonedx'>('tm-library')
-  const [importResult, setImportResult] = useState<ImportTmLibraryResponse | null>(null)
+  const [importResult, setImportResult] = useState<ImportCycloneDxResponse | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
@@ -41,7 +39,8 @@ export function ThreatModels() {
     })
   }
 
-  const importMutation = importFormat === 'cyclonedx' ? importCycloneDxMutation : importTmLibraryMutation
+  // CycloneDX TM-BOM is the one import format (L8).
+  const importMutation = importCycloneDxMutation
 
   const handleImportFile = useCallback((file: File) => {
     if (!file.name.endsWith('.json')) {
@@ -135,25 +134,7 @@ export function ThreatModels() {
 
           {!importResult ? (
             <div className="space-y-4">
-              {/* Format selector */}
-              <div className="flex gap-2">
-                <Button
-                  variant={importFormat === 'tm-library' ? 'default' : 'outline'}
-                  size="sm"
-                  className="flex-1 text-xs"
-                  onClick={() => setImportFormat('tm-library')}
-                >
-                  TM-Library
-                </Button>
-                <Button
-                  variant={importFormat === 'cyclonedx' ? 'default' : 'outline'}
-                  size="sm"
-                  className="flex-1 text-xs"
-                  onClick={() => setImportFormat('cyclonedx')}
-                >
-                  CycloneDX 2.0 BOM
-                </Button>
-              </div>
+              <p className="text-xs text-muted-foreground">CycloneDX 2.0 TM-BOM (.cdx.json)</p>
 
               {/* Dropzone */}
               <div

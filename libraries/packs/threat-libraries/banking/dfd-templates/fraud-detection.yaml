@@ -58,7 +58,8 @@ canvas_data:
       style: { width: 200, height: 250 }
       data:
         label: "Event Ingestion"
-        zoneType: "dmz"
+        zoneType: "trust"
+        trustLevel: 25
         technology: "Kafka Cluster"
 
     # Trust boundary - Processing Layer
@@ -69,7 +70,8 @@ canvas_data:
       style: { width: 380, height: 350 }
       data:
         label: "Real-Time Processing"
-        zoneType: "privateSecured"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "Stream Processing"
 
     # Trust boundary - Data Layer
@@ -80,7 +82,8 @@ canvas_data:
       style: { width: 220, height: 350 }
       data:
         label: "Data Layer"
-        zoneType: "privateSecured"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "Secured Storage"
 
     # Trust boundary - Investigation
@@ -91,7 +94,8 @@ canvas_data:
       style: { width: 380, height: 160 }
       data:
         label: "Investigation Layer"
-        zoneType: "privateSecured"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "Case Management"
 
     # Ingestion Layer
@@ -355,7 +359,7 @@ canvas_data:
         label: "Investigation Actions"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-case-alerts"
       source: "process-case-management"

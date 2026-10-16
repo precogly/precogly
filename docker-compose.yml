@@ -28,6 +28,8 @@ services:
       - ./backend:/app/backend
       # settings.LIBRARIES_PATH defaults here; the mount keeps pack edits live.
       - ./libraries:/app/libraries
+      # Read-only: the docs example test validates the TM-BOM sample in the guides.
+      - ./docs:/app/docs:ro
       # The MCP server is served from this process (backend/config/mcp_mount.py).
       # uv installs the workspace member editable, so this mount is what makes an
       # edit under mcp/ take effect without a rebuild.
@@ -41,6 +43,11 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-precogly}:${POSTGRES_PASSWORD:-precogly_dev_password}@db:5432/${POSTGRES_DB:-precogly}
       DJANGO_SETTINGS_MODULE: config.settings.development
       ALLOWED_HOSTS: localhost,127.0.0.1,0.0.0.0,backend
+      # cryptography 50 bundles an OpenSSL that probes ARM CPU features at import.
+      # On recent Apple Silicon the Docker VM advertises SME/SVE but faults on
+      # them, so the backend dies with "Illegal instruction" (exit 132). Turning
+      # off OpenSSL's ARM probing avoids those code paths. No effect on x86.
+      OPENSSL_armcap: "0"
     depends_on:
       db:
         condition: service_healthy

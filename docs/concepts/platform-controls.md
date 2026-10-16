@@ -15,7 +15,7 @@ Platform countermeasures show a lock icon to non-security-team members, who cann
 
 ## How controls become platform
 
-There are three paths:
+There are two paths, plus import:
 
 ### Library pack defaults
 
@@ -37,13 +37,25 @@ countermeasures:
 
 If `default_status` is omitted, countermeasures default to `gap`.
 
-### Zone protection inheritance
-
-When a component in an outer zone (lower trust level) has a platform countermeasure, inner-zone components with the same countermeasure as a gap can inherit the protection. The inherited countermeasure is promoted to platform with a label showing its source. See [Zone Protections](zone-protections.md).
-
 ### Manual assignment
 
 Security Team members can click the **Platform** button on any countermeasure in the Threat Analysis view. Regular team members do not see this option.
+
+### Import
+
+A CycloneDX TM-BOM file can carry a control with platform status. The import keeps it only when the importing user is on the Security Team. Otherwise the control is stored as a gap and the import summary says so.
+
+## Control scope and provider
+
+Every countermeasure records where it applies and who provides it. Both are shown in the countermeasure detail, exported, and have no effect on any threat's status.
+
+- **Applies to** lists the components, flows, zones, and boundaries the control covers. An empty list means the whole system. Edit it from the countermeasure card; the list is preset from where you added the control.
+- **Implemented by** (under Advanced) names the components that implement the control, and optionally another party as text, for example a cloud provider or a platform team.
+- **Source** (under Advanced) is free text saying where the control came from, such as a compliance tool or a pentest report.
+
+A control counts for a threat only when it is linked to that threat. A platform WAF scoped to the DMZ zone is a statement about the WAF; it does not close a gap on a threat in that zone until someone links it. This replaces the former zone protection inheritance, which promoted inner-zone gaps to platform automatically.
+
+When a diagram change removes the last target of a scoped control, the control is kept and now applies to the whole system. The editor shows a warning naming the control so you can decide what to do with it.
 
 ## Effect on threat status
 

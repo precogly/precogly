@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Plus, Check, Info } from 'lucide-react'
 import {
   Dialog,
@@ -22,52 +22,50 @@ import {
 import { Checkbox } from '@/components/ui/checkbox'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useGuestEditor } from '../context/GuestEditorContext'
-import { GUEST_CONTROL_FUNCTIONS, GUEST_CONTROL_NATURES } from '../types'
-import type { GuestCountermeasure, ControlFunction, ControlNature } from '../types'
+import { GUEST_CONTROL_FUNCTIONS, GUEST_CONTROL_NATURES, countermeasureDisplayNumber, threatDisplayNumber } from '../types'
+import type { GuestCountermeasure, GuestTargetRef, ControlFunction, ControlNature } from '../types'
+import { GuestTargetPicker } from './GuestTargetPicker'
 
 interface GuestCountermeasureDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  threatId: string
-  threatName: string
+  /** The threat the dialog was opened from; preselected for a new countermeasure. */
+  initialThreatId?: string | null
   editCountermeasure?: GuestCountermeasure
 }
 
-export function GuestCountermeasureDialog({
-  open,
+export function GuestCountermeasureDialog(props: GuestCountermeasureDialogProps) {
+  const { open, onOpenChange } = props
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {/* The form mounts with the dialog, so its state starts fresh on every open. */}
+      {open && <GuestCountermeasureDialogForm {...props} />}
+    </Dialog>
+  )
+}
+
+function GuestCountermeasureDialogForm({
   onOpenChange,
-  threatId,
-  threatName,
+  initialThreatId,
   editCountermeasure,
 }: GuestCountermeasureDialogProps) {
   const guestEditor = useGuestEditor()
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [controlFunction, setControlFunction] = useState<ControlFunction[]>(['preventive'])
-  const [controlNature, setControlNature] = useState<ControlNature>('technical')
+  const [name, setName] = useState(editCountermeasure?.name ?? '')
+  const [description, setDescription] = useState(editCountermeasure?.description ?? '')
+  const [controlFunction, setControlFunction] = useState<ControlFunction[]>(
+    editCountermeasure && editCountermeasure.controlFunction.length > 0 ? editCountermeasure.controlFunction : ['preventive']
+  )
+  const [controlNature, setControlNature] = useState<ControlNature>(editCountermeasure?.controlNature || 'technical')
+  const [threatIds, setThreatIds] = useState<string[]>(editCountermeasure ? editCountermeasure.threatIds : initialThreatId ? [initialThreatId] : [])
+  const [targets, setTargets] = useState<GuestTargetRef[]>(editCountermeasure?.targets ?? [])
 
   const isEditMode = !!editCountermeasure
-
-  useEffect(() => {
-    if (open) {
-      if (editCountermeasure) {
-        setName(editCountermeasure.name)
-        setDescription(editCountermeasure.description)
-        setControlFunction(editCountermeasure.controlFunction)
-        setControlNature(editCountermeasure.controlNature)
-      } else {
-        setName('')
-        setDescription('')
-        setControlFunction(['preventive'])
-        setControlNature('technical')
-      }
-    }
-  }, [open, editCountermeasure])
+  const allThreats = guestEditor?.getAllThreats() ?? []
 
   const handleToggleFunction = (value: ControlFunction) => {
     setControlFunction((prev) => {
       if (prev.includes(value)) {
-        // Don't allow deselecting the last one
+        // Keep at least one function selected
         if (prev.length === 1) return prev
         return prev.filter((f) => f !== value)
       }
@@ -75,8 +73,14 @@ export function GuestCountermeasureDialog({
     })
   }
 
+  const handleToggleThreat = (threatId: string) => {
+    setThreatIds((prev) => (prev.includes(threatId) ? prev.filter((id) => id !== threatId) : [...prev, threatId]))
+  }
+
+  const canSubmit = name.trim().length > 0 && controlFunction.length > 0 && threatIds.length > 0
+
   const handleSubmit = () => {
-    if (!name.trim() || !guestEditor || controlFunction.length === 0) return
+    if (!canSubmit || !guestEditor) return
 
     if (isEditMode) {
       guestEditor.updateCountermeasure(editCountermeasure.id, {
@@ -84,24 +88,36 @@ export function GuestCountermeasureDialog({
         description: description.trim(),
         controlFunction,
         controlNature,
+        threatIds,
+        targets,
       })
     } else {
-      guestEditor.addCountermeasure(threatId, name.trim(), description.trim(), controlFunction, controlNature)
+      guestEditor.addCountermeasure({
+        name: name.trim(),
+        description: description.trim(),
+        controlFunction,
+        controlNature,
+        threatIds,
+        targets,
+      })
     }
     onOpenChange(false)
   }
 
+  const hiddenScopeNote = editCountermeasure && editCountermeasure.hiddenTargetRefs.length > 0
+    ? `Also applies to ${editCountermeasure.hiddenTargetRefs.length} element${editCountermeasure.hiddenTargetRefs.length === 1 ? '' : 's'} not on the diagram.`
+    : null
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[520px]">
+    <DialogContent className="sm:max-w-[560px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isEditMode ? 'Edit Countermeasure' : 'Add Countermeasure'}
+            {isEditMode ? `Edit Countermeasure ${countermeasureDisplayNumber(editCountermeasure)}` : 'Add Countermeasure'}
           </DialogTitle>
           <DialogDescription>
             {isEditMode
-              ? `Editing countermeasure for "${threatName}"`
-              : `Add a countermeasure for "${threatName}"`}
+              ? 'Change the countermeasure, the threats it mitigates and what it applies to.'
+              : 'A countermeasure can mitigate several threats and apply to part of the system or all of it.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -114,7 +130,7 @@ export function GuestCountermeasureDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && name.trim()) handleSubmit()
+                if (e.key === 'Enter' && canSubmit) handleSubmit()
               }}
             />
           </div>
@@ -131,8 +147,44 @@ export function GuestCountermeasureDialog({
           </div>
 
           <div className="space-y-2">
+            <Label>Mitigates *</Label>
+            <p className="text-xs text-muted-foreground">The threats this countermeasure is linked to. Pick one or more.</p>
+            <div className="rounded-md border p-2 max-h-40 overflow-y-auto space-y-1" data-testid="countermeasure-threats">
+              {allThreats.length === 0 && (
+                <p className="text-xs text-muted-foreground px-1 py-2">No threats yet.</p>
+              )}
+              {allThreats.map((threat) => (
+                <div key={threat.id} className="flex items-center gap-2 px-1">
+                  <Checkbox
+                    id={`cm-threat-${threat.id}`}
+                    checked={threatIds.includes(threat.id)}
+                    onCheckedChange={() => handleToggleThreat(threat.id)}
+                  />
+                  <label htmlFor={`cm-threat-${threat.id}`} className="text-sm cursor-pointer truncate">
+                    <span className="font-mono text-xs text-muted-foreground mr-1.5">{threatDisplayNumber(threat)}</span>
+                    {threat.name}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Applies to</Label>
+            <p className="text-xs text-muted-foreground">Leave empty when the countermeasure applies to the whole system.</p>
+            <GuestTargetPicker
+              nodes={guestEditor?.nodes ?? []}
+              edges={guestEditor?.edges ?? []}
+              selected={targets}
+              onChange={setTargets}
+              hiddenNote={hiddenScopeNote}
+              idPrefix="countermeasure-target"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label>Control Function *</Label>
-            <p className="text-xs text-muted-foreground">What the control does — select one or more.</p>
+            <p className="text-xs text-muted-foreground">What the control does. Select one or more.</p>
             <div className="space-y-1.5 rounded-md border p-3">
               {GUEST_CONTROL_FUNCTIONS.map((opt) => (
                 <div key={opt.value} className="flex items-start gap-2">
@@ -196,7 +248,7 @@ export function GuestCountermeasureDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!name.trim() || controlFunction.length === 0}>
+          <Button onClick={handleSubmit} disabled={!canSubmit}>
             {isEditMode ? (
               <>
                 <Check className="h-4 w-4 mr-2" />
@@ -210,7 +262,6 @@ export function GuestCountermeasureDialog({
             )}
           </Button>
         </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    </DialogContent>
   )
 }

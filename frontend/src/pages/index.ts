@@ -15,5 +15,6 @@ export {
   MemberManagement,
   TeamManagement,
   BusinessUnitsSettings,
+  SystemsSettings,
 } from '@/features/organization'
 export { AIProviderSettings } from '@/features/ai'

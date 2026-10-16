@@ -40,7 +40,8 @@ canvas_data:
       style: { width: 610, height: 350 }
       data:
         label: "Build Tier"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-staging"
       type: "trustZone"
@@ -49,7 +50,8 @@ canvas_data:
       style: { width: 300, height: 280 }
       data:
         label: "Staging"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     - id: "tz-production"
       type: "trustZone"
@@ -58,7 +60,8 @@ canvas_data:
       style: { width: 300, height: 380 }
       data:
         label: "Production"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     - id: "tz-security"
       type: "trustZone"
@@ -67,7 +70,8 @@ canvas_data:
       style: { width: 610, height: 310 }
       data:
         label: "Security"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     # ---- Processes: Build Tier ----
     - id: "process-codepipeline"
@@ -195,7 +199,7 @@ canvas_data:
         label: "Code push"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     # Source Repo → CodePipeline (webhook)
     - id: "edge-repo-to-codepipeline"
@@ -206,7 +210,7 @@ canvas_data:
         label: "Webhook trigger"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # CodePipeline → ECR (push image)
     - id: "edge-codepipeline-to-ecr"
@@ -217,7 +221,7 @@ canvas_data:
         label: "Push container image"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # CodePipeline → S3 (store artifacts)
     - id: "edge-codepipeline-to-s3"
@@ -228,7 +232,7 @@ canvas_data:
         label: "Store build artifacts"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # CodePipeline → Lambda (custom action)
     - id: "edge-codepipeline-to-lambda"
@@ -239,7 +243,7 @@ canvas_data:
         label: "Custom pipeline action"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # CodePipeline → CloudFormation Staging (deploy)
     - id: "edge-codepipeline-to-cfn-staging"
@@ -250,7 +254,7 @@ canvas_data:
         label: "Deploy to staging"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # CloudFormation Staging → CloudFormation Production (promotion)
     - id: "edge-cfn-staging-to-cfn-production"
@@ -261,7 +265,7 @@ canvas_data:
         label: "Promote (manual approval gate)"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
         description: "Manual approval required before production deployment"
 
     # CodePipeline → CloudFormation Production (deploy)
@@ -273,7 +277,7 @@ canvas_data:
         label: "Deploy to production"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # CodePipeline → SNS (notifications)
     - id: "edge-codepipeline-to-sns"
@@ -284,7 +288,7 @@ canvas_data:
         label: "Pipeline notifications"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # SNS → Developer (notification)
     - id: "edge-sns-to-developer"
@@ -295,7 +299,6 @@ canvas_data:
         label: "Build/deploy notification"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false
 
     # CodePipeline → IAM (role assumption)
     - id: "edge-codepipeline-to-iam"
@@ -306,7 +309,7 @@ canvas_data:
         label: "Pipeline role assumption"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # KMS → S3 Artifacts (encryption)
     - id: "edge-kms-to-s3"
@@ -317,7 +320,7 @@ canvas_data:
         label: "Artifact encryption"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # CloudTrail audit (from CodePipeline)
     - id: "edge-codepipeline-to-cloudtrail"
@@ -328,4 +331,4 @@ canvas_data:
         label: "API call audit"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]

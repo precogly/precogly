@@ -37,7 +37,8 @@ const dfdTypes: DfdTypeItem[] = [
   { type: 'systemActor', label: 'System Actor', icon: Server, color: 'text-slate-600' },
   { type: 'process', label: 'Process', icon: Cog, color: 'text-blue-600' },
   { type: 'datastore', label: 'Data Store', icon: Database, color: 'text-purple-600' },
-  { type: 'trustZone', label: 'Trust Zone', icon: Shield, color: 'text-orange-600' },
+  // A zone's type (trust, network, ...) is picked in the panel after placing it.
+  { type: 'trustZone', label: 'Zone', icon: Shield, color: 'text-orange-600' },
   { type: 'systemScope', label: 'System Scope', icon: Box, color: 'text-gray-600' },
   { type: 'stickyNote', label: 'Sticky Note', icon: StickyNote, color: 'text-amber-700' },
   { type: 'table', label: 'Table', icon: Table, color: 'text-sky-700' },
@@ -114,7 +115,7 @@ export function ComponentPanel({
     return dfdTypes.filter((item) => item.label.toLowerCase().includes(normalizedQuery))
   }, [normalizedQuery])
 
-  const showTrustBoundary = !normalizedQuery || 'trust boundary'.includes(normalizedQuery)
+  const showTrustBoundary = !normalizedQuery || 'boundary'.includes(normalizedQuery) || 'trust boundary'.includes(normalizedQuery)
   const showFlow = !normalizedQuery || 'flow'.includes(normalizedQuery)
 
   const filteredGroups = useMemo(() => {
@@ -218,7 +219,7 @@ export function ComponentPanel({
                   )}
                 >
                   <ShieldCheck className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate">Trust Boundary</span>
+                  <span className="truncate">Boundary</span>
                 </div>
               )}
               {showFlow && onConnectionModeChange && (

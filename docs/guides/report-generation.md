@@ -10,17 +10,17 @@ Open a threat model from the dashboard, then select the **Report** tab in the wo
 
 ## Choosing a report type
 
-Four report types are available. Click the corresponding card at the top of the report view to switch between them.
+Four report types are available. Pick one from the report type dropdown under the model's name, at the top of the report view; the list gives a one-line description of each.
 
 ![Report type selector cards showing Executive, Technical, Compliance, and Full Report options](../assets/images/report-type-selector.png)
 
 ### Executive
 
-High-level overview for leadership. Surfaces the STRIDE summary, countermeasure status, top gaps, risk register, and critical findings without exposing low-level threat or component details. Scope and compliance coverage appear in summary form; assumptions are limited to flagged items only.
+High-level overview for leadership. Surfaces the review and approval state, the STRIDE summary, countermeasure status, top gaps, risk register, and critical findings without exposing low-level threat or component details. Scope, business objectives, and compliance coverage appear in summary form; assumptions are limited to flagged items only.
 
 ### Technical
 
-Detailed analysis for engineers. Includes full architecture, data assets, components and data flows, individual threat detail (including triaged threats), all countermeasure categories (status, gaps, waived, and inherited), and a complete findings and action items list. The risk register is shown in summary form.
+Detailed analysis for engineers. Includes full architecture (zone and boundary types, crossing requirements), data assets, components and flows, individual threat detail with numbers and targets (including triaged threats), countermeasure detail (status, gaps, waived, and controls not linked to any threat), and a complete findings and action items list. The risk register is shown in summary form.
 
 ### Compliance
 
@@ -28,7 +28,7 @@ Audit-ready view organized around framework coverage. Contains the full complian
 
 ### Full Report
 
-Every section at full depth. Includes all 18 sections listed in the reference table below with no filtering or summarization.
+Every section at full depth. Includes all sections listed in the reference table below with no filtering or summarization.
 
 ## Report sections reference
 
@@ -37,19 +37,23 @@ The table below shows which sections appear in each report type. **Full** means 
 | Section                  | Executive | Technical | Compliance | Full |
 |--------------------------|-----------|-----------|------------|------|
 | Executive Summary        | Full      | --        | --         | Full |
+| Review and Approval      | Summary   | Summary   | Full       | Full |
 | Scope and Assumptions    | Summary   | Summary   | Full       | Full |
+| Business Objectives      | Summary   | Summary   | Full       | Full |
 | Architecture             | --        | Full      | --         | Full |
 | Data Assets              | --        | Full      | Summary    | Full |
-| Components and Data Flows| --        | Full      | --         | Full |
+| Components and Flows     | --        | Full      | --         | Full |
 | STRIDE Summary           | Full      | Full      | Summary    | Full |
 | Threat Detail            | --        | Full      | --         | Full |
 | Triaged Threats          | --        | Full      | Full       | Full |
 | Countermeasure Status    | Full      | Full      | Full       | Full |
+| Countermeasure Detail    | --        | Full      | --         | Full |
 | Gaps                     | Top 3     | Full      | Full       | Full |
 | Waived Countermeasures   | Count     | Full      | Full       | Full |
-| Inherited Countermeasures| --        | Full      | --         | Full |
+| Unattached Controls      | --        | Full      | Full       | Full |
 | Risk Register            | Full      | Summary   | Full       | Full |
 | Compliance Mapping       | Summary   | --        | Full       | Full |
+| Compliance Matrix        | --        | --        | Full       | Full |
 | Cross-Framework Mappings | --        | --        | Full       | Full |
 | Assumptions Review       | Flagged   | --        | Full       | Full |
 | Findings                 | Critical  | Full      | Compliance | Full |
@@ -57,18 +61,22 @@ The table below shows which sections appear in each report type. **Full** means 
 
 ## Exporting reports
 
-The **Export CSV** dropdown in the top-right corner of the report view provides five export options.
+The **Export CSV** dropdown in the top-right corner of the report view provides the CSV exports and the Word report.
 
 ![Export dropdown showing Threats, Countermeasures, Risks, Compliance Coverage, and Full Report (Word) options](../assets/images/report-export-menu.png)
 
 ### CSV exports
 
-Four separate CSV files are available, each covering one domain of the threat model:
+Separate CSV files are available, each covering one domain of the threat model:
 
-- **Threats** -- all identified threats and their attributes
-- **Countermeasures** -- countermeasure status, ownership, and mapping
-- **Risks** -- risk register entries with severity and likelihood
-- **Compliance Coverage** -- framework control mappings and coverage status
+- **Threats**: number, name, description, targets (or "Whole system"), classifications, level, score, rating method, status, business objectives, and the linked control numbers
+- **Countermeasures**: number, name, control type, status, priority, applies to, implemented by, source, compliance standards, owner, and one row per linked threat with its number and targets
+- **Risks**: risk register entries with status, statement, the inherent, residual, and target ratings, and responses
+- **Compliance Coverage**: framework control mappings and coverage status
+- **Compliance Matrix**: one row per requirement and countermeasure pair, and one row per requirement nothing maps to, with the state, sufficiency, days overdue and threats
+- **Assumptions**: description, validity, topic, owner, and validation details
+
+The STRIDE summary appears only when STRIDE is among the model's methodologies. Controls not linked to any threat are listed on their own and left out of the gap and coverage figures.
 
 Click the desired item in the dropdown to download the corresponding CSV file immediately.
 

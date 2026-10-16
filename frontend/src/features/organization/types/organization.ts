@@ -3,6 +3,7 @@
  */
 
 import type { TaxonomyEntry } from '@/types/domain'
+import type { Rating } from '@/types/risk'
 
 // Role types
 export type OrganizationRole = 'security_team' | 'member'
@@ -161,12 +162,12 @@ export interface ThreatModelStats {
     verified: number
     gaps: number
   }
-  // Note: Backend returns snake_case but DRF converts to camelCase at API boundary
+  // Keys as organizations/views.py MagicLinkAccessView computes them (camelCased).
   progress: {
     assetsDefined: boolean
     componentsIdentified: boolean
-    trustBoundariesIdentified: boolean
-    dataFlowsDefined: boolean
+    boundariesIdentified: boolean
+    flowsDefined: boolean
     ownersAssigned: boolean
     threatsLinkedComponents: boolean
     threatsLinkedFlows: boolean
@@ -177,7 +178,6 @@ export interface ThreatModelStats {
 // Threat Analysis types for magic link sharing
 export interface ComplianceStandard {
   id: number
-  requirementId: number | null
   frameworkName: string
   frameworkSlug: string
   sectionCode: string
@@ -185,42 +185,53 @@ export interface ComplianceStandard {
   sufficiency: 'full' | 'partial' | 'supplemental'
 }
 
+/** A target in the shared payload (analysis_service.SHARED_TARGET_KEYS). */
+export interface SharedTarget {
+  type: 'component' | 'flow' | 'zone' | 'boundary'
+  id: number
+  name: string | null
+  blueprintId: number
+  nodeId: string | null
+  edgeId: string | null
+  dfdId: string | null
+  dfdName: string | null
+}
+
+// The shared (magic-link) form of the threat analysis payload. Same shape as
+// the signed-in payload from /threat-models/{id}/threats/, restricted to the
+// backend's allow-list (analysis_service.SHARED_THREAT_KEYS and
+// SHARED_COUNTERMEASURE_KEYS). The shared view shows nothing it did not show
+// before unless a key is added to that list on purpose (M6).
 export interface SharedCountermeasure {
   id: number
+  number: number
+  displayNumber: string
+  targets: SharedTarget[]
   countermeasureLibraryId: number | null
   countermeasureName: string | null
   countermeasureDescription: string | null
   controlFunctions: string[] | null
   controlNature: string | null
-  status: 'gap' | 'planned' | 'verified' | 'waived' | 'platform'
+  status: 'gap' | 'planned' | 'in_progress' | 'implemented' | 'verified' | 'waived' | 'platform' | 'decommissioned'
+  priority: string
   evidenceUrl: string
   assignedOwnerEmail: string | null
   verifiedByEmail: string | null
-  complianceStandards: ComplianceStandard[]
+  standardMappings: ComplianceStandard[]
 }
 
 export interface SharedThreat {
   id: number
-  type: 'component' | 'flow'
-  // Component threat fields
-  componentId?: number
-  componentName?: string | null
-  nodeId?: string | null
-  // Flow threat fields
-  flowId?: number
-  flowLabel?: string | null
-  edgeId?: string | null
-  // Common fields
-  dfdId: string | null
-  dfdName: string | null
+  number: number
+  displayNumber: string
+  wholeSystem: boolean
+  targets: SharedTarget[]
   threatLibraryId: number | null
   threatName: string | null
   threatDescription: string | null
   taxonomyEntries?: TaxonomyEntry[]
-  inherentSeverity: string
-  residualSeverity: string
-  status: 'open' | 'mitigated' | 'accepted'
-  severityScoringMetadata?: Record<string, unknown>
+  rating: Rating | null
+  status: 'exposed' | 'addressable' | 'mitigated'
   triageStatus: string
   countermeasures: SharedCountermeasure[]
 }
@@ -229,8 +240,8 @@ export interface ThreatAnalysisData {
   threatModelId: string
   threats: SharedThreat[]
   totalCount: number
-  nodeComponentMap: Record<string, { componentId: number; dfdId: string; dfdName: string }>
-  edgeFlowMap: Record<string, { flowId: number; dfdId: string; dfdName: string }>
+  nodeComponentMap: Record<string, { componentId: number; dfdId: string | null; dfdName: string | null }>
+  edgeFlowMap: Record<string, { flowId: number; dfdId: string | null; dfdName: string | null }>
 }
 
 export interface MagicLinkAccessResponse {

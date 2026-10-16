@@ -28,8 +28,21 @@ import {
 } from '@/components/ui/alert-dialog'
 import { TechnologyCombobox } from '../technology-combobox'
 import { SuggestionCombobox } from '../suggestion-combobox'
-import { useThreatModelSystems, useUpdateComponentSystem } from '@/features/threat-models/api/threat-models'
+import { AdvancedSection } from './AdvancedSection'
 import { useDataAssets } from '@/features/threat-models/api/data-assets'
+import { useSystems } from '@/features/threat-models/api/threat-models'
+import {
+  COMPONENT_KINDS,
+  ZONE_TYPES,
+  type ComponentKind,
+  type ZoneType,
+} from '@/types/domain'
+import { getComponentKind, getZoneType, kindForNodeType } from '../../lib/canvas-defaults'
+import {
+  NEW_ZONE_TRUST_LEVEL,
+  getTrustLevel,
+  zoneTypeHasTrustLevel,
+} from '../../lib/zone-trust-level'
 import {
   useComponentDataAssets,
   useCreateComponentDataAsset,
@@ -68,10 +81,122 @@ const nodeTypeConfig: Record<
   datastore: { label: 'Data Store', icon: Database, color: 'text-purple-600' },
   humanActor: { label: 'Human Actor', icon: User, color: 'text-green-600' },
   systemActor: { label: 'System Actor', icon: Server, color: 'text-slate-600' },
-  trustZone: { label: 'Trust Zone', icon: Shield, color: 'text-orange-600' },
+  trustZone: { label: 'Zone', icon: Shield, color: 'text-orange-600' },
   systemScope: { label: 'System Scope', icon: Box, color: 'text-gray-600' },
   stickyNote: { label: 'Sticky Note', icon: Box, color: 'text-amber-700' },
   table: { label: 'Table', icon: Table, color: 'text-sky-700' },
+}
+
+/** The "use the default" item of the kind select; Radix Select refuses an empty value. */
+const DEFAULT_KIND_CHOICE = '__default__'
+/** The "not linked" item of the inventory system select. */
+const NO_SYSTEM_CHOICE = 'none'
+
+const NODE_TYPES_WITH_KIND: DiagramNodeType[] = ['process', 'datastore', 'humanActor', 'systemActor']
+
+/**
+ * Component kind under "Advanced" (plan 11.11): the spec asset type. It
+ * defaults from the node type and is only written when the user picks one, so
+ * a technology change still copies the library's kind (plan M16).
+ */
+function ComponentKindSection({
+  node,
+  updateNodeData,
+}: {
+  node: DiagramNode
+  updateNodeData: (updates: Partial<DiagramNode['data']>) => void
+}) {
+  const chosenKind = (node.data as { kind?: ComponentKind }).kind
+  const defaultKind = kindForNodeType(node.type)
+  const defaultKindLabel = COMPONENT_KINDS.find((entry) => entry.value === defaultKind)?.label ?? defaultKind
+  const effectiveKind = getComponentKind(node.data, node.type)
+
+  return (
+    <>
+      <Separator />
+      <AdvancedSection>
+        <div className="space-y-1">
+          <Label htmlFor="node-kind" className="text-sm font-normal">
+            Kind
+          </Label>
+          <Select
+            value={chosenKind ?? DEFAULT_KIND_CHOICE}
+            onValueChange={(value) =>
+              updateNodeData({ kind: value === DEFAULT_KIND_CHOICE ? undefined : (value as ComponentKind) })
+            }
+          >
+            <SelectTrigger id="node-kind" data-testid="component-kind-select">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={DEFAULT_KIND_CHOICE}>
+                <span className="text-muted-foreground">Default ({defaultKindLabel})</span>
+              </SelectItem>
+              {COMPONENT_KINDS.map((entry) => (
+                <SelectItem key={entry.value} value={entry.value}>
+                  {entry.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            The asset type in exports. Defaults from the component's category
+            {chosenKind ? '' : ` (currently ${COMPONENT_KINDS.find((entry) => entry.value === effectiveKind)?.label ?? effectiveKind})`}.
+          </p>
+        </div>
+      </AdvancedSection>
+    </>
+  )
+}
+
+/**
+ * The system scope's inventory link (plan F20): an optional pick from the
+ * organization's systems. Sync links the system asset to it and never
+ * creates or deletes inventory rows.
+ */
+function LinkedInventorySystemField({
+  node,
+  updateNodeData,
+}: {
+  node: DiagramNode
+  updateNodeData: (updates: Partial<DiagramNode['data']>) => void
+}) {
+  const { data: systems = [], isLoading } = useSystems()
+  const linkedSystemId = (node.data as { orgsystemId?: number }).orgsystemId
+  const linkedSystemMissing =
+    linkedSystemId !== undefined && !systems.some((system) => system.id === linkedSystemId)
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="node-orgsystem">Linked inventory system (optional)</Label>
+      <Select
+        value={linkedSystemId !== undefined ? String(linkedSystemId) : NO_SYSTEM_CHOICE}
+        onValueChange={(value) =>
+          updateNodeData({ orgsystemId: value === NO_SYSTEM_CHOICE ? undefined : parseInt(value, 10) })
+        }
+      >
+        <SelectTrigger id="node-orgsystem" data-testid="linked-system-select">
+          <SelectValue placeholder={isLoading ? 'Loading systems...' : 'Not linked'} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={NO_SYSTEM_CHOICE}>
+            <span className="text-muted-foreground">Not linked</span>
+          </SelectItem>
+          {linkedSystemMissing && linkedSystemId !== undefined && (
+            <SelectItem value={String(linkedSystemId)}>System #{linkedSystemId}</SelectItem>
+          )}
+          {systems.map((system) => (
+            <SelectItem key={system.id} value={String(system.id)}>
+              {system.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <p className="text-xs text-muted-foreground">
+        Drawing or deleting this scope does not add or remove systems in the inventory. It only links to one.
+      </p>
+    </div>
+  )
 }
 
 /**
@@ -244,10 +369,6 @@ export const NodeEditPanel = memo(function NodeEditPanel({
 }: NodeEditPanelProps) {
   const { setNodes, getNodes, getEdges, setEdges } = useReactFlow()
 
-  // Get linked systems for this threat model
-  const { systems: linkedSystems, hasLinkedSystems } = useThreatModelSystems(threatModelId)
-  const updateComponentSystemMutation = useUpdateComponentSystem()
-
   const typeConfig = nodeTypeConfig[node.type as DiagramNodeType]
   const Icon = typeConfig?.icon || Cog
 
@@ -255,6 +376,18 @@ export const NodeEditPanel = memo(function NodeEditPanel({
   const parentNode = node.parentId
     ? (getNodes() as DiagramNode[]).find((n) => n.id === node.parentId)
     : null
+
+  // Zone fields (plan 4.5): the type is a badge in the header; the trust
+  // level is shown for trust and network zones and may be "not set".
+  const zoneType = node.type === 'trustZone' ? getZoneType(node.data) : null
+  const zoneTypeLabel = zoneType
+    ? ZONE_TYPES.find((entry) => entry.value === zoneType)?.label ?? 'Zone'
+    : null
+  const trustLevel = getTrustLevel(node.data)
+
+  // A system scope drawn inside another scope is a subsystem (plan F20).
+  const scopeKindFromNesting: ComponentKind = parentNode?.type === 'systemScope' ? 'subsystem' : 'system'
+  const scopeKind = (node.data as { kind?: ComponentKind }).kind ?? scopeKindFromNesting
 
   // Pending technology change awaiting confirmation
   const [pendingTechnology, setPendingTechnology] = useState<string | null>(null)
@@ -325,9 +458,14 @@ export const NodeEditPanel = memo(function NodeEditPanel({
     <div className="w-80 bg-background border-l h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b">
-        <div className="flex items-center gap-2">
-          <Icon className={`h-5 w-5 ${typeConfig?.color}`} />
+        <div className="flex items-center gap-2 min-w-0">
+          <Icon className={`h-5 w-5 shrink-0 ${typeConfig?.color}`} />
           <span className="font-medium">{typeConfig?.label || 'Node'}</span>
+          {zoneTypeLabel && (
+            <Badge variant="outline" className="text-[10px] h-5 px-1.5 truncate" title={zoneTypeLabel}>
+              {zoneTypeLabel}
+            </Badge>
+          )}
         </div>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="h-4 w-4" />
@@ -631,41 +769,6 @@ export const NodeEditPanel = memo(function NodeEditPanel({
               </div>
             )}
 
-            {/* System Assignment - only shown if threat model has linked systems */}
-            {hasLinkedSystems && (node.data as { componentId?: number }).componentId && (
-              <div className="space-y-2">
-                <Label htmlFor="node-system">System</Label>
-                <Select
-                  value={(node.data as { orgsystemId?: number }).orgsystemId?.toString() || 'none'}
-                  onValueChange={(value) => {
-                    const componentId = (node.data as { componentId?: number }).componentId
-                    if (componentId) {
-                      const orgsystemId = value === 'none' ? null : parseInt(value, 10)
-                      updateNodeData({ orgsystemId: orgsystemId ?? undefined })
-                      updateComponentSystemMutation.mutate({
-                        componentId,
-                        orgsystemId,
-                      })
-                    }
-                  }}
-                >
-                  <SelectTrigger id="node-system">
-                    <SelectValue placeholder="Not assigned" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Not assigned</SelectItem>
-                    {linkedSystems.map((system) => (
-                      <SelectItem key={system.id} value={system.id}>
-                        {system.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  Assign this component to a linked system
-                </p>
-              </div>
-            )}
 
             {/* Data Assets - only shown when component has been synced */}
             <DataAssetsSection
@@ -673,6 +776,11 @@ export const NodeEditPanel = memo(function NodeEditPanel({
               threatModelId={threatModelId}
             />
           </>
+        )}
+
+        {/* Kind, under Advanced, for every node that syncs to a component row */}
+        {NODE_TYPES_WITH_KIND.includes(node.type as DiagramNodeType) && (
+          <ComponentKindSection node={node} updateNodeData={updateNodeData} />
         )}
 
         {node.type === 'humanActor' && (
@@ -694,26 +802,78 @@ export const NodeEditPanel = memo(function NodeEditPanel({
           </div>
         )}
 
-        {node.type === 'trustZone' && (
+        {node.type === 'trustZone' && zoneType && (
           <>
-            <div className="space-y-3">
-              <Label>Trust Level</Label>
-              <Slider
-                value={[(node.data as { trustLevel?: number }).trustLevel ?? 75]}
-                onValueChange={([value]) => updateNodeData({ trustLevel: value })}
-                min={0}
-                max={100}
-                step={1}
-                className="w-full"
-              />
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>0 — untrusted</span>
-                <span className="font-medium text-foreground">
-                  {(node.data as { trustLevel?: number }).trustLevel ?? 75}
-                </span>
-                <span>100 — restricted</span>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="node-zone-type">Type</Label>
+              <Select
+                value={zoneType}
+                onValueChange={(value) => updateNodeData({ zoneType: value as ZoneType })}
+              >
+                <SelectTrigger id="node-zone-type" data-testid="zone-type-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {ZONE_TYPES.map((entry) => (
+                    <SelectItem key={entry.value} value={entry.value}>
+                      {entry.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            {/* Trust level: trust and network zones only, with a "not set" state */}
+            {zoneTypeHasTrustLevel(zoneType) && (
+              <div className="space-y-3" data-testid="zone-trust-level-field">
+                <div className="flex items-center justify-between">
+                  <Label>Trust Level</Label>
+                  {trustLevel === null ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-6 text-xs"
+                      onClick={() => updateNodeData({ trustLevel: NEW_ZONE_TRUST_LEVEL })}
+                    >
+                      Set level
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 text-xs text-muted-foreground"
+                      onClick={() => updateNodeData({ trustLevel: undefined })}
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+                {trustLevel === null ? (
+                  <p className="text-xs text-muted-foreground">Not set</p>
+                ) : (
+                  <>
+                    <Slider
+                      value={[trustLevel]}
+                      onValueChange={([value]) => updateNodeData({ trustLevel: value })}
+                      min={0}
+                      max={100}
+                      step={1}
+                      className="w-full"
+                      aria-label="Trust level"
+                    />
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span>0: untrusted</span>
+                      <span className="font-medium text-foreground" data-testid="zone-trust-level-value">
+                        {trustLevel}
+                      </span>
+                      <span>100: restricted</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label>Zone Color</Label>
@@ -767,7 +927,7 @@ export const NodeEditPanel = memo(function NodeEditPanel({
               )}
             </div>
 
-            {/* Trust Boundaries (read-only) */}
+            {/* Boundaries (read-only) */}
             {(() => {
               const allEdges = getEdges()
               const boundaryEdges = allEdges.filter(
@@ -783,7 +943,7 @@ export const NodeEditPanel = memo(function NodeEditPanel({
                   <div className="space-y-2">
                     <Label className="flex items-center gap-1.5">
                       <ShieldCheck className="h-3.5 w-3.5 text-orange-600" />
-                      Trust Boundaries
+                      Boundaries
                     </Label>
                     <div className="space-y-1">
                       {boundaryEdges.map((boundaryEdge) => {
@@ -849,6 +1009,34 @@ export const NodeEditPanel = memo(function NodeEditPanel({
 
         {node.type === 'systemScope' && (
           <>
+            {/* System or subsystem (the component's kind). A scope drawn inside
+                another scope is a subsystem; the choice follows the nesting
+                unless the user picks otherwise. */}
+            <div className="space-y-2">
+              <Label htmlFor="node-scope-kind">This is a</Label>
+              <Select
+                value={scopeKind}
+                onValueChange={(value) => updateNodeData({ kind: value as ComponentKind })}
+              >
+                <SelectTrigger id="node-scope-kind" data-testid="scope-kind-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="system">System</SelectItem>
+                  <SelectItem value="subsystem">Subsystem</SelectItem>
+                </SelectContent>
+              </Select>
+              {scopeKindFromNesting === 'subsystem' && (
+                <p className="text-xs text-muted-foreground">
+                  Drawn inside {parentNode?.data.label ? String(parentNode.data.label) : 'another scope'}, so a subsystem.
+                </p>
+              )}
+            </div>
+
+            {threatModelId && (
+              <LinkedInventorySystemField node={node} updateNodeData={updateNodeData} />
+            )}
+
             <div className="space-y-2">
               <Label>Technology</Label>
               {threatModelId ? (

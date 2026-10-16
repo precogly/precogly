@@ -72,7 +72,7 @@ Once saved, the **Data Assets** item in the completion checklist gets checked of
 
 Navigate to the DFD editor tab (scroll down on the threat model's 'Overview' tab). The sample threat model comes with a pre-built Data Flow Diagram.
 
-Click on different elements in the diagram — processes, data stores, external entities, and data flows — to view their details. Trust zones and trust boundaries are also visible on the canvas.
+Click on different elements in the diagram (processes, data stores, external entities, and flows) to view their details. Zones and boundaries are also visible on the canvas; each has a type, and flows have a type too.
 
 ![Selected element in DFD editor](../assets/images/quickstart-dfd-editor-side-panel.png)
 
@@ -86,9 +86,9 @@ Navigate to the threat analysis workspace screen. This is where you review the t
 
 The three columns map to the core threat modeling questions:
 
-- **Column 1** — "What are we working on?" (components)
-- **Column 2** — "What can go wrong?" (threats, with taxonomy links like CAPEC) along with severity assessment and a field to enter threat actor details
-- **Column 3** — "What can we do about it?" (countermeasures, with compliance mappings)
+- **Column 1**: "What are we working on?" (the system, zones, components, flows, and boundaries)
+- **Column 2**: "What can go wrong?" (threats, with taxonomy links like CAPEC) along with a rating and a field to enter threat actor details. Every threat has a number such as T7, and every countermeasure a number such as C3.
+- **Column 3**: "What can we do about it?" (countermeasures, with compliance mappings)
 
 Taxonomy mappings come with hyperlinks to their entries, and compliance mappings are viewable on each countermeasure.
 

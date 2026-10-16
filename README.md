@@ -4,7 +4,9 @@
 [![License](https://img.shields.io/github/license/precogly/precogly)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/precogly/precogly)](https://github.com/precogly/precogly/stargazers)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-5865F2?logo=discord&logoColor=white)](https://discord.gg/uBFZGJzpYa)
+[![OWASP Slack](https://img.shields.io/badge/OWASP%20Slack-%23project--precogly-4A154B)](https://owasp.slack.com/archives/C0C1HV90L5P)
 ![OWASP Project](https://img.shields.io/badge/OWASP-Project-blue?logo=owasp)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/precogly/precogly/badge)](https://securityscorecards.dev/viewer/?uri=github.com/precogly/precogly)
 
 > [!IMPORTANT]
 > **Precogly is now an OWASP project!** OWASP is the world's largest open-source application security community, and Precogly is proud to be part of it.
@@ -39,7 +41,7 @@ Precogly bridges this gap and democratizes threat modeling for every org in the 
 
 - Import and export TM-BOM style JSON files - improves interoperability with other threat modeling platforms
 - A threat modeling workspace allows for team collaboration
-- An advanced DFD editor (allows for nested components, trust zones with trust boundaries and much more)
+- An advanced DFD editor (allows for nested components, typed zones, boundaries and flows, and much more)
 - Community library packs with links to taxonomies like MITRE ATT&CK, CAPEC, LINDDUN, STRIDE etc. - allows your team to quickly create high quality threat models
 
 ### Who is Precogly for?
@@ -67,10 +69,28 @@ Precogly is designed for enterprise workflows, but smaller organizations can als
 ### Tech Stack
 
 - **Frontend:** React 19, TypeScript, Tailwind CSS, shadcn/ui, React Flow
-- **Backend:** Django 5.1, Django REST Framework, PostgreSQL 16
+- **Backend:** Django 5.2, Django REST Framework, PostgreSQL 16
 - **Infrastructure:** Docker, nginx (production)
 
 ### Roadmap
+
+- **0.3: DFD Editor Features** (released July 2026)
+- **0.4: MCP and AI Agents Support** (released September 2026)
+- **0.5: Threat Modeling Program Management and TM-BOM Alignment**
+  - See threat modeling coverage and risk management progress across the organization
+  - Report on risk ownership, treatment status and overdue actions by business unit, team and product
+  - Align program management with the [Threat Modeling Capabilities](https://www.threatmodelingmanifesto.org/capabilities/), especially the Measurement and Program Management areas
+  - Align Precogly's system representation with the TM-BOM System concepts in the upcoming CycloneDX 2.0
+- **0.6: Risk Management**
+  - Record risks from threat modeling, vulnerabilities and assessments in one risk register
+  - Assign risk owners, record treatment decisions and track residual risk
+  - Run risk assessments and produce reports that support compliance, including the EU CRA
+- **0.7: Security Controls Management**
+  - Show auditors that security controls are in place and working
+  - Define verification steps and record evidence
+  - Maintain control libraries at product and organization levels
+  - Integrate with development and security tools, starting with GitHub and DefectDojo
+  - Apply ISO/IEC 27034 concepts across applications, infrastructure and devices
 
 See the [GitHub milestones](https://github.com/precogly/precogly/milestones) for current and upcoming release work.
 
@@ -88,7 +108,10 @@ If you find Precogly useful, give the project a star!
 
 ### Community
 
-Join the conversation on [Discord](https://discord.gg/uBFZGJzpYa).
+Join the conversation:
+
+- [Discord](https://discord.gg/uBFZGJzpYa)
+- [#project-precogly](https://owasp.slack.com/archives/C0C1HV90L5P) on OWASP Slack ([get an invite](https://owasp.org/slack/invite))
 
 ### Need Help? Contact the Developer
 

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import type { CountermeasureStatus } from '../../types/threat-analysis'
 import { COUNTERMEASURE_STATUS_CONFIG } from '../../types/threat-analysis'
+import { countermeasureStatusAction, countermeasureStatusOptions } from './countermeasure-utils'
 
 export function CountermeasureStatusButtons({
   status,
@@ -22,22 +23,13 @@ export function CountermeasureStatusButtons({
   onPlannedWithoutOwner: () => void
   onWaivedWithoutReason: () => void
 }) {
-  const statuses: CountermeasureStatus[] = isSecurityTeam
-    ? ['platform', 'gap', 'planned', 'verified', 'waived']
-    : ['gap', 'planned', 'verified', 'waived']
+  const statuses = countermeasureStatusOptions({ isSecurityTeam })
 
   const handleStatusClick = (newStatus: CountermeasureStatus) => {
-    // If clicking "Planned" and no owner assigned, trigger owner assignment first
-    if (newStatus === 'planned' && !hasOwner) {
-      onPlannedWithoutOwner()
-      return
-    }
-    // If clicking "Waived", trigger waiver reason input first
-    if (newStatus === 'waived') {
-      onWaivedWithoutReason()
-      return
-    }
-    onChange(newStatus)
+    const action = countermeasureStatusAction(newStatus, hasOwner)
+    if (action === 'assign-owner') onPlannedWithoutOwner()
+    else if (action === 'waive') onWaivedWithoutReason()
+    else onChange(newStatus)
   }
 
   return (

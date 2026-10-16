@@ -98,6 +98,7 @@ components:
   - id: s3
     name: Amazon S3
     category: datastore # process | datastore | external_human_actor | external_system_actor
+    kind: data-store    # optional: the CycloneDX asset type, such as device, service, api or gateway
     type: Object Storage
     provider: aws
     description: |
@@ -130,6 +131,8 @@ countermeasures:
 
 ### Join files
 
+`kind` is optional. When you leave it out, it comes from the category: `process` gives `process`, `datastore` gives `data-store`, and the two actor categories give `actor`. Set it when the default is too vague, for example `device` for a field sensor or `gateway` for an API gateway. A value outside the CycloneDX asset type list is a validation error.
+
 Join files in the `joins/` directory define relationships between items.
 
 **components-threats.yaml** — which threats apply to which components:
@@ -140,7 +143,13 @@ mappings:
     threats:
       - threat: s3-public-exposure
         applies_to: component # component | flow | both
+      - threat: s3-traffic-interception
+        applies_to: flow
+        flow_types: [data, message] # optional: list of flow types, or any
+        severity: high              # optional: info | low | medium | high | critical
 ```
+
+For `flow` and `both` links, `flow_types` says which kinds of flow the threat reaches. A link that says nothing applies to data-like flows only (`data`, `message` and `event`), never to `signal`, `energy`, `physical`, `control`, `process` or `financial` flows. Use `any` to reach every flow type. `flow_types` is not allowed on a link with `applies_to: component`. `severity` is the level a generated threat starts with and defaults to `medium`.
 
 **threats-countermeasures.yaml** — which countermeasures mitigate which threats:
 
@@ -188,6 +197,40 @@ mappings:
 ```
 
 These cross-framework mappings appear in the **Cross-Framework Mappings** section of the Compliance report. See the [Compliance Mapping guide](../guides/compliance-mapping.md#cross-framework-requirement-mappings) for details.
+
+### DFD templates
+
+Templates in `dfd-templates/` describe a diagram as nodes and edges. These keys carry the type information:
+
+```yaml
+nodes:
+  - id: tb-site
+    type: trustZone
+    data:
+      label: Plant Network
+      zoneType: network # a CycloneDX zone type, default trust
+      trustLevel: 40    # optional, integer from 0 to 100
+  - id: process-plc
+    type: process
+    data:
+      label: PLC
+      kind: device      # optional, a CycloneDX asset type
+edges:
+  - id: edge-1
+    source: process-plc
+    target: process-valve
+    type: dataFlow
+    data:
+      label: Valve command
+      flowType: control            # default data
+      authentication: [certificate] # a list of methods
+```
+
+- `zoneType` is a CycloneDX zone type such as `trust`, `network`, `physical` or `logical`. Use `network` for segments such as a DMZ, a VPC or a Purdue level.
+- `flowType` is one of `control`, `data`, `energy`, `event`, `financial`, `message`, `physical`, `process` or `signal`.
+- `authentication` is always a list. An empty list or no key means not recorded.
+
+Two older keys are retired and now fail validation: the boolean `authenticated` on edges (use `authentication`), and the old zone values `zoneInternet`, `zoneDmz`, `zoneInternal`, `zoneRestricted` and `zoneExternal` (use `trust` or `network`, and set `trustLevel`). The pack format version stays `1`. See [`libraries/README.md`](https://github.com/precogly/precogly/blob/main/libraries/README.md) for the full field reference.
 
 ## How to import a library pack
 

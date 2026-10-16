@@ -24,9 +24,11 @@ dfd-editor/
 
 ## Key Concepts
 
-- **Nodes**: Process, DataStore, Actor, TrustZone, SystemScope
-- **Edges**: Data flows with protocol, encryption, and classification metadata
-- **Containers**: Nodes can be nested inside trust zones or system scopes (auto-detected on drag)
+- **Nodes**: Process, DataStore, Actor, TrustZone (a "Zone" with a `zoneType` badge), SystemScope
+- **Edges**: Flows (`flowType`; protocol, port and encryption on data-like types only; `authentication` as a list) and boundaries (`boundaryType`, `authenticationMethods`, `accessControlMethods`, crossing requirements under "Advanced")
+- **Containers**: Nodes can be nested inside zones or system scopes (auto-detected on drag)
+- **Canvas root**: `notationStyle` and `visibleFlowTypes` (the toolbar's flow type filter; missing means every type is drawn)
+- **Defaults**: readers go through `lib/canvas-defaults.ts` (`getZoneType`, `getFlowType`, `getBoundaryType`, `getComponentKind`, `getAuthentication`); a canvas that sets no type keys needs no rewrite. A zone's trust level is shown only when set (`lib/zone-trust-level.ts`); a new zone starts at 50.
 
 ## Extending
 

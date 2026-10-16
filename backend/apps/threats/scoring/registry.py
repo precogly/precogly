@@ -1,112 +1,74 @@
-"""Scoring method registry — maps method keys to engine classes and metadata."""
+"""Scoring method registry: engines by their CycloneDX methodology key.
+
+Populated by ``BaseScoringEngine.__init_subclass__``. Methods without an
+engine yet (FAIR, Mozilla RRA) are listed with ``available: false`` so the
+chooser can show them.
+"""
+
+from importlib import import_module
+
+_ENGINES: dict[str, type] = {}
+_ENGINE_MODULES = ("qualitative_matrix", "owasp_risk_rating", "manual")
+
+# Methods a threat model may pick that have no engine yet.
+PLANNED_METHODS = {
+    "fair": {
+        "label": "FAIR",
+        "description": "Factor Analysis of Information Risk. Quantitative. Engine not yet available.",
+    },
+    "mozilla-rra": {
+        "label": "Mozilla Rapid Risk Assessment",
+        "description": "Qualitative risk assessment with data classification. Engine not yet available.",
+    },
+}
 
 
-def score_to_level(score):
-    """Convert 0-100 score to risk level band."""
-    if score <= 25:
-        return "low"
-    if score <= 50:
-        return "medium"
-    if score <= 75:
-        return "high"
-    return "critical"
+def register(engine_class) -> None:
+    _ENGINES[engine_class.key] = engine_class
 
 
-def _build_scoring_methods():
-    """Build the scoring methods dict with lazy engine imports."""
-    from .tm_library import TmLibraryScoringEngine
-
-    return {
-        "tm_library": {
-            "label": "Likelihood x Impact (5x5 Matrix)",
-            "description": "TM-Library compatible. Score = likelihood(1-5) x impact(1-5).",
-            "metadata_schema": {
-                "likelihood": {
-                    "type": "enum",
-                    "values": ["rare", "unlikely", "possible", "likely", "certain"],
-                    "required": True,
-                },
-                "impact": {
-                    "type": "enum",
-                    "values": ["negligible", "minor", "moderate", "major", "severe"],
-                    "required": True,
-                },
-                "impact_description": {"type": "text", "required": False},
-            },
-            "engine": TmLibraryScoringEngine,
-        },
-        "fair": {
-            "label": "FAIR",
-            "description": "Factor Analysis of Information Risk. Quantitative.",
-            "metadata_schema": {
-                "loss_event_frequency": {"type": "range", "required": True},
-                "loss_magnitude": {"type": "range", "required": True},
-                "threat_event_frequency": {"type": "number", "required": True},
-                "vulnerability": {"type": "number", "min": 0, "max": 1, "required": True},
-            },
-            "engine": None,
-        },
-        "owasp_rr": {
-            "label": "OWASP Risk Rating",
-            "description": "Likelihood and impact factor groups per OWASP methodology.",
-            "metadata_schema": {
-                "threat_agent_factors": {"type": "object", "required": True},
-                "vulnerability_factors": {"type": "object", "required": True},
-                "technical_impact_factors": {"type": "object", "required": True},
-                "business_impact_factors": {"type": "object", "required": True},
-            },
-            "engine": None,
-        },
-        "mozilla_rra": {
-            "label": "Mozilla Rapid Risk Assessment",
-            "description": "Qualitative risk assessment with data classification.",
-            "metadata_schema": {
-                "data_classification": {
-                    "type": "enum",
-                    "values": [
-                        "public",
-                        "confidential_internal",
-                        "confidential_specific",
-                        "confidential_restricted",
-                    ],
-                    "required": True,
-                },
-                "risk_impact": {"type": "object", "required": True},
-            },
-            "engine": None,
-        },
-        "custom": {
-            "label": "Manual Score",
-            "description": "User enters score directly. No automated calculation.",
-            "metadata_schema": {
-                "justification": {"type": "text", "required": False},
-            },
-            "engine": None,
-        },
-    }
+def _ensure_loaded() -> None:
+    for name in _ENGINE_MODULES:
+        import_module(f"{__package__}.{name}")
 
 
-_SCORING_METHODS = None
+def get_engine(key: str):
+    """An engine instance for ``key``, or None when none is registered."""
+    _ensure_loaded()
+    engine_class = _ENGINES.get(key)
+    return engine_class() if engine_class is not None else None
 
 
-def get_scoring_methods():
-    """Get the scoring methods dict (lazy-initialized)."""
-    global _SCORING_METHODS
-    if _SCORING_METHODS is None:
-        _SCORING_METHODS = _build_scoring_methods()
-    return _SCORING_METHODS
+def get_engines() -> dict:
+    _ensure_loaded()
+    return dict(_ENGINES)
 
 
-def get_scoring_methods_list():
-    """Return serializable list of scoring methods for the API."""
-    methods = get_scoring_methods()
-    return [
+def get_scoring_methods_list() -> list[dict]:
+    """The chooser's list: registered engines first, then planned methods."""
+    _ensure_loaded()
+    methods = [
         {
-            "key": key,
-            "label": config["label"],
-            "description": config["description"],
-            "metadata_schema": config["metadata_schema"],
-            "available": config["engine"] is not None,
+            "key": engine_class.key,
+            "label": engine_class.label,
+            "description": engine_class.description,
+            "input_schema": engine_class.input_schema,
+            "score_scale": engine_class.score_scale,
+            "available": True,
         }
-        for key, config in methods.items()
+        for engine_class in _ENGINES.values()
+        if engine_class.key != "manual"
     ]
+    for key, planned in PLANNED_METHODS.items():
+        if key not in _ENGINES:
+            methods.append(
+                {
+                    "key": key,
+                    "label": planned["label"],
+                    "description": planned["description"],
+                    "input_schema": {},
+                    "score_scale": "",
+                    "available": False,
+                }
+            )
+    return methods

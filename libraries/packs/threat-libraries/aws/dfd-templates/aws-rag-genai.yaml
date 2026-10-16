@@ -41,7 +41,8 @@ canvas_data:
       style: { width: 250, height: 350 }
       data:
         label: "Public Edge"
-        zoneType: "zoneInternet"
+        zoneType: "trust"
+        trustLevel: 0
 
     - id: "tz-app"
       type: "trustZone"
@@ -50,7 +51,8 @@ canvas_data:
       style: { width: 280, height: 350 }
       data:
         label: "Application Tier"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-ai"
       type: "trustZone"
@@ -59,7 +61,8 @@ canvas_data:
       style: { width: 270, height: 350 }
       data:
         label: "AI Tier"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-data"
       type: "trustZone"
@@ -68,7 +71,8 @@ canvas_data:
       style: { width: 860, height: 340 }
       data:
         label: "Data Tier"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     # ---- Processes: Public Edge ----
     - id: "process-waf"
@@ -209,7 +213,6 @@ canvas_data:
         label: "HTTPS request"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false
 
     # WAF → API Gateway
     - id: "edge-waf-to-apigw"
@@ -220,7 +223,6 @@ canvas_data:
         label: "Filtered request"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false
 
     # API Gateway → Cognito (auth)
     - id: "edge-apigw-to-cognito"
@@ -231,7 +233,6 @@ canvas_data:
         label: "Token validation"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false
 
     # Cognito → API Gateway (auth result)
     - id: "edge-cognito-to-apigw"
@@ -242,7 +243,7 @@ canvas_data:
         label: "Auth result"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["jwt"]
 
     # User → Cognito (login)
     - id: "edge-user-to-cognito"
@@ -253,7 +254,6 @@ canvas_data:
         label: "Login / sign-up"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false
 
     # API Gateway → Lambda
     - id: "edge-apigw-to-lambda"
@@ -264,7 +264,7 @@ canvas_data:
         label: "Authorized request"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Lambda → API Gateway (response)
     - id: "edge-lambda-to-apigw"
@@ -275,7 +275,7 @@ canvas_data:
         label: "Generated response"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # API Gateway → User (response)
     - id: "edge-apigw-to-user"
@@ -286,7 +286,7 @@ canvas_data:
         label: "AI response"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["jwt"]
 
     # Lambda → Bedrock Agents
     - id: "edge-lambda-to-agents"
@@ -297,7 +297,7 @@ canvas_data:
         label: "Agent invocation"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Bedrock Agents → Lambda (tool call)
     - id: "edge-agents-to-lambda"
@@ -308,7 +308,7 @@ canvas_data:
         label: "Tool call (action group)"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Bedrock Agents → Bedrock (LLM inference)
     - id: "edge-agents-to-bedrock"
@@ -319,7 +319,7 @@ canvas_data:
         label: "LLM inference request"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Bedrock → Bedrock Agents (completion)
     - id: "edge-bedrock-to-agents"
@@ -330,7 +330,7 @@ canvas_data:
         label: "Model completion"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Bedrock Agents → Knowledge Bases (retrieval)
     - id: "edge-agents-to-kb"
@@ -341,7 +341,7 @@ canvas_data:
         label: "Knowledge retrieval"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Knowledge Bases → Bedrock Agents (context)
     - id: "edge-kb-to-agents"
@@ -352,7 +352,7 @@ canvas_data:
         label: "Retrieved context"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Knowledge Bases → OpenSearch (vector search)
     - id: "edge-kb-to-opensearch"
@@ -363,7 +363,7 @@ canvas_data:
         label: "Vector similarity search"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # OpenSearch → Knowledge Bases (results)
     - id: "edge-opensearch-to-kb"
@@ -374,7 +374,7 @@ canvas_data:
         label: "Matching documents"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # S3 → Knowledge Bases (document ingestion)
     - id: "edge-s3-to-kb"
@@ -385,7 +385,7 @@ canvas_data:
         label: "Document ingestion"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Lambda → DynamoDB (session)
     - id: "edge-lambda-to-dynamodb"
@@ -396,7 +396,7 @@ canvas_data:
         label: "Session read/write"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Lambda → CloudWatch (audit)
     - id: "edge-lambda-to-cloudwatch"
@@ -407,7 +407,7 @@ canvas_data:
         label: "Audit logs and traces"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # SageMaker → Bedrock (evaluation)
     - id: "edge-sagemaker-to-bedrock"
@@ -418,7 +418,7 @@ canvas_data:
         label: "Model evaluation"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # SageMaker → S3 (training data)
     - id: "edge-sagemaker-to-s3"
@@ -429,4 +429,4 @@ canvas_data:
         label: "Training data read"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]

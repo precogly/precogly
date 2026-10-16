@@ -48,7 +48,8 @@ canvas_data:
       style: { width: 260, height: 540 }
       data:
         label: "Data Preparation"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-training"
       type: "trustZone"
@@ -57,7 +58,8 @@ canvas_data:
       style: { width: 250, height: 260 }
       data:
         label: "Training Infrastructure"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     - id: "tz-registry"
       type: "trustZone"
@@ -66,7 +68,8 @@ canvas_data:
       style: { width: 250, height: 260 }
       data:
         label: "Model Management"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     - id: "tz-eval"
       type: "trustZone"
@@ -75,7 +78,8 @@ canvas_data:
       style: { width: 530, height: 250 }
       data:
         label: "Evaluation"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     # ---- Data Preparation ----
     - id: "process-data-curation"
@@ -181,7 +185,7 @@ canvas_data:
         label: "Data pipeline config"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-datasource-to-curation"
       source: "actor-data-source"
@@ -191,7 +195,7 @@ canvas_data:
         label: "Raw data"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-curation-to-pii"
       source: "process-data-curation"
@@ -201,7 +205,7 @@ canvas_data:
         label: "Cleaned data"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-pii-to-dataset"
       source: "process-pii-scrubbing"
@@ -211,7 +215,7 @@ canvas_data:
         label: "Scrubbed data"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-dataset-to-training"
       source: "datastore-training-data"
@@ -221,7 +225,7 @@ canvas_data:
         label: "Training data read"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-dataset-to-embed-training"
       source: "datastore-training-data"
@@ -231,7 +235,7 @@ canvas_data:
         label: "Embedding training data"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-training-to-registry"
       source: "process-training"
@@ -241,7 +245,7 @@ canvas_data:
         label: "Trained model"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-embed-to-registry"
       source: "process-embedding-training"
@@ -251,7 +255,7 @@ canvas_data:
         label: "Embedding model"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-registry-to-artifacts"
       source: "process-registry"
@@ -261,7 +265,7 @@ canvas_data:
         label: "Versioned artifacts"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-registry-to-eval"
       source: "process-registry"
@@ -271,7 +275,7 @@ canvas_data:
         label: "Model for evaluation"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-eval-to-evaldata"
       source: "process-eval"
@@ -281,7 +285,7 @@ canvas_data:
         label: "Evaluation results"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-evaldata-to-eval"
       source: "datastore-eval-data"
@@ -291,7 +295,7 @@ canvas_data:
         label: "Test datasets"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-eval-to-registry"
       source: "process-eval"
@@ -301,7 +305,7 @@ canvas_data:
         label: "Evaluation gate result"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-registry-to-serving"
       source: "process-registry"
@@ -311,7 +315,7 @@ canvas_data:
         label: "Approved model deployment"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-engineer-to-training"
       source: "actor-ml-engineer"
@@ -321,4 +325,4 @@ canvas_data:
         label: "Training config"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]

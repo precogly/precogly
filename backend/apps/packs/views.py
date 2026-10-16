@@ -4,13 +4,12 @@ Views for packs app.
 
 from pathlib import Path
 
+from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
-from django.db import transaction
 
 from apps.core.permissions import IsSecurityTeam
 from apps.diagrams.models import DFDTemplatesLibrary
@@ -44,7 +43,11 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
 
     permission_classes = [IsAuthenticated]
     pagination_class = None
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
     filterset_fields = ["pack_type"]
     search_fields = ["name", "description", "author", "tags"]
     ordering_fields = ["name", "created_at"]
@@ -100,14 +103,15 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
                 missing_dependencies.append(dep_pack.slug)
 
         response_data = {
-            "pack": LibraryPackDetailSerializer(pack, context={"request": request}).data,
+            "pack": LibraryPackDetailSerializer(
+                pack, context={"request": request}
+            ).data,
             "dependencies": dependencies,
             "missing_dependencies": missing_dependencies,
             "all_satisfied": len(missing_dependencies) == 0,
         }
 
         return Response(response_data)
-
 
     @action(detail=False, methods=["get"])
     def available_from_source(self, request):
@@ -119,14 +123,24 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
         and if it needs updating.
         """
         packs = discover_packs_from_source()
-        return Response({
-            "packs": [p.to_dict() for p in packs],
-            "total": len(packs),
-            "in_database": sum(1 for p in packs if p.is_in_database),
-            "needs_update": sum(1 for p in packs if p.is_in_database and p.database_version != p.version),
-        })
+        return Response(
+            {
+                "packs": [p.to_dict() for p in packs],
+                "total": len(packs),
+                "in_database": sum(1 for p in packs if p.is_in_database),
+                "needs_update": sum(
+                    1
+                    for p in packs
+                    if p.is_in_database and p.database_version != p.version
+                ),
+            }
+        )
 
-    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated, IsSecurityTeam])
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[IsAuthenticated, IsSecurityTeam],
+    )
     def sync_from_source(self, request):
         """
         Sync packs from the libraries folder to the database.
@@ -158,17 +172,23 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
                     associations, ignore_conflicts=True
                 )
 
-        return Response({
-            "results": [r.to_dict() for r in results],
-            "summary": {
-                "total": len(results),
-                "successful": len(successful),
-                "failed": len(failed),
-            },
-            "message": f"Synced {len(successful)} packs, {len(failed)} failed",
-        })
+        return Response(
+            {
+                "results": [r.to_dict() for r in results],
+                "summary": {
+                    "total": len(results),
+                    "successful": len(successful),
+                    "failed": len(failed),
+                },
+                "message": f"Synced {len(successful)} packs, {len(failed)} failed",
+            }
+        )
 
-    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated, IsSecurityTeam])
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[IsAuthenticated, IsSecurityTeam],
+    )
     def import_single(self, request):
         """
         Import a single pack from the libraries folder by slug.
@@ -183,8 +203,11 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
         """
         slug = request.data.get("slug")
         force = request.data.get("force", False)
-        selected_overlays = request.data.get("selected_overlays")  # camelCase auto-converted by middleware
-        skip_validation = request.data.get("skip_validation", False)
+        selected_overlays = request.data.get(
+            "selected_overlays"
+        )  # camelCase auto-converted by middleware
+        # "Import anyway" accepts warnings only; errors always refuse (S2).
+        accept_warnings = bool(request.data.get("skip_validation", False))
 
         if not slug:
             return Response(
@@ -207,7 +230,7 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
             Path(pack_info.path),
             force=force,
             selected_overlays=selected_overlays,
-            skip_validation=skip_validation,
+            accept_warnings=accept_warnings,
         )
 
         # Handle ValidationResult (returned when validation finds issues)
@@ -300,21 +323,27 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
 
         overlays = get_available_overlays_for_pack(pack_path)
 
-        return Response({
-            "overlays": [
-                {
-                    "framework_id": o.framework_id,
-                    "framework_name": o.framework_name,
-                    "mapping_count": o.mapping_count,
-                    "framework_exists": o.framework_exists,
-                }
-                for o in overlays
-            ],
-            "total": len(overlays),
-            "available_count": sum(1 for o in overlays if o.framework_exists),
-        })
+        return Response(
+            {
+                "overlays": [
+                    {
+                        "framework_id": o.framework_id,
+                        "framework_name": o.framework_name,
+                        "mapping_count": o.mapping_count,
+                        "framework_exists": o.framework_exists,
+                    }
+                    for o in overlays
+                ],
+                "total": len(overlays),
+                "available_count": sum(1 for o in overlays if o.framework_exists),
+            }
+        )
 
-    @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated, IsSecurityTeam])
+    @action(
+        detail=False,
+        methods=["post"],
+        permission_classes=[IsAuthenticated, IsSecurityTeam],
+    )
     def validate(self, request):
         """
         Validate a pack's references without importing (dry-run).
@@ -347,7 +376,11 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
 
         return Response(result.to_dict())
 
-    @action(detail=True, methods=["delete"], permission_classes=[IsAuthenticated, IsSecurityTeam])
+    @action(
+        detail=True,
+        methods=["delete"],
+        permission_classes=[IsAuthenticated, IsSecurityTeam],
+    )
     def unimport(self, request, pk=None):
         """
         Unimport a pack by deleting all its library items and the pack record.
@@ -358,7 +391,7 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
         3. Delete all CountermeasureLibrary entries from this pack
         4. Delete the LibraryPack record itself
 
-        Note: Instances (ComponentInstanceThreat, etc.) that reference the deleted
+        Note: Instances (InstanceThreat targets, etc.) that reference the deleted
         library items will have their library FK set to NULL but remain intact
         with their copied metadata.
 
@@ -367,7 +400,11 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
         """
         from apps.compliance.models import StandardFramework
         from apps.systems.models import ComponentLibrary
-        from apps.threats.models import CountermeasureLibrary, ExternalTaxonomy, ThreatLibrary
+        from apps.threats.models import (
+            CountermeasureLibrary,
+            ExternalTaxonomy,
+            ThreatLibrary,
+        )
 
         pack = self.get_object()
         dry_run = request.query_params.get("dry_run", "false").lower() == "true"
@@ -390,7 +427,9 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
         # Count what will be deleted
         component_count = ComponentLibrary.objects.filter(source_pack=pack).count()
         threat_count = ThreatLibrary.objects.filter(source_pack=pack).count()
-        countermeasure_count = CountermeasureLibrary.objects.filter(source_pack=pack).count()
+        countermeasure_count = CountermeasureLibrary.objects.filter(
+            source_pack=pack
+        ).count()
         template_count = DFDTemplatesLibrary.objects.filter(source_pack=pack).count()
         taxonomy_count = ExternalTaxonomy.objects.filter(source_pack=pack).count()
         framework_count = StandardFramework.objects.filter(source_pack=pack).count()

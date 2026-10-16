@@ -11,19 +11,21 @@ frontend/
 docs/
 site/
 
-venv/
+# Patterns match from the context root only, so the ones that can appear inside
+# backend/ or mcp/ need the **/ prefix. backend/venv/ alone is several hundred MB.
+**/venv/
 # uv's default location. A host venv holds host-platform wheels.
-.venv/
-__pycache__/
-*.pyc
-*.pyo
-.env
-.env.*
-*.egg-info/
-.mypy_cache/
-.pytest_cache/
-.ruff_cache/
-htmlcov/
-.coverage
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.env
+**/.env.*
+**/*.egg-info/
+**/.mypy_cache/
+**/.pytest_cache/
+**/.ruff_cache/
+**/htmlcov/
+**/.coverage
 backend/staticfiles/
 backend/media/

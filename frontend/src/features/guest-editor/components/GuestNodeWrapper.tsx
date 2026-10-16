@@ -93,5 +93,6 @@ function withEdgeThreatBadge<P extends EdgeProps>(EdgeComponent: ComponentType<P
 // Wrapped edge types with threat badges
 export const guestEdgeTypes = {
   dataFlow: withEdgeThreatBadge(DataFlowEdgeComponent),
-  trustBoundary: TrustBoundaryEdgeComponent,
+  // Boundaries take threats too (plan 11.9).
+  trustBoundary: withEdgeThreatBadge(TrustBoundaryEdgeComponent),
 } as const

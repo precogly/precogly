@@ -125,6 +125,7 @@ components:
   - id: field-sensor
     name: Field Sensor / Instrument
     category: external_system_actor
+    kind: device
     type: Measurement Device
     provider: generic
     description: |
@@ -136,6 +137,7 @@ components:
   - id: actuator
     name: Actuator / Control Valve
     category: external_system_actor
+    kind: device
     type: Final Control Element
     provider: generic
     description: |

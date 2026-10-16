@@ -8,14 +8,14 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           # --from-ref resolves against the base branch, which a shallow clone
           # does not fetch.
           fetch-depth: 0
       # Pinned to an exact release: setup-uv stopped publishing floating major
       # tags after v7, so @v10 does not resolve.
-      - uses: astral-sh/setup-uv@v10.0.1
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version: '0.9.13'
       # uvx builds an ephemeral environment, so there is no interpreter to set
@@ -30,7 +30,7 @@ jobs:
   backend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - run: docker compose up -d db
       - run: docker compose run --rm backend python -m pytest
 
@@ -44,8 +44,8 @@ jobs:
       run:
         working-directory: mcp
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version: '0.9.13'
       # From inside the member, uv installs that member's dependencies only, not
@@ -56,18 +56,43 @@ jobs:
   frontend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22'
       - run: cd frontend && npm ci
-      - run: cd frontend && npx tsc --noEmit
+      - run: cd frontend && npx tsc -b
+      - run: cd frontend && npx vitest run
+
+  # Browser tests against the compose stack. The backend container migrates and
+  # seeds on start, so the signed-in project (frontend/e2e/global-setup.ts) can
+  # log in with the demo account; the guest project needs only the frontend.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '22'
+      - run: docker compose up -d --build db backend frontend
+      - run: cd frontend && npm ci
+      - run: cd frontend && npx playwright install --with-deps chromium
+      # global-setup waits for both services, up to three minutes.
+      - run: cd frontend && npx playwright test
+      - if: failure()
+        run: docker compose logs backend frontend
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/test-results
+          if-no-files-found: ignore
 
   # Django's deployment checklist, run against the production settings module.
   deploy-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       # Every deployment finding is a WARNING and the check framework only fails
       # on ERROR, so use --fail-level. --tag security drops drf_spectacular's schema warnings.
       # --no-deps skips the database: the security checks read settings only.

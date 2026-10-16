@@ -1,120 +1,199 @@
 /**
- * TypeScript interfaces for CycloneDX 2.0 TM-BOM document structure.
- * Matches the backend adapter's export format for guest-editor serialization.
+ * The CycloneDX 2.0 TM-BOM objects the guest editor reads and writes, in the
+ * shape the backend adapter emits (`backend/apps/threat_models/tmbom/`).
+ *
+ * Every object may carry keys beyond the ones named here; the adapter keeps
+ * them as passthrough. A `type`-like field is a spec value or the spec's
+ * custom object `{name, description?}`.
  */
+
+export interface CycloneDxCustomType {
+  name: string
+  description?: string
+}
+
+export type CycloneDxTypeValue = string | CycloneDxCustomType
+
+export interface CycloneDxProperty {
+  name: string
+  value?: string
+}
 
 export interface CycloneDxDocument {
   specFormat: 'CycloneDX'
   specVersion: string
-  serialNumber: string
-  version: number
-  metadata: CycloneDxMetadata
-  blueprints: CycloneDxBlueprint[]
+  serialNumber?: string
+  version?: number
+  metadata?: CycloneDxMetadata
+  blueprints?: CycloneDxBlueprint[]
+  threats?: CycloneDxThreatsSection
   controls?: CycloneDxControl[]
-  threats?: CycloneDxThreatsBlock
-  risks?: CycloneDxRisksBlock
+  properties?: CycloneDxProperty[]
+  [key: string]: unknown
 }
 
 export interface CycloneDxMetadata {
-  timestamp: string
-  tools?: {
-    components?: { type: string; name: string; version: string }[]
-  }
-  authors?: { name?: string; email?: string }[]
+  timestamp?: string
+  tools?: { components?: { type: string; name: string; version?: string }[] }
+  component?: CycloneDxMetadataComponent
+  [key: string]: unknown
+}
+
+export interface CycloneDxMetadataComponent {
+  type: string
+  'bom-ref'?: string
+  name: string
+  description?: string
+  properties?: CycloneDxProperty[]
+  parties?: Record<string, unknown>[]
+  [key: string]: unknown
 }
 
 export interface CycloneDxBlueprint {
   'bom-ref'?: string
   name: string
   description?: string
-  modelTypes?: string[]
-  zones?: CycloneDxZone[]
+  modelTypes: CycloneDxTypeValue[]
+  scope?: CycloneDxScope
   assets?: CycloneDxAsset[]
-  flows?: CycloneDxFlow[]
-  boundaries?: CycloneDxBoundary[]
+  dataStores?: CycloneDxDataStore[]
   dataSets?: CycloneDxDataSet[]
+  zones?: CycloneDxZone[]
+  boundaries?: CycloneDxBoundary[]
+  flows?: CycloneDxFlow[]
   assumptions?: CycloneDxAssumption[]
   visualizations?: CycloneDxVisualization[]
+  [key: string]: unknown
 }
 
-export interface CycloneDxZone {
-  'bom-ref': string
+export interface CycloneDxScope {
   name: string
-  type?: string
   description?: string
-  trustLevel?: number
-  parent?: string
+  excludedComponents?: string[]
+  properties?: CycloneDxProperty[]
+  [key: string]: unknown
 }
 
 export interface CycloneDxAsset {
   'bom-ref': string
   name: string
-  type: string
+  type: CycloneDxTypeValue
   description?: string
   zone?: string
+  properties?: CycloneDxProperty[]
+  [key: string]: unknown
 }
 
-export interface CycloneDxFlow {
+export interface CycloneDxDataStore {
   'bom-ref': string
-  name?: string
+  name: string
+  type: CycloneDxTypeValue
   description?: string
-  source: string
-  destination: string
-  type?: string
-  protocols?: string[]
-  encrypted?: boolean
-  authenticated?: boolean
+  vendor?: string
+  zone?: string
+  dataSets?: string[]
+  properties?: CycloneDxProperty[]
+  [key: string]: unknown
 }
 
-export interface CycloneDxBoundary {
+export interface CycloneDxDataProfile {
   'bom-ref'?: string
-  name?: string
-  description?: string
-  zones: string[]
-  crossingRequirements?: Record<string, unknown>
+  name: string
+  classification?: CycloneDxTypeValue
+  regulations?: string[]
+  [key: string]: unknown
 }
 
 export interface CycloneDxDataSet {
   'bom-ref': string
   name: string
+  description: string
+  dataProfiles?: (CycloneDxDataProfile | string)[]
+  properties?: CycloneDxProperty[]
+  [key: string]: unknown
+}
+
+export interface CycloneDxZone {
+  'bom-ref': string
+  name: string
+  type: CycloneDxTypeValue
   description?: string
-  classification?: string
+  parent?: string
+  properties?: CycloneDxProperty[]
+  [key: string]: unknown
+}
+
+export interface CycloneDxCrossingRequirements {
+  authentication?: CycloneDxTypeValue[]
+  authorization?: CycloneDxTypeValue[]
+  dataValidation?: boolean
+  dataTransformation?: boolean
+  logging?: boolean
+  monitoring?: boolean
+  rateLimit?: string
+  protocols?: string[]
+}
+
+export interface CycloneDxBoundary {
+  'bom-ref': string
+  zones: string[]
+  type?: CycloneDxTypeValue
+  name?: string
+  crossingRequirements?: CycloneDxCrossingRequirements
+  sessionManagement?: Record<string, unknown>
+  properties?: CycloneDxProperty[]
+  [key: string]: unknown
+}
+
+export interface CycloneDxFlow {
+  'bom-ref': string
+  name: string
+  type: CycloneDxTypeValue
+  source: string
+  destination: string
+  description?: string
+  encrypted?: boolean
+  protocols?: string[]
+  authentication?: CycloneDxTypeValue[]
+  authorization?: CycloneDxTypeValue[]
+  properties?: CycloneDxProperty[]
+  [key: string]: unknown
 }
 
 export interface CycloneDxAssumption {
-  'bom-ref': string
+  'bom-ref'?: string
   description: string
   validity?: string
-  topic?: string
+  topic?: CycloneDxTypeValue
+  [key: string]: unknown
+}
+
+export interface CycloneDxAttachment {
+  mediaType?: string
+  encoding?: 'base64'
+  content: string
 }
 
 export interface CycloneDxVisualization {
-  type: string
-  name?: string
-  diagramType?: string
-  data?: Record<string, unknown>
-}
-
-export interface CycloneDxControl {
-  'bom-ref': string
+  'bom-ref'?: string
   name: string
-  description?: string
-  status?: string
-  category?: string
-  effectiveness?: { percentage?: number }
-  mitigations?: string[]
+  type: { type: string } | CycloneDxCustomType
+  attachment?: CycloneDxAttachment
   properties?: CycloneDxProperty[]
+  [key: string]: unknown
 }
 
-export interface CycloneDxThreatsBlock {
+export interface CycloneDxThreatsSection {
   threats?: CycloneDxThreat[]
   scenarios?: CycloneDxScenario[]
-  methodologies?: { type: string }[]
+  trustBoundaries?: CycloneDxTrustBoundary[]
+  methodologies?: CycloneDxTypeValue[]
+  [key: string]: unknown
 }
 
-export interface CycloneDxProperty {
-  name: string
-  value: string
+export interface CycloneDxThreatCategory {
+  taxonomy: string
+  category: string
 }
 
 export interface CycloneDxThreat {
@@ -122,46 +201,49 @@ export interface CycloneDxThreat {
   name: string
   description?: string
   categories?: CycloneDxThreatCategory[]
-  affectedAssets?: string[]
   mitigations?: string[]
   properties?: CycloneDxProperty[]
+  [key: string]: unknown
 }
 
-export interface CycloneDxThreatCategory {
-  taxonomy?: string
-  id?: string
-  name?: string
+export interface CycloneDxRiskScore {
+  level: string
+  score?: number
+  methodology?: CycloneDxTypeValue
+  [key: string]: unknown
 }
 
 export interface CycloneDxScenario {
   'bom-ref': string
-  threat: string
+  name: string
+  threats: string[]
+  description?: string
   affectedAssets?: string[]
   riskScore?: CycloneDxRiskScore
+  likelihood?: Record<string, unknown>
+  impact?: Record<string, unknown>
   properties?: CycloneDxProperty[]
+  [key: string]: unknown
 }
 
-export interface CycloneDxRiskScore {
-  level?: string
-  score?: number
+export interface CycloneDxTrustBoundary {
+  'bom-ref': string
+  boundary: string
+  name?: string
+  description?: string
+  trustLevel?: string
+  threatsAtBoundary?: string[]
+  controlsAtBoundary?: string[]
+  [key: string]: unknown
 }
 
-export interface CycloneDxRisksBlock {
-  risks?: CycloneDxRisk[]
-}
-
-export interface CycloneDxRisk {
+export interface CycloneDxControl {
   'bom-ref': string
   name: string
-  statement?: string
-  inherentRisk?: { riskScore: CycloneDxRiskScore }
-  residualRisk?: { riskScore: CycloneDxRiskScore }
-  relatedThreats?: string[]
-  responses?: CycloneDxRiskResponse[]
-}
-
-export interface CycloneDxRiskResponse {
-  strategy?: string
   description?: string
-  status?: string
+  category?: CycloneDxTypeValue
+  status?: CycloneDxTypeValue
+  appliesTo?: string[]
+  properties?: CycloneDxProperty[]
+  [key: string]: unknown
 }

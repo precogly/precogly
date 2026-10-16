@@ -1,84 +1,467 @@
 {
   "specFormat": "CycloneDX",
   "specVersion": "2.0",
-  "serialNumber": "urn:uuid:test-backend-export",
-  "version": 1,
+  "serialNumber": "urn:uuid:31f98b2e-df1e-4b17-94a3-6e8e758c842c",
   "metadata": {
-    "timestamp": "2026-01-01T00:00:00Z",
+    "timestamp": "2026-10-08T04:44:45.118752+00:00",
     "tools": {
       "components": [
-        { "type": "application", "name": "Precogly", "version": "0.3.0" }
+        {
+          "type": "application",
+          "name": "Precogly",
+          "version": "0.5.0"
+        }
       ]
-    }
+    },
+    "authors": [
+      {
+        "email": "owner@org.test"
+      }
+    ],
+    "component": {
+      "type": "application",
+      "bom-ref": "system-1",
+      "name": "Payments platform",
+      "properties": [
+        {
+          "name": "precogly:criticality",
+          "value": "moderate"
+        },
+        {
+          "name": "precogly:lifecycle-state",
+          "value": "production"
+        }
+      ],
+      "parties": [
+        {
+          "bom-ref": "party-user-1",
+          "roles": [
+            {
+              "role": "signatory"
+            },
+            {
+              "role": "owner"
+            }
+          ],
+          "person": {
+            "email": [
+              {
+                "address": "owner@org.test"
+              }
+            ]
+          }
+        },
+        {
+          "bom-ref": "party-provider-cloudflare",
+          "roles": [
+            {
+              "role": "provider"
+            }
+          ],
+          "organization": {
+            "name": "Cloudflare"
+          }
+        }
+      ]
+    },
+    "lifecycles": [
+      {
+        "phase": "build"
+      }
+    ]
   },
   "blueprints": [
     {
-      "bom-ref": "blueprint-backend-1",
-      "name": "Backend Export Test",
-      "modelTypes": ["data-flow"],
+      "bom-ref": "blueprint-2",
+      "name": "Reference model",
+      "modelTypes": [
+        "data-flow"
+      ],
+      "scope": {
+        "name": "Reference model scope",
+        "description": "The card path",
+        "properties": [
+          {
+            "name": "precogly:out-of-scope",
+            "value": "{\"name\":\"Mainframe\",\"reason\":\"Separate model\"}"
+          }
+        ]
+      },
       "assets": [
-        { "bom-ref": "asset-api-1", "name": "API Gateway", "type": "component" },
-        { "bom-ref": "asset-cache-2", "name": "Redis Cache", "type": "data-store" }
+        {
+          "bom-ref": "asset-1",
+          "name": "Customer",
+          "type": "actor",
+          "properties": [
+            {
+              "name": "precogly:category",
+              "value": "external_human_actor"
+            },
+            {
+              "name": "precogly:actor-type",
+              "value": "customer"
+            }
+          ]
+        },
+        {
+          "bom-ref": "asset-2",
+          "name": "API",
+          "type": "service",
+          "description": "Public API",
+          "zone": "zone-2",
+          "properties": [
+            {
+              "name": "precogly:category",
+              "value": "process"
+            },
+            {
+              "name": "precogly:data-sensitivity",
+              "value": "high"
+            }
+          ]
+        },
+        {
+          "bom-ref": "asset-3",
+          "name": "Worker",
+          "type": "process",
+          "zone": "zone-3",
+          "properties": [
+            {
+              "name": "precogly:category",
+              "value": "process"
+            }
+          ]
+        },
+        {
+          "bom-ref": "asset-5",
+          "name": "Sensor",
+          "type": "device",
+          "properties": [
+            {
+              "name": "precogly:category",
+              "value": "process"
+            }
+          ]
+        },
+        {
+          "bom-ref": "asset-model-1",
+          "name": "Ledger",
+          "type": "system",
+          "externalReferences": [
+            {
+              "type": "threat-model",
+              "url": "urn:cdx:5f1d4f6a-2c1e-4d6b-9c0a-7b1e2a3c4d5e/1"
+            }
+          ],
+          "properties": [
+            {
+              "name": "precogly:relationship",
+              "value": "depends_on"
+            }
+          ]
+        }
+      ],
+      "dataStores": [
+        {
+          "bom-ref": "datastore-4",
+          "name": "Database",
+          "type": "relational",
+          "zone": "zone-3",
+          "dataSets": [
+            "dataset-1"
+          ],
+          "properties": [
+            {
+              "name": "precogly:data-store-type",
+              "value": "relational"
+            }
+          ]
+        }
+      ],
+      "dataSets": [
+        {
+          "bom-ref": "dataset-1",
+          "name": "Card records",
+          "description": "Card data",
+          "dataProfiles": [
+            {
+              "bom-ref": "dataset-1-profile",
+              "name": "Card records profile",
+              "classification": "confidential",
+              "regulations": [
+                "PCI DSS"
+              ]
+            }
+          ],
+          "placements": [
+            {
+              "dataStore": "datastore-4",
+              "encrypted": true
+            }
+          ],
+          "properties": [
+            {
+              "name": "precogly:confidentiality",
+              "value": "high"
+            },
+            {
+              "name": "precogly:availability",
+              "value": "low"
+            },
+            {
+              "name": "precogly:data-sensitivity-tags",
+              "value": "[\"pci\",\"pii\"]"
+            },
+            {
+              "name": "precogly:placements",
+              "value": "[{\"dataState\":\"at_rest\",\"dataStore\":\"datastore-4\",\"volume\":\"2 million rows\"}]"
+            }
+          ]
+        }
+      ],
+      "zones": [
+        {
+          "bom-ref": "zone-1",
+          "name": "Internet",
+          "type": "trust",
+          "properties": [
+            {
+              "name": "precogly:trust-level",
+              "value": "10"
+            }
+          ]
+        },
+        {
+          "bom-ref": "zone-2",
+          "name": "DMZ",
+          "type": "network",
+          "properties": [
+            {
+              "name": "precogly:trust-level",
+              "value": "40"
+            }
+          ]
+        },
+        {
+          "bom-ref": "zone-3",
+          "name": "Core",
+          "type": "trust",
+          "parent": "zone-2",
+          "properties": [
+            {
+              "name": "precogly:trust-level",
+              "value": "80"
+            }
+          ]
+        }
+      ],
+      "boundaries": [
+        {
+          "bom-ref": "boundary-1",
+          "zones": [
+            "zone-1",
+            "zone-2"
+          ],
+          "type": "trust",
+          "name": "Edge",
+          "crossingRequirements": {
+            "authentication": [
+              "oauth2",
+              {
+                "name": "Badge"
+              }
+            ],
+            "authorization": [
+              "rbac"
+            ],
+            "dataValidation": true,
+            "rateLimit": "100 rps",
+            "protocols": [
+              "https"
+            ]
+          },
+          "sessionManagement": {
+            "idleTimeout": 600,
+            "accessTokenTtl": 900
+          }
+        },
+        {
+          "bom-ref": "boundary-2",
+          "zones": [
+            "zone-2",
+            "zone-3"
+          ],
+          "type": "network",
+          "name": "Inner"
+        }
       ],
       "flows": [
         {
-          "bom-ref": "flow-cache-lookup-1",
-          "source": "asset-api-1",
-          "destination": "asset-cache-2",
+          "bom-ref": "flow-1",
+          "name": "Login",
           "type": "data",
-          "name": "Cache Lookup"
+          "source": "asset-1",
+          "destination": "asset-2",
+          "encrypted": true,
+          "protocols": [
+            "HTTPS"
+          ],
+          "authentication": [
+            "oauth2"
+          ],
+          "dataProfiles": [
+            "dataset-1-profile"
+          ],
+          "properties": [
+            {
+              "name": "precogly:port",
+              "value": "443"
+            },
+            {
+              "name": "precogly:flow-data",
+              "value": "[{\"dataSet\":\"dataset-1\",\"encryptionType\":\"AES-256\",\"format\":\"json\",\"protectionMethod\":\"encrypted\"}]"
+            }
+          ]
+        },
+        {
+          "bom-ref": "flow-2",
+          "name": "Query",
+          "type": "data",
+          "source": "asset-2",
+          "destination": "datastore-4",
+          "properties": [
+            {
+              "name": "precogly:has-sensitive-data",
+              "value": "true"
+            },
+            {
+              "name": "precogly:data-classification",
+              "value": "[\"pii\"]"
+            }
+          ]
+        },
+        {
+          "bom-ref": "flow-3",
+          "name": "Reading",
+          "type": "signal",
+          "source": "asset-5",
+          "destination": "asset-3"
         }
       ],
       "visualizations": [
         {
-          "type": "precogly-dfd",
-          "name": "Backend Export Test",
-          "data": {
-            "nodes": [
+          "bom-ref": "visualization-1",
+          "name": "Primary",
+          "type": {
+            "type": "data-flow"
+          },
+          "attachment": {
+            "mediaType": "application/vnd.precogly.dfd+json",
+            "encoding": "base64",
+            "content": "eyJlZGdlcyI6W10sIm5vZGVzIjpbeyJpZCI6InoxIiwiZGF0YSI6eyJsYWJlbCI6IkRNWiIsInpvbmVfdHlwZSI6Im5ldHdvcmsiLCJ0cnVzdF96b25lX2lkIjoyLCJib21fcmVmIjoiem9uZS0yIn0sInR5cGUiOiJ0cnVzdFpvbmUiLCJwb3NpdGlvbiI6eyJ4IjowLCJ5IjowfX0seyJpZCI6Im4xIiwiZGF0YSI6eyJsYWJlbCI6IkFQSSIsImNvbXBvbmVudF9pZCI6MiwiYm9tX3JlZiI6ImFzc2V0LTIifSwidHlwZSI6InByb2Nlc3MiLCJwb3NpdGlvbiI6eyJ4IjoxMCwieSI6MTB9LCJwYXJlbnRfaWQiOiJ6MSJ9XX0="
+          },
+          "properties": [
+            {
+              "name": "precogly:diagram-type",
+              "value": "level1"
+            },
+            {
+              "name": "precogly:primary",
+              "value": "true"
+            }
+          ]
+        }
+      ],
+      "relationships": [
+        {
+          "ref": "system-1",
+          "dependsOn": [
+            "asset-model-1"
+          ]
+        }
+      ],
+      "assumptions": [
+        {
+          "bom-ref": "assumption-1",
+          "description": "TLS everywhere",
+          "validity": "verified",
+          "topic": "security",
+          "owner": "party-user-1",
+          "relatedAssets": [
+            "asset-2"
+          ],
+          "validationMethod": "Config review"
+        }
+      ],
+      "metadata": {
+        "approver": "party-user-1",
+        "approvalDate": "2026-10-08T04:44:44.345798+00:00",
+        "lifecycles": [
+          {
+            "phase": "build"
+          }
+        ],
+        "validityPeriod": {
+          "reviewFrequency": "P6M"
+        }
+      },
+      "actors": [
+        {
+          "bom-ref": "actor-persona-1",
+          "party": {
+            "bom-ref": "party-persona-1",
+            "roles": [
               {
-                "id": "process-100",
-                "type": "process",
-                "position": { "x": 200, "y": 150 },
-                "data": {
-                  "label": "API Gateway",
-                  "technology": "nginx",
-                  "is_newly_inserted": false,
-                  "is_inline_editing": false,
-                  "data_sensitivity": "confidential"
-                },
-                "style": { "width": 100, "height": 100 }
+                "role": "attacker"
+              }
+            ],
+            "persona": {
+              "archetype": "insider-threat"
+            },
+            "properties": [
+              {
+                "name": "precogly:persona-name",
+                "value": "Malicious insider"
               },
               {
-                "id": "datastore-100",
-                "type": "datastore",
-                "position": { "x": 500, "y": 150 },
-                "data": {
-                  "label": "Redis Cache",
-                  "technology": "redis",
-                  "data_store_type": "key_value",
-                  "data_sensitivity": "internal"
-                },
-                "style": { "width": 120, "height": 60 }
-              }
-            ],
-            "edges": [
+                "name": "precogly:persona-symbolic-name",
+                "value": "malicious-insider"
+              },
               {
-                "id": "edge-100",
-                "source": "process-100",
-                "target": "datastore-100",
-                "type": "dataFlow",
-                "data": { "label": "Cache Lookup", "encrypted": false, "authenticated": true }
+                "name": "precogly:persona-is-person",
+                "value": "true"
+              },
+              {
+                "name": "precogly:persona-malicious-intent",
+                "value": "true"
+              },
+              {
+                "name": "precogly:persona-skill-level",
+                "value": "high"
+              }
+            ]
+          }
+        },
+        {
+          "bom-ref": "actor-text-organized-crime",
+          "party": {
+            "bom-ref": "party-text-organized-crime",
+            "roles": [
+              {
+                "role": "attacker"
               }
             ],
-            "notation_style": "yourdon",
-            "system_context": {
-              "session": { "facilitator": "Test User", "participants": [], "meeting_date": "" },
-              "system_info": { "description": "API caching layer", "criticality": "high" },
-              "data_assets": [],
-              "assumptions": [],
-              "out_of_scope_items": []
+            "persona": {
+              "description": "Organized crime",
+              "archetype": "attacker"
             }
-          }
+          },
+          "properties": [
+            {
+              "name": "precogly:actor-text",
+              "value": "Organized crime"
+            }
+          ]
         }
       ]
     }
@@ -86,20 +469,692 @@
   "threats": {
     "threats": [
       {
-        "bom-ref": "threat-cache-poisoning-1",
-        "name": "Cache Poisoning",
-        "description": "Attacker poisons cached responses",
-        "categories": [{ "taxonomy": "stride", "id": "tampering", "name": "Tampering" }],
-        "affectedAssets": ["asset-api-1"]
+        "bom-ref": "threat-reference/sql-injection",
+        "name": "SQL injection",
+        "description": "Injected SQL",
+        "categories": [
+          {
+            "taxonomy": "STRIDE",
+            "category": "tampering"
+          }
+        ],
+        "origin": "adversarial",
+        "mitigations": [
+          "control-1"
+        ],
+        "relatedBusinessObjectives": [
+          "objective-1"
+        ]
+      },
+      {
+        "bom-ref": "threat-custom-2",
+        "name": "Backup theft",
+        "description": "Backups leave the building"
+      },
+      {
+        "bom-ref": "threat-custom-3",
+        "name": "Boundary crossing",
+        "mitigations": [
+          "control-2"
+        ]
       }
     ],
     "scenarios": [
       {
-        "bom-ref": "scenario-cache-poisoning-1",
-        "threat": "threat-cache-poisoning-1",
-        "affectedAssets": ["asset-api-1"],
-        "riskScore": { "level": "high" }
+        "bom-ref": "scenario-1",
+        "name": "SQL injection",
+        "threats": [
+          "threat-reference/sql-injection"
+        ],
+        "description": "Injected SQL",
+        "affectedAssets": [
+          "asset-2",
+          "flow-2"
+        ],
+        "actor": "actor-persona-1",
+        "intent": "targeted",
+        "accessLevel": "internal",
+        "riskScore": {
+          "level": "high",
+          "methodology": {
+            "name": "manual"
+          }
+        },
+        "properties": [
+          {
+            "name": "precogly:number",
+            "value": "1"
+          },
+          {
+            "name": "precogly:threat-status",
+            "value": "addressable"
+          },
+          {
+            "name": "precogly:triage-status",
+            "value": "accept"
+          },
+          {
+            "name": "precogly:decision-rationale",
+            "value": "Accepted for now"
+          },
+          {
+            "name": "precogly:auto-generated",
+            "value": "true"
+          },
+          {
+            "name": "precogly:instance-categories",
+            "value": "[{\"external_id\":\"66\",\"taxonomy_slug\":\"capec\",\"title\":\"SQL Injection\"}]"
+          },
+          {
+            "name": "precogly:threat-sources",
+            "value": "[\"adversarial\"]"
+          },
+          {
+            "name": "precogly:business-objectives",
+            "value": "[\"objective-1\"]"
+          }
+        ]
+      },
+      {
+        "bom-ref": "scenario-2",
+        "name": "Backup theft",
+        "threats": [
+          "threat-custom-2"
+        ],
+        "description": "Backups leave the building",
+        "affectedAssets": [
+          "system-1"
+        ],
+        "actor": "actor-text-organized-crime",
+        "riskScore": {
+          "level": "high",
+          "score": 5.75,
+          "methodology": "owasp-risk-rating"
+        },
+        "likelihood": {
+          "level": "medium",
+          "score": 5.4,
+          "factors": [
+            {
+              "name": "Skill level",
+              "type": "threat-capability",
+              "score": 5
+            },
+            {
+              "name": "Motive",
+              "type": "motivation",
+              "score": 6
+            },
+            {
+              "name": "Opportunity",
+              "type": "opportunity",
+              "score": 5
+            },
+            {
+              "name": "Size",
+              "type": {
+                "name": "Threat agent size"
+              },
+              "score": 6
+            },
+            {
+              "name": "Ease of discovery",
+              "type": "discoverability",
+              "score": 5
+            },
+            {
+              "name": "Ease of exploit",
+              "type": "exploit-maturity",
+              "score": 6
+            },
+            {
+              "name": "Awareness",
+              "type": {
+                "name": "Awareness"
+              },
+              "score": 5
+            },
+            {
+              "name": "Intrusion detection",
+              "type": "detectability",
+              "score": 5
+            }
+          ]
+        },
+        "impact": {
+          "level": "major",
+          "score": 6.1,
+          "factors": [
+            {
+              "name": "Loss of confidentiality",
+              "score": 6,
+              "category": "confidentiality"
+            },
+            {
+              "name": "Loss of integrity",
+              "score": 6,
+              "category": "integrity"
+            },
+            {
+              "name": "Loss of availability",
+              "score": 6,
+              "category": "availability"
+            },
+            {
+              "name": "Loss of accountability",
+              "score": 7,
+              "category": {
+                "name": "Accountability"
+              }
+            },
+            {
+              "name": "Financial damage",
+              "score": 6,
+              "category": "financial"
+            },
+            {
+              "name": "Reputation damage",
+              "score": 6,
+              "category": "reputation"
+            },
+            {
+              "name": "Non compliance",
+              "score": 6,
+              "category": "regulatory"
+            },
+            {
+              "name": "Privacy violation",
+              "score": 6,
+              "category": "privacy"
+            }
+          ],
+          "description": "Data leaves"
+        },
+        "properties": [
+          {
+            "name": "precogly:number",
+            "value": "2"
+          },
+          {
+            "name": "precogly:threat-status",
+            "value": "exposed"
+          },
+          {
+            "name": "precogly:triage-status",
+            "value": "open"
+          }
+        ]
+      },
+      {
+        "bom-ref": "scenario-3",
+        "name": "Boundary crossing",
+        "threats": [
+          "threat-custom-3"
+        ],
+        "affectedAssets": [
+          "boundary-1"
+        ],
+        "riskScore": {
+          "level": "low",
+          "methodology": {
+            "name": "manual"
+          }
+        },
+        "properties": [
+          {
+            "name": "precogly:number",
+            "value": "3"
+          },
+          {
+            "name": "precogly:threat-status",
+            "value": "mitigated"
+          },
+          {
+            "name": "precogly:triage-status",
+            "value": "open"
+          }
+        ]
+      }
+    ],
+    "trustBoundaries": [
+      {
+        "bom-ref": "trustboundary-1",
+        "boundary": "boundary-1",
+        "name": "Edge",
+        "trustLevel": "untrusted",
+        "threatsAtBoundary": [
+          "scenario-3"
+        ],
+        "controlsAtBoundary": [
+          "control-2"
+        ]
+      }
+    ],
+    "methodologies": [
+      "STRIDE",
+      {
+        "name": "Our own"
       }
     ]
-  }
+  },
+  "controls": [
+    {
+      "bom-ref": "control-1",
+      "name": "Parameterised queries",
+      "description": "Bind parameters",
+      "category": "preventive",
+      "status": "planned",
+      "appliesTo": [
+        "asset-2",
+        "flow-2"
+      ],
+      "implementedBy": [
+        "asset-3",
+        "party-provider-cloudflare"
+      ],
+      "satisfies": [
+        "requirement-1",
+        "requirement-snapshot-1"
+      ],
+      "effectiveness": {
+        "percentage": 0.6
+      },
+      "owner": "party-user-1",
+      "externalReferences": [
+        {
+          "type": "issue-tracker",
+          "url": "https://tickets.example/1"
+        },
+        {
+          "type": "evidence",
+          "url": "https://evidence.example/1.pdf"
+        }
+      ],
+      "properties": [
+        {
+          "name": "precogly:number",
+          "value": "1"
+        },
+        {
+          "name": "precogly:control-functions",
+          "value": "[\"preventive\"]"
+        },
+        {
+          "name": "precogly:control-nature",
+          "value": "technical"
+        },
+        {
+          "name": "precogly:priority",
+          "value": "high"
+        },
+        {
+          "name": "precogly:required-for-release",
+          "value": "true"
+        },
+        {
+          "name": "precogly:source",
+          "value": "Pentest 2026-09"
+        },
+        {
+          "name": "precogly:library",
+          "value": "reference/param-queries"
+        },
+        {
+          "name": "precogly:mitigates",
+          "value": "[\"scenario-1\"]"
+        },
+        {
+          "name": "precogly:sufficiency",
+          "value": "[{\"requirement\":\"requirement-1\",\"sufficiency\":\"full\"},{\"requirement\":\"requirement-snapshot-1\",\"sufficiency\":\"partial\"}]"
+        }
+      ]
+    },
+    {
+      "bom-ref": "control-2",
+      "name": "Security training",
+      "status": {
+        "name": "platform"
+      },
+      "appliesTo": [
+        "boundary-1"
+      ],
+      "properties": [
+        {
+          "name": "precogly:number",
+          "value": "2"
+        },
+        {
+          "name": "precogly:mitigates",
+          "value": "[\"scenario-3\"]"
+        }
+      ]
+    }
+  ],
+  "risks": {
+    "risks": [
+      {
+        "bom-ref": "risk-1",
+        "name": "Customer data exposure",
+        "statement": "An attacker reads card records through the API.",
+        "description": "PII leaves the system",
+        "status": "assessed",
+        "domains": [
+          {
+            "type": "security"
+          },
+          {
+            "type": "privacy"
+          }
+        ],
+        "relatedThreats": [
+          "scenario-1",
+          "scenario-2"
+        ],
+        "relatedBusinessObjectives": [
+          "objective-1"
+        ],
+        "inherentRisk": {
+          "score": {
+            "level": "high",
+            "score": 5.75,
+            "methodology": "owasp-risk-rating"
+          },
+          "likelihood": {
+            "level": "medium",
+            "score": 5.4,
+            "factors": [
+              {
+                "name": "Skill level",
+                "type": "threat-capability",
+                "score": 5
+              },
+              {
+                "name": "Motive",
+                "type": "motivation",
+                "score": 6
+              },
+              {
+                "name": "Opportunity",
+                "type": "opportunity",
+                "score": 5
+              },
+              {
+                "name": "Size",
+                "type": {
+                  "name": "Threat agent size"
+                },
+                "score": 6
+              },
+              {
+                "name": "Ease of discovery",
+                "type": "discoverability",
+                "score": 5
+              },
+              {
+                "name": "Ease of exploit",
+                "type": "exploit-maturity",
+                "score": 6
+              },
+              {
+                "name": "Awareness",
+                "type": {
+                  "name": "Awareness"
+                },
+                "score": 5
+              },
+              {
+                "name": "Intrusion detection",
+                "type": "detectability",
+                "score": 5
+              }
+            ]
+          },
+          "impact": {
+            "level": "major",
+            "score": 6.1,
+            "factors": [
+              {
+                "name": "Loss of confidentiality",
+                "score": 6,
+                "category": "confidentiality"
+              },
+              {
+                "name": "Loss of integrity",
+                "score": 6,
+                "category": "integrity"
+              },
+              {
+                "name": "Loss of availability",
+                "score": 6,
+                "category": "availability"
+              },
+              {
+                "name": "Loss of accountability",
+                "score": 7,
+                "category": {
+                  "name": "Accountability"
+                }
+              },
+              {
+                "name": "Financial damage",
+                "score": 6,
+                "category": "financial"
+              },
+              {
+                "name": "Reputation damage",
+                "score": 6,
+                "category": "reputation"
+              },
+              {
+                "name": "Non compliance",
+                "score": 6,
+                "category": "regulatory"
+              },
+              {
+                "name": "Privacy violation",
+                "score": 6,
+                "category": "privacy"
+              }
+            ]
+          }
+        },
+        "residualRisk": {
+          "score": {
+            "level": "high",
+            "score": 5.75,
+            "methodology": "owasp-risk-rating"
+          },
+          "likelihood": {
+            "level": "medium",
+            "score": 5.4,
+            "factors": [
+              {
+                "name": "Skill level",
+                "type": "threat-capability",
+                "score": 5
+              },
+              {
+                "name": "Motive",
+                "type": "motivation",
+                "score": 6
+              },
+              {
+                "name": "Opportunity",
+                "type": "opportunity",
+                "score": 5
+              },
+              {
+                "name": "Size",
+                "type": {
+                  "name": "Threat agent size"
+                },
+                "score": 6
+              },
+              {
+                "name": "Ease of discovery",
+                "type": "discoverability",
+                "score": 5
+              },
+              {
+                "name": "Ease of exploit",
+                "type": "exploit-maturity",
+                "score": 6
+              },
+              {
+                "name": "Awareness",
+                "type": {
+                  "name": "Awareness"
+                },
+                "score": 5
+              },
+              {
+                "name": "Intrusion detection",
+                "type": "detectability",
+                "score": 5
+              }
+            ]
+          },
+          "impact": {
+            "level": "major",
+            "score": 6.1,
+            "factors": [
+              {
+                "name": "Loss of confidentiality",
+                "score": 6,
+                "category": "confidentiality"
+              },
+              {
+                "name": "Loss of integrity",
+                "score": 6,
+                "category": "integrity"
+              },
+              {
+                "name": "Loss of availability",
+                "score": 6,
+                "category": "availability"
+              },
+              {
+                "name": "Loss of accountability",
+                "score": 7,
+                "category": {
+                  "name": "Accountability"
+                }
+              },
+              {
+                "name": "Financial damage",
+                "score": 6,
+                "category": "financial"
+              },
+              {
+                "name": "Reputation damage",
+                "score": 6,
+                "category": "reputation"
+              },
+              {
+                "name": "Non compliance",
+                "score": 6,
+                "category": "regulatory"
+              },
+              {
+                "name": "Privacy violation",
+                "score": 6,
+                "category": "privacy"
+              }
+            ]
+          }
+        },
+        "responses": [
+          {
+            "bom-ref": "response-1",
+            "strategy": "reduce",
+            "description": "Add a WAF",
+            "status": "in-progress",
+            "cost": "medium",
+            "priority": "high",
+            "owner": "party-user-1",
+            "controls": [
+              "control-1"
+            ]
+          }
+        ],
+        "owner": "party-user-1"
+      }
+    ]
+  },
+  "definitions": {
+    "businessObjectives": [
+      {
+        "bom-ref": "objective-1",
+        "name": "Keep card data private",
+        "criticality": "high",
+        "owner": {
+          "roles": [
+            {
+              "role": "owner"
+            }
+          ],
+          "person": {
+            "name": "CISO"
+          }
+        }
+      }
+    ],
+    "standards": [
+      {
+        "bom-ref": "standard-1",
+        "name": "Reference standard",
+        "requirements": [
+          {
+            "bom-ref": "requirement-1",
+            "identifier": "AC-2",
+            "title": "AC-2",
+            "text": "Account management"
+          }
+        ],
+        "version": "1"
+      },
+      {
+        "bom-ref": "standard-elsewhere-standard",
+        "name": "Elsewhere standard",
+        "requirements": [
+          {
+            "bom-ref": "requirement-snapshot-1",
+            "identifier": "SI-4",
+            "title": "SI-4",
+            "text": "Monitor the system."
+          }
+        ]
+      }
+    ],
+    "useCases": [
+      {
+        "bom-ref": "usecase-1",
+        "name": "Pay",
+        "preconditions": [
+          "Logged in"
+        ],
+        "mainFlow": [
+          {
+            "number": 1,
+            "description": "Enter card"
+          }
+        ]
+      }
+    ]
+  },
+  "properties": [
+    {
+      "name": "precogly:next-threat-number",
+      "value": "4"
+    },
+    {
+      "name": "precogly:next-countermeasure-number",
+      "value": "3"
+    },
+    {
+      "name": "precogly:risk-scoring-method",
+      "value": "owasp-risk-rating"
+    }
+  ],
+  "version": 1
 }

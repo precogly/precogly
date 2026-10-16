@@ -8,5 +8,10 @@
 # `backend/`. The backend image's build context is the repository root for that
 # reason.
 
+[dependency-groups]
+dev = [
+    "pip-audit>=2.7",
+]
+
 [tool.uv.workspace]
 members = ["backend", "mcp"]

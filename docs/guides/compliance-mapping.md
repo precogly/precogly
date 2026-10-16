@@ -23,12 +23,23 @@ These are the primary compliance mappings. When a library pack defines a counter
 
 ### How they appear in the UI
 
-In the **Threat Analysis** view, expand a countermeasure to see its compliance coverage. Each mapping shows the framework name, requirement code, and whether coverage is full or partial.
+In the **Threat Analysis** view, open a countermeasure to see its compliance coverage in the **Compliance coverage** part of its modal. Each mapping shows the framework name, requirement code, and whether coverage is full or partial.
 
 In the **Compliance** report, frameworks appear as rows showing two metrics:
 
 - **Covered**: the percentage of requirements that have at least one countermeasure mapped to them
 - **Satisfied**: the percentage of requirements where at least one mapped countermeasure is Verified or Platform
+
+### Compliance matrix
+
+The **Compliance Matrix** section of the Compliance and Full reports lists, for the framework you pick, one row per requirement: the countermeasures mapped to it (with status and whether they cover it fully or partly), the threats those countermeasures mitigate, and an overdue mark. Each requirement has one of four states:
+
+- **Satisfied**: a countermeasure fully covers it and is Verified or Platform
+- **Covered**: a countermeasure fully covers it but is not in effect yet
+- **Partial only**: only countermeasures that partly cover it are mapped
+- **Not covered**: nothing is mapped to it
+
+Coverage is stated against the installed pack ("N of the M requirements in this pack"). A pack often holds only part of a standard, so the matrix never claims coverage of the whole standard. **Show not covered** hides or shows the requirements with nothing mapped. Rows are grouped by family where the pack defines one, otherwise by the start of the requirement code (V1 for ASVS, SR 1 for IEC 62443). A framework that is mapped but not installed shows only its mapped requirements. Click a countermeasure number to open it in Threat Analysis. The matrix is also in the Word report and as its own CSV.
 
 ### YAML format
 

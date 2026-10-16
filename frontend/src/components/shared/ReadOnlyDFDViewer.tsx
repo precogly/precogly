@@ -9,6 +9,7 @@ import '@xyflow/react/dist/style.css'
 import { nodeTypes, edgeTypes } from '@/features/dfd-editor/components'
 import { DFDNotationProvider } from '@/features/dfd-editor/context/DFDNotationContext'
 import { DEFAULT_NOTATION } from '@/features/dfd-editor/types/notation'
+import type { FlowType } from '@/types/domain'
 import { captureDiagramImage } from '@/features/dfd-editor/lib/export-diagram-image'
 
 // Flexible canvas data type that accepts the API response format
@@ -16,6 +17,8 @@ interface CanvasData {
   nodes?: unknown[]
   edges?: unknown[]
   notationStyle?: string
+  /** The flow type filter saved with the diagram (plan F22); missing means every type. */
+  visibleFlowTypes?: FlowType[]
 }
 
 interface ReadOnlyDFDViewerProps {
@@ -55,7 +58,7 @@ const DFDViewerContent = forwardRef<ReadOnlyDFDViewerHandle, ReadOnlyDFDViewerPr
 
   return (
     <div ref={wrapperRef} className={className}>
-      <DFDNotationProvider notationStyle={notationStyle}>
+      <DFDNotationProvider notationStyle={notationStyle} visibleFlowTypes={canvasData.visibleFlowTypes}>
         <ReactFlow
           nodes={nodes}
           edges={edges}

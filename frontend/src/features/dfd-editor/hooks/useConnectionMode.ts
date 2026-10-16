@@ -2,6 +2,7 @@ import { useCallback, useState, useEffect } from 'react'
 import { addEdge } from '@xyflow/react'
 import type { XYPosition } from '@xyflow/react'
 import type { DiagramNode, DiagramEdge, DataFlowEdge } from '../types'
+import { DEFAULT_FLOW_TYPE } from '@/types/domain'
 
 /**
  * Manages click-to-connect interaction mode.
@@ -150,10 +151,12 @@ export function useConnectionMode({
           targetHandle,
           type: 'dataFlow',
           animated: true,
+          // A new flow is a data flow with no authentication recorded (plan 4.6).
           data: {
             label: '',
+            flowType: DEFAULT_FLOW_TYPE,
             encrypted: false,
-            authenticated: false,
+            authentication: [],
           },
         }
 

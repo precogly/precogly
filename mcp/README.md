@@ -11,7 +11,17 @@ Early. Four tools, all read-only:
   read; over stdio it is one page of twenty, so `total` is how you tell the difference.
 - `search_threat_library`, `search_countermeasure_library`, `search_component_library` —
   the shared catalogs installed packs populate, with `matched` and `catalogSize` beside
-  the rows.
+  the rows. Component rows carry `kind` (the CycloneDX asset type) and take a `kind`
+  filter; countermeasure queries match the description as well as the name.
+
+The schema alignment work (precogly/precogly#583, #584) changed the output shapes in one
+go: `list_threat_models` rows gained `methodologies`, `lifecycle_phase`, `approved_at`,
+`primary_system_name`, `serial_number`, `version` and `blueprint_count`, and
+`risk_scoring_method` is now `qualitative-matrix`, `owasp-risk-rating`, `fair` or
+`mozilla-rra`. Tool names and shapes are not versioned, so a client that pinned the old
+values updates with the server. The planned per-model tools are redesigned on the new
+model before they are built ([0002](docs/0002-tool-implementation-order.md), last
+section).
 
 Both transports work end to end. A tool reads Precogly through a protocol the mounting
 application supplies rather than by forwarding the caller's token, which cannot work

@@ -1,5 +1,9 @@
 /**
- * API hooks for risk endpoints.
+ * API hooks for risks, risk responses and countermeasure comments.
+ *
+ * Risks live under `/threat-models/{id}/risks/` and carry three read-only
+ * ratings (`inherent`, `residual`, `target`); writes take `ratingInputs`.
+ * Responses live under `/threat-models/{id}/risks/{riskId}/responses/`.
  */
 
 import {
@@ -12,9 +16,13 @@ import {
 import { api, getPage } from '@/lib/api'
 import type {
   Risk,
+  RiskResponse,
+  RiskStatus,
   ScoringMethod,
   CreateRiskInput,
   UpdateRiskInput,
+  CreateRiskResponseInput,
+  UpdateRiskResponseInput,
   AddRemoveThreatsInput,
   BulkUpdateRisksInput,
   CountermeasureComment,
@@ -26,10 +34,12 @@ export const riskKeys = {
   // Every page's key extends `list`, so the mutations below can keep
   // invalidating `list` alone and still reach whichever pages are cached.
   list: (threatModelId: string) => [...riskKeys.all, 'list', threatModelId] as const,
-  page: (threatModelId: string, page: number, pageSize: number) =>
-    [...riskKeys.list(threatModelId), { page, pageSize }] as const,
+  page: (threatModelId: string, page: number, pageSize: number, filters: RiskListFilters) =>
+    [...riskKeys.list(threatModelId), { page, pageSize, ...filters }] as const,
   detail: (threatModelId: string, riskId: number) =>
     [...riskKeys.all, 'detail', threatModelId, riskId] as const,
+  responses: (threatModelId: string, riskId: number) =>
+    [...riskKeys.all, 'responses', threatModelId, riskId] as const,
   scoringMethods: ['scoring-methods'] as const,
 }
 
@@ -43,6 +53,29 @@ export const riskKeys = {
 export const RISK_PAGE_SIZES = [20, 50, 100, 200] as const
 export const DEFAULT_RISK_PAGE_SIZE = RISK_PAGE_SIZES[0]
 
+export interface RiskListFilters {
+  status?: RiskStatus
+  /** `inherent__level` filter. */
+  inherentLevel?: string
+  /** `residual__level` filter. */
+  residualLevel?: string
+  search?: string
+  /** One of inherent_rank, residual_rank, inherent__score, residual__score, created_at, name (prefix `-` to reverse). */
+  ordering?: string
+}
+
+function riskListEndpoint(threatModelId: string, filters: RiskListFilters): string {
+  const params = new URLSearchParams()
+  if (filters.status) params.set('status', filters.status)
+  if (filters.inherentLevel) params.set('inherent__level', filters.inherentLevel)
+  if (filters.residualLevel) params.set('residual__level', filters.residualLevel)
+  if (filters.search) params.set('search', filters.search)
+  if (filters.ordering) params.set('ordering', filters.ordering)
+  const query = params.toString()
+  const base = `/threat-models/${threatModelId}/risks/`
+  return query ? `${base}?${query}` : base
+}
+
 /**
  * Fetch one page of a threat model's risks.
  *
@@ -51,12 +84,16 @@ export const DEFAULT_RISK_PAGE_SIZE = RISK_PAGE_SIZES[0]
  */
 export function useRisks(
   threatModelId: string | null | undefined,
-  { page = 1, pageSize = DEFAULT_RISK_PAGE_SIZE }: { page?: number; pageSize?: number } = {}
+  {
+    page = 1,
+    pageSize = DEFAULT_RISK_PAGE_SIZE,
+    ...filters
+  }: { page?: number; pageSize?: number } & RiskListFilters = {}
 ) {
   return useQuery({
-    queryKey: riskKeys.page(threatModelId!, page, pageSize),
+    queryKey: riskKeys.page(threatModelId ?? '', page, pageSize, filters),
     queryFn: threatModelId
-      ? () => getPage<Risk>(`/threat-models/${threatModelId}/risks/`, { page, pageSize })
+      ? () => getPage<Risk>(riskListEndpoint(threatModelId, filters), { page, pageSize })
       : skipToken,
     // Hold the previous page on screen while the next one loads. Without this
     // every page step unmounts the table and shows the tab-wide spinner.
@@ -69,7 +106,7 @@ export function useRisks(
  */
 export function useRisk(threatModelId: string | null | undefined, riskId: number | null) {
   return useQuery({
-    queryKey: riskKeys.detail(threatModelId!, riskId!),
+    queryKey: riskKeys.detail(threatModelId ?? '', riskId ?? -1),
     queryFn:
       threatModelId && riskId
         ? () => api.get<Risk>(`/threat-models/${threatModelId}/risks/${riskId}/`)
@@ -78,7 +115,7 @@ export function useRisk(threatModelId: string | null | undefined, riskId: number
 }
 
 /**
- * Fetch available scoring methods.
+ * Fetch available scoring methods (`GET /scoring-methods/`).
  */
 export function useScoringMethods() {
   return useQuery({
@@ -89,7 +126,7 @@ export function useScoringMethods() {
 }
 
 /**
- * Create a new risk.
+ * Create a new risk. `ratingInputs` is required.
  */
 export function useCreateRisk(threatModelId: string) {
   const queryClient = useQueryClient()
@@ -135,7 +172,7 @@ export function useDeleteRisk(threatModelId: string) {
 }
 
 /**
- * Recalculate a risk's residual score.
+ * Recalculate a risk's residual rating.
  */
 export function useRecalculateRisk(threatModelId: string) {
   const queryClient = useQueryClient()
@@ -151,7 +188,7 @@ export function useRecalculateRisk(threatModelId: string) {
 }
 
 /**
- * Add threats to a risk.
+ * Add threats to a risk (`add-threats`, body `{ threatIds }`).
  */
 export function useAddRiskThreats(threatModelId: string) {
   const queryClient = useQueryClient()
@@ -167,7 +204,7 @@ export function useAddRiskThreats(threatModelId: string) {
 }
 
 /**
- * Remove threats from a risk.
+ * Remove threats from a risk (`remove-threats`, body `{ threatIds }`).
  */
 export function useRemoveRiskThreats(threatModelId: string) {
   const queryClient = useQueryClient()
@@ -183,7 +220,7 @@ export function useRemoveRiskThreats(threatModelId: string) {
 }
 
 /**
- * Bulk update status/owner/due_date on multiple risks.
+ * Bulk update status or owner on multiple risks.
  */
 export function useBulkUpdateRisks(threatModelId: string) {
   const queryClient = useQueryClient()
@@ -197,45 +234,97 @@ export function useBulkUpdateRisks(threatModelId: string) {
   })
 }
 
-// Query keys for comments
-export const commentKeys = {
-  forComponent: (cmId: number) => ['countermeasure-comments', 'component', cmId] as const,
-  forFlow: (cmId: number) => ['countermeasure-comments', 'flow', cmId] as const,
+// ============================================
+// Risk responses
+// ============================================
+
+function invalidateRisk(queryClient: ReturnType<typeof useQueryClient>, threatModelId: string, riskId: number) {
+  queryClient.invalidateQueries({ queryKey: riskKeys.responses(threatModelId, riskId) })
+  queryClient.invalidateQueries({ queryKey: riskKeys.detail(threatModelId, riskId) })
+  queryClient.invalidateQueries({ queryKey: riskKeys.list(threatModelId) })
 }
 
-/**
- * Fetch comments for a component countermeasure.
- */
-export function useCountermeasureComments(componentCmId: number | null) {
+export function useRiskResponses(threatModelId: string | null | undefined, riskId: number | null) {
   return useQuery({
-    queryKey: commentKeys.forComponent(componentCmId!),
-    queryFn: componentCmId
-      ? async () => {
-          const res = await api.get<{ results: CountermeasureComment[] } | CountermeasureComment[]>(
-            `/countermeasure-comments/?component_countermeasure=${componentCmId}`
-          )
-          return Array.isArray(res) ? res : res.results
-        }
-      : undefined,
-    enabled: componentCmId !== null,
+    queryKey: riskKeys.responses(threatModelId ?? '', riskId ?? -1),
+    queryFn:
+      threatModelId && riskId
+        ? async () => {
+            const response = await api.get<{ results: RiskResponse[] } | RiskResponse[]>(
+              `/threat-models/${threatModelId}/risks/${riskId}/responses/`
+            )
+            return Array.isArray(response) ? response : response.results
+          }
+        : skipToken,
   })
 }
 
+export function useCreateRiskResponse(threatModelId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ riskId, data }: { riskId: number; data: CreateRiskResponseInput }) =>
+      api.post<RiskResponse>(`/threat-models/${threatModelId}/risks/${riskId}/responses/`, data),
+    onSuccess: (_, { riskId }) => invalidateRisk(queryClient, threatModelId, riskId),
+  })
+}
+
+export function useUpdateRiskResponse(threatModelId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      riskId,
+      responseId,
+      data,
+    }: {
+      riskId: number
+      responseId: number
+      data: UpdateRiskResponseInput
+    }) =>
+      api.patch<RiskResponse>(
+        `/threat-models/${threatModelId}/risks/${riskId}/responses/${responseId}/`,
+        data
+      ),
+    onSuccess: (_, { riskId }) => invalidateRisk(queryClient, threatModelId, riskId),
+  })
+}
+
+export function useDeleteRiskResponse(threatModelId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ riskId, responseId }: { riskId: number; responseId: number }) =>
+      api.delete(`/threat-models/${threatModelId}/risks/${riskId}/responses/${responseId}/`),
+    onSuccess: (_, { riskId }) => invalidateRisk(queryClient, threatModelId, riskId),
+  })
+}
+
+// ============================================
+// Countermeasure comments (one countermeasure table, one key)
+// ============================================
+
+export const countermeasureCommentKeys = {
+  all: ['countermeasure-comments'] as const,
+  forCountermeasure: (countermeasureId: number) =>
+    [...countermeasureCommentKeys.all, countermeasureId] as const,
+}
+
 /**
- * Fetch comments for a flow countermeasure.
+ * Fetch comments for a countermeasure.
  */
-export function useFlowCountermeasureComments(flowCmId: number | null) {
+export function useCountermeasureComments(countermeasureId: number | null) {
   return useQuery({
-    queryKey: commentKeys.forFlow(flowCmId!),
-    queryFn: flowCmId
-      ? async () => {
-          const res = await api.get<{ results: CountermeasureComment[] } | CountermeasureComment[]>(
-            `/countermeasure-comments/?flow_countermeasure=${flowCmId}`
-          )
-          return Array.isArray(res) ? res : res.results
-        }
-      : undefined,
-    enabled: flowCmId !== null,
+    queryKey: countermeasureCommentKeys.forCountermeasure(countermeasureId ?? -1),
+    queryFn:
+      countermeasureId !== null
+        ? async () => {
+            const res = await api.get<{ results: CountermeasureComment[] } | CountermeasureComment[]>(
+              `/countermeasure-comments/?countermeasure=${countermeasureId}`
+            )
+            return Array.isArray(res) ? res : res.results
+          }
+        : skipToken,
   })
 }
 
@@ -246,19 +335,12 @@ export function useAddCountermeasureComment() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: {
-      body: string
-      changeSummary?: string
-      componentCountermeasure?: number
-      flowCountermeasure?: number
-    }) => api.post<CountermeasureComment>('/countermeasure-comments/', data),
+    mutationFn: (data: { countermeasure: number; body: string; changeSummary?: string }) =>
+      api.post<CountermeasureComment>('/countermeasure-comments/', data),
     onSuccess: (_, vars) => {
-      if (vars.componentCountermeasure) {
-        queryClient.invalidateQueries({ queryKey: commentKeys.forComponent(vars.componentCountermeasure) })
-      }
-      if (vars.flowCountermeasure) {
-        queryClient.invalidateQueries({ queryKey: commentKeys.forFlow(vars.flowCountermeasure) })
-      }
+      queryClient.invalidateQueries({
+        queryKey: countermeasureCommentKeys.forCountermeasure(vars.countermeasure),
+      })
     },
   })
 }

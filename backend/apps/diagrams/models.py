@@ -131,17 +131,16 @@ class DFD(TimestampedModel):
         blank=True,
         related_name="instantiated_dfds",
     )
-    # Direct FK to ThreatModel (one DFD per threat model)
-    threat_model = models.ForeignKey(
-        "threat_models.ThreatModel",
+    # A DFD is a visualization of one blueprint. The blueprint's primary DFD is
+    # the one that syncs to rows; the others are reference views.
+    blueprint = models.ForeignKey(
+        "threat_models.Blueprint",
         on_delete=models.CASCADE,
-        null=True,
-        blank=True,
         related_name="dfds",
     )
     is_primary = models.BooleanField(
         default=False,
-        help_text="Only the primary DFD syncs nodes to components/threats.",
+        help_text="Only the primary DFD of a blueprint syncs nodes to components/threats.",
     )
     # Store the ReactFlow JSON structure (nodes, edges)
     canvas_data = models.JSONField(default=dict, blank=True)
@@ -152,11 +151,15 @@ class DFD(TimestampedModel):
         ordering = ["name"]
         constraints = [
             models.UniqueConstraint(
-                fields=["threat_model"],
+                fields=["blueprint"],
                 condition=models.Q(is_primary=True),
-                name="unique_primary_dfd_per_threat_model",
+                name="unique_primary_dfd_per_blueprint",
             ),
         ]
+
+    @property
+    def threat_model(self):
+        return self.blueprint.threat_model
 
     def __str__(self):
         return f"{self.name} ({self.diagram_type})"

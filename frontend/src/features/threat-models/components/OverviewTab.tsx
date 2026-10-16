@@ -1,168 +1,192 @@
+/**
+ * The Overview tab: a vertical list of sections, collapsed to a header row
+ * unless noted. Top to bottom: diagrams with "+ New DFD" and the completion
+ * checklist (open), the review row, three buttons that open the System
+ * (Details and Context tabs), Business objectives and Use cases dialogs,
+ * Connections, and Reference images (open when the model has one).
+ */
+
+import { useState } from 'react'
+import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
+  BlueprintSwitcher,
+  BusinessObjectivesDialog,
   CompletionStatusCard,
+  DFDCarousel,
+  OverviewDetailButtons,
+  OverviewSection,
   ReferenceImageGallery,
   ReferenceImageUploader,
   RelationshipCards,
-  DFDCarousel,
-  SummaryCards,
-  SystemContextCard,
+  ReviewCard,
+  UseCasesDialog,
+  countLabel,
+  showsBlueprintChoice,
 } from '@/features/threat-models/components/workspace'
 import type { Diagram } from '@/types'
-import type { ReferenceImage } from '@/features/threat-models/types/core'
+import type { Blueprint, ReferenceImage, ThreatModel } from '@/features/threat-models/types/core'
 import type { CompletionStatus, ProgressChecklistItem } from '@/features/dfd-editor/types/threat-analysis'
 
-interface SummaryData {
-  componentSummary: {
-    total: number
-    processes: number
-    datastores: number
-    humanActors: number
-    systemActors: number
-    trustZones: number
-  }
-  threatSummary: {
-    total: number
-    exposed: number
-    addressable: number
-    mitigated: number
-  }
-  countermeasureSummary: {
-    total: number
-    platform: number
-    verified: number
-    gap: number
-    planned: number
-    waived: number
-  }
-}
-
 interface OverviewTabProps {
-  threatModelId: string
+  threatModel: ThreatModel
+  /** Every blueprint of the model. */
+  blueprints: Blueprint[]
+  selectedBlueprintId: number | null
+  /** The diagrams of the switcher's blueprint (or all, with one blueprint). */
   diagrams: Diagram[]
   progressChecklist: ProgressChecklistItem[]
   completionStatus?: CompletionStatus
-  summaries: SummaryData
   selectedDiagramId: string | null
   referenceImages: ReferenceImage[]
   isCreatingDiagram: boolean
   isUploadingImage: boolean
+  isSecurityTeam: boolean
+  onSelectBlueprint: (blueprintId: number) => void
+  onAddBlueprint: () => void
+  onManageBlueprints: () => void
   onSelectDiagram: (id: string | null) => void
   onEditDiagram: (diagramId: string) => void
   onCreateDiagram: () => void
   onUploadImage: (file: File, description?: string) => Promise<void>
   onDeleteImage: (imageId: number) => Promise<void>
   onImageClick: (index: number) => void
-  onManageSystems: () => void
   onManageThreatModels: () => void
   onManagePacks: () => void
   onManagePeople: () => void
-  onEditSystemContext: () => void
-  onNavigateToThreats: () => void
+  /** Opens the System dialog (System Details and System context) on a tab. */
+  onOpenSystem: (tab: 'details' | 'context') => void
 }
 
 export function OverviewTab({
-  threatModelId,
+  threatModel,
+  blueprints,
+  selectedBlueprintId,
   diagrams,
   progressChecklist,
   completionStatus,
-  summaries,
   selectedDiagramId,
   referenceImages,
   isCreatingDiagram,
   isUploadingImage,
+  isSecurityTeam,
+  onSelectBlueprint,
+  onAddBlueprint,
+  onManageBlueprints,
   onSelectDiagram,
   onEditDiagram,
   onCreateDiagram,
   onUploadImage,
   onDeleteImage,
   onImageClick,
-  onManageSystems,
   onManageThreatModels,
   onManagePacks,
   onManagePeople,
-  onEditSystemContext,
-  onNavigateToThreats,
+  onOpenSystem,
 }: OverviewTabProps) {
+  const threatModelId = threatModel.id
+
+  const [businessObjectivesOpen, setBusinessObjectivesOpen] = useState(false)
+  const [useCasesOpen, setUseCasesOpen] = useState(false)
+  // Reference images start open when the model has one. The images load after
+  // the first render, so the section follows them until someone toggles it.
+  const [referenceImagesOpenChoice, setReferenceImagesOpenChoice] = useState<boolean | null>(null)
+  const referenceImagesOpen = referenceImagesOpenChoice ?? referenceImages.length > 0
+
   return (
-    <div className="space-y-6">
-      {/* Completion Status + Relationship Cards */}
-      <div className="grid grid-cols-2 gap-6">
-        <div className="border rounded-lg p-4">
-          <h3 className="text-sm font-medium">Completion Status</h3>
-          <p className="text-xs text-muted-foreground mb-3">Did We Do a Good Job?</p>
-          <CompletionStatusCard
-            completionStatus={completionStatus}
-            progressChecklist={progressChecklist}
-          />
+    <div className="space-y-4">
+      {/* Diagrams and completion: the page's call to action is a new DFD. */}
+      <OverviewSection title="Diagrams and completion" defaultOpen testId="overview-diagrams-section">
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,620px)]">
+          <div className="min-w-0 space-y-3">
+            {showsBlueprintChoice(blueprints) && (
+              <BlueprintSwitcher
+                blueprints={blueprints}
+                selectedBlueprintId={selectedBlueprintId}
+                onSelect={onSelectBlueprint}
+                onAddBlueprint={onAddBlueprint}
+                onManageBlueprints={onManageBlueprints}
+              />
+            )}
+            {diagrams.length > 0 ? (
+              <DFDCarousel
+                diagrams={diagrams}
+                selectedDiagramId={selectedDiagramId}
+                onSelectDiagram={onSelectDiagram}
+                onEditDiagram={onEditDiagram}
+                onCreateDiagram={onCreateDiagram}
+                isCreating={isCreatingDiagram}
+              />
+            ) : (
+              <div className="rounded-lg bg-muted/30 p-8 text-center">
+                <p className="mb-4 text-sm text-muted-foreground">
+                  No DFDs created yet. Create a data flow diagram to start threat modeling.
+                </p>
+                <Button onClick={onCreateDiagram} disabled={isCreatingDiagram} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  {isCreatingDiagram ? 'Creating...' : 'New DFD'}
+                </Button>
+              </div>
+            )}
+          </div>
+          {/* A rule between the diagrams and the checklist: beside them on wide screens, above on narrow ones. */}
+          <div className="min-w-0 border-t pt-4 xl:border-t-0 xl:border-l xl:pt-0 xl:pl-6">
+            <h3 className="text-sm font-medium">Completion Status</h3>
+            <p className="mb-3 text-xs text-muted-foreground">Did We Do a Good Job?</p>
+            <CompletionStatusCard completionStatus={completionStatus} progressChecklist={progressChecklist} />
+          </div>
         </div>
+      </OverviewSection>
+
+      <ReviewCard threatModelId={threatModelId} threatModelName={threatModel.name} isSecurityTeam={isSecurityTeam} />
+
+      <OverviewDetailButtons
+        threatModel={threatModel}
+        onOpenSystem={() => onOpenSystem('details')}
+        onOpenBusinessObjectives={() => setBusinessObjectivesOpen(true)}
+        onOpenUseCases={() => setUseCasesOpen(true)}
+      />
+
+      <OverviewSection
+        title="Connections"
+        summary="Related models, library packs, team members, blueprints"
+        testId="overview-connections-section"
+      >
         <RelationshipCards
-          onManageSystems={onManageSystems}
+          blueprintCount={blueprints.length}
           onManageThreatModels={onManageThreatModels}
           onManagePacks={onManagePacks}
           onManagePeople={onManagePeople}
+          onManageBlueprints={onManageBlueprints}
         />
-      </div>
+      </OverviewSection>
 
-      {/* System Context Card */}
-      <SystemContextCard
-        threatModelId={threatModelId}
-        onEdit={onEditSystemContext}
-      />
-
-      {/* Summary Cards */}
-      <SummaryCards
-        components={summaries.componentSummary}
-        threats={summaries.threatSummary}
-        countermeasures={summaries.countermeasureSummary}
-        onComponentsClick={onNavigateToThreats}
-        onThreatsClick={onNavigateToThreats}
-        onCountermeasuresClick={onNavigateToThreats}
-      />
-
-      {/* DFD Carousel */}
-      {diagrams.length > 0 ? (
-        <DFDCarousel
-          diagrams={diagrams}
-          selectedDiagramId={selectedDiagramId}
-          onSelectDiagram={onSelectDiagram}
-          onEditDiagram={onEditDiagram}
-          onCreateDiagram={onCreateDiagram}
-          isCreating={isCreatingDiagram}
-        />
-      ) : (
-        <div className="border rounded-lg p-12 text-center">
-          <p className="text-muted-foreground mb-4">
-            No DFDs created yet. Create a data flow diagram to start threat modeling.
+      <OverviewSection
+        title="Reference images"
+        summary={referenceImages.length > 0 ? countLabel(referenceImages.length, 'image') : undefined}
+        open={referenceImagesOpen}
+        onOpenChange={setReferenceImagesOpenChoice}
+        testId="overview-reference-images-section"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Upload diagrams, whiteboard photos, or architecture screenshots for reference
           </p>
-          <Button onClick={onCreateDiagram} disabled={isCreatingDiagram}>
-            {isCreatingDiagram ? 'Creating...' : 'Create First DFD'}
-          </Button>
+          <ReferenceImageUploader onUpload={onUploadImage} isUploading={isUploadingImage} />
+          {referenceImages.length > 0 && (
+            <div className="pt-4">
+              <ReferenceImageGallery images={referenceImages} onImageClick={onImageClick} onDelete={onDeleteImage} />
+            </div>
+          )}
         </div>
-      )}
+      </OverviewSection>
 
-      {/* Reference Images */}
-      <div className="border rounded-lg p-6 space-y-4">
-        <h3 className="text-lg font-semibold">Reference Images</h3>
-        <p className="text-sm text-muted-foreground">
-          Upload diagrams, whiteboard photos, or architecture screenshots for reference
-        </p>
-
-        <ReferenceImageUploader
-          onUpload={onUploadImage}
-          isUploading={isUploadingImage}
-        />
-
-        {referenceImages.length > 0 && (
-          <div className="pt-4">
-            <ReferenceImageGallery
-              images={referenceImages}
-              onImageClick={onImageClick}
-              onDelete={onDeleteImage}
-            />
-          </div>
-        )}
-      </div>
+      <BusinessObjectivesDialog
+        open={businessObjectivesOpen}
+        onOpenChange={setBusinessObjectivesOpen}
+        threatModelId={threatModelId}
+      />
+      <UseCasesDialog open={useCasesOpen} onOpenChange={setUseCasesOpen} threatModelId={threatModelId} />
     </div>
   )
 }

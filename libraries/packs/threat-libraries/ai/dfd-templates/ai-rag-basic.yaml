@@ -40,7 +40,8 @@ canvas_data:
       style: { width: 220, height: 540 }
       data:
         label: "Edge / API"
-        zoneType: "zoneInternet"
+        zoneType: "trust"
+        trustLevel: 0
 
     - id: "tz-ai"
       type: "trustZone"
@@ -49,7 +50,8 @@ canvas_data:
       style: { width: 260, height: 280 }
       data:
         label: "AI Processing"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-data"
       type: "trustZone"
@@ -58,7 +60,8 @@ canvas_data:
       style: { width: 530, height: 230 }
       data:
         label: "Data Tier"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     # ---- Edge Processes ----
     - id: "process-gateway"
@@ -144,7 +147,7 @@ canvas_data:
         label: "User query"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-gateway-to-input-guard"
       source: "process-gateway"
@@ -154,7 +157,7 @@ canvas_data:
         label: "Authenticated query"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-input-guard-to-embedding"
       source: "process-input-guardrail"
@@ -164,7 +167,7 @@ canvas_data:
         label: "Validated query"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-embedding-to-vectordb"
       source: "process-embedding"
@@ -174,7 +177,7 @@ canvas_data:
         label: "Vector similarity search"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-vectordb-to-llm"
       source: "datastore-vectordb"
@@ -184,7 +187,7 @@ canvas_data:
         label: "Retrieved context"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-input-guard-to-llm"
       source: "process-input-guardrail"
@@ -194,7 +197,7 @@ canvas_data:
         label: "User query with context"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-llm-to-provider"
       source: "process-llm"
@@ -204,7 +207,7 @@ canvas_data:
         label: "Inference request"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["api-key"]
 
     - id: "edge-provider-to-llm"
       source: "actor-llm-provider"
@@ -214,7 +217,7 @@ canvas_data:
         label: "Model completion"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["api-key"]
 
     - id: "edge-llm-to-output-guard"
       source: "process-llm"
@@ -224,7 +227,7 @@ canvas_data:
         label: "Raw response"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-output-guard-to-gateway"
       source: "process-output-guardrail"
@@ -234,7 +237,7 @@ canvas_data:
         label: "Validated response"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-gateway-to-user"
       source: "process-gateway"
@@ -244,7 +247,7 @@ canvas_data:
         label: "AI response"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-documents-to-embedding"
       source: "datastore-documents"
@@ -254,4 +257,4 @@ canvas_data:
         label: "Document ingestion"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]

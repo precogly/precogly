@@ -42,7 +42,8 @@ canvas_data:
       style: { width: 650, height: 440 }
       data:
         label: "Payment Processing Zone"
-        zoneType: "privateSecured"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "Secure Network Segment"
 
     # Core processes (nested inside tb-processing)

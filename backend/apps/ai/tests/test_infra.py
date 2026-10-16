@@ -20,7 +20,6 @@ from apps.ai.providers import openai_compat
 from apps.ai.providers.base import (
     AIDisabledError,
     AIProviderError,
-    ProviderHealth,
     ResolvedConfig,
 )
 from apps.ai.providers.openai_compat import OpenAICompatProvider
@@ -65,7 +64,11 @@ class OpenAICompatCompleteTests(SimpleTestCase):
     @mock.patch.object(openai_compat.requests, "post")
     def test_usage_block_is_captured(self, post):
         body = self._ok_body("hi")
-        body["usage"] = {"prompt_tokens": 10, "completion_tokens": 4, "total_tokens": 14}
+        body["usage"] = {
+            "prompt_tokens": 10,
+            "completion_tokens": 4,
+            "total_tokens": 14,
+        }
         post.return_value = _response(json_body=body)
         usage = self.provider.complete([{"role": "user", "content": "hi"}]).usage
         self.assertEqual(
@@ -76,7 +79,9 @@ class OpenAICompatCompleteTests(SimpleTestCase):
     @mock.patch.object(openai_compat.requests, "post")
     def test_missing_usage_block_yields_none(self, post):
         post.return_value = _response(json_body=self._ok_body("hi"))
-        self.assertIsNone(self.provider.complete([{"role": "user", "content": "hi"}]).usage)
+        self.assertIsNone(
+            self.provider.complete([{"role": "user", "content": "hi"}]).usage
+        )
 
     @mock.patch.object(openai_compat.requests, "post")
     def test_total_defaults_to_sum_when_server_omits_it(self, post):
@@ -84,7 +89,9 @@ class OpenAICompatCompleteTests(SimpleTestCase):
         body["usage"] = {"prompt_tokens": 10, "completion_tokens": 4}
         post.return_value = _response(json_body=body)
         self.assertEqual(
-            self.provider.complete([{"role": "user", "content": "hi"}]).usage.total_tokens,
+            self.provider.complete(
+                [{"role": "user", "content": "hi"}]
+            ).usage.total_tokens,
             14,
         )
 
@@ -209,7 +216,10 @@ class OpenAICompatCompleteTests(SimpleTestCase):
             status_code=400,
             json_body={
                 "error": {
-                    "message": "Unsupported parameter: 'max_tokens' is not supported with this model. Use 'max_completion_tokens' instead."
+                    "message": (
+                        "Unsupported parameter: 'max_tokens' is not supported "
+                        "with this model. Use 'max_completion_tokens' instead."
+                    )
                 }
             },
         )
@@ -291,9 +301,11 @@ class CryptoTests(SimpleTestCase):
 
     def test_wrong_secret_raises_actionable_error(self):
         token = crypto.encrypt("sk-live-123")
-        with override_settings(AI_SECRET_KEY="a-different-secret"):
-            with self.assertRaises(AIProviderError):
-                crypto.decrypt(token)
+        with (
+            override_settings(AI_SECRET_KEY="a-different-secret"),
+            self.assertRaises(AIProviderError),
+        ):
+            crypto.decrypt(token)
 
 
 class CryptoMisconfigurationTests(SimpleTestCase):
@@ -306,13 +318,13 @@ class CryptoMisconfigurationTests(SimpleTestCase):
 class ResolverFallbackTests(SimpleTestCase):
     """Org-independent precedence: settings fallback and the disabled path."""
 
-    SETTINGS_FALLBACK = dict(
-        AI_SUGGESTIONS_ENABLED=True,
-        AI_BASE_URL="http://settings-default:1234/v1",
-        AI_MODEL="settings-model",
-        AI_API_KEY="",
-        AI_REQUEST_TIMEOUT=42,
-    )
+    SETTINGS_FALLBACK = {
+        "AI_SUGGESTIONS_ENABLED": True,
+        "AI_BASE_URL": "http://settings-default:1234/v1",
+        "AI_MODEL": "settings-model",
+        "AI_API_KEY": "",
+        "AI_REQUEST_TIMEOUT": 42,
+    }
 
     @override_settings(**SETTINGS_FALLBACK)
     def test_settings_default_used_when_no_org(self):
@@ -326,23 +338,18 @@ class ResolverFallbackTests(SimpleTestCase):
         with self.assertRaises(AIDisabledError):
             resolver.resolve_config(None)
 
-    def test_organization_for_component_prefers_orgsystem(self):
-        org = SimpleNamespace(name="via-system")
+    def test_organization_for_component_reads_the_blueprints_model(self):
+        org = SimpleNamespace(name="via-blueprint")
         component = SimpleNamespace(
-            orgsystem=SimpleNamespace(organization=org),
-            threat_model=SimpleNamespace(organization=SimpleNamespace(name="other")),
-        )
-        self.assertIs(resolver.organization_for_component(component), org)
-
-    def test_organization_for_component_falls_back_to_threat_model(self):
-        org = SimpleNamespace(name="via-tm")
-        component = SimpleNamespace(
-            orgsystem=None, threat_model=SimpleNamespace(organization=org)
+            blueprint_id=7,
+            blueprint=SimpleNamespace(threat_model=SimpleNamespace(organization=org)),
+            # The inventory link is not a tenancy path any more.
+            orgsystem=SimpleNamespace(organization=SimpleNamespace(name="other")),
         )
         self.assertIs(resolver.organization_for_component(component), org)
 
     def test_organization_for_component_none_when_unlinked(self):
-        component = SimpleNamespace(orgsystem=None, threat_model=None)
+        component = SimpleNamespace(blueprint_id=None, blueprint=None, orgsystem=None)
         self.assertIsNone(resolver.organization_for_component(component))
 
 

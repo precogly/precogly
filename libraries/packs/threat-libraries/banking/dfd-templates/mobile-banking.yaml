@@ -34,7 +34,8 @@ canvas_data:
       style: { width: 200, height: 250 }
       data:
         label: "Mobile Device"
-        zoneType: "internet"
+        zoneType: "trust"
+        trustLevel: 0
         technology: "iOS/Android"
 
     # Trust boundary - Backend (inside sb-banking)
@@ -45,7 +46,8 @@ canvas_data:
       style: { width: 520, height: 460 }
       data:
         label: "Bank Backend"
-        zoneType: "privateSecured"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "Private Cloud"
 
     # Mobile app (nested inside tb-mobile)

@@ -86,9 +86,14 @@ class MeteringProvider(ChatProvider):
         self._feature = feature
         self._user = user
 
-    def complete(self, messages, *, temperature=0.2, force_json=True, max_tokens=4096) -> Completion:
+    def complete(
+        self, messages, *, temperature=0.2, force_json=True, max_tokens=4096
+    ) -> Completion:
         completion = self._inner.complete(
-            messages, temperature=temperature, force_json=force_json, max_tokens=max_tokens
+            messages,
+            temperature=temperature,
+            force_json=force_json,
+            max_tokens=max_tokens,
         )
         self._record(completion)
         return completion
@@ -144,18 +149,13 @@ def resolve_provider(organization, *, feature=None, user=None):
 def organization_for_component(component):
     """Find the organization that owns ``component``.
 
-    A component reaches its org either through its system or, for analysis-only
-    components, directly through its threat model — mirroring
-    ``apps.core.permissions.CanWrite._get_organization``. A user may belong to
-    many orgs, but a component belongs to exactly one, so this (not the caller's
+    A component reaches its org through its blueprint's threat model, mirroring
+    ``apps.core.permissions._get_organization``. A user may belong to many
+    orgs, but a component belongs to exactly one, so this (not the caller's
     membership list) is the correct tenant for resolving a provider.
     """
-    orgsystem = getattr(component, "orgsystem", None)
-    if orgsystem is not None:
-        return orgsystem.organization
-    threat_model = getattr(component, "threat_model", None)
-    if threat_model is not None:
-        return threat_model.organization
+    if getattr(component, "blueprint_id", None):
+        return component.blueprint.threat_model.organization
     return None
 
 

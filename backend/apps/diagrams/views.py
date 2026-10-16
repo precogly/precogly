@@ -12,9 +12,10 @@ from rest_framework.response import Response
 from apps.ai.providers.base import AIDisabledError, AIProviderError
 from apps.ai.resolver import resolve_config
 from apps.core.permissions import CanWrite
-from apps.threat_models.models import ThreatModel
+from apps.threat_models.models import Blueprint, ThreatModel
 
 from .ai import analyze_architecture_image, generate_dfd_from_analysis
+from .canvas import normalize_canvas
 from .models import DFD, DFDTemplatesLibrary
 from .serializers import (
     DFDListSerializer,
@@ -50,9 +51,16 @@ class DFDViewSet(viewsets.ModelViewSet):
             "organization_id", flat=True
         )
 
-        return DFD.objects.filter(
-            threat_model__organization_id__in=org_ids
-        ).select_related("updated_by", "threat_model")
+        queryset = DFD.objects.filter(
+            blueprint__threat_model__organization_id__in=org_ids
+        ).select_related("updated_by", "blueprint", "blueprint__threat_model")
+        threat_model_id = self.request.query_params.get("threat_model")
+        if threat_model_id:
+            queryset = queryset.filter(blueprint__threat_model_id=threat_model_id)
+        blueprint_id = self.request.query_params.get("blueprint")
+        if blueprint_id:
+            queryset = queryset.filter(blueprint_id=blueprint_id)
+        return queryset
 
     def get_serializer_class(self):
         """Return appropriate serializer based on action."""
@@ -62,16 +70,19 @@ class DFDViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         """
-        Create a DFD with required threat model association.
+        Create a DFD for a blueprint.
 
-        All DFDs must be associated with a threat model to prevent orphaned DFDs.
-        The threat_model_id field is required in the request body.
+        Takes `blueprint_id`, or `threat_model_id` for that model's default
+        blueprint. Both are scoped to the caller's organizations. The first DFD
+        of a blueprint becomes its primary diagram, the one that syncs to rows.
         """
+        blueprint_id = request.data.get("blueprint_id")
         threat_model_id = request.data.get("threat_model_id")
-        if not threat_model_id:
+        if not blueprint_id and not threat_model_id:
             return Response(
                 {
-                    "error": "threat_model_id is required. DFDs cannot be created without a threat model."
+                    "error": "blueprint_id or threat_model_id is required. "
+                    "DFDs cannot be created without a blueprint."
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -79,22 +90,36 @@ class DFDViewSet(viewsets.ModelViewSet):
         org_ids = request.user.organization_memberships.values_list(
             "organization_id", flat=True
         )
-        threat_model = ThreatModel.objects.filter(
-            id=threat_model_id, organization_id__in=org_ids
-        ).first()
-        if threat_model is None:
-            return Response(
-                {"error": "Threat model not found"},
-                status=status.HTTP_404_NOT_FOUND,
+        if blueprint_id:
+            blueprint = (
+                Blueprint.objects.filter(
+                    id=blueprint_id, threat_model__organization_id__in=org_ids
+                )
+                .select_related("threat_model")
+                .first()
             )
+            if blueprint is None:
+                return Response(
+                    {"error": "Blueprint not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+        else:
+            threat_model = ThreatModel.objects.filter(
+                id=threat_model_id, organization_id__in=org_ids
+            ).first()
+            if threat_model is None:
+                return Response(
+                    {"error": "Threat model not found"},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+            blueprint = threat_model.default_blueprint
 
-        # Create the DFD with direct FK — first DFD is auto-primary
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        is_first_dfd = not threat_model.dfds.exists()
+        is_first_dfd = not blueprint.dfds.exists()
         serializer.save(
             updated_by=request.user,
-            threat_model=threat_model,
+            blueprint=blueprint,
             is_primary=is_first_dfd,
         )
 
@@ -111,11 +136,21 @@ class DFDViewSet(viewsets.ModelViewSet):
 
         dfd = serializer.save(updated_by=self.request.user)
 
-        # Only the primary DFD syncs nodes to OrgsystemComponent records
-        if dfd.is_primary and dfd.threat_model:
-            sync_dfd_nodes_to_components(
-                dfd, dfd.threat_model, old_canvas_data=old_canvas_data
+        # Only the primary DFD of a blueprint syncs nodes to rows
+        self._sync_warnings = []
+        if dfd.is_primary:
+            result = sync_dfd_nodes_to_components(
+                dfd, dfd.blueprint, old_canvas_data=old_canvas_data
             )
+            self._sync_warnings = result.get("warnings", [])
+
+    def update(self, request, *args, **kwargs):
+        """A save that left a control without scope says so (section 4.3)."""
+        response = super().update(request, *args, **kwargs)
+        warnings = getattr(self, "_sync_warnings", [])
+        if warnings and isinstance(response.data, dict):
+            response.data["sync_warnings"] = warnings
+        return response
 
     @action(detail=False, methods=["post"])
     def create_for_threat_model(self, request):
@@ -138,14 +173,10 @@ class DFDViewSet(viewsets.ModelViewSet):
         canvas_data = dfd.canvas_data or {}
         nodes = canvas_data.get("nodes", [])
 
-        affected_threat_models = []
-        if dfd.threat_model:
-            affected_threat_models.append(
-                {
-                    "id": str(dfd.threat_model.id),
-                    "name": dfd.threat_model.name,
-                }
-            )
+        threat_model = dfd.blueprint.threat_model
+        affected_threat_models = [
+            {"id": str(threat_model.id), "name": threat_model.name}
+        ]
 
         # Extract component IDs from nodes
         component_ids = []
@@ -154,10 +185,10 @@ class DFDViewSet(viewsets.ModelViewSet):
             if comp_id:
                 component_ids.append(comp_id)
 
-        # Find orphaned components (components only referenced by this DFD within the same threat model)
+        # Find orphaned components (components only referenced by this DFD within the same blueprint)
         orphaned_components = []
-        if component_ids and dfd.threat_model:
-            sibling_dfds = dfd.threat_model.dfds.exclude(id=dfd.id)
+        if component_ids:
+            sibling_dfds = dfd.blueprint.dfds.exclude(id=dfd.id)
 
             sibling_component_ids = set()
             for sibling_dfd in sibling_dfds:
@@ -364,7 +395,7 @@ class DFDViewSet(viewsets.ModelViewSet):
 
         # Capture primary state before deletion for auto-promotion
         was_primary = dfd.is_primary
-        threat_model_for_promotion = dfd.threat_model
+        blueprint = dfd.blueprint
 
         orphaned_deleted_count = 0
 
@@ -378,8 +409,8 @@ class DFDViewSet(viewsets.ModelViewSet):
                 if comp_id:
                     component_ids.append(comp_id)
 
-            if component_ids and dfd.threat_model:
-                sibling_dfds = dfd.threat_model.dfds.exclude(id=dfd.id)
+            if component_ids:
+                sibling_dfds = blueprint.dfds.exclude(id=dfd.id)
                 sibling_component_ids = set()
                 for sibling_dfd in sibling_dfds:
                     sibling_canvas = sibling_dfd.canvas_data or {}
@@ -391,15 +422,15 @@ class DFDViewSet(viewsets.ModelViewSet):
                 orphaned_component_ids = set(component_ids) - sibling_component_ids
                 if orphaned_component_ids:
                     orphaned_deleted_count, _ = OrgsystemComponent.objects.filter(
-                        id__in=orphaned_component_ids
+                        id__in=orphaned_component_ids, blueprint=blueprint
                     ).delete()
 
         # Delete the DFD (cascades via FK)
         dfd.delete()
 
-        # Auto-promote next DFD to primary if the deleted one was primary
-        if was_primary and threat_model_for_promotion:
-            next_dfd = threat_model_for_promotion.dfds.order_by("created_at").first()
+        # Auto-promote the next DFD of the blueprint if the deleted one was primary
+        if was_primary:
+            next_dfd = blueprint.dfds.order_by("created_at").first()
             if next_dfd:
                 next_dfd.is_primary = True
                 next_dfd.save(update_fields=["is_primary"])
@@ -462,7 +493,7 @@ class DFDTemplatesLibraryViewSet(viewsets.ReadOnlyModelViewSet):
         from apps.systems.models import ComponentLibrary
 
         template = self.get_object()
-        canvas_data = template.canvas_data or {}
+        canvas_data = normalize_canvas(template.canvas_data)
 
         source_pack = template.source_pack
 

@@ -12,6 +12,13 @@ class DFDTemplatesLibraryAdmin(admin.ModelAdmin):
 
 @admin.register(DFD)
 class DFDAdmin(admin.ModelAdmin):
-    list_display = ["name", "diagram_type", "is_primary", "threat_model", "updated_by", "updated_at"]
+    list_display = [
+        "name",
+        "diagram_type",
+        "is_primary",
+        "blueprint",
+        "updated_by",
+        "updated_at",
+    ]
     list_filter = ["diagram_type", "is_primary"]
     search_fields = ["name"]

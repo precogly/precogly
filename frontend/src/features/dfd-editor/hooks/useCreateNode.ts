@@ -3,6 +3,8 @@ import { useReactFlow, type XYPosition } from '@xyflow/react'
 import type { DiagramNode, DiagramNodeType } from '../types'
 import { createDefaultTableData } from '../types/diagram'
 import { type DFDNotationStyle, NOTATION_NODE_SIZES, TECHNOLOGY_NODE_SIZES } from '../types/notation'
+import { DEFAULT_ZONE_TYPE } from '@/types/domain'
+import { NEW_ZONE_TRUST_LEVEL } from '../lib/zone-trust-level'
 
 export interface CreateNodeOptions {
   technology?: string
@@ -16,7 +18,9 @@ const defaultData: Record<DiagramNodeType, Record<string, unknown>> = {
   systemActor: { label: 'New System Actor', technology: '' },
   process: { label: 'New Process', technology: '' },
   datastore: { label: 'New Data Store', technology: '' },
-  trustZone: { label: 'Trust Zone', trustLevel: 25, zoneColor: '#ef4444' },
+  // A new zone is a trust zone at level 50 (plan F13). Component nodes get no
+  // `kind`: the backend derives it from the category or the library row.
+  trustZone: { label: 'New Zone', zoneType: DEFAULT_ZONE_TYPE, trustLevel: NEW_ZONE_TRUST_LEVEL, zoneColor: '#ef4444' },
   systemScope: { label: 'System Scope' },
   stickyNote: { label: 'Add a note', noteColor: 'yellow', textSize: 'medium', bold: false, italic: false },
   // The grid itself is built per node in createNode, not here: this literal is

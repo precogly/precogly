@@ -20,6 +20,7 @@ export {
   formatCategoryLabel,
 } from '@/types/domain'
 
+import { AUTHENTICATION_TYPES } from '@/types/domain'
 import type {
   DiagramNodeType,
   DataClassification,
@@ -27,6 +28,12 @@ import type {
   DataSensitivity,
   DiagramTypeValue,
   ThreatFramework,
+  ZoneType,
+  BoundaryType,
+  FlowType,
+  ComponentKind,
+  AuthenticationType,
+  AuthorizationType,
 } from '@/types/domain'
 
 // Node Data Types
@@ -40,32 +47,46 @@ export interface BaseNodeData {
   [key: string]: unknown  // Required for React Flow's Node<T> constraint
 }
 
-export interface ProcessNodeData extends BaseNodeData {
+/**
+ * Keys shared by every node that syncs to a component row. `kind` is the
+ * spec asset type; when missing it defaults from the node type (read it
+ * through `getComponentKind` in lib/canvas-defaults.ts, never directly).
+ */
+export interface ComponentNodeDataFields {
+  kind?: ComponentKind
+  // Written back by backend sync (component_id)
+  componentId?: number
+}
+
+export interface ProcessNodeData extends BaseNodeData, ComponentNodeDataFields {
   technology?: string
   dataSensitivity?: DataSensitivity
   // Backend component ID of the parent process (for sync to OrgsystemComponent.parent_component)
   parentComponentId?: number
 }
 
-export interface DataStoreNodeData extends BaseNodeData {
+export interface DataStoreNodeData extends BaseNodeData, ComponentNodeDataFields {
   technology?: string
   dataSensitivity?: DataSensitivity
   dataStoreType?: string
 }
 
-export interface HumanActorNodeData extends BaseNodeData {
+export interface HumanActorNodeData extends BaseNodeData, ComponentNodeDataFields {
   actorType?: string
   technology?: string
 }
 
-export interface SystemActorNodeData extends BaseNodeData {
+export interface SystemActorNodeData extends BaseNodeData, ComponentNodeDataFields {
   systemType?: string
   vendor?: string
   technology?: string
 }
 
 export interface TrustZoneNodeData extends BaseNodeData {
-  // Trust level 0-100 (0 = untrusted/internet, 100 = restricted)
+  // Spec zone type; missing means `trust` (read through `getZoneType`)
+  zoneType?: ZoneType
+  // Trust level 0-100 (0 = untrusted/internet, 100 = restricted). Missing
+  // means "not set": the backend stores null and the indicator is hidden.
   trustLevel?: number
   // User-chosen zone color (borderColor hex, e.g., '#22c55e')
   zoneColor?: string
@@ -75,10 +96,11 @@ export interface TrustZoneNodeData extends BaseNodeData {
   trustZoneId?: number
 }
 
-export interface SystemScopeNodeData extends BaseNodeData {
+export interface SystemScopeNodeData extends BaseNodeData, ComponentNodeDataFields {
   owner?: string
   classification?: string
   technology?: string
+  // The inventory system this scope stands for (optional, plan F20)
   orgsystemId?: number
 }
 
@@ -680,10 +702,16 @@ export type DiagramNodeData =
 export interface DataFlowEdgeData {
   label?: string
   description?: string
+  // Spec flow type; missing means `data` (read through `getFlowType`)
+  flowType?: FlowType
   protocol?: Protocol
+  port?: number
   dataClassification?: DataClassification[]
   encrypted?: boolean
-  authenticated?: boolean
+  // Authentication methods on the spec list. The retired boolean
+  // `authenticated` is gone; read the list through `getAuthentication` and
+  // answer "is it authenticated" with `isAuthenticated` (plan I5).
+  authentication?: AuthenticationType[]
   hasSensitiveData?: boolean
   isNewlyInserted?: boolean
   // Backend data flow ID (written back by diagram sync)
@@ -697,8 +725,10 @@ export interface DataFlowEdgeData {
   [key: string]: unknown  // Required for React Flow's Edge<T> constraint
 }
 
-// Trust Boundary edge types
-export type AccessControlMethod = 'none' | 'acl' | 'rbac' | 'mac' | 'dac' | 'abac'
+// Trust Boundary edge types. The two lists sync to the boundary row's
+// `authorization` and `authentication` (apps.diagrams.services), so their
+// values are the spec's lists from types/domain.ts.
+export type AccessControlMethod = AuthorizationType
 export const ACCESS_CONTROL_METHODS: { value: AccessControlMethod; label: string }[] = [
   { value: 'none', label: 'None' },
   { value: 'acl', label: 'ACL' },
@@ -708,25 +738,20 @@ export const ACCESS_CONTROL_METHODS: { value: AccessControlMethod; label: string
   { value: 'abac', label: 'ABAC' },
 ]
 
-export type AuthenticationMethod =
-  | 'none' | 'password' | 'otp' | 'challengeResponse'
-  | 'publicKey' | 'token' | 'biometrics' | 'sso' | 'social'
-export const AUTHENTICATION_METHODS: { value: AuthenticationMethod; label: string }[] = [
-  { value: 'none', label: 'None' },
-  { value: 'password', label: 'Password' },
-  { value: 'otp', label: 'OTP' },
-  { value: 'challengeResponse', label: 'Challenge/Response' },
-  { value: 'publicKey', label: 'Public Key' },
-  { value: 'token', label: 'Token' },
-  { value: 'biometrics', label: 'Biometrics' },
-  { value: 'sso', label: 'SSO' },
-  { value: 'social', label: 'Social' },
-]
+export type AuthenticationMethod = AuthenticationType
+export const AUTHENTICATION_METHODS: { value: AuthenticationMethod; label: string }[] = AUTHENTICATION_TYPES
 
 export interface TrustBoundaryEdgeData {
   label?: string
+  // Spec boundary type; missing means `trust` (read through `getBoundaryType`)
+  boundaryType?: BoundaryType
   accessControlMethods?: AccessControlMethod[]
   authenticationMethods?: AuthenticationMethod[]
+  // Crossing requirements (Boundary.data_validation, logging, monitoring, rate_limit)
+  dataValidation?: boolean
+  logging?: boolean
+  monitoring?: boolean
+  rateLimit?: string
   accessTokenExpires?: boolean
   accessTokenTtl?: number
   hasRefreshToken?: boolean
@@ -750,14 +775,19 @@ export interface CanvasData {
   nodes: DiagramNode[]
   edges: DiagramEdge[]
   notationStyle?: DFDNotationStyle
+  // The flow types shown on the canvas (the "physical view" filter, plan
+  // F22). Missing means every type is visible.
+  visibleFlowTypes?: FlowType[]
 }
 
-// Diagram entity
+// Diagram entity (DFDSerializer)
 export interface Diagram {
   id: string
   name: string
   diagramType?: DiagramTypeValue
   isPrimary?: boolean
+  // The blueprint the diagram belongs to; threatModel is derived from it
+  blueprint?: number
   threatModel?: number
   canvasData?: CanvasData
   updatedBy?: string
@@ -768,6 +798,8 @@ export interface Diagram {
 
 export interface CreateDiagramInput {
   threatModelId: string
+  // The blueprint to create the diagram in; the model's default when omitted
+  blueprintId?: number
   title: string
   description?: string
   diagramType?: DiagramTypeValue

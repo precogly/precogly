@@ -1,216 +1,218 @@
-import { Cog, Database, User, ChevronRight, Building2, Trash2 } from 'lucide-react'
+/**
+ * One row of the analysis tree (plan 11.3): System, blueprint, zone,
+ * component, flow, boundary, or a Flows or Boundaries group. Counts come
+ * from the tree builder, where each scenario counts once per level.
+ */
+
+import { createElement } from 'react'
+import {
+  Boxes,
+  Building2,
+  ChevronRight,
+  Cog,
+  Database,
+  Layers,
+  MoveRight,
+  Shield,
+  SquareDashed,
+  Trash2,
+  User,
+} from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import type { ComponentThreat } from '../../types/threat-analysis'
-import { deriveThreatStatus } from '../../types/threat-analysis'
-import { isActiveThreat } from '@/types/triage'
-import type { ComponentTreeNode } from './hierarchy-utils'
+import { ZONE_TYPES } from '@/types/domain'
+import type { AnalysisTreeNode } from './hierarchy-utils'
+import { isSameSelection, type AnalysisSelection } from './analysis-selection'
 import { ComponentDataAssetsDisplay } from './ComponentDataAssetsDisplay'
+import { DataFlowAssetsDisplay } from './DataFlowAssetsDisplay'
 
-const nodeTypeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+const COMPONENT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   process: Cog,
   datastore: Database,
-  humanActor: User,
-  systemActor: Building2,
+  external_human_actor: User,
+  external_system_actor: Building2,
 }
 
-function getComponentThreatSummary(
-  componentId: string,
-  threats: ComponentThreat[]
-): { total: number; exposed: number; addressable: number; mitigated: number } {
-  const componentThreats = threats.filter(
-    (t) => t.componentId === componentId && isActiveThreat(t.triageStatus)
-  )
-
-  let exposed = 0
-  let addressable = 0
-  let mitigated = 0
-
-  componentThreats.forEach((threat) => {
-    const status = deriveThreatStatus(threat.countermeasures)
-    if (status === 'exposed') exposed++
-    else if (status === 'addressable') addressable++
-    else mitigated++
-  })
-
-  return { total: componentThreats.length, exposed, addressable, mitigated }
+function rowIcon(node: AnalysisTreeNode): React.ComponentType<{ className?: string }> {
+  switch (node.kind) {
+    case 'system':
+      return Boxes
+    case 'blueprint':
+      return Layers
+    case 'zone':
+      return Shield
+    case 'flow':
+    case 'flowsGroup':
+      return MoveRight
+    case 'boundary':
+    case 'boundariesGroup':
+      return SquareDashed
+    default:
+      return COMPONENT_ICONS[node.category ?? ''] ?? Cog
+  }
 }
 
-export function ComponentTreeItem({
-  treeNode,
-  componentThreats,
-  selectedComponentId,
-  collapsedNodes,
-  onSelectComponent,
-  onToggleCollapsed,
-  resolveTechName,
-  onRequestDeleteComponent,
-}: {
-  treeNode: ComponentTreeNode
-  componentThreats: ComponentThreat[]
-  selectedComponentId: string | null
-  collapsedNodes: Set<string>
-  onSelectComponent: (id: string) => void
-  onToggleCollapsed: (id: string) => void
-  resolveTechName: (value: string | undefined) => string
+function zoneTypeLabel(node: AnalysisTreeNode): string | null {
+  if (node.kind !== 'zone') return null
+  return ZONE_TYPES.find((entry) => entry.value === node.zoneType)?.label ?? null
+}
+
+interface AnalysisTreeItemProps {
+  node: AnalysisTreeNode
+  selection: AnalysisSelection | null
+  collapsedKeys: Set<string>
+  onSelect: (selection: AnalysisSelection) => void
+  onToggleCollapsed: (key: string) => void
   onRequestDeleteComponent: (component: { id: number; name: string }) => void
-}) {
-  const { node, children, depth } = treeNode
-  const Icon = nodeTypeIcons[node.type as string] || Cog
-  const summary = getComponentThreatSummary(node.id, componentThreats)
-  const isSelected = node.id === selectedComponentId
-  const technologyName = resolveTechName((node.data as { technology?: string }).technology)
-  const nodeLabel = String(node.data.label)
-  const isDefaultLabel = nodeLabel.toLowerCase().includes('new ')
-  const displayName = !isDefaultLabel ? nodeLabel : (technologyName || nodeLabel)
-  const showSecondaryLabel = technologyName && !isDefaultLabel && nodeLabel !== technologyName
-  const hasChildren = children.length > 0
-  const isCollapsed = collapsedNodes.has(node.id)
-  const componentId = (node.data as { componentId?: number }).componentId
-  const isAnalysisOnly = (node.data as { isAnalysisOnly?: boolean }).isAnalysisOnly
+}
+
+export function AnalysisTreeItem({
+  node,
+  selection,
+  collapsedKeys,
+  onSelect,
+  onToggleCollapsed,
+  onRequestDeleteComponent,
+}: AnalysisTreeItemProps) {
+  const isGroup = node.selection === null
+  const isSelected = !isGroup && isSameSelection(node.selection, selection)
+  const hasChildren = node.children.length > 0
+  const isCollapsed = collapsedKeys.has(node.key)
+  const { counts } = node
+  const typeLabel = zoneTypeLabel(node)
+
+  const select = () => {
+    if (node.selection) onSelect(node.selection)
+    else if (hasChildren) onToggleCollapsed(node.key)
+  }
 
   return (
     <>
       <div
         role="button"
         tabIndex={0}
-        onClick={() => onSelectComponent(node.id)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            onSelectComponent(node.id)
+        data-tree-key={node.key}
+        onClick={select}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault()
+            select()
           }
         }}
         className={cn(
-          'group w-full text-left p-2 rounded-md transition-colors cursor-pointer',
-          isSelected
-            ? 'bg-slate-100 border border-slate-300'
-            : 'hover:bg-slate-50'
+          'group w-full cursor-pointer rounded-md p-1.5 text-left transition-colors',
+          isSelected ? 'border border-slate-300 bg-slate-100' : 'hover:bg-slate-50',
+          isGroup && 'mt-1'
         )}
-        style={{ paddingLeft: `${8 + depth * 16}px` }}
+        style={{ paddingLeft: `${6 + node.depth * 14}px` }}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 min-w-0">
-            {/* Chevron for parents, spacer for leaves */}
+        <div className="flex items-center justify-between gap-1">
+          <div className="flex min-w-0 items-center gap-1.5">
             {hasChildren ? (
               <button
                 type="button"
-                className="flex-shrink-0 p-0.5 rounded hover:bg-slate-200 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onToggleCollapsed(node.id)
+                className="shrink-0 rounded p-0.5 transition-colors hover:bg-slate-200"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onToggleCollapsed(node.key)
                 }}
-                aria-label={isCollapsed ? `Expand ${displayName}` : `Collapse ${displayName}`}
+                aria-label={isCollapsed ? `Expand ${node.label}` : `Collapse ${node.label}`}
               >
                 <ChevronRight
-                  className={cn(
-                    'h-3 w-3 text-muted-foreground transition-transform',
-                    !isCollapsed && 'rotate-90'
-                  )}
+                  className={cn('h-3 w-3 text-muted-foreground transition-transform', !isCollapsed && 'rotate-90')}
                 />
               </button>
             ) : (
-              <span className="w-4 flex-shrink-0" />
+              <span className="w-4 shrink-0" />
             )}
-            <Icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            {createElement(rowIcon(node), { className: 'h-4 w-4 shrink-0 text-muted-foreground' })}
             <div className="min-w-0">
-              <div className="font-medium text-sm truncate">
-                {displayName}
+              <div className={cn('truncate text-sm', isGroup ? 'text-xs font-medium text-muted-foreground' : 'font-medium')}>
+                {node.label}
+                {typeLabel && (
+                  <Badge variant="outline" className="ml-1.5 px-1 py-0 text-[10px] font-normal">
+                    {typeLabel}
+                  </Badge>
+                )}
               </div>
-              {showSecondaryLabel && (
-                <div className="text-xs text-muted-foreground truncate">
-                  {technologyName}
+              {(node.secondaryLabel || (node.kind === 'zone' && node.trustLevel != null)) && (
+                <div className="truncate text-xs text-muted-foreground">
+                  {node.secondaryLabel}
+                  {node.kind === 'zone' && node.trustLevel != null && `TL ${node.trustLevel}`}
                 </div>
               )}
             </div>
           </div>
-          <div className="flex items-center gap-1 ml-2 shrink-0">
-            {componentId !== undefined && isAnalysisOnly && (
+          <div className="ml-1 flex shrink-0 items-center gap-1">
+            {node.kind === 'component' && node.backendId !== undefined && node.isAnalysisOnly && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 opacity-0 group-hover:opacity-100 touch:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onRequestDeleteComponent({ id: componentId, name: displayName })
+                className="h-7 w-7 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100 touch:opacity-100"
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onRequestDeleteComponent({ id: node.backendId!, name: node.label })
                 }}
-                aria-label={`Delete ${displayName}`}
+                aria-label={`Delete ${node.label}`}
                 title="Delete component"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3.5 w-3.5" />
               </Button>
             )}
-            {componentId !== undefined && !isAnalysisOnly && (
+            {node.kind === 'component' && node.backendId !== undefined && !node.isAnalysisOnly && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="opacity-0 group-hover:opacity-100 touch:opacity-100 transition-opacity">
+                  <span className="opacity-0 transition-opacity group-hover:opacity-100 touch:opacity-100">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-muted-foreground pointer-events-none opacity-50"
+                      className="pointer-events-none h-7 w-7 text-muted-foreground opacity-50"
                       disabled
-                      aria-label={`Cannot delete ${displayName}`}
+                      aria-label={`Cannot delete ${node.label}`}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </span>
                 </TooltipTrigger>
                 <TooltipContent side="left">
-                  This component was created in the DFD editor. You can delete it only where you created it.
+                  This component is on a diagram. Delete it where you drew it.
                 </TooltipContent>
               </Tooltip>
             )}
-            {summary.exposed > 0 ? (
-              <Badge variant="outline" className="bg-red-100 text-red-700 text-xs shrink-0">
-                {summary.exposed} exposed
+            {counts.exposed > 0 ? (
+              <Badge variant="outline" className="shrink-0 bg-red-100 text-xs text-red-700" title={`${counts.total} threats`}>
+                {counts.exposed} exposed
               </Badge>
-            ) : summary.addressable > 0 ? (
-              <Badge variant="outline" className="bg-yellow-100 text-yellow-700 text-xs shrink-0">
-                {summary.addressable} in progress
+            ) : counts.addressable > 0 ? (
+              <Badge variant="outline" className="shrink-0 bg-yellow-100 text-xs text-yellow-700" title={`${counts.total} threats`}>
+                {counts.addressable} in progress
               </Badge>
-            ) : summary.total > 0 ? (
-              <span className="text-xs text-muted-foreground shrink-0">
-                No threats
-              </span>
             ) : null}
+            {counts.total > 0 && (
+              <span className="text-xs tabular-nums text-muted-foreground" title="Threats, each counted once">
+                ({counts.total})
+              </span>
+            )}
           </div>
         </div>
-        {summary.total > 0 && (
-          <div className="flex items-center gap-1 mt-1" style={{ marginLeft: `${hasChildren ? 24 : 20}px` }}>
-            <span
-              className={cn(
-                'w-2 h-2 rounded-full',
-                summary.exposed > 0 ? 'bg-red-500' : 'bg-yellow-500'
-              )}
-            />
-            <span className="text-xs text-muted-foreground">
-              {summary.total}
-            </span>
-          </div>
-        )}
       </div>
-      {/* Data assets inline under selected component */}
-      {isSelected && (
-        <ComponentDataAssetsDisplay
-          componentId={(node.data as { componentId?: number }).componentId}
-        />
-      )}
-      {/* Recursively render children when not collapsed */}
-      {hasChildren && !isCollapsed && children.map((child) => (
-        <ComponentTreeItem
-          key={child.node.id}
-          treeNode={child}
-          componentThreats={componentThreats}
-          selectedComponentId={selectedComponentId}
-          collapsedNodes={collapsedNodes}
-          onSelectComponent={onSelectComponent}
-          onToggleCollapsed={onToggleCollapsed}
-          resolveTechName={resolveTechName}
-          onRequestDeleteComponent={onRequestDeleteComponent}
-        />
-      ))}
+      {isSelected && node.kind === 'component' && <ComponentDataAssetsDisplay componentId={node.backendId} />}
+      {isSelected && node.kind === 'flow' && <DataFlowAssetsDisplay dataFlowId={node.backendId} />}
+      {hasChildren &&
+        !isCollapsed &&
+        node.children.map((child) => (
+          <AnalysisTreeItem
+            key={child.key}
+            node={child}
+            selection={selection}
+            collapsedKeys={collapsedKeys}
+            onSelect={onSelect}
+            onToggleCollapsed={onToggleCollapsed}
+            onRequestDeleteComponent={onRequestDeleteComponent}
+          />
+        ))}
     </>
   )
 }

@@ -23,13 +23,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # 1. Check out the repo
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       # 2. Build and deploy to gh-pages branch
       #
       # mkdocs-material is the whole dependency set: mkdocs.yml declares no
       # `plugins:`, and its `pymdownx.*` extensions ship with the theme.
-      - uses: astral-sh/setup-uv@v10.0.1
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version: '0.9.13'
       - run: uvx --from 'mkdocs-material>=9.5,<10.0' mkdocs gh-deploy --force

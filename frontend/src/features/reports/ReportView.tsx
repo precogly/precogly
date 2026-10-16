@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { Card, CardContent } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,9 +11,11 @@ import { Button } from '@/components/ui/button'
 import { Loader2, BarChart3, Code, Shield, FileText, Download, ChevronDown } from 'lucide-react'
 import { useReport } from '@/features/reports/api/reports'
 import type { ReportType, ReportData } from '@/features/reports/types/report'
-import { getSectionsForType } from './reportConfig'
+import { getSectionsForType, type SectionDepth } from './reportConfig'
 import { ExecutiveSummary } from './sections/ExecutiveSummary'
 import { ScopeSection } from './sections/ScopeSection'
+import { ReviewSection } from './sections/ReviewSection'
+import { BusinessObjectivesSection } from './sections/BusinessObjectivesSection'
 import { ArchitectureSection } from './sections/ArchitectureSection'
 import { DataAssetsSection } from './sections/DataAssetsSection'
 import { ComponentInventory } from './sections/ComponentInventory'
@@ -24,6 +26,7 @@ import { CountermeasureSection } from './sections/CountermeasureSection'
 import { RiskSection } from './sections/RiskSection'
 import { ComplianceSection } from './sections/ComplianceSection'
 import { CrossFrameworkMappingsSection } from './sections/CrossFrameworkMappingsSection'
+import { ComplianceMatrixSection } from './sections/ComplianceMatrixSection'
 import { AssumptionsReviewSection } from './sections/AssumptionsReviewSection'
 import { FindingsSection } from './sections/FindingsSection'
 import { ProgressChecklistSection } from './sections/ProgressChecklistSection'
@@ -32,7 +35,9 @@ import {
   exportThreatsCSV,
   exportCountermeasuresCSV,
   exportRisksCSV,
+  exportAssumptionsCSV,
   exportComplianceCSV,
+  exportComplianceMatrixCSV,
 } from './utils/csvExport'
 import { exportWordDoc } from './utils/wordExport'
 import { ReadOnlyDFDViewer, type ReadOnlyDFDViewerHandle } from '@/components/shared/ReadOnlyDFDViewer'
@@ -51,67 +56,75 @@ const REPORT_TYPES: Array<{
     type: 'executive',
     label: 'Executive',
     description: 'High-level overview for leadership',
-    icon: <BarChart3 className="h-5 w-5" />,
+    icon: <BarChart3 className="h-4 w-4" />,
   },
   {
     type: 'technical',
     label: 'Technical',
     description: 'Detailed analysis for engineers',
-    icon: <Code className="h-5 w-5" />,
+    icon: <Code className="h-4 w-4" />,
   },
   {
     type: 'compliance',
     label: 'Compliance',
     description: 'Framework coverage and gaps',
-    icon: <Shield className="h-5 w-5" />,
+    icon: <Shield className="h-4 w-4" />,
   },
   {
     type: 'full',
-    label: 'Full Report',
+    label: 'Full',
     description: 'Complete threat model report',
-    icon: <FileText className="h-5 w-5" />,
+    icon: <FileText className="h-4 w-4" />,
   },
 ]
 
-function renderSection(sectionId: string, depth: string, data: ReportData) {
+function renderSection(sectionId: string, depth: SectionDepth, data: ReportData, threatModelId: string) {
   switch (sectionId) {
     case 'executiveSummary':
       return <ExecutiveSummary data={data} />
+    case 'review':
+      return <ReviewSection metadata={data.metadata} assumptions={data.scope.assumptions} depth={depth} />
     case 'scope':
-      return <ScopeSection scope={data.scope} depth={depth as any} />
+      return <ScopeSection scope={data.scope} depth={depth} metadata={data.metadata} />
+    case 'businessObjectives':
+      return <BusinessObjectivesSection objectives={data.scope.businessObjectives} depth={depth} />
     case 'architecture':
       return <ArchitectureSection architecture={data.architecture} />
     case 'dataAssets':
-      return <DataAssetsSection dataAssets={data.dataAssets} depth={depth as any} />
+      return <DataAssetsSection dataAssets={data.dataAssets} depth={depth} />
     case 'components':
-      return <ComponentInventory components={data.components} dataFlows={data.dataFlows} />
+      return <ComponentInventory components={data.components} dataFlows={data.flows} />
     case 'strideSummary':
-      return <StrideSummary threatAnalysis={data.threatAnalysis} />
+      return <StrideSummary threatAnalysis={data.threatAnalysis} methodologies={data.metadata.methodologies} />
     case 'threatDetail':
       return <ThreatAnalysisSection threatAnalysis={data.threatAnalysis} />
     case 'triagedThreats':
       return <TriagedThreatsSection triagedThreats={data.threatAnalysis.triagedThreats} />
     case 'countermeasureStatus':
+    case 'countermeasureDetail':
     case 'gaps':
     case 'waived':
-    case 'inherited':
+    case 'unattached':
       return (
         <CountermeasureSection
           summary={data.countermeasureSummary}
-          depth={depth as any}
+          depth={depth}
           sectionId={sectionId}
+          threats={data.threatAnalysis.threats}
         />
       )
     case 'risks':
-      return <RiskSection risks={data.risks} depth={depth as any} />
+      return <RiskSection risks={data.risks} depth={depth} />
     case 'compliance':
-      return <ComplianceSection compliance={data.compliance} depth={depth as any} />
+      return <ComplianceSection compliance={data.compliance} depth={depth} />
+    case 'complianceMatrix':
+      return <ComplianceMatrixSection matrix={data.complianceMatrix} threatModelId={threatModelId} />
     case 'crossFrameworkMappings':
       return <CrossFrameworkMappingsSection compliance={data.compliance} />
     case 'assumptions':
-      return <AssumptionsReviewSection scope={data.scope} depth={depth as any} />
+      return <AssumptionsReviewSection scope={data.scope} depth={depth} />
     case 'findings':
-      return <FindingsSection data={data} depth={depth as any} />
+      return <FindingsSection data={data} depth={depth} />
     case 'progressChecklist':
       return <ProgressChecklistSection progressChecklist={data.progressChecklist} completionStatus={data.completionStatus} />
     default:
@@ -124,7 +137,7 @@ export function ReportView({ threatModelId }: ReportViewProps) {
   const [isExportingWord, setIsExportingWord] = useState(false)
   const dfdViewerRefs = useRef<Record<string, ReadOnlyDFDViewerHandle | null>>({})
   const { data, isLoading, error } = useReport(threatModelId)
-  const sections = getSectionsForType(reportType)
+  const sections = getSectionsForType(reportType, { methodologies: data?.metadata.methodologies ?? [] })
 
   const handleWordExport = async (reportData: ReportData) => {
     setIsExportingWord(true)
@@ -152,30 +165,6 @@ export function ReportView({ threatModelId }: ReportViewProps) {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <div className="shrink-0 p-4 border-b">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {REPORT_TYPES.map((rt) => (
-            <Card
-              key={rt.type}
-              className={`cursor-pointer transition-colors ${
-                reportType === rt.type
-                  ? 'ring-2 ring-primary bg-primary/5'
-                  : 'hover:bg-muted/50'
-              }`}
-              onClick={() => setReportType(rt.type)}
-            >
-              <CardContent className="pt-4 pb-3">
-                <div className="flex items-center gap-2 mb-1">
-                  {rt.icon}
-                  <span className="font-medium text-sm">{rt.label}</span>
-                </div>
-                <p className="text-xs text-muted-foreground">{rt.description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-
       {reportType === 'compliance' && (
         <ComplianceDriftBanner threatModelId={threatModelId} />
       )}
@@ -198,15 +187,36 @@ export function ReportView({ threatModelId }: ReportViewProps) {
         )}
         {data && (
           <div className="space-y-4 max-w-5xl mx-auto">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold">{data.metadata.name}</h2>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm text-muted-foreground">
-                    {REPORT_TYPES.find((rt) => rt.type === reportType)?.label} Report
-                  </span>
-                </div>
-              </div>
+            {/* One row: the model's name on the left, the report type and the export menu together on the right. */}
+            <div className="flex items-center gap-6">
+              <h2 className="min-w-0 flex-1 truncate text-lg font-semibold" data-testid="report-title" title={data.metadata.name}>
+                {data.metadata.name}
+              </h2>
+              <div className="flex shrink-0 items-center gap-2">
+                <Select value={reportType} onValueChange={(value) => setReportType(value as ReportType)}>
+                  <SelectTrigger className="h-8 w-[220px] text-sm" aria-label="Report type">
+                    {/* The closed select shows the name only; the list adds each description. */}
+                    <SelectValue>
+                      <span className="flex items-center gap-2">
+                        {REPORT_TYPES.find((rt) => rt.type === reportType)?.icon}
+                        {REPORT_TYPES.find((rt) => rt.type === reportType)?.label} Report
+                      </span>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {REPORT_TYPES.map((rt) => (
+                      <SelectItem key={rt.type} value={rt.type} textValue={`${rt.label} Report`}>
+                        <span className="flex items-center gap-2">
+                          {rt.icon}
+                          <span>
+                            <span className="block text-sm">{rt.label} Report</span>
+                            <span className="block text-xs text-muted-foreground">{rt.description}</span>
+                          </span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-1.5">
@@ -225,8 +235,14 @@ export function ReportView({ threatModelId }: ReportViewProps) {
                   <DropdownMenuItem onClick={() => exportRisksCSV(data, data.metadata.name)}>
                     Risks
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportAssumptionsCSV(data, data.metadata.name)}>
+                    Assumptions
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => exportComplianceCSV(data, data.metadata.name)}>
                     Compliance Coverage
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportComplianceMatrixCSV(data, data.metadata.name)}>
+                    Compliance Matrix
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={async () => {
@@ -245,6 +261,7 @@ export function ReportView({ threatModelId }: ReportViewProps) {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </div>
             </div>
 
             {isExportingWord && (
@@ -273,7 +290,7 @@ export function ReportView({ threatModelId }: ReportViewProps) {
 
             {sections.map((section) => (
               <div key={section.id}>
-                {renderSection(section.id, section.depth, data)}
+                {renderSection(section.id, section.depth, data, threatModelId)}
               </div>
             ))}
           </div>

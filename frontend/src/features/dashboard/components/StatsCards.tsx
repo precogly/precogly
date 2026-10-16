@@ -1,6 +1,8 @@
 import { FileText, BarChart3 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { DashboardStats } from '@/types'
+import { RATING_LEVELS, type RatingLevel } from '@/types/risk'
+import { RATING_LEVEL_COLORS, ratingLevelLabel } from '@/features/threat-models/components/rating/rating-utils'
 
 interface StatsCardsProps {
   stats: DashboardStats
@@ -16,11 +18,15 @@ const statItems = [
   },
 ]
 
-const riskLevelColors = {
-  critical: 'bg-red-500',
-  high: 'bg-orange-500',
-  medium: 'bg-yellow-500',
-  low: 'bg-green-500',
+/**
+ * Worst level first, `info` last. Counts come from the backend's grouping of
+ * risks by `inherent__level` (core/views.py DashboardStatsView), which includes
+ * `info`.
+ */
+const DASHBOARD_RISK_LEVELS: RatingLevel[] = [...RATING_LEVELS].reverse().map((level) => level.value)
+
+function riskLevelCount(stats: DashboardStats, level: RatingLevel): number {
+  return stats.risks?.[level] ?? 0
 }
 
 export function StatsCards({ stats, isLoading }: StatsCardsProps) {
@@ -34,17 +40,12 @@ export function StatsCards({ stats, isLoading }: StatsCardsProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {isLoading ? (
-                <span className="animate-pulse bg-muted rounded w-8 h-8 inline-block" />
-              ) : (
-                stats[item.key]
-              )}
+              {isLoading ? <span className="animate-pulse bg-muted rounded w-8 h-8 inline-block" /> : stats[item.key]}
             </div>
           </CardContent>
         </Card>
       ))}
 
-      {/* Risk Summary Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Risks</CardTitle>
@@ -57,18 +58,15 @@ export function StatsCards({ stats, isLoading }: StatsCardsProps) {
             <>
               <div className="text-2xl font-bold">{stats.risks.total}</div>
               {stats.risks.total > 0 && (
-                <div className="flex gap-2 mt-2">
-                  {(['critical', 'high', 'medium', 'low'] as const).map(
-                    (level) =>
-                      stats.risks![level] > 0 && (
-                        <div key={level} className="flex items-center gap-1">
-                          <span className={`w-2 h-2 rounded-full ${riskLevelColors[level]}`} />
-                          <span className="text-xs text-muted-foreground">
-                            {stats.risks![level]}
-                          </span>
-                        </div>
-                      )
-                  )}
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {DASHBOARD_RISK_LEVELS.filter((level) => riskLevelCount(stats, level) > 0).map((level) => (
+                    <div key={level} className="flex items-center gap-1" title={ratingLevelLabel(level)}>
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: RATING_LEVEL_COLORS[level] }} />
+                      <span className="text-xs text-muted-foreground">
+                        {riskLevelCount(stats, level)} {ratingLevelLabel(level).toLowerCase()}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
             </>

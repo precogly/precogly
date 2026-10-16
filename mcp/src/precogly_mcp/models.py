@@ -80,8 +80,19 @@ class ThreatModelSummary(BaseModel):
     )
 
     risk_scoring_method: Literal[
-        "tm_library", "fair", "owasp_rr", "mozilla_rra", "custom"
+        "qualitative-matrix", "owasp-risk-rating", "fair", "mozilla-rra"
     ]
+
+    # The summary fields the model-alignment work added (plan section 7).
+    # `approved_at` is the approval date, not the approval state, which a list
+    # never computes.
+    methodologies: list[str] = Field(default_factory=lambda: ["STRIDE"])
+    lifecycle_phase: str = ""
+    approved_at: datetime | None = None
+    primary_system_name: str | None = None
+    serial_number: str | None = None
+    version: int = 1
+    blueprint_count: int = 1
 
     created_at: datetime
     updated_at: datetime
@@ -180,16 +191,17 @@ class LibraryThreat(BaseModel):
 class LibraryCountermeasure(BaseModel):
     """One row of `GET /api/countermeasure-library/`, projected.
 
-    Narrower than the sibling projections because the list serializer is:
-    `CountermeasureLibraryListSerializer` omits `description` entirely, which the
-    detail serializer carries. So there is no description to forward and none to
-    match on.
+    The list serializer carries `description` since the model-alignment work
+    (plan section 7), so a query can match the mechanism a control's name does
+    not mention. Defaulted because older fixtures and rows made by hand may
+    leave it out.
     """
 
     model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
     id: int
     name: str
+    description: str = ""
 
     control_functions: list[str] = Field(default_factory=list)
     control_nature: str = ""
@@ -221,6 +233,11 @@ class LibraryComponent(BaseModel):
     category: Literal[
         "process", "datastore", "external_human_actor", "external_system_actor"
     ]
+
+    # The CycloneDX asset type. `kind` is what the pack declared (blank when it
+    # did not); `effective_kind` fills the blank from the category.
+    kind: str = ""
+    effective_kind: str = ""
 
     # Free text on both: `component_type` is a `CharField` with no choices, and
     # `provider` is `blank=True`, so an empty string means "not attributed to one".

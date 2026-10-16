@@ -19,7 +19,7 @@ canvas_data:
 
     - id: "actor-remote-eng"
       type: "humanActor"
-      position: { x: 90, y: 620 }
+      position: { x: 90, y: 880 }
       data:
         label: "Remote Engineer"
         actorType: "user"
@@ -30,46 +30,62 @@ canvas_data:
     - id: "scope-lng-facility"
       type: "systemScope"
       position: { x: 300, y: 30 }
-      style: { width: 1100, height: 900 }
+      style: { width: 1100, height: 1050 }
       data:
         label: "LNG Facility Control System"
 
-    # Trust Zones
-    - id: "zone-enterprise"
+    # Trust Zones. Purdue levels 0 to 3 are network zones nested under one
+    # OT network zone; the enterprise network and the industrial DMZ sit beside it.
+    - id: "zone-ot-network"
       type: "trustZone"
       parentId: "scope-lng-facility"
-      position: { x: 30, y: 580 }
-      style: { width: 500, height: 185 }
+      position: { x: 30, y: 30 }
+      style: { width: 1040, height: 540 }
       data:
-        label: "Enterprise Network (Level 4-5)"
-        zoneType: "zoneInternet"
+        label: "OT Network (Levels 0-3)"
+        zoneType: "network"
+        trustLevel: 60
+        description: "Operations and control networks behind the industrial DMZ"
+
+    - id: "zone-operations"
+      type: "trustZone"
+      parentId: "zone-ot-network"
+      position: { x: 20, y: 40 }
+      style: { width: 500, height: 180 }
+      data:
+        label: "Operations Network (Level 2-3)"
+        zoneType: "network"
+        trustLevel: 70
+
+    - id: "zone-control"
+      type: "trustZone"
+      parentId: "zone-ot-network"
+      position: { x: 540, y: 40 }
+      style: { width: 480, height: 480 }
+      data:
+        label: "Control Network (Level 0-1)"
+        zoneType: "network"
+        trustLevel: 90
 
     - id: "zone-dmz"
       type: "trustZone"
       parentId: "scope-lng-facility"
-      position: { x: 30, y: 370 }
+      position: { x: 30, y: 600 }
       style: { width: 500, height: 180 }
       data:
         label: "Industrial DMZ (Level 3.5)"
-        zoneType: "zoneDMZ"
+        zoneType: "network"
+        trustLevel: 40
 
-    - id: "zone-operations"
+    - id: "zone-enterprise"
       type: "trustZone"
       parentId: "scope-lng-facility"
-      position: { x: 30, y: 160 }
-      style: { width: 500, height: 180 }
+      position: { x: 30, y: 810 }
+      style: { width: 500, height: 185 }
       data:
-        label: "Operations Network (Level 2-3)"
-        zoneType: "zoneInternal"
-
-    - id: "zone-control"
-      type: "trustZone"
-      parentId: "scope-lng-facility"
-      position: { x: 560, y: 30 }
-      style: { width: 510, height: 530 }
-      data:
-        label: "Control Network (Level 0-1)"
-        zoneType: "zoneRestricted"
+        label: "Enterprise Network (Level 4-5)"
+        zoneType: "network"
+        trustLevel: 20
 
     # Enterprise Zone Components
     - id: "process-eng-workstation"
@@ -160,6 +176,7 @@ canvas_data:
       data:
         label: "Field Sensors"
         component_ref: "field-sensor"
+        kind: "device"
         description: "Temperature, pressure, flow, and level transmitters"
 
     - id: "actor-actuators"
@@ -169,6 +186,7 @@ canvas_data:
       data:
         label: "Control Valves"
         component_ref: "actuator"
+        kind: "device"
         description: "LNG process control valves and motor drives"
 
   edges:
@@ -180,7 +198,7 @@ canvas_data:
       data:
         label: "Operator commands"
         encrypted: false
-        authenticated: true
+        authentication: ["unspecified"]
 
     # Remote Engineer -> Firewall
     - id: "edge-eng-firewall"
@@ -190,7 +208,7 @@ canvas_data:
       data:
         label: "Remote access"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
         protocol: "VPN"
 
     # Firewall -> Engineering Workstation
@@ -201,7 +219,7 @@ canvas_data:
       data:
         label: ""
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     # Engineering Workstation -> Firewall
     - id: "edge-ews-firewall"
@@ -211,7 +229,7 @@ canvas_data:
       data:
         label: "Engineering access"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     # SCADA -> HMI
     - id: "edge-scada-hmi"
@@ -221,7 +239,6 @@ canvas_data:
       data:
         label: "Process display data"
         encrypted: false
-        authenticated: false
 
     # HMI -> SCADA
     - id: "edge-hmi-scada"
@@ -231,7 +248,7 @@ canvas_data:
       data:
         label: "Operator setpoints"
         encrypted: false
-        authenticated: true
+        authentication: ["unspecified"]
 
     # SCADA -> Historian
     - id: "edge-scada-historian"
@@ -241,7 +258,6 @@ canvas_data:
       data:
         label: "Process data archival"
         encrypted: false
-        authenticated: false
 
     # SCADA -> DCS
     - id: "edge-scada-dcs"
@@ -251,7 +267,6 @@ canvas_data:
       data:
         label: "Supervisory commands"
         encrypted: false
-        authenticated: false
         protocol: "Modbus TCP"
 
     # DCS -> SCADA
@@ -262,7 +277,6 @@ canvas_data:
       data:
         label: "Process status"
         encrypted: false
-        authenticated: false
         protocol: "Modbus TCP"
 
     # DCS -> PLC
@@ -273,7 +287,6 @@ canvas_data:
       data:
         label: "Control parameters"
         encrypted: false
-        authenticated: false
 
     # PLC -> DCS
     - id: "edge-plc-dcs"
@@ -283,7 +296,6 @@ canvas_data:
       data:
         label: "Compressor status"
         encrypted: false
-        authenticated: false
 
     # PLC -> Actuators
     - id: "edge-plc-actuators"
@@ -292,8 +304,8 @@ canvas_data:
       type: "dataFlow"
       data:
         label: "Control signals (4-20mA)"
+        flowType: "signal"
         encrypted: false
-        authenticated: false
 
     # Sensors -> PLC
     - id: "edge-sensors-plc"
@@ -302,8 +314,8 @@ canvas_data:
       type: "dataFlow"
       data:
         label: "Process measurements"
+        flowType: "signal"
         encrypted: false
-        authenticated: false
 
     # Sensors -> SIS
     - id: "edge-sensors-sis"
@@ -312,8 +324,8 @@ canvas_data:
       type: "dataFlow"
       data:
         label: "Safety-critical measurements"
+        flowType: "signal"
         encrypted: false
-        authenticated: false
 
     # SIS -> Actuators
     - id: "edge-sis-actuators"
@@ -322,8 +334,8 @@ canvas_data:
       type: "dataFlow"
       data:
         label: "Emergency shutdown signals"
+        flowType: "control"
         encrypted: false
-        authenticated: false
 
     # Firewall -> SCADA
     - id: "edge-firewall-scada"
@@ -333,4 +345,19 @@ canvas_data:
       data:
         label: "Filtered traffic"
         encrypted: false
-        authenticated: false
+
+    # Conduit: the industrial DMZ is the only way between the OT network and
+    # the enterprise side. Every flow across it is certificate-authenticated,
+    # filtered by ACL, validated, logged and monitored.
+    - id: "boundary-ot-idmz"
+      source: "zone-ot-network"
+      target: "zone-dmz"
+      type: "trustBoundary"
+      data:
+        label: "IDMZ conduit"
+        boundaryType: "network"
+        authenticationMethods: ["certificate"]
+        accessControlMethods: ["acl"]
+        dataValidation: true
+        logging: true
+        monitoring: true

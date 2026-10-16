@@ -3,6 +3,7 @@ import { memo, type ComponentType } from 'react'
 import { useParams } from 'react-router-dom'
 import { EdgeLabelRenderer, type EdgeProps, type NodeProps } from '@xyflow/react'
 import { useThreatModelThreats } from '@/features/threat-models/api/threats'
+import { threatTargetsCanvasId } from '../../types/threat-analysis'
 import { isActiveThreat } from '@/types/triage'
 
 // Import original node components
@@ -17,6 +18,9 @@ import { TableNode } from './TableNode'
 import type { DiagramNodeType } from '../../types'
 import { DataFlowEdge as DataFlowEdgeComponent } from '../edges/DataFlowEdge'
 import { TrustBoundaryEdge as TrustBoundaryEdgeComponent } from '../edges/TrustBoundaryEdge'
+import { useDFDNotation } from '../../context/DFDNotationContext'
+import { getFlowType } from '../../lib/canvas-defaults'
+import { isFlowTypeVisible } from '../../lib/flow-visibility'
 
 function ThreatBadge({ count }: { count: number }) {
   if (count === 0) return null
@@ -34,10 +38,10 @@ function useThreatCount(canvasElementId: string): number {
   const { id: threatModelId } = useParams<{ id: string }>()
   const { data: threatData } = useThreatModelThreats(threatModelId)
 
-  if (!threatData?.componentThreats) return 0
+  if (!threatData?.analysisThreats) return 0
 
-  return threatData.componentThreats.filter(
-    (t) => t.componentId === canvasElementId && isActiveThreat(t.triageStatus)
+  return threatData.analysisThreats.filter(
+    (t) => threatTargetsCanvasId(t, canvasElementId) && isActiveThreat(t.triageStatus)
   ).length
 }
 
@@ -74,11 +78,16 @@ export const canvasNodeTypes = {
 function withEdgeThreatBadge<P extends EdgeProps>(EdgeComponent: ComponentType<P>) {
   const WrappedEdge = memo(function WrappedEdge(props: P) {
     const count = useThreatCount(props.id)
+    const { visibleFlowTypes } = useDFDNotation()
+    // A flow hidden by the flow type filter draws nothing, badge included.
+    const hiddenByFilter =
+      props.type === 'dataFlow' &&
+      !isFlowTypeVisible(getFlowType(props.data as Record<string, unknown> | undefined), visibleFlowTypes)
 
     return (
       <>
         <EdgeComponent {...props} />
-        {count > 0 && (
+        {count > 0 && !hiddenByFilter && (
           <EdgeLabelRenderer>
             <div
               data-id={props.id}

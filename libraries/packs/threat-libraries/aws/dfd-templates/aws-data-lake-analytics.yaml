@@ -40,7 +40,8 @@ canvas_data:
       style: { width: 250, height: 280 }
       data:
         label: "Data Ingestion"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-lake"
       type: "trustZone"
@@ -49,7 +50,8 @@ canvas_data:
       style: { width: 280, height: 280 }
       data:
         label: "Data Lake"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-processing"
       type: "trustZone"
@@ -58,7 +60,8 @@ canvas_data:
       style: { width: 280, height: 340 }
       data:
         label: "Processing"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     - id: "tz-analytics"
       type: "trustZone"
@@ -67,7 +70,8 @@ canvas_data:
       style: { width: 270, height: 340 }
       data:
         label: "Analytics"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     - id: "tz-security"
       type: "trustZone"
@@ -76,7 +80,8 @@ canvas_data:
       style: { width: 270, height: 280 }
       data:
         label: "Security"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     # ---- Processes: Ingestion ----
     - id: "process-eventbridge"
@@ -173,7 +178,7 @@ canvas_data:
         label: "Data events"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # EventBridge → Lambda (ETL trigger)
     - id: "edge-eventbridge-to-lambda"
@@ -184,7 +189,7 @@ canvas_data:
         label: "Event trigger"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # EventBridge → S3 Raw (direct delivery)
     - id: "edge-eventbridge-to-s3-raw"
@@ -195,7 +200,7 @@ canvas_data:
         label: "Raw data delivery"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # S3 Raw → Lambda (ETL read)
     - id: "edge-s3-raw-to-lambda"
@@ -206,7 +211,7 @@ canvas_data:
         label: "Read raw data"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Lambda → S3 Processed (ETL output)
     - id: "edge-lambda-to-s3-processed"
@@ -217,7 +222,7 @@ canvas_data:
         label: "Write transformed data"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # S3 Processed → Redshift (load)
     - id: "edge-s3-processed-to-redshift"
@@ -228,7 +233,7 @@ canvas_data:
         label: "Data load (COPY)"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Analyst → Redshift (queries)
     - id: "edge-analyst-to-redshift"
@@ -239,7 +244,7 @@ canvas_data:
         label: "Analytics queries"
         protocol: "SQL"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     # Redshift → Analyst (results)
     - id: "edge-redshift-to-analyst"
@@ -250,7 +255,7 @@ canvas_data:
         label: "Query results"
         protocol: "SQL"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     # KMS → S3 Raw (encryption)
     - id: "edge-kms-to-s3-raw"
@@ -261,7 +266,7 @@ canvas_data:
         label: "Encryption at rest"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # KMS → S3 Processed (encryption)
     - id: "edge-kms-to-s3-processed"
@@ -272,7 +277,7 @@ canvas_data:
         label: "Encryption at rest"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # KMS → Redshift (encryption)
     - id: "edge-kms-to-redshift"
@@ -283,4 +288,4 @@ canvas_data:
         label: "Encryption at rest"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]

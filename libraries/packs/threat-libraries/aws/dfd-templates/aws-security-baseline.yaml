@@ -32,7 +32,8 @@ canvas_data:
       style: { width: 300, height: 310 }
       data:
         label: "Management Account"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     - id: "tz-log-archive"
       type: "trustZone"
@@ -41,7 +42,8 @@ canvas_data:
       style: { width: 340, height: 310 }
       data:
         label: "Log Archive Account"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     - id: "tz-security-tooling"
       type: "trustZone"
@@ -50,7 +52,8 @@ canvas_data:
       style: { width: 670, height: 350 }
       data:
         label: "Security Tooling Account"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-application"
       type: "trustZone"
@@ -59,7 +62,8 @@ canvas_data:
       style: { width: 340, height: 690 }
       data:
         label: "Application Account"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     # ---- Processes: Management Account ----
     - id: "process-iam"
@@ -197,7 +201,7 @@ canvas_data:
         label: "Org management"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # IAM → Workload (SCPs, role assumption)
     - id: "edge-iam-to-workload"
@@ -208,7 +212,7 @@ canvas_data:
         label: "SCPs and role assumption"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Workload → App CloudTrail
     - id: "edge-workload-to-app-cloudtrail"
@@ -219,7 +223,7 @@ canvas_data:
         label: "API call logging"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # App CloudTrail → S3 Log Bucket (centralized)
     - id: "edge-app-cloudtrail-to-s3-logs"
@@ -230,7 +234,7 @@ canvas_data:
         label: "Log delivery"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Org CloudTrail → S3 Log Bucket
     - id: "edge-cloudtrail-to-s3-logs"
@@ -241,7 +245,7 @@ canvas_data:
         label: "Org trail log storage"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # KMS → S3 Log Bucket (encryption)
     - id: "edge-kms-to-s3-logs"
@@ -252,7 +256,7 @@ canvas_data:
         label: "Log encryption keys"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # GuardDuty → Security Hub
     - id: "edge-guardduty-to-security-hub"
@@ -263,7 +267,7 @@ canvas_data:
         label: "Threat findings"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Config → Security Hub
     - id: "edge-config-to-security-hub"
@@ -274,7 +278,7 @@ canvas_data:
         label: "Compliance findings"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # App Config → Config (delegated)
     - id: "edge-app-config-to-config"
@@ -285,7 +289,7 @@ canvas_data:
         label: "Configuration snapshots"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Security Hub → SNS (alerts)
     - id: "edge-security-hub-to-sns"
@@ -296,7 +300,7 @@ canvas_data:
         label: "Alert notifications"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # SNS → Security Admin
     - id: "edge-sns-to-admin"
@@ -307,7 +311,6 @@ canvas_data:
         label: "Email/SMS alerts"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: false
 
     # Security Admin → Security Hub (review)
     - id: "edge-admin-to-security-hub"
@@ -318,7 +321,7 @@ canvas_data:
         label: "Review findings"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]
 
     # Workload → GuardDuty (monitoring)
     - id: "edge-workload-to-guardduty"
@@ -329,4 +332,4 @@ canvas_data:
         label: "VPC flow logs, DNS logs"
         protocol: "AWS Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["hmac"]

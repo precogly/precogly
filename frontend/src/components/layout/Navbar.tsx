@@ -21,7 +21,7 @@ const navItems = [
 
 // Routes where we show minimal navbar (just logo + user menu)
 const minimalNavRoutes = [
-  /^\/threat-models\/[^/]+$/, // /threat-models/:id (but not /threat-models)
+  /^\/threat-models\/[^/]+(\/[^/]+){0,2}$/, // /threat-models/:id, /:id/:tab and /:id/threat-analysis/:view (but not /threat-models)
   /^\/threat-models\/[^/]+\/diagrams/, // /threat-models/:id/diagrams/:diagramId
 ]
 

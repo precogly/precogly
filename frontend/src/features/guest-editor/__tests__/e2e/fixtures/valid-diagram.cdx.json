@@ -1,66 +1,274 @@
 {
   "specFormat": "CycloneDX",
   "specVersion": "2.0",
-  "serialNumber": "urn:uuid:test-valid-diagram",
-  "version": 1,
+  "serialNumber": "urn:uuid:6f1c2a9e-4b7d-4c1e-9a2f-3d5e6f7a8b9c",
   "metadata": {
-    "timestamp": "2026-01-01T00:00:00Z",
+    "timestamp": "2026-10-08T12:00:00.000Z",
     "tools": {
       "components": [
-        { "type": "application", "name": "Precogly Guest Editor", "version": "1.0.0" }
+        {
+          "type": "application",
+          "name": "Precogly Guest Editor",
+          "version": "2.0.0"
+        }
+      ]
+    },
+    "component": {
+      "type": "application",
+      "bom-ref": "system-model-1",
+      "name": "Web shop",
+      "properties": [
+        {
+          "name": "precogly:criticality",
+          "value": "high"
+        }
       ]
     }
   },
   "blueprints": [
     {
-      "bom-ref": "blueprint-test-1",
-      "name": "Test Diagram",
-      "modelTypes": ["data-flow"],
+      "bom-ref": "blueprint-1",
+      "name": "Web shop",
+      "modelTypes": [
+        "data-flow"
+      ],
+      "description": "A small web shop with a hosted payment provider",
+      "scope": {
+        "name": "Web shop scope",
+        "excludedComponents": [
+          "asset-actor-psp"
+        ]
+      },
       "assets": [
-        { "bom-ref": "asset-web-server-1", "name": "Web Server", "type": "component" },
-        { "bom-ref": "asset-database-2", "name": "Database", "type": "data-store" }
+        {
+          "bom-ref": "asset-process-web",
+          "name": "Web Server",
+          "type": "service",
+          "description": "Serves the shop",
+          "zone": "zone-zone-core",
+          "properties": [
+            {
+              "name": "precogly:category",
+              "value": "process"
+            }
+          ]
+        },
+        {
+          "bom-ref": "asset-actor-customer",
+          "name": "Customer",
+          "type": "actor",
+          "zone": "zone-zone-internet",
+          "properties": [
+            {
+              "name": "precogly:category",
+              "value": "external_human_actor"
+            },
+            {
+              "name": "precogly:actor-type",
+              "value": "customer"
+            }
+          ]
+        },
+        {
+          "bom-ref": "asset-actor-psp",
+          "name": "Payment provider",
+          "type": "actor",
+          "properties": [
+            {
+              "name": "precogly:category",
+              "value": "external_system_actor"
+            },
+            {
+              "name": "precogly:actor-type",
+              "value": "api"
+            }
+          ]
+        }
+      ],
+      "dataStores": [
+        {
+          "bom-ref": "datastore-datastore-db",
+          "name": "Database",
+          "type": "relational",
+          "zone": "zone-zone-core",
+          "properties": [
+            {
+              "name": "precogly:data-store-type",
+              "value": "sql"
+            },
+            {
+              "name": "precogly:data-sensitivity",
+              "value": "confidential"
+            }
+          ]
+        }
+      ],
+      "dataSets": [
+        {
+          "bom-ref": "dataset-da-cards",
+          "name": "Customer records",
+          "description": "Names, addresses and order history",
+          "dataProfiles": [
+            {
+              "bom-ref": "dataset-da-cards-profile",
+              "name": "Customer records profile",
+              "classification": "confidential",
+              "regulations": [
+                "GDPR"
+              ]
+            }
+          ],
+          "properties": [
+            {
+              "name": "precogly:confidentiality",
+              "value": "high"
+            },
+            {
+              "name": "precogly:availability",
+              "value": "low"
+            },
+            {
+              "name": "precogly:data-sensitivity-tags",
+              "value": "[\"pii\"]"
+            }
+          ]
+        }
+      ],
+      "zones": [
+        {
+          "bom-ref": "zone-zone-internet",
+          "name": "Internet",
+          "type": "trust",
+          "properties": [
+            {
+              "name": "precogly:trust-level",
+              "value": "10"
+            }
+          ]
+        },
+        {
+          "bom-ref": "zone-zone-core",
+          "name": "Core network",
+          "type": "network",
+          "properties": [
+            {
+              "name": "precogly:trust-level",
+              "value": "80"
+            }
+          ]
+        }
+      ],
+      "boundaries": [
+        {
+          "bom-ref": "boundary-boundary-edge",
+          "zones": [
+            "zone-zone-internet",
+            "zone-zone-core"
+          ],
+          "type": "trust",
+          "name": "Internet edge",
+          "crossingRequirements": {
+            "authentication": [
+              "session-cookie"
+            ],
+            "authorization": [
+              "rbac"
+            ],
+            "dataValidation": true,
+            "logging": true,
+            "rateLimit": "100 requests per second"
+          },
+          "sessionManagement": {
+            "accessTokenExpires": true,
+            "accessTokenTtl": 900,
+            "userLogout": true
+          }
+        }
       ],
       "flows": [
         {
-          "bom-ref": "flow-query-1",
-          "source": "asset-web-server-1",
-          "destination": "asset-database-2",
+          "bom-ref": "flow-flow-browse",
+          "name": "Browse",
           "type": "data",
-          "name": "Query"
+          "source": "asset-actor-customer",
+          "destination": "asset-process-web",
+          "encrypted": true,
+          "protocols": [
+            "HTTPS"
+          ],
+          "authentication": [
+            "session-cookie"
+          ],
+          "properties": [
+            {
+              "name": "precogly:port",
+              "value": "443"
+            },
+            {
+              "name": "precogly:has-sensitive-data",
+              "value": "true"
+            },
+            {
+              "name": "precogly:data-classification",
+              "value": "[\"pii\"]"
+            }
+          ]
+        },
+        {
+          "bom-ref": "flow-flow-query",
+          "name": "Query",
+          "type": "data",
+          "source": "asset-process-web",
+          "destination": "datastore-datastore-db",
+          "protocols": [
+            "SQL"
+          ],
+          "authentication": [
+            "basic"
+          ]
+        },
+        {
+          "bom-ref": "flow-flow-charge",
+          "name": "Charge",
+          "type": "message",
+          "source": "asset-process-web",
+          "destination": "asset-actor-psp",
+          "encrypted": true,
+          "authentication": [
+            "api-key"
+          ]
         }
       ],
       "visualizations": [
         {
-          "type": "precogly-dfd",
-          "name": "Test Diagram",
-          "data": {
-            "nodes": [
-              {
-                "id": "process-1",
-                "type": "process",
-                "position": { "x": 100, "y": 100 },
-                "data": { "label": "Web Server", "technology": "" },
-                "style": { "width": 100, "height": 100 }
-              },
-              {
-                "id": "datastore-1",
-                "type": "datastore",
-                "position": { "x": 400, "y": 100 },
-                "data": { "label": "Database", "technology": "" },
-                "style": { "width": 120, "height": 60 }
-              }
-            ],
-            "edges": [
-              {
-                "id": "edge-1",
-                "source": "process-1",
-                "target": "datastore-1",
-                "type": "dataFlow",
-                "data": { "label": "Query", "encrypted": false, "authenticated": false }
-              }
-            ],
-            "notationStyle": "yourdon"
-          }
+          "bom-ref": "visualization-1",
+          "name": "Web shop",
+          "type": {
+            "type": "data-flow"
+          },
+          "attachment": {
+            "mediaType": "application/vnd.precogly.dfd+json",
+            "encoding": "base64",
+            "content": "eyJub3RhdGlvbl9zdHlsZSI6InlvdXJkb24iLCJub2RlcyI6W3siaWQiOiJ6b25lLWludGVybmV0IiwidHlwZSI6InRydXN0Wm9uZSIsInBvc2l0aW9uIjp7IngiOjQwLCJ5Ijo0MH0sImRhdGEiOnsibGFiZWwiOiJJbnRlcm5ldCIsInpvbmVfdHlwZSI6InRydXN0IiwidHJ1c3RfbGV2ZWwiOjEwLCJ6b25lX2NvbG9yIjoiI2VmNDQ0NCIsImJvbV9yZWYiOiJ6b25lLXpvbmUtaW50ZXJuZXQifSwic3R5bGUiOnsid2lkdGgiOjQyMCwiaGVpZ2h0IjozMDB9fSx7ImlkIjoiem9uZS1jb3JlIiwidHlwZSI6InRydXN0Wm9uZSIsInBvc2l0aW9uIjp7IngiOjUyMCwieSI6NDB9LCJkYXRhIjp7ImxhYmVsIjoiQ29yZSBuZXR3b3JrIiwiem9uZV90eXBlIjoibmV0d29yayIsInRydXN0X2xldmVsIjo4MCwiem9uZV9jb2xvciI6IiMyMmM1NWUiLCJib21fcmVmIjoiem9uZS16b25lLWNvcmUifSwic3R5bGUiOnsid2lkdGgiOjQyMCwiaGVpZ2h0IjozMDB9fSx7ImlkIjoicHJvY2Vzcy13ZWIiLCJ0eXBlIjoicHJvY2VzcyIsInBvc2l0aW9uIjp7IngiOjQwLCJ5Ijo2MH0sInBhcmVudF9pZCI6InpvbmUtY29yZSIsImRhdGEiOnsibGFiZWwiOiJXZWIgU2VydmVyIiwiZGVzY3JpcHRpb24iOiJTZXJ2ZXMgdGhlIHNob3AiLCJ0ZWNobm9sb2d5IjoibmdpbngiLCJraW5kIjoic2VydmljZSIsImJvbV9yZWYiOiJhc3NldC1wcm9jZXNzLXdlYiJ9fSx7ImlkIjoiZGF0YXN0b3JlLWRiIiwidHlwZSI6ImRhdGFzdG9yZSIsInBvc2l0aW9uIjp7IngiOjI0MCwieSI6NjB9LCJwYXJlbnRfaWQiOiJ6b25lLWNvcmUiLCJkYXRhIjp7ImxhYmVsIjoiRGF0YWJhc2UiLCJkYXRhX3N0b3JlX3R5cGUiOiJzcWwiLCJkYXRhX3NlbnNpdGl2aXR5IjoiY29uZmlkZW50aWFsIiwiYm9tX3JlZiI6ImRhdGFzdG9yZS1kYXRhc3RvcmUtZGIifX0seyJpZCI6ImFjdG9yLWN1c3RvbWVyIiwidHlwZSI6Imh1bWFuQWN0b3IiLCJwb3NpdGlvbiI6eyJ4Ijo0MCwieSI6ODB9LCJwYXJlbnRfaWQiOiJ6b25lLWludGVybmV0IiwiZGF0YSI6eyJsYWJlbCI6IkN1c3RvbWVyIiwiYWN0b3JfdHlwZSI6ImN1c3RvbWVyIiwiYm9tX3JlZiI6ImFzc2V0LWFjdG9yLWN1c3RvbWVyIn19LHsiaWQiOiJhY3Rvci1wc3AiLCJ0eXBlIjoic3lzdGVtQWN0b3IiLCJwb3NpdGlvbiI6eyJ4Ijo0MCwieSI6NDAwfSwiZGF0YSI6eyJsYWJlbCI6IlBheW1lbnQgcHJvdmlkZXIiLCJzeXN0ZW1fdHlwZSI6ImFwaSIsImJvbV9yZWYiOiJhc3NldC1hY3Rvci1wc3AifX1dLCJlZGdlcyI6W3siaWQiOiJmbG93LWJyb3dzZSIsInR5cGUiOiJkYXRhRmxvdyIsInNvdXJjZSI6ImFjdG9yLWN1c3RvbWVyIiwidGFyZ2V0IjoicHJvY2Vzcy13ZWIiLCJhbmltYXRlZCI6dHJ1ZSwiZGF0YSI6eyJsYWJlbCI6IkJyb3dzZSIsImZsb3dfdHlwZSI6ImRhdGEiLCJwcm90b2NvbCI6IkhUVFBTIiwicG9ydCI6NDQzLCJlbmNyeXB0ZWQiOnRydWUsImF1dGhlbnRpY2F0aW9uIjpbInNlc3Npb24tY29va2llIl0sImRhdGFfY2xhc3NpZmljYXRpb24iOlsicGlpIl0sImhhc19zZW5zaXRpdmVfZGF0YSI6dHJ1ZSwiYm9tX3JlZiI6ImZsb3ctZmxvdy1icm93c2UifX0seyJpZCI6ImZsb3ctcXVlcnkiLCJ0eXBlIjoiZGF0YUZsb3ciLCJzb3VyY2UiOiJwcm9jZXNzLXdlYiIsInRhcmdldCI6ImRhdGFzdG9yZS1kYiIsImFuaW1hdGVkIjp0cnVlLCJkYXRhIjp7ImxhYmVsIjoiUXVlcnkiLCJmbG93X3R5cGUiOiJkYXRhIiwicHJvdG9jb2wiOiJTUUwiLCJlbmNyeXB0ZWQiOmZhbHNlLCJhdXRoZW50aWNhdGlvbiI6WyJiYXNpYyJdLCJib21fcmVmIjoiZmxvdy1mbG93LXF1ZXJ5In19LHsiaWQiOiJmbG93LWNoYXJnZSIsInR5cGUiOiJkYXRhRmxvdyIsInNvdXJjZSI6InByb2Nlc3Mtd2ViIiwidGFyZ2V0IjoiYWN0b3ItcHNwIiwiYW5pbWF0ZWQiOnRydWUsImRhdGEiOnsibGFiZWwiOiJDaGFyZ2UiLCJmbG93X3R5cGUiOiJtZXNzYWdlIiwiZW5jcnlwdGVkIjp0cnVlLCJhdXRoZW50aWNhdGlvbiI6WyJhcGkta2V5Il0sImJvbV9yZWYiOiJmbG93LWZsb3ctY2hhcmdlIn19LHsiaWQiOiJib3VuZGFyeS1lZGdlIiwidHlwZSI6InRydXN0Qm91bmRhcnkiLCJzb3VyY2UiOiJ6b25lLWludGVybmV0IiwidGFyZ2V0Ijoiem9uZS1jb3JlIiwiZGF0YSI6eyJsYWJlbCI6IkludGVybmV0IGVkZ2UiLCJib3VuZGFyeV90eXBlIjoidHJ1c3QiLCJhdXRoZW50aWNhdGlvbl9tZXRob2RzIjpbInNlc3Npb24tY29va2llIl0sImFjY2Vzc19jb250cm9sX21ldGhvZHMiOlsicmJhYyJdLCJkYXRhX3ZhbGlkYXRpb24iOnRydWUsImxvZ2dpbmciOnRydWUsInJhdGVfbGltaXQiOiIxMDAgcmVxdWVzdHMgcGVyIHNlY29uZCIsImFjY2Vzc190b2tlbl9leHBpcmVzIjp0cnVlLCJhY2Nlc3NfdG9rZW5fdHRsIjo5MDAsImNhbl91c2VyX2xvZ291dCI6dHJ1ZSwiYm9tX3JlZiI6ImJvdW5kYXJ5LWJvdW5kYXJ5LWVkZ2UifX1dfQ=="
+          },
+          "properties": [
+            {
+              "name": "precogly:diagram-type",
+              "value": "level1"
+            },
+            {
+              "name": "precogly:primary",
+              "value": "true"
+            }
+          ]
+        }
+      ],
+      "assumptions": [
+        {
+          "bom-ref": "assumption-assumption-tls",
+          "description": "TLS is terminated at the edge and re-encrypted inside",
+          "validity": "verified",
+          "topic": "security"
         }
       ]
     }
@@ -68,37 +276,259 @@
   "threats": {
     "threats": [
       {
-        "bom-ref": "threat-sql-injection-1",
+        "bom-ref": "threat-custom-threat-sqli",
         "name": "SQL Injection",
-        "description": "Attacker injects malicious SQL",
-        "categories": [{ "taxonomy": "stride", "id": "tampering", "name": "Tampering" }],
-        "affectedAssets": ["asset-web-server-1"]
+        "description": "Attacker injects SQL through the search form",
+        "categories": [
+          {
+            "taxonomy": "STRIDE",
+            "category": "tampering"
+          }
+        ],
+        "mitigations": [
+          "control-cm-validation",
+          "control-cm-tokens"
+        ]
+      },
+      {
+        "bom-ref": "threat-custom-threat-session",
+        "name": "Session hijacking",
+        "description": "Stolen session cookie reused from another network",
+        "categories": [
+          {
+            "taxonomy": "STRIDE",
+            "category": "spoofing"
+          }
+        ],
+        "mitigations": [
+          "control-cm-tokens"
+        ]
+      },
+      {
+        "bom-ref": "threat-custom-threat-backups",
+        "name": "No backup tested"
+      },
+      {
+        "bom-ref": "threat-custom-threat-zone",
+        "name": "Lateral movement in the core network",
+        "categories": [
+          {
+            "taxonomy": "STRIDE",
+            "category": "elevation-of-privilege"
+          }
+        ]
       }
     ],
     "scenarios": [
       {
-        "bom-ref": "scenario-sql-injection-1",
-        "threat": "threat-sql-injection-1",
-        "affectedAssets": ["asset-web-server-1"],
-        "riskScore": { "level": "high" },
+        "bom-ref": "scenario-threat-sqli",
+        "name": "SQL Injection",
+        "threats": [
+          "threat-custom-threat-sqli"
+        ],
+        "description": "Attacker injects SQL through the search form",
+        "affectedAssets": [
+          "asset-process-web",
+          "flow-flow-query"
+        ],
+        "riskScore": {
+          "level": "high",
+          "methodology": {
+            "name": "manual"
+          }
+        },
         "properties": [
-          { "name": "precogly:threat-status", "value": "mitigate" }
+          {
+            "name": "precogly:number",
+            "value": "1"
+          },
+          {
+            "name": "precogly:threat-status",
+            "value": "addressable"
+          },
+          {
+            "name": "precogly:triage-status",
+            "value": "mitigate"
+          }
+        ]
+      },
+      {
+        "bom-ref": "scenario-threat-session",
+        "name": "Session hijacking",
+        "threats": [
+          "threat-custom-threat-session"
+        ],
+        "description": "Stolen session cookie reused from another network",
+        "affectedAssets": [
+          "boundary-boundary-edge",
+          "flow-flow-browse"
+        ],
+        "riskScore": {
+          "level": "medium",
+          "methodology": {
+            "name": "manual"
+          }
+        },
+        "properties": [
+          {
+            "name": "precogly:number",
+            "value": "2"
+          },
+          {
+            "name": "precogly:threat-status",
+            "value": "addressable"
+          },
+          {
+            "name": "precogly:triage-status",
+            "value": "open"
+          }
+        ]
+      },
+      {
+        "bom-ref": "scenario-threat-backups",
+        "name": "No backup tested",
+        "threats": [
+          "threat-custom-threat-backups"
+        ],
+        "affectedAssets": [
+          "system-model-1"
+        ],
+        "riskScore": {
+          "level": "info",
+          "methodology": {
+            "name": "manual"
+          }
+        },
+        "properties": [
+          {
+            "name": "precogly:number",
+            "value": "3"
+          },
+          {
+            "name": "precogly:threat-status",
+            "value": "exposed"
+          },
+          {
+            "name": "precogly:triage-status",
+            "value": "accept"
+          },
+          {
+            "name": "precogly:decision-rationale",
+            "value": "Backups are restored monthly by operations"
+          }
+        ]
+      },
+      {
+        "bom-ref": "scenario-threat-zone",
+        "name": "Lateral movement in the core network",
+        "threats": [
+          "threat-custom-threat-zone"
+        ],
+        "affectedAssets": [
+          "zone-zone-core"
+        ],
+        "riskScore": {
+          "level": "low",
+          "methodology": {
+            "name": "manual"
+          }
+        },
+        "properties": [
+          {
+            "name": "precogly:number",
+            "value": "4"
+          },
+          {
+            "name": "precogly:threat-status",
+            "value": "exposed"
+          },
+          {
+            "name": "precogly:triage-status",
+            "value": "open"
+          }
+        ]
+      }
+    ],
+    "trustBoundaries": [
+      {
+        "bom-ref": "trustboundary-boundary-edge",
+        "boundary": "boundary-boundary-edge",
+        "name": "Internet edge",
+        "trustLevel": "untrusted",
+        "threatsAtBoundary": [
+          "scenario-threat-session"
         ]
       }
     ]
   },
   "controls": [
     {
-      "bom-ref": "control-input-validation-1",
+      "bom-ref": "control-cm-validation",
       "name": "Input Validation",
-      "description": "Validate all user inputs",
+      "description": "Validate and parameterise every query",
       "category": "preventive",
       "status": "recommended",
-      "mitigations": ["threat-sql-injection-1"],
+      "appliesTo": [
+        "asset-process-web"
+      ],
       "properties": [
-        { "name": "precogly:control-functions", "value": "preventive" },
-        { "name": "precogly:control-nature", "value": "technical" }
+        {
+          "name": "precogly:number",
+          "value": "1"
+        },
+        {
+          "name": "precogly:control-functions",
+          "value": "[\"preventive\"]"
+        },
+        {
+          "name": "precogly:control-nature",
+          "value": "technical"
+        },
+        {
+          "name": "precogly:mitigates",
+          "value": "[\"scenario-threat-sqli\"]"
+        }
+      ]
+    },
+    {
+      "bom-ref": "control-cm-tokens",
+      "name": "Short-lived tokens",
+      "description": "Rotate session tokens and bind them to the client",
+      "category": "preventive",
+      "status": "recommended",
+      "properties": [
+        {
+          "name": "precogly:number",
+          "value": "2"
+        },
+        {
+          "name": "precogly:control-functions",
+          "value": "[\"preventive\",\"detective\"]"
+        },
+        {
+          "name": "precogly:control-nature",
+          "value": "technical"
+        },
+        {
+          "name": "precogly:mitigates",
+          "value": "[\"scenario-threat-session\",\"scenario-threat-sqli\"]"
+        }
       ]
     }
-  ]
+  ],
+  "properties": [
+    {
+      "name": "precogly:next-threat-number",
+      "value": "5"
+    },
+    {
+      "name": "precogly:next-countermeasure-number",
+      "value": "3"
+    },
+    {
+      "name": "precogly-guest:session",
+      "value": "{\"facilitator\":\"Security Team\",\"meetingDate\":\"2026-10-08\",\"participants\":[\"Alice\",\"Bob\"]}"
+    }
+  ],
+  "version": 1
 }

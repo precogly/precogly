@@ -175,6 +175,7 @@ export function MultiSelectCombobox({
               <button
                 type="button"
                 onClick={(e) => removeOption(option.value, e)}
+                aria-label={`Remove ${option.label}`}
                 className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
               >
                 <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />

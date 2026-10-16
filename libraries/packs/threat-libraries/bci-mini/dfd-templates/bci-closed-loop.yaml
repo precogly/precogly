@@ -37,7 +37,8 @@ canvas_data:
       style: { width: 320, height: 470 }
       data:
         label: "Device / Edge"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "Embedded SoC"
 
     - id: "tz-cloud"
@@ -47,7 +48,8 @@ canvas_data:
       style: { width: 320, height: 470 }
       data:
         label: "Cloud / Backend"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "HIPAA Cloud"
 
     - id: "node-headset"
@@ -57,6 +59,7 @@ canvas_data:
       data:
         label: "Neural Headset"
         component_ref: "neural-headset"
+        kind: "device"
         description: "EEG/ECoG electrode array"
 
     - id: "node-sigproc"
@@ -84,6 +87,7 @@ canvas_data:
       data:
         label: "Stim Controller"
         component_ref: "stim-controller"
+        kind: "device"
         description: "Closed-loop neurostimulation"
 
     - id: "node-cloud"
@@ -113,6 +117,7 @@ canvas_data:
       data:
         label: "Neural Signals"
         protocol: "Biotelemetry"
+        flowType: "signal"
         encrypted: false
 
     - id: "edge-headset-sigproc"
@@ -149,6 +154,7 @@ canvas_data:
       data:
         label: "Electrical Stimuli"
         protocol: "Direct Neural"
+        flowType: "energy"
         encrypted: false
 
     - id: "edge-sigproc-cloud"

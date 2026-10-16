@@ -237,12 +237,11 @@ async def search_countermeasure_library(
     implementation status. `default_status` is the state a countermeasure starts in
     when it is applied.
 
-    `query` matches the name only. The listing does not return a description, so there
-    is nothing else to match: a control whose name does not mention the mechanism will
-    not be found by searching for the mechanism, and an empty result does not mean no
-    such control exists. Narrow by `control_function`, `control_nature`, and `cost`
-    instead, or omit `query` and read all of them. The catalog runs to tens of
-    controls, not hundreds.
+    `query` matches the name and the description, so a control whose name does not
+    mention the mechanism is still found when its description does. An empty result
+    still does not prove no such control exists: narrow by `control_function`,
+    `control_nature`, and `cost` instead, or omit `query` and read all of them. The
+    catalog runs to tens of controls, not hundreds.
 
     `control_function` matches any entry in the countermeasure's `control_functions`
     list (e.g. `preventive`, `detective`, `corrective`). A single countermeasure can
@@ -260,7 +259,10 @@ async def search_countermeasure_library(
     found = [
         countermeasure
         for countermeasure in countermeasures
-        if (query is None or _matches(query, countermeasure.name))
+        if (
+            query is None
+            or _matches(query, countermeasure.name, countermeasure.description)
+        )
         and (
             control_function is None
             or any(
@@ -287,6 +289,7 @@ async def search_component_library(
         "process", "datastore", "external_human_actor", "external_system_actor"
     ]
     | None = None,
+    kind: str | None = None,
 ) -> LibraryComponentMatches:
     """Search the shared catalog of library components.
 
@@ -298,8 +301,11 @@ async def search_component_library(
     all as case-insensitive substrings. So `s3` finds `aws/s3`, and `database` finds
     every component typed as one.
 
-    `category` is the role the component plays in a data flow diagram. Omitting both
-    arguments returns the whole catalog, which is the smallest of the three.
+    `category` is the role the component plays in a data flow diagram. `kind` is the
+    CycloneDX asset type (`device`, `service`, `data-store`, ...), matched against the
+    effective kind, which derives from the category when the pack declared none.
+    Omitting every argument returns the whole catalog, which is the smallest of the
+    three.
 
     `matched` and `catalogSize` come back beside the rows. Read them for "how many"
     rather than counting the entries.
@@ -322,6 +328,7 @@ async def search_component_library(
             )
         )
         and (category is None or component.category == category)
+        and (kind is None or component.effective_kind == kind)
     ]
     return LibraryComponentMatches(
         matches=found, matched=len(found), catalog_size=len(components)

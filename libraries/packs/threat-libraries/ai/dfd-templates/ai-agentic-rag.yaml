@@ -48,7 +48,8 @@ canvas_data:
       style: { width: 220, height: 640 }
       data:
         label: "Edge / API"
-        zoneType: "zoneInternet"
+        zoneType: "trust"
+        trustLevel: 0
 
     - id: "tz-orchestration"
       type: "trustZone"
@@ -57,7 +58,8 @@ canvas_data:
       style: { width: 340, height: 350 }
       data:
         label: "Agent Orchestration"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-tools"
       type: "trustZone"
@@ -66,7 +68,8 @@ canvas_data:
       style: { width: 240, height: 350 }
       data:
         label: "Tool Execution"
-        zoneType: "zoneInternal"
+        zoneType: "trust"
+        trustLevel: 50
 
     - id: "tz-data"
       type: "trustZone"
@@ -75,7 +78,8 @@ canvas_data:
       style: { width: 610, height: 250 }
       data:
         label: "Data Tier"
-        zoneType: "zoneRestricted"
+        zoneType: "trust"
+        trustLevel: 75
 
     # ---- Edge Processes ----
     - id: "process-gateway"
@@ -192,7 +196,7 @@ canvas_data:
         label: "User query"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-gateway-to-input-guard"
       source: "process-gateway"
@@ -202,7 +206,7 @@ canvas_data:
         label: "Authenticated query"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-input-guard-to-agent"
       source: "process-input-guardrail"
@@ -212,7 +216,7 @@ canvas_data:
         label: "Validated query"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-agent-to-llm"
       source: "process-agent"
@@ -222,7 +226,7 @@ canvas_data:
         label: "Reasoning request"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-llm-to-agent"
       source: "process-llm"
@@ -232,7 +236,7 @@ canvas_data:
         label: "Reasoning result"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-llm-to-provider"
       source: "process-llm"
@@ -242,7 +246,7 @@ canvas_data:
         label: "Inference request"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["api-key"]
 
     - id: "edge-provider-to-llm"
       source: "actor-llm-provider"
@@ -252,7 +256,7 @@ canvas_data:
         label: "Model completion"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["api-key"]
 
     - id: "edge-agent-to-tool"
       source: "process-agent"
@@ -262,7 +266,7 @@ canvas_data:
         label: "Tool invocation"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-tool-to-agent"
       source: "process-tool-executor"
@@ -272,7 +276,7 @@ canvas_data:
         label: "Tool result"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-agent-to-mcp"
       source: "process-agent"
@@ -282,7 +286,7 @@ canvas_data:
         label: "MCP tool call"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-mcp-to-agent"
       source: "process-mcp-server"
@@ -292,7 +296,7 @@ canvas_data:
         label: "MCP tool result"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-mcp-to-external"
       source: "process-mcp-server"
@@ -302,7 +306,7 @@ canvas_data:
         label: "External API call"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-external-to-mcp"
       source: "actor-external-api"
@@ -312,7 +316,7 @@ canvas_data:
         label: "API response"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-agent-to-embedding"
       source: "process-agent"
@@ -322,7 +326,7 @@ canvas_data:
         label: "Retrieval request"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-embedding-to-vectordb"
       source: "process-embedding"
@@ -332,7 +336,7 @@ canvas_data:
         label: "Vector similarity search"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-vectordb-to-agent"
       source: "datastore-vectordb"
@@ -342,7 +346,7 @@ canvas_data:
         label: "Retrieved context"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-documents-to-embedding"
       source: "datastore-documents"
@@ -352,7 +356,7 @@ canvas_data:
         label: "Document ingestion"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-agent-to-output-guard"
       source: "process-agent"
@@ -362,7 +366,7 @@ canvas_data:
         label: "Agent response"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-output-guard-to-gateway"
       source: "process-output-guardrail"
@@ -372,7 +376,7 @@ canvas_data:
         label: "Validated response"
         protocol: "Internal"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]
 
     - id: "edge-gateway-to-user"
       source: "process-gateway"
@@ -382,4 +386,4 @@ canvas_data:
         label: "AI response"
         protocol: "HTTPS"
         encrypted: true
-        authenticated: true
+        authentication: ["unspecified"]

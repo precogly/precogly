@@ -34,7 +34,8 @@ canvas_data:
       style: { width: 650, height: 360 }
       data:
         label: "GCP VPC"
-        zoneType: "privateSecured"
+        zoneType: "trust"
+        trustLevel: 75
         technology: "Google VPC"
 
     # GCP Services (nested inside tb-gcp)

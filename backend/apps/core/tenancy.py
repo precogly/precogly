@@ -4,10 +4,11 @@ Precogly serves several organizations from one database, and the rule keeping th
 apart has been written once per viewset — as a join from the caller's memberships to
 whatever the model happens to hang off. Measured across the 61 models in `apps/`, 38
 of the 43 that reach `Organization` do so by more than one path, all 38 through a
-nullable foreign key somewhere along the way, and three models that hold customer
-data — `TrustZone`, `TrustBoundary`, `VerificationTest` — reach it by no forward path
-at all. So each of those joins is a guess, nothing checks it, and
-six cross-tenant defects have been found by hand (#226, #227, #404, #405, #406, #258).
+nullable foreign key somewhere along the way, and three models that held customer
+data — `Zone`, `Boundary`, `VerificationTest` — reached it by no forward path
+at all (zones and boundaries now reach it through `blueprint.threat_model`). So each
+of those joins is a guess, nothing checks it, and six cross-tenant defects have been
+found by hand (#226, #227, #404, #405, #406, #258).
 
 The fact that no join can recover is which kind of row a table holds. That is what
 this module records, and `apps.core.checks` is what makes recording it compulsory.
@@ -73,7 +74,7 @@ class Tenancy(enum.Enum):
     One table is not itself the defect, and there is a real reason these are shaped
     this way: one table is one foreign-key target. `ThreatLibrary` has six incoming
     foreign keys and `StandardRequirement` five, so splitting them turns each into a
-    nullable pair or a generic relation, and a `ComponentInstanceThreat` would have to
+    nullable pair or a generic relation, and an `InstanceThreat` would have to
     record which of two tables it points at.
 
     The defect is that ownership is *inferred* from a key that exists for another
