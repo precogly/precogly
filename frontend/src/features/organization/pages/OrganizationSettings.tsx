@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react'
 import { useWorkspace } from '@/contexts/WorkspaceContext'
-import { useUpdateOrganization } from '@/features/organization/api/organizations'
+import { useOrganization, useUpdateOrganization } from '@/features/organization/api/organizations'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -14,6 +14,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 
 export function OrganizationSettings() {
   const { currentOrganization, isLoading, refresh, isSecurityTeam } = useWorkspace()
+  // The workspace holds list items, which omit domain. The form reads the
+  // detail endpoint so it shows the same fields the PATCH writes.
+  const {
+    data: organization,
+    isLoading: organizationLoading,
+    isError: organizationError,
+  } = useOrganization(currentOrganization?.id ?? 0)
   const updateOrgMutation = useUpdateOrganization()
 
   const [name, setName] = useState('')
@@ -22,13 +29,13 @@ export function OrganizationSettings() {
 
   // Sync form state when org loads
   useEffect(() => {
-    if (currentOrganization) {
-      setName(currentOrganization.name)
-      setDomain(currentOrganization.domain || '')
+    if (organization) {
+      setName(organization.name)
+      setDomain(organization.domain || '')
     }
-  }, [currentOrganization])
+  }, [organization])
 
-  if (isLoading) {
+  if (isLoading || organizationLoading) {
     return (
       <div className="space-y-6">
         <Card>
@@ -68,15 +75,31 @@ export function OrganizationSettings() {
     )
   }
 
+  if (organizationError || !organization) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <AlertCircle className="h-10 w-10 text-muted-foreground mb-3" />
+            <p className="text-lg font-medium">Could not load organization settings</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Refresh the page to try again.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   const hasChanges =
-    name !== currentOrganization.name ||
-    domain !== (currentOrganization.domain || '')
+    name !== organization.name ||
+    domain !== (organization.domain || '')
 
   const handleSave = () => {
     setSaveSuccess(false)
     updateOrgMutation.mutate(
       {
-        id: currentOrganization.id,
+        id: organization.id,
         data: { name, domain },
       },
       {

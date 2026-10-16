@@ -22,6 +22,16 @@ export interface Organization {
   updatedAt: string
 }
 
+// Organization list item (lightweight). Mirrors OrganizationListSerializer;
+// fields only the detail endpoint returns, such as domain, are absent here.
+export interface OrganizationListItem {
+  id: number
+  name: string
+  plan: 'free' | 'pro' | 'enterprise'
+  businessUnitLabel: string
+  myRole?: OrganizationRole
+}
+
 // Business Unit (flexible grouping layer)
 export interface BusinessUnit {
   id: number

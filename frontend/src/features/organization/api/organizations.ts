@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type {
   Organization,
+  OrganizationListItem,
   BusinessUnit,
   Team,
   TeamListItem,
@@ -65,7 +66,7 @@ export function useOrganizations() {
   return useQuery({
     queryKey: organizationKeys.list(),
     queryFn: async () => {
-      const response = await api.get<{ results: Organization[] } | Organization[]>(
+      const response = await api.get<{ results: OrganizationListItem[] } | OrganizationListItem[]>(
         '/organizations/'
       )
       return Array.isArray(response) ? response : response.results

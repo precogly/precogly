@@ -13,13 +13,13 @@ import {
   type ReactNode,
 } from 'react'
 import { useOrganizations, useTeams } from '@/features/organization/api/organizations'
-import type { Organization, TeamListItem } from '@/features/organization/types/organization'
+import type { OrganizationListItem, TeamListItem } from '@/features/organization/types/organization'
 
 interface WorkspaceContextType {
   // Organizations
-  organizations: Organization[]
-  currentOrganization: Organization | null
-  setCurrentOrganization: (org: Organization) => void
+  organizations: OrganizationListItem[]
+  currentOrganization: OrganizationListItem | null
+  setCurrentOrganization: (org: OrganizationListItem) => void
 
   // Teams
   teams: TeamListItem[]
@@ -53,7 +53,7 @@ interface WorkspaceProviderProps {
 export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
   const { data: organizations = [], isLoading: orgsLoading, refetch: refetchOrgs } = useOrganizations()
 
-  const [currentOrganization, setCurrentOrgState] = useState<Organization | null>(null)
+  const [currentOrganization, setCurrentOrgState] = useState<OrganizationListItem | null>(null)
   const [currentTeam, setCurrentTeamState] = useState<TeamListItem | null>(null)
 
   // Fetch teams for current organization
@@ -100,7 +100,7 @@ export function WorkspaceProvider({ children }: WorkspaceProviderProps) {
     }
   }, [currentOrganization?.id])
 
-  const setCurrentOrganization = useCallback((org: Organization) => {
+  const setCurrentOrganization = useCallback((org: OrganizationListItem) => {
     setCurrentOrgState(org)
     localStorage.setItem(STORAGE_KEY_ORG, org.id.toString())
     // Clear team when switching orgs
