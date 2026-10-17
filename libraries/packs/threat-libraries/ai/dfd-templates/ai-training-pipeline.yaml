@@ -109,7 +109,7 @@ canvas_data:
         label: "Training Dataset"
         component_ref: "ai/document-store"
         description: "Curated and validated training data"
-        dataSensitivity: "restricted"
+        dataSensitivity: "confidential"
 
     # ---- Training Infrastructure ----
     - id: "process-training"
@@ -152,7 +152,7 @@ canvas_data:
         label: "Model Artifacts"
         component_ref: "ai/model-registry"
         description: "Trained model weights, configs, and metadata"
-        dataSensitivity: "restricted"
+        dataSensitivity: "confidential"
 
     # ---- Evaluation ----
     - id: "process-eval"
