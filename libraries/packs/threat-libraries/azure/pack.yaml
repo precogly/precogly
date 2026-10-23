@@ -2,15 +2,23 @@ pack:
   schema_version: 1
   slug: azure
   name: Azure Technologies
-  description: Microsoft Azure cloud components for threat modeling diagrams
-  version: 2.0.0
+  version: 3.4.0
+  pack_type: full
+  description: Azure threat library covering 89 Azure components (storage, identity, networking, compute,
+    data, analytics, AI, IoT, messaging, security and management services) with 470 threats and 740 countermeasures.
+    Every threat states an attack scenario, impact, severity and Terraform (azurerm and azuread) indicators
+    and cites Microsoft cloud security benchmark controls, NIST SP 800-53 Rev. 5, BSI IT-Grundschutz,
+    NIS2 Article 21 and Microsoft Learn guidance. Threats map to STRIDE, CWE, CAPEC and MITRE ATT&CK.
+    Countermeasures are actionable controls, including Azure Policy definitions and detective controls,
+    with compliance overlays for the Microsoft cloud security benchmark, NIST SP 800-53 Rev. 5, BSI IT-Grundschutz,
+    NIS2, OWASP ASVS, OWASP Top 10, CRA, SOC 2, NIST CSF, ISO 27001 and PCI DSS that activate when matching
+    framework packs are imported. Version 3.4.0 merges the Azure Technologies 2.2.0 and 3.0.0 libraries,
+    replaces all threat identifiers and adds detective controls so every threat has at least one detection.
   author: Precogly Team
-  pack_type: technology
-  tags:
-  - azure
-  - microsoft
-  - cloud
-  - infrastructure
-  - all
+  depends_on: [taxonomies/stride-taxonomy, taxonomies/capec, taxonomies/cwe, taxonomies/mitre-attack]
+  tags: [azure, microsoft, cloud, infrastructure, terraform, azurerm, azuread, storage, key-vault, managed-identity,
+    aks, app-service, functions, virtual-desktop, networking, firewall, application-gateway, private-endpoint,
+    bastion, virtual-machines, sql, cosmosdb, container-registry, entra-id, log-analytics, defender, data-analytics,
+    ai, iot, messaging, files, netapp, all, full]
   repository_url: https://github.com/precogly/precogly
-  documentation_url: https://docs.microsoft.com/azure/
+  documentation_url: https://learn.microsoft.com/azure/

@@ -1,0 +1,942 @@
+taxonomy: cwe
+mappings:
+- threat: azure-storage-account-public-access
+  entries: [CWE-284, CWE-200, CWE-1188]
+- threat: azure-storage-account-shared-key-abuse
+  entries: [CWE-798, CWE-522]
+- threat: azure-storage-account-sas-token-abuse
+  entries: [CWE-613, CWE-522]
+- threat: azure-storage-account-public-network-exposure
+  entries: [CWE-284, CWE-923]
+- threat: azure-storage-account-data-exfiltration
+  entries: [CWE-284, CWE-200]
+- threat: azure-storage-account-insecure-transport
+  entries: [CWE-319, CWE-326]
+- threat: azure-storage-account-malicious-content-upload
+  entries: [CWE-434]
+- threat: azure-storage-account-data-destruction
+  entries: [CWE-284, CWE-693]
+- threat: azure-storage-account-cmk-revocation
+  entries: [CWE-284]
+- threat: azure-storage-account-missing-audit-logging
+  entries: [CWE-778]
+- threat: azure-storage-account-control-plane-key-listing
+  entries: [CWE-266, CWE-272]
+- threat: azure-key-vault-public-network-exposure
+  entries: [CWE-284, CWE-923]
+- threat: azure-key-vault-access-policy-escalation
+  entries: [CWE-266, CWE-863]
+- threat: azure-key-vault-overprivileged-secret-access
+  entries: [CWE-272, CWE-522]
+- threat: azure-key-vault-secret-tampering
+  entries: [CWE-284, CWE-345]
+- threat: azure-key-vault-stale-credentials
+  entries: [CWE-324]
+- threat: azure-key-vault-secrets-in-terraform-state
+  entries: [CWE-312, CWE-522]
+- threat: azure-key-vault-secret-deletion
+  entries: [CWE-284, CWE-693]
+- threat: azure-key-vault-throttling
+  entries: [CWE-770, CWE-400]
+- threat: azure-key-vault-missing-audit-logging
+  entries: [CWE-778]
+- threat: azure-managed-identity-token-theft
+  entries: [CWE-918, CWE-522]
+- threat: azure-managed-identity-token-replay
+  entries: [CWE-294, CWE-613]
+- threat: azure-managed-identity-overprivileged-role
+  entries: [CWE-272, CWE-266]
+- threat: azure-managed-identity-shared-identity-abuse
+  entries: [CWE-653, CWE-272]
+- threat: azure-managed-identity-federated-credential-abuse
+  entries: [CWE-863, CWE-346]
+- threat: azure-managed-identity-deletion-outage
+  entries: [CWE-284]
+- threat: azure-managed-identity-unattributed-actions
+  entries: [CWE-778]
+- threat: azure-aks-public-api-server
+  entries: [CWE-284, CWE-923]
+- threat: azure-aks-local-account-abuse
+  entries: [CWE-288, CWE-522]
+- threat: azure-aks-run-command-abuse
+  entries: [CWE-284, CWE-288]
+- threat: azure-aks-container-escape
+  entries: [CWE-653, CWE-276]
+- threat: azure-aks-node-identity-abuse
+  entries: [CWE-653, CWE-272]
+- threat: azure-aks-kubernetes-rbac-overprivilege
+  entries: [CWE-272, CWE-266]
+- threat: azure-aks-flat-pod-network
+  entries: [CWE-923, CWE-284]
+- threat: azure-aks-untrusted-image
+  entries: [CWE-494, CWE-347]
+- threat: azure-aks-secrets-exposure
+  entries: [CWE-312, CWE-522]
+- threat: azure-aks-missing-audit-logging
+  entries: [CWE-778]
+- threat: azure-aks-resource-exhaustion
+  entries: [CWE-770, CWE-400]
+- threat: azure-aks-outdated-components
+  entries: [CWE-693]
+- threat: azure-app-service-missing-authentication
+  entries: [CWE-306]
+- threat: azure-app-service-direct-origin-access
+  entries: [CWE-288, CWE-693]
+- threat: azure-app-service-insecure-transport
+  entries: [CWE-319, CWE-523]
+- threat: azure-app-service-publishing-credential-abuse
+  entries: [CWE-522, CWE-288]
+- threat: azure-app-service-kudu-abuse
+  entries: [CWE-284, CWE-272]
+- threat: azure-app-service-secrets-in-app-settings
+  entries: [CWE-312, CWE-256]
+- threat: azure-app-service-insecure-configuration
+  entries: [CWE-16, CWE-200]
+- threat: azure-app-service-vnet-pivot
+  entries: [CWE-923, CWE-653]
+- threat: azure-app-service-denial-of-service
+  entries: [CWE-400, CWE-770]
+- threat: azure-app-service-missing-logging
+  entries: [CWE-778]
+- threat: azure-virtual-desktop-weak-user-authentication
+  entries: [CWE-287, CWE-307]
+- threat: azure-virtual-desktop-rogue-session-host
+  entries: [CWE-522, CWE-613]
+- threat: azure-virtual-desktop-session-host-exposure
+  entries: [CWE-284, CWE-307]
+- threat: azure-virtual-desktop-data-exfiltration-redirection
+  entries: [CWE-200]
+- threat: azure-virtual-desktop-profile-and-session-isolation
+  entries: [CWE-653, CWE-732]
+- threat: azure-virtual-desktop-unpatched-session-hosts
+  entries: [CWE-693]
+- threat: azure-virtual-desktop-public-workspace-access
+  entries: [CWE-284]
+- threat: azure-virtual-desktop-overprivileged-assignments
+  entries: [CWE-272]
+- threat: azure-virtual-desktop-capacity-exhaustion
+  entries: [CWE-770]
+- threat: azure-virtual-desktop-missing-diagnostics
+  entries: [CWE-778]
+- threat: azure-vnet-peering-lateral-movement
+  entries: [CWE-923, CWE-653]
+- threat: azure-vnet-unauthorized-network-modification
+  entries: [CWE-284]
+- threat: azure-vnet-dns-exfiltration
+  entries: [CWE-200]
+- threat: azure-vnet-custom-dns-hijack
+  entries: [CWE-923]
+- threat: azure-vnet-ddos
+  entries: [CWE-400]
+- threat: azure-vnet-missing-flow-logs
+  entries: [CWE-778]
+- threat: azure-subnet-missing-nsg
+  entries: [CWE-284, CWE-923]
+- threat: azure-subnet-default-outbound-access
+  entries: [CWE-923]
+- threat: azure-subnet-route-manipulation
+  entries: [CWE-923, CWE-284]
+- threat: azure-subnet-service-endpoint-exfiltration
+  entries: [CWE-923]
+- threat: azure-subnet-address-exhaustion
+  entries: [CWE-770]
+- threat: azure-nsg-permissive-inbound
+  entries: [CWE-284, CWE-923]
+- threat: azure-nsg-broad-service-tag
+  entries: [CWE-284]
+- threat: azure-nsg-unrestricted-outbound
+  entries: [CWE-923]
+- threat: azure-nsg-rule-tampering
+  entries: [CWE-284]
+- threat: azure-nsg-terraform-rule-drift
+  entries: [CWE-16]
+- threat: azure-firewall-permissive-rules
+  entries: [CWE-284]
+- threat: azure-firewall-threat-detection-disabled
+  entries: [CWE-693]
+- threat: azure-firewall-dnat-exposure
+  entries: [CWE-284]
+- threat: azure-firewall-policy-tampering
+  entries: [CWE-284]
+- threat: azure-firewall-snat-exhaustion
+  entries: [CWE-770]
+- threat: azure-firewall-missing-logs
+  entries: [CWE-778]
+- threat: azure-application-gateway-waf-ineffective
+  entries: [CWE-693]
+- threat: azure-application-gateway-weak-tls
+  entries: [CWE-326, CWE-757]
+- threat: azure-application-gateway-unencrypted-backend
+  entries: [CWE-319]
+- threat: azure-application-gateway-certificate-exposure
+  entries: [CWE-312, CWE-522]
+- threat: azure-application-gateway-header-spoofing
+  entries: [CWE-290, CWE-346]
+- threat: azure-application-gateway-ddos
+  entries: [CWE-400, CWE-770]
+- threat: azure-application-gateway-missing-logs
+  entries: [CWE-778]
+- threat: azure-private-endpoint-exfiltration-to-foreign-resource
+  entries: [CWE-923]
+- threat: azure-private-endpoint-unreviewed-inbound-connection
+  entries: [CWE-284]
+- threat: azure-private-endpoint-network-policies-disabled
+  entries: [CWE-284]
+- threat: azure-private-endpoint-public-access-retained
+  entries: [CWE-284]
+- threat: azure-private-endpoint-dns-misconfiguration
+  entries: [CWE-16]
+- threat: azure-private-dns-zone-record-tampering
+  entries: [CWE-284, CWE-923]
+- threat: azure-private-dns-zone-resolution-failure
+  entries: [CWE-284]
+- threat: azure-private-dns-zone-missing-logging
+  entries: [CWE-778]
+- threat: azure-bastion-overprivileged-access
+  entries: [CWE-272]
+- threat: azure-bastion-feature-abuse
+  entries: [CWE-284]
+- threat: azure-bastion-vm-credential-spoofing
+  entries: [CWE-522]
+- threat: azure-bastion-subnet-nsg-misconfiguration
+  entries: [CWE-16]
+- threat: azure-bastion-missing-audit
+  entries: [CWE-778]
+- threat: azure-sql-database-public-network-exposure
+  entries: [CWE-284, CWE-923]
+- threat: azure-sql-database-sql-authentication
+  entries: [CWE-798, CWE-307]
+- threat: azure-sql-database-sql-injection
+  entries: [CWE-89]
+- threat: azure-sql-database-excessive-privileges
+  entries: [CWE-272, CWE-266]
+- threat: azure-sql-database-data-exfiltration
+  entries: [CWE-284]
+- threat: azure-sql-database-insecure-transport
+  entries: [CWE-326, CWE-319]
+- threat: azure-sql-database-sensitive-data-plaintext
+  entries: [CWE-311, CWE-359]
+- threat: azure-sql-database-destruction
+  entries: [CWE-284]
+- threat: azure-sql-database-missing-auditing
+  entries: [CWE-778]
+- threat: azure-cosmosdb-account-key-abuse
+  entries: [CWE-798, CWE-522]
+- threat: azure-cosmosdb-control-plane-key-listing
+  entries: [CWE-266, CWE-272]
+- threat: azure-cosmosdb-public-network-exposure
+  entries: [CWE-284, CWE-923]
+- threat: azure-cosmosdb-query-injection
+  entries: [CWE-89]
+- threat: azure-cosmosdb-data-deletion
+  entries: [CWE-284]
+- threat: azure-cosmosdb-throughput-exhaustion
+  entries: [CWE-770, CWE-400]
+- threat: azure-cosmosdb-missing-logging
+  entries: [CWE-778]
+- threat: azure-ad-application-client-secret-leak
+  entries: [CWE-798, CWE-522]
+- threat: azure-ad-application-credential-backdoor
+  entries: [CWE-284]
+- threat: azure-ad-application-excessive-api-permissions
+  entries: [CWE-272, CWE-266]
+- threat: azure-ad-application-redirect-uri-hijack
+  entries: [CWE-346]
+- threat: azure-ad-application-multitenant-misuse
+  entries: [CWE-287, CWE-863]
+- threat: azure-ad-application-insecure-oauth-flows
+  entries: [CWE-200]
+- threat: azure-ad-application-missing-audit
+  entries: [CWE-778]
+- threat: azure-service-principal-overprivileged-rbac
+  entries: [CWE-272, CWE-266]
+- threat: azure-service-principal-credential-theft
+  entries: [CWE-522, CWE-798]
+- threat: azure-service-principal-directory-role-escalation
+  entries: [CWE-272]
+- threat: azure-service-principal-credential-backdoor
+  entries: [CWE-284]
+- threat: azure-service-principal-stale
+  entries: [CWE-284]
+- threat: azure-service-principal-third-party-app-abuse
+  entries: [CWE-272]
+- threat: azure-function-app-function-key-abuse
+  entries: [CWE-306, CWE-522]
+- threat: azure-function-app-storage-takeover
+  entries: [CWE-494, CWE-284]
+- threat: azure-function-app-trigger-input-injection
+  entries: [CWE-20, CWE-502]
+- threat: azure-function-app-scale-cost-dos
+  entries: [CWE-770, CWE-400]
+- threat: azure-container-registry-admin-user
+  entries: [CWE-798, CWE-522]
+- threat: azure-container-registry-anonymous-pull
+  entries: [CWE-284, CWE-200]
+- threat: azure-container-registry-public-network-exposure
+  entries: [CWE-284, CWE-923]
+- threat: azure-container-registry-image-poisoning
+  entries: [CWE-494, CWE-345]
+- threat: azure-container-registry-vulnerable-images
+  entries: [CWE-798]
+- threat: azure-container-registry-tasks-abuse
+  entries: [CWE-272]
+- threat: azure-container-registry-image-deletion
+  entries: [CWE-284]
+- threat: azure-container-registry-missing-logs
+  entries: [CWE-778]
+- threat: azure-virtual-machine-public-management-exposure
+  entries: [CWE-284, CWE-307]
+- threat: azure-virtual-machine-password-authentication
+  entries: [CWE-521, CWE-798]
+- threat: azure-virtual-machine-run-command-abuse
+  entries: [CWE-284]
+- threat: azure-virtual-machine-disk-exfiltration
+  entries: [CWE-284]
+- threat: azure-virtual-machine-disk-encryption-gaps
+  entries: [CWE-311]
+- threat: azure-virtual-machine-boot-tampering
+  entries: [CWE-353]
+- threat: azure-virtual-machine-unpatched
+  entries: [CWE-693]
+- threat: azure-virtual-machine-ransomware
+  entries: [CWE-693]
+- threat: azure-virtual-machine-missing-security-logging
+  entries: [CWE-778]
+- threat: azure-log-analytics-sensitive-data-exposure
+  entries: [CWE-532]
+- threat: azure-log-analytics-local-auth-log-injection
+  entries: [CWE-117, CWE-345]
+- threat: azure-log-analytics-log-tampering
+  entries: [CWE-284]
+- threat: azure-log-analytics-collection-disabled
+  entries: [CWE-778]
+- threat: azure-log-analytics-public-access
+  entries: [CWE-284]
+- threat: azure-log-analytics-daily-cap-blinding
+  entries: [CWE-770]
+- threat: azure-log-analytics-insufficient-retention
+  entries: [CWE-778]
+- threat: azure-defender-plans-disabled
+  entries: [CWE-778]
+- threat: azure-defender-alert-suppression-tampering
+  entries: [CWE-284]
+- threat: azure-defender-alerts-unrouted
+  entries: [CWE-778]
+- threat: azure-defender-posture-data-exposure
+  entries: [CWE-200]
+- threat: azure-ai-search-public-exposure
+  entries: [CWE-284]
+- threat: azure-ai-search-key-authentication
+  entries: [CWE-798, CWE-287]
+- threat: azure-ai-search-index-data-overexposure
+  entries: [CWE-863, CWE-639]
+- threat: azure-ai-search-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-ai-search-missing-logging
+  entries: [CWE-778]
+- threat: azure-ai-services-public-endpoint
+  entries: [CWE-284]
+- threat: azure-ai-services-api-key-exposure
+  entries: [CWE-798, CWE-522]
+- threat: azure-ai-services-prompt-injection
+  entries: [CWE-20]
+- threat: azure-ai-services-missing-logging
+  entries: [CWE-778]
+- threat: azure-ai-services-unrestricted-outbound
+  entries: [CWE-918]
+- threat: azure-api-center-test-console-credential-exposure
+  entries: [CWE-522]
+- threat: azure-api-center-broad-key-vault-access
+  entries: [CWE-863, CWE-272]
+- threat: azure-api-center-unregistered-api
+  entries: [CWE-200]
+- threat: azure-api-management-public-exposure
+  entries: [CWE-284]
+- threat: azure-api-management-weak-tls-protocols
+  entries: [CWE-319, CWE-326]
+- threat: azure-api-management-legacy-platform-config
+  entries: [CWE-16]
+- threat: azure-api-management-missing-api-authentication
+  entries: [CWE-306, CWE-862]
+- threat: azure-api-management-subscription-key-and-secret-leakage
+  entries: [CWE-798, CWE-312]
+- threat: azure-app-configuration-public-exposure
+  entries: [CWE-284]
+- threat: azure-app-configuration-access-key-authentication
+  entries: [CWE-798]
+- threat: azure-app-configuration-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-app-configuration-deletion-without-recovery
+  entries: [CWE-862]
+- threat: azure-app-insights-key-and-connection-string-misuse
+  entries: [CWE-287]
+- threat: azure-app-insights-sensitive-telemetry
+  entries: [CWE-200, CWE-532]
+- threat: azure-app-insights-public-ingestion-and-query
+  entries: [CWE-284]
+- threat: azure-app-insights-ingestion-flooding
+  entries: [CWE-770]
+- threat: azure-arc-managed-identity-key-theft
+  entries: [CWE-522]
+- threat: azure-arc-extension-code-execution
+  entries: [CWE-272, CWE-863]
+- threat: azure-arc-onboarding-credential-abuse
+  entries: [CWE-522, CWE-798]
+- threat: azure-automation-public-exposure
+  entries: [CWE-284]
+- threat: azure-automation-plaintext-credentials-and-variables
+  entries: [CWE-312, CWE-522]
+- threat: azure-automation-local-authentication
+  entries: [CWE-287]
+- threat: azure-automation-runbook-privilege-escalation
+  entries: [CWE-272, CWE-266]
+- threat: azure-automation-webhook-url-exposure
+  entries: [CWE-522, CWE-306]
+- threat: azure-avd-desktop-group-overexposure
+  entries: [CWE-284, CWE-272]
+- threat: azure-avd-host-pool-identity-overprivileged
+  entries: [CWE-272, CWE-284]
+- threat: azure-avd-domain-join-account-overprivileged
+  entries: [CWE-272, CWE-522]
+- threat: azure-avd-scaling-plan-excessive-rights
+  entries: [CWE-732, CWE-863]
+- threat: azure-avd-session-host-unrestricted-egress
+  entries: [CWE-284, CWE-923]
+- threat: azure-avd-session-host-shared-local-admin
+  entries: [CWE-798, CWE-266]
+- threat: azure-avd-session-host-user-admin-rights
+  entries: [CWE-732, CWE-272]
+- threat: azure-avd-session-host-no-endpoint-protection
+  entries: [CWE-693]
+- threat: azure-avd-fslogix-av-exclusion-malware
+  entries: [CWE-693]
+- threat: azure-avd-idle-session-unlocked
+  entries: [CWE-613]
+- threat: azure-backup-vault-single-admin-destruction
+  entries: [CWE-863]
+- threat: azure-backup-vault-soft-delete-disabled
+  entries: [CWE-862]
+- threat: azure-backup-vault-mutable-recovery-points
+  entries: [CWE-862]
+- threat: azure-backup-vault-public-network-access
+  entries: [CWE-284]
+- threat: azure-backup-vault-restore-exfiltration
+  entries: [CWE-863]
+- threat: azure-backup-vault-unmonitored-failures
+  entries: [CWE-778]
+- threat: azure-batch-public-exposure
+  entries: [CWE-284]
+- threat: azure-batch-shared-key-authentication
+  entries: [CWE-798, CWE-287]
+- threat: azure-batch-unencrypted-data
+  entries: [CWE-311]
+- threat: azure-batch-task-privilege-and-secret-exposure
+  entries: [CWE-522, CWE-272]
+- threat: azure-batch-compute-hijacking
+  entries: [CWE-770]
+- threat: azure-batch-missing-logging
+  entries: [CWE-778]
+- threat: azure-redis-public-exposure
+  entries: [CWE-284]
+- threat: azure-redis-insecure-transport
+  entries: [CWE-319]
+- threat: azure-redis-access-key-authentication
+  entries: [CWE-306, CWE-798]
+- threat: azure-redis-persistence-and-key-exposure
+  entries: [CWE-312]
+- threat: azure-redis-cache-poisoning
+  entries: [CWE-502, CWE-306]
+- threat: azure-container-apps-public-exposure
+  entries: [CWE-284]
+- threat: azure-container-apps-insecure-ingress
+  entries: [CWE-319]
+- threat: azure-container-apps-plaintext-secrets
+  entries: [CWE-312, CWE-798]
+- threat: azure-container-apps-unauthenticated-ingress
+  entries: [CWE-306]
+- threat: azure-container-apps-untrusted-image
+  entries: [CWE-494]
+- threat: azure-container-apps-missing-logging
+  entries: [CWE-778]
+- threat: azure-aci-plaintext-credentials
+  entries: [CWE-312, CWE-522]
+- threat: azure-aci-untrusted-images
+  entries: [CWE-494]
+- threat: azure-aci-no-network-segmentation
+  entries: [CWE-284]
+- threat: azure-aci-privileged-runtime
+  entries: [CWE-266]
+- threat: azure-aci-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-data-explorer-public-exposure
+  entries: [CWE-284]
+- threat: azure-data-explorer-encryption-gaps
+  entries: [CWE-311]
+- threat: azure-data-explorer-overbroad-roles
+  entries: [CWE-272, CWE-863]
+- threat: azure-data-explorer-trusted-tenants-and-egress
+  entries: [CWE-284]
+- threat: azure-data-factory-public-exposure
+  entries: [CWE-284]
+- threat: azure-data-factory-linked-service-credentials
+  entries: [CWE-522, CWE-798]
+- threat: azure-data-factory-self-hosted-runtime-compromise
+  entries: [CWE-522, CWE-653]
+- threat: azure-data-factory-pipeline-tampering
+  entries: [CWE-862, CWE-494]
+- threat: azure-data-lake-acl-overgrant
+  entries: [CWE-732, CWE-272]
+- threat: azure-data-lake-missing-dfs-private-endpoint
+  entries: [CWE-284]
+- threat: azure-databricks-public-exposure
+  entries: [CWE-284]
+- threat: azure-databricks-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-databricks-storage-credential-exposure
+  entries: [CWE-798, CWE-522]
+- threat: azure-databricks-code-execution-privilege-escalation
+  entries: [CWE-272, CWE-863]
+- threat: azure-databricks-missing-logging
+  entries: [CWE-778]
+- threat: azure-ddos-protection-public-ip-unprotected
+  entries: [CWE-400]
+- threat: azure-ddos-protection-unsupported-resources
+  entries: [CWE-16]
+- threat: azure-ddos-protection-no-attack-telemetry
+  entries: [CWE-778]
+- threat: azure-dedicated-hsm-default-credentials
+  entries: [CWE-798, CWE-1188]
+- threat: azure-dedicated-hsm-role-lockout
+  entries: [CWE-307]
+- threat: azure-dedicated-hsm-no-ha-backup
+  entries: [CWE-862]
+- threat: azure-defender-unremediated-recommendations
+  entries: [CWE-16]
+- threat: azure-dns-private-zone-link-misconfiguration
+  entries: [CWE-284]
+- threat: azure-dns-no-dnssec-validation
+  entries: [CWE-290]
+- threat: azure-dns-malicious-domain-resolution
+  entries: [CWE-284]
+- threat: azure-dns-dangling-record-takeover
+  entries: [CWE-346]
+- threat: azure-dns-zone-record-tampering
+  entries: [CWE-863]
+- threat: azure-domain-services-ntlm-hash-sync
+  entries: [CWE-327, CWE-326]
+- threat: azure-domain-services-weak-protocols
+  entries: [CWE-327, CWE-326]
+- threat: azure-domain-services-ldap-relay
+  entries: [CWE-294]
+- threat: azure-domain-services-ldaps-internet-exposure
+  entries: [CWE-284, CWE-307]
+- threat: azure-elastic-san-public-network-access
+  entries: [CWE-284]
+- threat: azure-elastic-san-implicit-subnet-access
+  entries: [CWE-284]
+- threat: azure-elastic-san-no-transit-encryption-or-soft-delete
+  entries: [CWE-319, CWE-862]
+- threat: azure-elastic-san-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-entra-token-theft
+  entries: [CWE-294, CWE-522]
+- threat: azure-entra-password-spraying
+  entries: [CWE-307, CWE-521]
+- threat: azure-entra-conditional-access-bypass
+  entries: [CWE-287, CWE-863]
+- threat: azure-entra-standing-admin-access
+  entries: [CWE-266, CWE-272]
+- threat: azure-entra-break-glass-misuse
+  entries: [CWE-287]
+- threat: azure-entra-provider-support-access
+  entries: [CWE-863]
+- threat: azure-entra-guest-and-external-collaboration-overexposure
+  entries: [CWE-284]
+- threat: azure-entra-hybrid-identity-compromise
+  entries: [CWE-284, CWE-272]
+- threat: azure-event-grid-public-exposure
+  entries: [CWE-284]
+- threat: azure-event-grid-key-authentication
+  entries: [CWE-798, CWE-287]
+- threat: azure-event-grid-unauthenticated-webhook-delivery
+  entries: [CWE-306]
+- threat: azure-event-grid-subscription-exfiltration
+  entries: [CWE-863]
+- threat: azure-event-hubs-public-exposure
+  entries: [CWE-284]
+- threat: azure-event-hubs-sas-key-authentication
+  entries: [CWE-798, CWE-287]
+- threat: azure-event-hubs-weak-tls
+  entries: [CWE-319, CWE-326]
+- threat: azure-event-hubs-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-expressroute-unencrypted-private-peering
+  entries: [CWE-319]
+- threat: azure-expressroute-unauthenticated-bgp
+  entries: [CWE-290]
+- threat: azure-expressroute-broad-circuit-rbac
+  entries: [CWE-863]
+- threat: azure-expressroute-authorization-key-abuse
+  entries: [CWE-522]
+- threat: azure-expressroute-missing-logging
+  entries: [CWE-778]
+- threat: azure-file-sync-public-endpoint-exposure
+  entries: [CWE-284]
+- threat: azure-file-sync-identity-misconfiguration
+  entries: [CWE-863]
+- threat: azure-file-sync-no-backup
+  entries: [CWE-862]
+- threat: azure-file-sync-registered-server-compromise
+  entries: [CWE-653]
+- threat: azure-files-rbac-acl-misalignment
+  entries: [CWE-732, CWE-272]
+- threat: azure-files-default-share-permission-overgrant
+  entries: [CWE-276, CWE-732]
+- threat: azure-files-smb-unencrypted-transfer
+  entries: [CWE-319]
+- threat: azure-files-share-destruction
+  entries: [CWE-862]
+- threat: azure-firewall-manager-global-policy-change
+  entries: [CWE-863]
+- threat: azure-firewall-manager-traffic-bypasses-firewall
+  entries: [CWE-284]
+- threat: azure-firewall-manager-fqdn-filter-dns-mismatch
+  entries: [CWE-290]
+- threat: azure-front-door-weak-tls
+  entries: [CWE-319, CWE-326]
+- threat: azure-front-door-origin-bypass
+  entries: [CWE-284, CWE-923]
+- threat: azure-front-door-waf-ineffective
+  entries: [CWE-693]
+- threat: azure-front-door-missing-logging
+  entries: [CWE-778]
+- threat: azure-front-door-dangling-custom-domain
+  entries: [CWE-346]
+- threat: azure-hdinsight-no-esp-authentication
+  entries: [CWE-306]
+- threat: azure-hdinsight-insecure-transport
+  entries: [CWE-319]
+- threat: azure-hdinsight-keytab-exposure
+  entries: [CWE-522]
+- threat: azure-hdinsight-public-gateway-and-ssh
+  entries: [CWE-284]
+- threat: azure-hdinsight-encryption-gaps
+  entries: [CWE-311]
+- threat: azure-iot-hub-public-exposure
+  entries: [CWE-284]
+- threat: azure-iot-hub-shared-access-policy-abuse
+  entries: [CWE-798, CWE-272]
+- threat: azure-iot-hub-device-credential-theft
+  entries: [CWE-522, CWE-321]
+- threat: azure-iot-hub-weak-tls
+  entries: [CWE-319, CWE-326]
+- threat: azure-iot-hub-routing-key-credentials
+  entries: [CWE-522, CWE-312]
+- threat: azure-iot-hub-missing-logging
+  entries: [CWE-778]
+- threat: azure-load-balancer-backend-directly-exposed
+  entries: [CWE-284]
+- threat: azure-load-balancer-retired-basic-sku
+  entries: [CWE-16]
+- threat: azure-load-balancer-unencrypted-application-traffic
+  entries: [CWE-319]
+- threat: azure-load-balancer-open-inbound-rules
+  entries: [CWE-284, CWE-1327]
+- threat: azure-logic-apps-secrets-in-workflow
+  entries: [CWE-312, CWE-798]
+- threat: azure-logic-apps-connection-credentials
+  entries: [CWE-522, CWE-798]
+- threat: azure-logic-apps-anonymous-request-trigger
+  entries: [CWE-306]
+- threat: azure-logic-apps-run-history-data-exposure
+  entries: [CWE-200, CWE-532]
+- threat: azure-logic-apps-missing-logging
+  entries: [CWE-778]
+- threat: azure-logic-apps-standard-public-and-basic-auth
+  entries: [CWE-284, CWE-798]
+- threat: azure-ml-public-exposure
+  entries: [CWE-284]
+- threat: azure-ml-compute-local-auth-and-ssh
+  entries: [CWE-287, CWE-272]
+- threat: azure-ml-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-ml-datastore-credential-exposure
+  entries: [CWE-522, CWE-798]
+- threat: azure-ml-untrusted-model-and-environment
+  entries: [CWE-502, CWE-494]
+- threat: azure-ml-outdated-compute-instances
+  entries: [CWE-16]
+- threat: azure-ml-missing-logging
+  entries: [CWE-778]
+- threat: azure-managed-grafana-public-exposure
+  entries: [CWE-284]
+- threat: azure-managed-grafana-api-keys-and-service-accounts
+  entries: [CWE-287, CWE-798]
+- threat: azure-managed-grafana-datasource-credentials
+  entries: [CWE-312, CWE-863]
+- threat: azure-managed-grafana-admin-role-overgrant
+  entries: [CWE-272, CWE-863]
+- threat: azure-managed-hsm-public-exposure
+  entries: [CWE-284]
+- threat: azure-managed-hsm-purge-protection-disabled
+  entries: [CWE-862]
+- threat: azure-managed-hsm-single-custodian-security-domain
+  entries: [CWE-266]
+- threat: azure-managed-hsm-no-key-autorotation
+  entries: [CWE-324]
+- threat: azure-managed-hsm-missing-logging
+  entries: [CWE-778]
+- threat: azure-managed-hsm-overbroad-local-rbac
+  entries: [CWE-272]
+- threat: azure-monitor-public-ingestion-and-query
+  entries: [CWE-284]
+- threat: azure-monitor-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-monitor-not-security-monitoring
+  entries: [CWE-778]
+- threat: azure-monitor-container-insights-legacy-auth
+  entries: [CWE-522]
+- threat: azure-monitor-alert-suppression
+  entries: [CWE-862]
+- threat: azure-mysql-public-exposure
+  entries: [CWE-284]
+- threat: azure-mysql-insecure-transport
+  entries: [CWE-319]
+- threat: azure-mysql-password-authentication
+  entries: [CWE-287, CWE-798]
+- threat: azure-mysql-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-mysql-insufficient-backup
+  entries: [CWE-862]
+- threat: azure-mysql-no-threat-detection
+  entries: [CWE-778]
+- threat: azure-postgresql-public-exposure
+  entries: [CWE-284]
+- threat: azure-postgresql-insecure-transport
+  entries: [CWE-319]
+- threat: azure-postgresql-password-authentication
+  entries: [CWE-287, CWE-798]
+- threat: azure-postgresql-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-postgresql-insufficient-backup
+  entries: [CWE-862]
+- threat: azure-postgresql-no-threat-detection
+  entries: [CWE-778]
+- threat: azure-nat-gateway-outbound-unlogged
+  entries: [CWE-778]
+- threat: azure-nat-gateway-snat-exhaustion
+  entries: [CWE-770]
+- threat: azure-nat-gateway-unrestricted-egress
+  entries: [CWE-284]
+- threat: azure-netapp-files-nfs-export-overexposure
+  entries: [CWE-290, CWE-284]
+- threat: azure-netapp-files-dual-protocol-permission-mismatch
+  entries: [CWE-732]
+- threat: azure-netapp-files-snapshot-and-backup-destruction
+  entries: [CWE-862]
+- threat: azure-netapp-files-platform-only-keys
+  entries: [CWE-311]
+- threat: azure-netapp-files-network-activity-unlogged
+  entries: [CWE-778]
+- threat: azure-netapp-files-directory-credential-exposure
+  entries: [CWE-522, CWE-312]
+- threat: azure-network-watcher-overbroad-packet-capture
+  entries: [CWE-863]
+- threat: azure-network-watcher-flow-log-storage-exposure
+  entries: [CWE-284]
+- threat: azure-network-watcher-nsg-flow-log-retirement-gap
+  entries: [CWE-778]
+- threat: azure-queue-storage-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-queue-storage-message-injection
+  entries: [CWE-20, CWE-306]
+- threat: azure-queue-storage-overbroad-queue-roles
+  entries: [CWE-272]
+- threat: azure-sentinel-security-logs-not-ingested
+  entries: [CWE-778]
+- threat: azure-sentinel-analytics-rule-tampering
+  entries: [CWE-863]
+- threat: azure-sentinel-watchlist-data-exposure
+  entries: [CWE-200]
+- threat: azure-sentinel-workspace-access-overbroad
+  entries: [CWE-863]
+- threat: azure-sentinel-automation-privilege-abuse
+  entries: [CWE-272]
+- threat: azure-service-bus-public-exposure
+  entries: [CWE-284]
+- threat: azure-service-bus-sas-key-authentication
+  entries: [CWE-798, CWE-287]
+- threat: azure-service-bus-weak-tls
+  entries: [CWE-319, CWE-326]
+- threat: azure-service-bus-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-service-bus-missing-logging
+  entries: [CWE-778]
+- threat: azure-service-fabric-unsecured-cluster
+  entries: [CWE-306]
+- threat: azure-service-fabric-weak-client-authentication
+  entries: [CWE-287]
+- threat: azure-service-fabric-shared-client-certificate
+  entries: [CWE-522]
+- threat: azure-service-fabric-public-management-endpoints
+  entries: [CWE-284]
+- threat: azure-service-fabric-reverse-proxy-exposure
+  entries: [CWE-284, CWE-306]
+- threat: azure-site-recovery-replication-over-public-endpoint
+  entries: [CWE-319, CWE-284]
+- threat: azure-site-recovery-over-privileged-operator
+  entries: [CWE-863]
+- threat: azure-site-recovery-replica-platform-keys
+  entries: [CWE-311]
+- threat: azure-site-recovery-cache-storage-exposure
+  entries: [CWE-284, CWE-522]
+- threat: azure-sql-managed-instance-public-data-endpoint
+  entries: [CWE-284]
+- threat: azure-sql-managed-instance-sql-authentication
+  entries: [CWE-287, CWE-798]
+- threat: azure-sql-managed-instance-weak-tls
+  entries: [CWE-319, CWE-326]
+- threat: azure-sql-managed-instance-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-sql-managed-instance-no-threat-detection
+  entries: [CWE-778]
+- threat: azure-storage-mover-broad-target-rbac
+  entries: [CWE-863]
+- threat: azure-storage-mover-orphaned-agent-roles
+  entries: [CWE-266]
+- threat: azure-storage-mover-public-control-plane
+  entries: [CWE-319]
+- threat: azure-stream-analytics-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-stream-analytics-connection-string-authentication
+  entries: [CWE-522, CWE-798]
+- threat: azure-stream-analytics-missing-logging
+  entries: [CWE-778]
+- threat: azure-stream-analytics-output-redirection
+  entries: [CWE-863]
+- threat: azure-synapse-public-exposure
+  entries: [CWE-284]
+- threat: azure-synapse-sql-authentication
+  entries: [CWE-287, CWE-798]
+- threat: azure-synapse-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-synapse-weak-tls
+  entries: [CWE-319, CWE-326]
+- threat: azure-synapse-no-threat-detection
+  entries: [CWE-778]
+- threat: azure-synapse-overbroad-roles
+  entries: [CWE-272, CWE-863]
+- threat: azure-traffic-manager-unauthorized-profile-change
+  entries: [CWE-863]
+- threat: azure-traffic-manager-dangling-dns-takeover
+  entries: [CWE-346]
+- threat: azure-traffic-manager-http-health-probes
+  entries: [CWE-295]
+- threat: azure-traffic-manager-missing-logging
+  entries: [CWE-778]
+- threat: azure-virtual-wan-route-override-bypasses-hub-firewall
+  entries: [CWE-284]
+- threat: azure-virtual-wan-flat-spoke-transit
+  entries: [CWE-284]
+- threat: azure-virtual-wan-p2s-weak-authentication
+  entries: [CWE-287]
+- threat: azure-vmss-unpatched-instances
+  entries: [CWE-16]
+- threat: azure-vmss-instance-protection-gaps
+  entries: [CWE-284]
+- threat: azure-vmss-no-application-health
+  entries: [CWE-400]
+- threat: azure-vmss-encryption-and-logging-gaps
+  entries: [CWE-311, CWE-778]
+- threat: azure-vnet-public-paas-path
+  entries: [CWE-284]
+- threat: azure-vpn-gateway-weak-p2s-authentication
+  entries: [CWE-287]
+- threat: azure-vpn-gateway-weak-ipsec-policy
+  entries: [CWE-326, CWE-327]
+- threat: azure-vpn-gateway-shared-key-exposure
+  entries: [CWE-522, CWE-798]
+- threat: azure-vpn-gateway-missing-logging
+  entries: [CWE-778]
+- threat: azure-waf-detection-mode-in-production
+  entries: [CWE-20]
+- threat: azure-waf-no-rate-limit-or-bot-protection
+  entries: [CWE-400, CWE-307]
+- threat: azure-waf-missing-logging
+  entries: [CWE-778]
+- threat: azure-waf-exclusions-and-stale-rule-sets
+  entries: [CWE-693]
+- threat: azure-app-service-remote-code-execution
+  entries: [CWE-502, CWE-434, CWE-94]
+- threat: azure-app-service-public-network-exposure
+  entries: [CWE-284]
+- threat: azure-managed-identity-role-changes-unmonitored
+  entries: [CWE-778]
+- threat: azure-managed-identity-not-used
+  entries: [CWE-798, CWE-522]
+- threat: azure-virtual-machine-configuration-drift
+  entries: [CWE-16]
+- threat: azure-virtual-machine-no-endpoint-protection
+  entries: [CWE-693]
+- threat: azure-sql-database-insufficient-backup
+  entries: [CWE-862]
+- threat: azure-sql-database-no-threat-detection
+  entries: [CWE-778]
+- threat: azure-cosmosdb-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-cosmosdb-no-threat-detection
+  entries: [CWE-778]
+- threat: azure-aks-insecure-ingress-transport
+  entries: [CWE-319]
+- threat: azure-aks-insecure-cluster-configuration
+  entries: [CWE-16]
+- threat: azure-aks-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-application-gateway-broad-management-rbac
+  entries: [CWE-863]
+- threat: azure-firewall-no-tls-inspection
+  entries: [CWE-693]
+- threat: azure-bastion-target-subnet-open-management-ports
+  entries: [CWE-284, CWE-1327]
+- threat: azure-bastion-vm-public-ip-bypass
+  entries: [CWE-284]
+- threat: azure-b2c-password-spraying
+  entries: [CWE-307, CWE-521]
+- threat: azure-b2c-account-takeover-without-risk-policy
+  entries: [CWE-287]
+- threat: azure-b2c-single-factor-sign-in
+  entries: [CWE-287]
+- threat: azure-key-vault-platform-key-encryption-gap
+  entries: [CWE-311]
+- threat: azure-key-vault-secrets-copied-into-code
+  entries: [CWE-312, CWE-798]
+- threat: azure-key-vault-no-conditional-access
+  entries: [CWE-287]
+- threat: azure-key-vault-no-threat-detection
+  entries: [CWE-778]
+- threat: azure-storage-account-broad-data-plane-role
+  entries: [CWE-272, CWE-863]
+- threat: azure-storage-account-platform-key-encryption
+  entries: [CWE-311]
+- threat: azure-storage-account-no-threat-detection
+  entries: [CWE-778]
+- threat: azure-flow-plaintext-transport
+  entries: [CWE-319, CWE-523]
+- threat: azure-flow-mitm-network-path
+  entries: [CWE-295, CWE-300]
+- threat: azure-flow-token-replay
+  entries: [CWE-294, CWE-522]
+- threat: azure-flow-message-tampering
+  entries: [CWE-345, CWE-294]
+- threat: azure-flow-input-injection
+  entries: [CWE-20, CWE-89, CWE-79]
+- threat: azure-flow-smb-relay
+  entries: [CWE-294, CWE-290]
+- threat: azure-event-hubs-missing-logging
+  entries: [CWE-778]
+- threat: azure-app-service-subdomain-takeover
+  entries: [CWE-346]
+- threat: azure-ad-application-illicit-consent
+  entries: [CWE-863]
+- threat: azure-ad-application-credential-expiry-outage
+  entries: [CWE-324]

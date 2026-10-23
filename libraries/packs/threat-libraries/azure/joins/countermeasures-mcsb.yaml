@@ -1,0 +1,2069 @@
+framework: mcsb-v2
+mappings:
+- countermeasure: cm-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: cm-network-default-deny
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: cm-private-endpoint
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: cm-enforce-tls12
+  requirements: [DP-3, NS-8]
+  sufficiency: partial
+- countermeasure: cm-entra-id-authentication
+  requirements: [IM-1, IM-3]
+  sufficiency: partial
+- countermeasure: cm-least-privilege-rbac
+  requirements: [PA-7]
+  sufficiency: partial
+- countermeasure: cm-pim-privileged-access
+  requirements: [PA-1, PA-2]
+  sufficiency: partial
+- countermeasure: cm-conditional-access-mfa
+  requirements: [IM-6, IM-7]
+  sufficiency: partial
+- countermeasure: cm-diagnostic-logging
+  requirements: [LT-3, LT-5, LT-6]
+  sufficiency: partial
+- countermeasure: cm-activity-log-alerting
+  requirements: [LT-1, IR-3]
+  sufficiency: partial
+- countermeasure: cm-resource-lock
+  requirements: [AM-3]
+  sufficiency: partial
+- countermeasure: cm-terraform-state-protection
+  requirements: [DS-3, IM-8]
+  sufficiency: partial
+- countermeasure: cm-secrets-outside-terraform-state
+  requirements: [IM-8, DS-3]
+  sufficiency: partial
+- countermeasure: cm-iac-security-scanning
+  requirements: [DS-6, PV-2]
+  sufficiency: partial
+- countermeasure: cm-azure-policy-guardrails
+  requirements: [PV-1, PV-2]
+  sufficiency: partial
+- countermeasure: cm-secret-scanning
+  requirements: [IM-8, DS-6]
+  sufficiency: partial
+- countermeasure: cm-egress-filtering
+  requirements: [NS-1, NS-3]
+  sufficiency: partial
+- countermeasure: cm-nsg-segmentation
+  requirements: [NS-1]
+  sufficiency: partial
+- countermeasure: cm-waf
+  requirements: [NS-6, NS-5]
+  sufficiency: partial
+- countermeasure: cm-ssrf-protection
+  requirements: [DS-6]
+  sufficiency: partial
+- countermeasure: cm-defender-for-storage
+  requirements: [DP-2, LT-1]
+  sufficiency: partial
+- countermeasure: cm-defender-for-key-vault
+  requirements: [LT-1, DP-8]
+  sufficiency: partial
+- countermeasure: cm-defender-for-containers
+  requirements: [LT-1, PV-5]
+  sufficiency: partial
+- countermeasure: cm-defender-for-app-service
+  requirements: [LT-1]
+  sufficiency: partial
+- countermeasure: cm-defender-for-servers
+  requirements: [ES-1, LT-1, PV-5]
+  sufficiency: partial
+- countermeasure: cm-disable-public-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: cm-storage-disable-shared-key
+  requirements: [IM-1, IM-8]
+  sufficiency: partial
+- countermeasure: cm-storage-user-delegation-sas
+  requirements: [IM-8]
+  sufficiency: partial
+- countermeasure: cm-storage-sas-expiration-policy
+  requirements: [IM-8]
+  sufficiency: partial
+- countermeasure: cm-storage-restrict-copy-scope
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: cm-storage-soft-delete-versioning
+  requirements: [BR-1, BR-2]
+  sufficiency: partial
+- countermeasure: cm-storage-immutability
+  requirements: [BR-2]
+  sufficiency: partial
+- countermeasure: cm-key-vault-rbac-authorization
+  requirements: [DP-8, PA-7]
+  sufficiency: partial
+- countermeasure: cm-key-vault-purge-protection
+  requirements: [DP-8, BR-2]
+  sufficiency: partial
+- countermeasure: cm-key-vault-expiration-rotation
+  requirements: [DP-6, DP-7]
+  sufficiency: partial
+- countermeasure: cm-key-vault-per-application
+  requirements: [DP-8, PA-7]
+  sufficiency: partial
+- countermeasure: cm-dedicated-workload-identities
+  requirements: [IM-3, PA-7]
+  sufficiency: partial
+- countermeasure: cm-federated-credential-scoping
+  requirements: [IM-3]
+  sufficiency: partial
+- countermeasure: cm-aks-private-api-server
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: cm-aks-entra-rbac
+  requirements: [IM-1, PA-7]
+  sufficiency: partial
+- countermeasure: cm-aks-disable-run-command
+  requirements: [PA-7]
+  sufficiency: partial
+- countermeasure: cm-aks-pod-security
+  requirements: [PV-3, PV-4]
+  sufficiency: partial
+- countermeasure: cm-aks-workload-identity
+  requirements: [IM-3]
+  sufficiency: partial
+- countermeasure: cm-aks-network-policy
+  requirements: [NS-1]
+  sufficiency: partial
+- countermeasure: cm-aks-trusted-registries
+  requirements: [DS-2, DS-6]
+  sufficiency: partial
+- countermeasure: cm-aks-key-vault-secrets-provider
+  requirements: [IM-8]
+  sufficiency: partial
+- countermeasure: cm-aks-kms-etcd-encryption
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: cm-aks-auto-upgrade
+  requirements: [PV-6]
+  sufficiency: partial
+- countermeasure: cm-aks-kubernetes-rbac-least-privilege
+  requirements: [PA-7]
+  sufficiency: partial
+- countermeasure: cm-app-service-authentication
+  requirements: [IM-1, IM-5]
+  sufficiency: partial
+- countermeasure: cm-app-service-access-restrictions
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: cm-app-service-disable-basic-auth
+  requirements: [IM-1, NS-8]
+  sufficiency: partial
+- countermeasure: cm-app-service-scm-restrictions
+  requirements: [NS-2, PA-7]
+  sufficiency: partial
+- countermeasure: cm-app-service-key-vault-references
+  requirements: [IM-8]
+  sufficiency: partial
+- countermeasure: cm-dangling-dns-protection
+  requirements: [NS-10]
+  sufficiency: partial
+- countermeasure: cm-app-service-runtime-hardening
+  requirements: [PV-1]
+  sufficiency: partial
+- countermeasure: cm-avd-no-inbound-access
+  requirements: [NS-1]
+  sufficiency: partial
+- countermeasure: cm-avd-registration-token-lifetime
+  requirements: [IM-8]
+  sufficiency: partial
+- countermeasure: cm-avd-profile-isolation
+  requirements: [PA-7]
+  sufficiency: partial
+- countermeasure: cm-vm-patch-management
+  requirements: [PV-6]
+  sufficiency: partial
+- countermeasure: cm-avd-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: cm-avd-scoped-app-group-assignments
+  requirements: [PA-7]
+  sufficiency: partial
+- countermeasure: cm-vnet-hub-spoke-peering
+  requirements: [NS-1]
+  sufficiency: partial
+- countermeasure: cm-dns-security-policy
+  requirements: [NS-10]
+  sufficiency: partial
+- countermeasure: cm-ddos-protection
+  requirements: [NS-5]
+  sufficiency: partial
+- countermeasure: cm-vnet-flow-logs
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: cm-subnet-disable-default-outbound
+  requirements: [NS-1]
+  sufficiency: partial
+- countermeasure: cm-service-endpoint-policies
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: cm-nsg-least-privilege-rules
+  requirements: [NS-1]
+  sufficiency: partial
+- countermeasure: cm-bastion-jit-admin-access
+  requirements: [PA-2, PA-6]
+  sufficiency: partial
+- countermeasure: cm-iac-drift-detection
+  requirements: [PV-2]
+  sufficiency: partial
+- countermeasure: cm-firewall-least-privilege-rules
+  requirements: [NS-3]
+  sufficiency: partial
+- countermeasure: cm-firewall-threat-protection
+  requirements: [NS-4]
+  sufficiency: partial
+- countermeasure: cm-private-endpoint-governance
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: cm-private-endpoint-network-policies
+  requirements: [NS-1]
+  sufficiency: partial
+- countermeasure: cm-private-dns-centralized
+  requirements: [NS-10]
+  sufficiency: partial
+- countermeasure: cm-appgw-tls-policy
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: cm-appgw-end-to-end-tls
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: cm-appgw-key-vault-certificates
+  requirements: [DP-7]
+  sufficiency: partial
+- countermeasure: cm-bastion-feature-hardening
+  requirements: [PA-6]
+  sufficiency: partial
+- countermeasure: cm-vm-entra-login
+  requirements: [IM-1, IM-6]
+  sufficiency: partial
+- countermeasure: cm-disk-access-restriction
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: cm-vm-encryption-at-host
+  requirements: [DP-4]
+  sufficiency: partial
+- countermeasure: cm-vm-trusted-launch
+  requirements: [PV-3]
+  sufficiency: partial
+- countermeasure: cm-vm-backup
+  requirements: [BR-1, BR-2]
+  sufficiency: partial
+- countermeasure: cm-vm-log-collection
+  requirements: [LT-3, LT-5]
+  sufficiency: partial
+- countermeasure: cm-no-allow-all-azure-services
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: cm-sql-entra-only-auth
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: cm-defender-for-databases
+  requirements: [LT-1, DP-2]
+  sufficiency: partial
+- countermeasure: cm-sql-auditing
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: cm-sql-outbound-restriction
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: cm-sql-backup-retention
+  requirements: [BR-1, BR-2]
+  sufficiency: partial
+- countermeasure: cm-sql-least-privilege-db-roles
+  requirements: [PA-7]
+  sufficiency: partial
+- countermeasure: cm-sql-always-encrypted
+  requirements: [DP-4, DP-5]
+  sufficiency: partial
+- countermeasure: cm-cosmosdb-disable-local-auth
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: cm-cosmosdb-continuous-backup
+  requirements: [BR-1]
+  sufficiency: partial
+- countermeasure: cm-workload-identity-federation
+  requirements: [IM-3, IM-8]
+  sufficiency: partial
+- countermeasure: cm-app-credential-management
+  requirements: [IM-3, IM-8]
+  sufficiency: partial
+- countermeasure: cm-app-owner-restrictions
+  requirements: [PA-1]
+  sufficiency: partial
+- countermeasure: cm-entra-audit-alerting
+  requirements: [LT-2]
+  sufficiency: partial
+- countermeasure: cm-graph-permission-least-privilege
+  requirements: [PA-7]
+  sufficiency: partial
+- countermeasure: cm-restrict-user-consent
+  requirements: [IM-2]
+  sufficiency: partial
+- countermeasure: cm-app-tenant-restriction
+  requirements: [IM-7]
+  sufficiency: partial
+- countermeasure: cm-pipeline-identity-separation
+  requirements: [DS-3, PA-7]
+  sufficiency: partial
+- countermeasure: cm-conditional-access-workload-identities
+  requirements: [IM-7]
+  sufficiency: partial
+- countermeasure: cm-identity-lifecycle-reviews
+  requirements: [PA-3, PA-4]
+  sufficiency: partial
+- countermeasure: cm-function-app-entra-auth
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: cm-function-app-storage-identity
+  requirements: [IM-3, IM-8]
+  sufficiency: partial
+- countermeasure: cm-input-validation
+  requirements: [AI-2, AI-3, IM-1]
+  sufficiency: partial
+- countermeasure: cm-acr-disable-admin-user
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: cm-acr-image-signing-and-locking
+  requirements: [DS-2]
+  sufficiency: partial
+- countermeasure: cm-log-analytics-access-control
+  requirements: [PA-7]
+  sufficiency: partial
+- countermeasure: cm-log-data-minimization
+  requirements: [DP-1]
+  sufficiency: partial
+- countermeasure: cm-log-immutability
+  requirements: [LT-6]
+  sufficiency: partial
+- countermeasure: cm-log-analytics-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: cm-log-analytics-capacity-alerting
+  requirements: [LT-5]
+  sufficiency: partial
+- countermeasure: cm-log-retention
+  requirements: [LT-6]
+  sufficiency: partial
+- countermeasure: cm-defender-plan-coverage
+  requirements: [LT-1]
+  sufficiency: partial
+- countermeasure: cm-defender-alert-routing
+  requirements: [IR-2, IR-3]
+  sufficiency: partial
+- countermeasure: aci-keyvault-secrets
+  requirements: [IM-8]
+  sufficiency: partial
+- countermeasure: aci-least-privilege-runtime
+  requirements: [PV-3]
+  sufficiency: partial
+- countermeasure: aci-private-registry-scan
+  requirements: [DS-6, PV-6, PV-3]
+  sufficiency: partial
+- countermeasure: aci-vnet-nsg
+  requirements: [NS-1, NS-2]
+  sufficiency: partial
+- countermeasure: adls-group-based-acls
+  requirements: [PA-4, IM-7]
+  sufficiency: partial
+- countermeasure: adls-private-endpoints-blob-dfs
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: afs-ad-ds-identity
+  requirements: [IM-1, IM-7]
+  sufficiency: partial
+- countermeasure: afs-azure-files-backup
+  requirements: [BR-1, BR-2]
+  sufficiency: partial
+- countermeasure: afs-private-endpoints
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: agw-least-privilege-rbac
+  requirements: [PA-7, IM-7]
+  sufficiency: partial
+- countermeasure: agw-waf-v2-prevention
+  requirements: [NS-6, PV-2]
+  sufficiency: partial
+- countermeasure: ai-content-filtering
+  requirements: [AI-2, AI-3]
+  sufficiency: partial
+- countermeasure: ai-managed-identity-auth
+  requirements: [IM-1, IM-3, IM-8]
+  sufficiency: partial
+- countermeasure: ai-private-endpoint
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: anf-cmk-encryption
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: anf-diagnostic-logging
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: anf-export-policy-kerberos
+  requirements: [NS-2, IM-7]
+  sufficiency: partial
+- countermeasure: anf-immutable-backup-lock
+  requirements: [BR-2]
+  sufficiency: partial
+- countermeasure: anf-permission-model-review
+  requirements: [IM-7, PA-7]
+  sufficiency: partial
+- countermeasure: anf-snapshot-delete-alert
+  requirements: [LT-1]
+  sufficiency: partial
+- countermeasure: apic-least-privilege-keyvault
+  requirements: [PA-7, IM-7]
+  sufficiency: partial
+- countermeasure: apic-register-all-apis
+  requirements: [AM-2]
+  sufficiency: partial
+- countermeasure: apic-scope-credential-access
+  requirements: [IM-8, IM-7]
+  sufficiency: partial
+- countermeasure: appi-entra-authentication
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: appi-scrub-sensitive-telemetry
+  requirements: [DP-2, DP-1]
+  sufficiency: partial
+- countermeasure: appi-secret-references
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: appservice-app-settings-keyvault
+  requirements: [IM-8]
+  sufficiency: partial
+- countermeasure: appservice-diagnostic-logging
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: appservice-disable-scm-public
+  requirements: [NS-2, IM-4]
+  sufficiency: partial
+- countermeasure: appservice-imds-egress-control
+  requirements: [IM-3, NS-2]
+  sufficiency: partial
+- countermeasure: appservice-managed-identity-least-privilege
+  requirements: [IM-3, PA-7]
+  sufficiency: partial
+- countermeasure: appservice-rce-sast
+  requirements: [PV-6]
+  sufficiency: partial
+- countermeasure: appservice-secure-runtime
+  requirements: [DP-3, PV-3]
+  sufficiency: partial
+- countermeasure: appservice-waf
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: arc-full-disk-encryption
+  requirements: [IM-3, DP-4]
+  sufficiency: partial
+- countermeasure: arc-least-privilege-roles
+  requirements: [PA-7, PA-1]
+  sufficiency: partial
+- countermeasure: arc-onboarding-certificate-sp
+  requirements: [IM-8, PA-7]
+  sufficiency: partial
+- countermeasure: arc-restrict-himds-group
+  requirements: [IM-3, DP-4]
+  sufficiency: partial
+- countermeasure: asr-customer-managed-keys
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: asr-least-privilege-roles
+  requirements: [PA-7, PA-1]
+  sufficiency: partial
+- countermeasure: asr-private-replication
+  requirements: [NS-2, DP-3]
+  sufficiency: partial
+- countermeasure: avd-appgroup-preferred-type
+  requirements: [IM-7, PA-7]
+  sufficiency: partial
+- countermeasure: avd-appgroup-role-review
+  requirements: [IM-7, PA-7]
+  sufficiency: partial
+- countermeasure: avd-domain-join-delegation
+  requirements: [PA-7, IM-8]
+  sufficiency: partial
+- countermeasure: avd-fslogix-av-exclusions-scoped
+  requirements: [ES-2, ES-3]
+  sufficiency: partial
+- countermeasure: avd-hostpool-diagnostics
+  requirements: [PV-3]
+  sufficiency: partial
+- countermeasure: avd-hostpool-mi-secret-scope
+  requirements: [PA-7, IM-7]
+  sufficiency: partial
+- countermeasure: avd-scaling-plan-scope
+  requirements: [PA-7, IM-7]
+  sufficiency: partial
+- countermeasure: avd-sh-edr
+  requirements: [NS-3, NS-1, ES-1]
+  sufficiency: partial
+- countermeasure: avd-sh-egress-control
+  requirements: [NS-3, NS-1]
+  sufficiency: partial
+- countermeasure: avd-sh-idle-lock
+  requirements: [PV-3]
+  sufficiency: partial
+- countermeasure: avd-sh-laps-rotation
+  requirements: [IM-8, PA-7]
+  sufficiency: partial
+- countermeasure: avd-sh-no-user-admin
+  requirements: [PA-1, PA-7]
+  sufficiency: partial
+- countermeasure: avd-workspace-role-review
+  requirements: [IM-7, PA-7]
+  sufficiency: partial
+- countermeasure: azure-files-backup-soft-delete
+  requirements: [BR-1, BR-2]
+  sufficiency: partial
+- countermeasure: azure-files-diagnostic-monitoring
+  requirements: [LT-3, DP-2]
+  sufficiency: partial
+- countermeasure: azure-files-disable-shared-key
+  requirements: [IM-8]
+  sufficiency: partial
+- countermeasure: azure-files-identity-rbac-with-ntfs
+  requirements: [IM-7, PA-7]
+  sufficiency: partial
+- countermeasure: azure-files-private-endpoint
+  requirements: [NS-2, NS-9]
+  sufficiency: partial
+- countermeasure: azure-files-short-lived-sas
+  requirements: [IM-8]
+  sufficiency: partial
+- countermeasure: azure-files-smb-encryption
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: b2c-enable-mfa
+  requirements: [IM-6]
+  sufficiency: partial
+- countermeasure: b2c-smart-lockout
+  requirements: [IM-6, LT-2]
+  sufficiency: partial
+- countermeasure: b2c-user-risk-policy
+  requirements: [IM-6, LT-2, IM-7]
+  sufficiency: partial
+- countermeasure: bastion-no-public-ip
+  requirements: [NS-1, NS-2]
+  sufficiency: partial
+- countermeasure: bastion-nsg-required-rules
+  requirements: [NS-1, NS-2]
+  sufficiency: partial
+- countermeasure: bkp-immutable-vault-lock
+  requirements: [BR-2]
+  sufficiency: partial
+- countermeasure: bkp-mua-resource-guard
+  requirements: [BR-2, PA-1]
+  sufficiency: partial
+- countermeasure: bkp-private-endpoint
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: bkp-soft-delete-always-on
+  requirements: [BR-2]
+  sufficiency: partial
+- countermeasure: ddos-monitoring-telemetry
+  requirements: [NS-5, LT-4]
+  sufficiency: partial
+- countermeasure: ddos-protect-every-public-ip
+  requirements: [NS-5]
+  sufficiency: partial
+- countermeasure: ddos-validate-supported-deployment
+  requirements: [NS-5]
+  sufficiency: partial
+- countermeasure: dds-disable-ntlm-password-sync
+  requirements: [IM-6, DP-4]
+  sufficiency: partial
+- countermeasure: dds-disable-weak-protocols
+  requirements: [NS-8, DP-3]
+  sufficiency: partial
+- countermeasure: dds-ldap-signing-channel-binding
+  requirements: [IM-6, NS-8]
+  sufficiency: partial
+- countermeasure: defender-review-recommendations
+  requirements: [PV-5, PV-6]
+  sufficiency: partial
+- countermeasure: dhsm-change-default-credentials
+  requirements: [IM-8, PA-1]
+  sufficiency: partial
+- countermeasure: dhsm-ha-pairs-backup
+  requirements: [BR-1, DP-6]
+  sufficiency: partial
+- countermeasure: dhsm-operational-procedures
+  requirements: [IM-1, NS-1]
+  sufficiency: partial
+- countermeasure: dns-review-zone-links
+  requirements: [NS-10]
+  sufficiency: partial
+- countermeasure: dns-security-policy
+  requirements: [NS-10, NS-4]
+  sufficiency: partial
+- countermeasure: dns-validating-resolver
+  requirements: [NS-10]
+  sufficiency: partial
+- countermeasure: entra-block-legacy-auth
+  requirements: [IM-6, IM-7]
+  sufficiency: partial
+- countermeasure: entra-break-glass-accounts
+  requirements: [PA-5]
+  sufficiency: partial
+- countermeasure: entra-ca-gap-review
+  requirements: [IM-7]
+  sufficiency: partial
+- countermeasure: entra-customer-lockbox
+  requirements: [PA-8]
+  sufficiency: partial
+- countermeasure: entra-password-protection
+  requirements: [IM-6]
+  sufficiency: partial
+- countermeasure: entra-phishing-resistant-mfa
+  requirements: [IM-6]
+  sufficiency: partial
+- countermeasure: entra-pim-just-in-time
+  requirements: [PA-2, PA-4, PA-6]
+  sufficiency: partial
+- countermeasure: entra-risk-detection
+  requirements: [LT-2]
+  sufficiency: partial
+- countermeasure: entra-sp-credential-hygiene
+  requirements: [IM-3, IM-8]
+  sufficiency: partial
+- countermeasure: entra-sp-least-privilege-monitor
+  requirements: [IM-3, LT-2]
+  sufficiency: partial
+- countermeasure: entra-token-protection-cae
+  requirements: [IM-6, IM-7]
+  sufficiency: partial
+- countermeasure: entra-user-consent-restriction
+  requirements: [IM-5]
+  sufficiency: partial
+- countermeasure: er-ipsec-over-er
+  requirements: [DP-3, NS-9]
+  sufficiency: partial
+- countermeasure: er-md5-bgp
+  requirements: [NS-8, NS-9]
+  sufficiency: partial
+- countermeasure: er-rbac-circuits
+  requirements: [PA-7, PA-1]
+  sufficiency: partial
+- countermeasure: esan-disable-public-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: esan-private-endpoint-network-policies
+  requirements: [NS-1, NS-2]
+  sufficiency: partial
+- countermeasure: esan-snapshot-recovery
+  requirements: [DP-3, BR-1]
+  sufficiency: partial
+- countermeasure: flow-private-connectivity
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: fw-diagnostic-logs
+  requirements: [NS-4, NS-3]
+  sufficiency: partial
+- countermeasure: fw-tls-inspection
+  requirements: [NS-4, NS-3]
+  sufficiency: partial
+- countermeasure: fwm-dns-proxy-clients
+  requirements: [NS-3, NS-10]
+  sufficiency: partial
+- countermeasure: fwm-policy-hierarchy
+  requirements: [PA-7, NS-3]
+  sufficiency: partial
+- countermeasure: fwm-routing-intent
+  requirements: [NS-1, NS-3]
+  sufficiency: partial
+- countermeasure: hdi-encryption-in-transit
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: hdi-esp-cluster
+  requirements: [IM-1, IM-7]
+  sufficiency: partial
+- countermeasure: hdi-keytab-protection
+  requirements: [IM-8, PA-7]
+  sufficiency: partial
+- countermeasure: kv-backup
+  requirements: [BR-1]
+  sufficiency: partial
+- countermeasure: kv-cmk-for-regulated-data
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: kv-conditional-access
+  requirements: [IM-7]
+  sufficiency: partial
+- countermeasure: kv-defender-plan
+  requirements: [LT-1]
+  sufficiency: partial
+- countermeasure: kv-firewall-disable-public-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: kv-key-autorotation
+  requirements: [DP-6]
+  sufficiency: partial
+- countermeasure: kv-key-expiration-policy
+  requirements: [DP-6]
+  sufficiency: partial
+- countermeasure: kv-least-privilege-rbac
+  requirements: [PA-7]
+  sufficiency: partial
+- countermeasure: kv-managed-identity
+  requirements: [IM-3]
+  sufficiency: partial
+- countermeasure: kv-private-endpoint
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: kv-references-not-copies
+  requirements: [IM-8]
+  sufficiency: partial
+- countermeasure: kv-resource-logs-to-sentinel
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: kv-soft-delete-purge-protection
+  requirements: [BR-1]
+  sufficiency: partial
+- countermeasure: la-aad-trigger-auth
+  requirements: [IM-1, NS-2]
+  sufficiency: partial
+- countermeasure: la-keyvault-app-settings
+  requirements: [IM-8]
+  sufficiency: partial
+- countermeasure: la-managed-identity
+  requirements: [IM-3, IM-8]
+  sufficiency: partial
+- countermeasure: lb-protect-backend
+  requirements: [NS-1, NS-3]
+  sufficiency: partial
+- countermeasure: lb-standard-sku
+  requirements: [PV-1, AM-2]
+  sufficiency: partial
+- countermeasure: lb-tls-backend
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: managed-identity-review
+  requirements: [PA-4, LT-1]
+  sufficiency: partial
+- countermeasure: mg-disable-api-keys
+  requirements: [IM-1, IM-8]
+  sufficiency: partial
+- countermeasure: mg-managed-identity-datasource
+  requirements: [IM-3, DP-8]
+  sufficiency: partial
+- countermeasure: mg-private-endpoint
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: mhsm-key-autorotation
+  requirements: [DP-6]
+  sufficiency: partial
+- countermeasure: mhsm-purge-protection
+  requirements: [DP-6, BR-2]
+  sufficiency: partial
+- countermeasure: mhsm-security-domain-quorum
+  requirements: [PA-1, DP-6]
+  sufficiency: partial
+- countermeasure: mon-managed-identity-auth
+  requirements: [IM-3]
+  sufficiency: partial
+- countermeasure: mon-private-link-agents
+  requirements: [NS-2, LT-5]
+  sufficiency: partial
+- countermeasure: mon-security-monitoring-defender
+  requirements: [LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: nat-anomaly-alerts
+  requirements: [NS-3, DP-2]
+  sufficiency: partial
+- countermeasure: nat-flow-logs
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: nat-snat-alerts
+  requirements: [NS-5, LT-1]
+  sufficiency: partial
+- countermeasure: nw-least-privilege-rbac
+  requirements: [PA-7, IM-7]
+  sufficiency: partial
+- countermeasure: nw-migrate-vnet-flow-logs
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: nw-storage-private-endpoints
+  requirements: [NS-2, DP-2]
+  sufficiency: partial
+- countermeasure: policy-a-custom-ipsec-ike-policy-must-be-applied-to-all-azure-virtual-network-gateway-connections
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-a-microsoft-entra-administrator-should-be-provisioned-for-mysql-servers
+  requirements: [DP-4]
+  sufficiency: partial
+- countermeasure: policy-a-microsoft-entra-administrator-should-be-provisioned-for-postgresql-servers
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-all-flow-log-resources-should-be-in-enabled-state
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-api-management-apis-should-use-only-encrypted-protocols
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-api-management-services-should-use-a-virtual-network
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-api-management-should-disable-public-network-access-to-the-service-configuration-endpoints
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-app-configuration-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-app-configuration-should-use-a-customer-managed-key
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-app-configuration-should-use-a-sku-that-supports-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-app-configuration-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-app-service-app-slots-should-be-injected-into-a-virtual-network
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-app-service-app-slots-should-use-managed-identity
+  requirements: [IM-3]
+  sufficiency: partial
+- countermeasure: policy-app-service-apps-should-be-injected-into-a-virtual-network
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-app-service-apps-should-use-a-sku-that-supports-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-app-service-apps-should-use-a-virtual-network-service-endpoint
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-app-service-apps-should-use-managed-identity
+  requirements: [IM-3]
+  sufficiency: partial
+- countermeasure: policy-app-service-apps-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-application-insights-components-should-block-log-ingestion-and-querying-from-public-networ
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-audit-flow-logs-configuration-for-every-virtual-network
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-automation-account-variables-should-be-encrypted
+  requirements: [DP-4]
+  sufficiency: partial
+- countermeasure: policy-automation-accounts-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-ai-search-service-should-use-a-sku-that-supports-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-ai-search-services-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-ai-search-services-should-have-local-authentication-methods-disabled
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-azure-ai-search-services-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-azure-api-for-fhir-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-api-management-platform-version-should-be-stv2
+  requirements: [AM-2, PV-2]
+  sufficiency: partial
+- countermeasure: policy-azure-application-gateway-should-have-resource-logs-enabled
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-azure-arc-enabled-kubernetes-clusters-should-be-configured-with-an-azure-arc-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-arc-enabled-servers-should-be-configured-with-an-azure-arc-private-link-scope
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-arc-private-link-scopes-should-be-configured-with-a-private-endpoint
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-arc-private-link-scopes-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-automation-account-should-have-local-authentication-method-disabled
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-azure-automation-accounts-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-azure-batch-account-should-use-customer-managed-keys-to-encrypt-data
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-azure-batch-pools-should-have-disk-encryption-enabled
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-azure-cache-for-redis-enterprise-should-use-customer-managed-keys-for-encrypting-disk-data
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-azure-cache-for-redis-enterprise-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-cache-for-redis-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-cache-for-redis-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-container-instance-container-group-should-deploy-into-a-virtual-network
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-container-instance-container-group-should-use-customer-managed-key-for-encryption
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-azure-cosmos-db-accounts-should-have-firewall-rules
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-cosmos-db-accounts-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-azure-cosmos-db-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-data-explorer-cluster-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-data-explorer-encryption-at-rest-should-use-a-customer-managed-key
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-azure-data-explorer-should-use-a-sku-that-supports-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-data-factory-linked-services-should-use-system-assigned-managed-identity-authenticat
+  requirements: [IM-3]
+  sufficiency: partial
+- countermeasure: policy-azure-data-factory-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-databricks-clusters-should-disable-public-ip
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-databricks-workspaces-should-be-in-a-virtual-network
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-databricks-workspaces-should-be-premium-sku-that-supports-features-like-private-link
+  requirements: [DP-5, NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-databricks-workspaces-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-databricks-workspaces-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-app-service-should-be-enabled
+  requirements: [IR-3, IR-5, LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-azure-sql-database-servers-should-be-enabled
+  requirements: [DP-2, IR-3, IR-5, LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-key-vault-should-be-enabled
+  requirements: [DP-8, IR-3, IR-5, LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-open-source-relational-databases-should-be-enabled
+  requirements: [DP-2, IR-3, IR-5, LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-resource-manager-should-be-enabled
+  requirements: [IR-3, IR-5, LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-servers-should-be-enabled
+  requirements: [ES-1, IR-3, IR-5, LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-sql-servers-on-machines-should-be-enabled
+  requirements: [DP-2, IR-3, IR-5, LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-sql-should-be-enabled-for-unprotected-azure-sql-servers
+  requirements: [IR-3, IR-5, LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-sql-should-be-enabled-for-unprotected-mysql-flexible-servers
+  requirements: [IR-3, IR-5, LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-sql-should-be-enabled-for-unprotected-postgresql-flexible-servers
+  requirements: [IR-3, IR-5, LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: policy-azure-defender-for-sql-should-be-enabled-for-unprotected-sql-managed-instances
+  requirements: [DP-2, IR-3, IR-5, LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: policy-azure-device-update-for-iot-hub-accounts-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-domains-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-domains-should-have-local-authentication-methods-disabled
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-domains-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-namespace-mqtt-broker-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-namespace-topic-broker-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-namespaces-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-partner-namespaces-should-have-local-authentication-methods-disabled
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-topics-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-topics-should-have-local-authentication-methods-disabled
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-azure-event-grid-topics-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-event-hub-namespaces-should-have-local-authentication-methods-disabled
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-azure-file-sync-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-front-door-profiles-should-use-premium-tier-that-supports-managed-waf-rules-and-priv
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-front-door-should-have-resource-logs-enabled
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-azure-front-door-standard-and-premium-should-be-running-minimum-tls-version-of-1-2
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-azure-front-door-standard-or-premium-plus-waf-should-have-resource-logs-enabled
+  requirements: [NS-6]
+  sufficiency: partial
+- countermeasure: policy-azure-hdinsight-clusters-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-azure-hdinsight-clusters-should-use-encryption-at-host-to-encrypt-data-at-rest
+  requirements: [DP-4]
+  sufficiency: partial
+- countermeasure: policy-azure-hdinsight-clusters-should-use-encryption-in-transit-to-encrypt-communication-between
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-azure-hdinsight-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-health-data-services-de-identification-service-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-health-data-services-workspace-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-key-vault-managed-hsm-should-have-purge-protection-enabled
+  requirements: [DP-6]
+  sufficiency: partial
+- countermeasure: policy-azure-key-vaults-should-use-private-link
+  requirements: [DP-8, NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-kubernetes-service-clusters-should-enable-microsoft-entra-id-integration
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-azure-kubernetes-service-clusters-should-have-defender-profile-enabled
+  requirements: [LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: policy-azure-kubernetes-service-clusters-should-have-local-authentication-methods-disabled
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-azure-kubernetes-service-clusters-should-use-managed-identities
+  requirements: [IM-3]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-compute-instances-should-be-recreated-to-get-the-latest-software-up
+  requirements: [PV-2]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-computes-should-be-in-a-virtual-network
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-computes-should-have-local-authentication-methods-disabled
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-be-encrypted-with-a-customer-managed-key
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-be-encrypted-with-the-use-of-a-customer-managed-k
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-enable-v1legacymode-to-support-network-isolation
+  requirements: [PV-2]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-machine-learning-workspaces-should-use-user-assigned-managed-identity
+  requirements: [IM-3]
+  sufficiency: partial
+- countermeasure: policy-azure-managed-grafana-workspaces-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-managed-grafana-workspaces-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-log-profile-should-collect-logs-for-categories-write-delete-and-action
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-logs-clusters-should-be-created-with-infrastructure-encryption-enabled-doubl
+  requirements: [DP-4]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-logs-clusters-should-be-encrypted-with-customer-managed-key
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-logs-for-application-insights-should-be-linked-to-a-log-analytics-workspace
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-private-link-scope-should-block-access-to-non-private-link-resources
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-private-link-scope-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-should-collect-activity-logs-from-all-regions
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-azure-monitor-solution-security-and-audit-must-be-deployed
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-azure-mysql-flexible-server-should-have-microsoft-entra-only-authentication-enabled
+  requirements: [DP-4]
+  sufficiency: partial
+- countermeasure: policy-azure-purview-accounts-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-registry-container-images-should-have-vulnerabilities-resolved-powered-by-microsoft
+  requirements: [DS-6, PV-6]
+  sufficiency: partial
+- countermeasure: policy-azure-running-container-images-should-have-vulnerabilities-resolved-powered-by-microsoft-d
+  requirements: [DS-6, PV-6]
+  sufficiency: partial
+- countermeasure: policy-azure-service-bus-namespaces-should-have-local-authentication-methods-disabled
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-azure-service-bus-namespaces-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-signalr-service-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-database-should-be-running-tls-version-1-2-or-newer
+  requirements: [DP-3, IM-4]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-database-should-have-microsoft-entra-only-authentication-enabled
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-database-should-have-microsoft-entra-only-authentication-enabled-during-creation
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-managed-instance-should-have-microsoft-entra-only-authentication-enabled
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-managed-instances-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-sql-managed-instances-should-have-microsoft-entra-only-authentication-enabled-during
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-azure-stream-analytics-jobs-should-use-customer-managed-keys-to-encrypt-data
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-azure-synapse-analytics-dedicated-sql-pools-should-enable-encryption
+  requirements: [DP-4]
+  sufficiency: partial
+- countermeasure: policy-azure-synapse-workspace-sql-server-should-be-running-tls-version-1-2-or-newer
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-azure-synapse-workspaces-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-synapse-workspaces-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-azure-synapse-workspaces-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-virtual-desktop-service-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-web-pubsub-service-should-use-a-sku-that-supports-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-azure-web-pubsub-service-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-both-operating-systems-and-data-disks-in-azure-kubernetes-service-clusters-should-be-encry
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-botservice-resources-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-cognitive-services-accounts-should-use-a-managed-identity
+  requirements: [IM-3]
+  sufficiency: partial
+- countermeasure: policy-communication-service-resource-should-use-a-managed-identity
+  requirements: [IM-3]
+  sufficiency: partial
+- countermeasure: policy-container-app-environments-should-use-network-injection
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-container-apps-environment-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-container-apps-should-disable-external-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-container-apps-should-only-be-accessible-over-https
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-container-registries-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-cosmos-db-database-accounts-should-have-local-authentication-methods-disabled
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-cosmos-db-should-use-a-virtual-network-service-endpoint
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-cosmosdb-accounts-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-create-and-assign-a-built-in-user-assigned-managed-identity
+  requirements: [IM-3]
+  sufficiency: partial
+- countermeasure: policy-customer-managed-key-encryption-must-be-used-as-part-of-cmk-encryption-for-arc-sql-managed
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-diagnostic-logs-in-azure-ai-services-resources-should-be-enabled
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-disk-access-resources-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-disk-encryption-should-be-enabled-on-azure-data-explorer
+  requirements: [DP-4]
+  sufficiency: partial
+- countermeasure: policy-double-encryption-should-be-enabled-on-azure-data-explorer
+  requirements: [DP-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-application-gateways-microsoft-network-applicationgat
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-bastions-microsoft-network-bastionhosts-to-event-hub
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-bastions-microsoft-network-bastionhosts-to-log-analyt
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-bastions-microsoft-network-bastionhosts-to-storage
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-endpoints-microsoft-cdn-profiles-endpoints-to-event-h
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-endpoints-microsoft-cdn-profiles-endpoints-to-log-ana
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-expressroute-circuits-microsoft-network-expressroutec
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-firewall-microsoft-network-azurefirewalls-to-log-anal
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-firewalls-microsoft-network-azurefirewalls-to-event-h
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-firewalls-microsoft-network-azurefirewalls-to-log-ana
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-firewalls-microsoft-network-azurefirewalls-to-storage
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-front-door-and-cdn-profiles-microsoft-cdn-profiles-to
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-front-door-and-cdn-profiles-microsoft-network-frontdo
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-load-balancers-microsoft-network-loadbalancers-to-eve
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-load-balancers-microsoft-network-loadbalancers-to-log
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-cdn-cdnwebapplicationfirewallpolicies-to-ev
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-cdn-cdnwebapplicationfirewallpolicies-to-lo
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-dnsresolverpolicies-to-event-hub
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-dnsresolverpolicies-to-log-analytic
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-networkmanagers-ipampools-to-event
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-networkmanagers-ipampools-to-log-an
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-networksecurityperimeters-to-event
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-networksecurityperimeters-to-log-an
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-p2svpngateways-to-event-hub
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-p2svpngateways-to-log-analytics
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-p2svpngateways-to-storage
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-vpngateways-to-event-hub
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-vpngateways-to-log-analytics
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-network-vpngateways-to-storage
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-networkfunction-azuretrafficcollectors-to-e
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-microsoft-networkfunction-azuretrafficcollectors-to-l
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-network-managers-microsoft-network-networkmanagers-to
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-network-security-groups-microsoft-network-networksecu
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-public-ip-addresses-microsoft-network-publicipaddress
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-public-ip-prefixes-microsoft-network-publicipprefixes
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-traffic-manager-profiles-microsoft-network-trafficman
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-virtual-network-gateways-microsoft-network-virtualnet
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enable-logging-by-category-group-for-virtual-networks-microsoft-network-virtualnetworks-to
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-enforce-ssl-connection-should-be-enabled-for-mysql-database-servers
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-enforce-ssl-connection-should-be-enabled-for-postgresql-database-servers
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-event-hub-namespaces-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-event-hub-namespaces-should-have-double-encryption-enabled
+  requirements: [DP-4]
+  sufficiency: partial
+- countermeasure: policy-event-hub-namespaces-should-use-a-customer-managed-key-for-encryption
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-event-hub-namespaces-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-event-hub-should-use-a-virtual-network-service-endpoint
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-should-enable-end-to-end-encryption
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-should-not-have-cors-configured-to-allow-every-resource-to-access-your
+  requirements: [PV-2]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-should-only-be-accessible-over-https
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-should-use-the-latest-tls-version
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-function-app-slots-that-use-java-should-use-a-specified-java-version
+  requirements: [PV-2]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-enable-end-to-end-encryption
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-have-authentication-enabled
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-not-have-cors-configured-to-allow-every-resource-to-access-your-apps
+  requirements: [PV-2]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-only-be-accessible-over-https
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-use-managed-identity
+  requirements: [IM-3]
+  sufficiency: partial
+- countermeasure: policy-function-apps-should-use-the-latest-tls-version
+  requirements: [DP-3, NS-8]
+  sufficiency: partial
+- countermeasure: policy-function-apps-that-use-java-should-use-a-specified-java-version
+  requirements: [PV-2]
+  sufficiency: partial
+- countermeasure: policy-function-apps-that-use-python-should-use-a-specified-python-version
+  requirements: [PV-2]
+  sufficiency: partial
+- countermeasure: policy-geo-redundant-backup-should-be-enabled-for-azure-database-for-mysql
+  requirements: [BR-1, BR-2]
+  sufficiency: partial
+- countermeasure: policy-geo-redundant-backup-should-be-enabled-for-azure-database-for-postgresql
+  requirements: [BR-1, BR-2]
+  sufficiency: partial
+- countermeasure: policy-infrastructure-encryption-should-be-enabled-for-azure-database-for-mysql-servers
+  requirements: [DP-4]
+  sufficiency: partial
+- countermeasure: policy-infrastructure-encryption-should-be-enabled-for-azure-database-for-postgresql-servers
+  requirements: [DP-4]
+  sufficiency: partial
+- countermeasure: policy-iot-central-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-iot-hub-device-provisioning-service-instances-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-iot-hub-device-provisioning-service-instances-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-ip-firewall-rules-on-azure-synapse-workspaces-should-be-removed
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-key-vault-should-use-a-virtual-network-service-endpoint
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-cluster-pods-should-only-use-approved-host-network-and-port-list
+  requirements: [PV-2]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-cluster-should-not-allow-privileged-containers
+  requirements: [PV-2]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-clusters-should-be-accessible-only-over-https
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-clusters-should-disable-automounting-api-credentials
+  requirements: [PV-2]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-clusters-should-ensure-that-the-cluster-admin-role-is-only-used-where-required
+  requirements: [PA-7]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-clusters-should-minimize-wildcard-use-in-role-and-cluster-role
+  requirements: [PA-7]
+  sufficiency: partial
+- countermeasure: policy-kubernetes-services-should-be-upgraded-to-a-non-vulnerable-kubernetes-version
+  requirements: [PV-6]
+  sufficiency: partial
+- countermeasure: policy-linux-arc-enabled-machines-should-have-azure-monitor-agent-installed
+  requirements: [LT-5]
+  sufficiency: partial
+- countermeasure: policy-linux-virtual-machine-scale-sets-should-have-azure-monitor-agent-installed
+  requirements: [LT-5]
+  sufficiency: partial
+- countermeasure: policy-linux-virtual-machines-should-have-azure-monitor-agent-installed
+  requirements: [LT-5]
+  sufficiency: partial
+- countermeasure: policy-log-analytics-agent-should-be-installed-on-your-cloud-services-extended-support-role-insta
+  requirements: [LT-5]
+  sufficiency: partial
+- countermeasure: policy-log-analytics-workspaces-should-block-log-ingestion-and-querying-from-public-networks
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-logic-apps-integration-service-environment-should-be-encrypted-with-customer-managed-keys
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-long-term-geo-redundant-backup-should-be-enabled-for-azure-sql-databases
+  requirements: [BR-1]
+  sufficiency: partial
+- countermeasure: policy-managed-workspace-virtual-network-on-azure-synapse-workspaces-should-be-enabled
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-mariadb-server-should-use-a-virtual-network-service-endpoint
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-cspm-should-be-enabled
+  requirements: [IR-3, IR-5, LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-for-apis-should-be-enabled
+  requirements: [DP-1, DP-2, IR-3, IR-5, LT-1]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-for-azure-cosmos-db-should-be-enabled
+  requirements: [LT-1]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-for-containers-should-be-enabled
+  requirements: [IR-3, IR-5, LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-for-sql-should-be-enabled-for-unprotected-synapse-workspaces
+  requirements: [IR-3, IR-5, LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: policy-microsoft-defender-for-storage-should-be-enabled
+  requirements: [DP-2, IR-3, IR-5, LT-1]
+  sufficiency: partial
+- countermeasure: policy-mysql-server-should-use-a-virtual-network-service-endpoint
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-mysql-servers-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-network-watcher-flow-logs-should-have-traffic-analytics-enabled
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-postgresql-flexible-servers-should-be-running-tls-version-1-2-or-newer
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-postgresql-flexible-servers-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-postgresql-server-should-use-a-virtual-network-service-endpoint
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-postgresql-servers-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-public-ip-addresses-should-have-resource-logs-enabled-for-azure-ddos-protection
+  requirements: [LT-4]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-for-azure-device-update-for-iot-hub-accounts-should-be-disabled
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-on-azure-data-explorer-should-be-disabled
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-on-azure-data-factory-should-be-disabled
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-on-azure-iot-hub-should-be-disabled
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-on-azure-sql-database-should-be-disabled
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-azure-file-sync
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-batch-accounts
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-mysql-flexible-servers
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-mysql-servers
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-postgresql-flexible-servers
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-public-network-access-should-be-disabled-for-postgresql-servers
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-queue-storage-should-use-customer-managed-key-for-encryption
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-data-lake-store-should-be-enabled
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-databricks-workspaces-should-be-enabled
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-key-vault-managed-hsm-should-be-enabled
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-kubernetes-service-should-be-enabled
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-machine-learning-workspaces-should-be-enabled
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-azure-stream-analytics-should-be-enabled
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-batch-accounts-should-be-enabled
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-data-lake-analytics-should-be-enabled
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-event-hub-should-be-enabled
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-iot-hub-should-be-enabled
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-logic-apps-should-be-enabled
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-search-services-should-be-enabled
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-resource-logs-in-service-bus-should-be-enabled
+  requirements: [LT-3]
+  sufficiency: partial
+- countermeasure: policy-role-based-access-control-rbac-should-be-used-on-kubernetes-services
+  requirements: [PA-7]
+  sufficiency: partial
+- countermeasure: policy-saved-queries-in-azure-monitor-should-be-saved-in-customer-storage-account-for-logs-encryp
+  requirements: [LT-5]
+  sufficiency: partial
+- countermeasure: policy-service-bus-namespaces-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-service-bus-namespaces-should-have-double-encryption-enabled
+  requirements: [DP-4]
+  sufficiency: partial
+- countermeasure: policy-service-bus-premium-namespaces-should-use-a-customer-managed-key-for-encryption
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-service-fabric-clusters-should-only-use-azure-active-directory-for-client-authentication
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-sql-databases-should-have-vulnerability-findings-resolved
+  requirements: [PV-6]
+  sufficiency: partial
+- countermeasure: policy-sql-managed-instance-should-have-the-minimal-tls-version-of-1-2
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-sql-managed-instances-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-sql-server-integration-services-integration-runtimes-on-azure-data-factory-should-be-joine
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-sql-server-should-use-a-virtual-network-service-endpoint
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-storage-account-containing-the-container-with-activity-logs-must-be-encrypted-with-byok
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-storage-account-encryption-scopes-should-use-customer-managed-keys-to-encrypt-data-at-rest
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-storage-account-encryption-scopes-should-use-double-encryption-for-data-at-rest
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-storage-account-public-access-should-be-disallowed
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-disable-public-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-have-infrastructure-encryption
+  requirements: [DP-4]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-have-the-specified-minimum-tls-version
+  requirements: [DP-3]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-prevent-cross-tenant-object-replication
+  requirements: [PV-2]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-prevent-shared-key-access
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-prevent-shared-key-access-excluding-storage-accounts-created-by-da
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-restrict-network-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-restrict-network-access-using-virtual-network-rules
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-restrict-network-access-using-virtual-network-rules-excluding-stor
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-use-a-virtual-network-service-endpoint
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-use-customer-managed-key-for-encryption
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-storage-accounts-should-use-private-link-excluding-storage-accounts-created-by-databricks
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-stream-analytics-job-should-use-managed-identity-to-authenticate-endpoints
+  requirements: [IM-3]
+  sufficiency: partial
+- countermeasure: policy-synapse-managed-private-endpoints-should-only-connect-to-resources-in-approved-azure-activ
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-synapse-workspaces-should-have-microsoft-entra-only-authentication-enabled
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-synapse-workspaces-should-use-only-microsoft-entra-identities-for-authentication-during-wo
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-temp-disks-and-cache-for-agent-node-pools-in-azure-kubernetes-service-clusters-should-be-e
+  requirements: [DP-4]
+  sufficiency: partial
+- countermeasure: policy-virtual-machines-and-virtual-machine-scale-sets-should-have-encryption-at-host-enabled
+  requirements: [DP-4]
+  sufficiency: partial
+- countermeasure: policy-virtual-machines-guest-configuration-extension-should-be-deployed-with-system-assigned-man
+  requirements: [IM-3, PV-4]
+  sufficiency: partial
+- countermeasure: policy-virtual-machines-should-be-connected-to-an-approved-virtual-network
+  requirements: [NS-1]
+  sufficiency: partial
+- countermeasure: policy-virtual-networks-should-be-protected-by-azure-ddos-protection
+  requirements: [NS-5]
+  sufficiency: partial
+- countermeasure: policy-virtual-networks-should-use-specified-virtual-network-gateway
+  requirements: [NS-1]
+  sufficiency: partial
+- countermeasure: policy-vm-image-builder-templates-should-use-private-link
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: policy-vpn-gateways-should-use-only-azure-active-directory-azure-ad-authentication-for-point-to-s
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: policy-windows-arc-enabled-machines-should-have-azure-monitor-agent-installed
+  requirements: [LT-5]
+  sufficiency: partial
+- countermeasure: policy-windows-defender-exploit-guard-should-be-enabled-on-your-machines
+  requirements: [ES-2, LT-1, LT-2]
+  sufficiency: partial
+- countermeasure: policy-windows-machines-should-configure-windows-defender-to-update-protection-signatures-within
+  requirements: [PV-4]
+  sufficiency: partial
+- countermeasure: policy-windows-machines-should-enable-windows-defender-real-time-protection
+  requirements: [PV-4]
+  sufficiency: partial
+- countermeasure: policy-windows-virtual-machine-scale-sets-should-have-azure-monitor-agent-installed
+  requirements: [LT-5]
+  sufficiency: partial
+- countermeasure: policy-windows-virtual-machines-should-have-azure-monitor-agent-installed
+  requirements: [LT-5]
+  sufficiency: partial
+- countermeasure: sa-customer-managed-key
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: sa-defender-for-storage
+  requirements: [LT-1, LT-4]
+  sufficiency: partial
+- countermeasure: sa-diagnostic-settings
+  requirements: [LT-1, LT-4]
+  sufficiency: partial
+- countermeasure: sa-disable-public-access
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: sa-disallow-shared-key
+  requirements: [IM-7, PA-7]
+  sufficiency: partial
+- countermeasure: sa-immutability-and-soft-delete
+  requirements: [BR-2]
+  sufficiency: partial
+- countermeasure: sa-least-privilege-rbac
+  requirements: [IM-7, PA-7]
+  sufficiency: partial
+- countermeasure: sa-resource-lock
+  requirements: [DP-5]
+  sufficiency: partial
+- countermeasure: sa-restrict-copy-scope
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: sa-sas-expiration-policy
+  requirements: [IM-7, PA-7]
+  sufficiency: partial
+- countermeasure: sa-secure-transfer-tls12
+  requirements: [NS-2]
+  sufficiency: partial
+- countermeasure: sa-user-delegation-sas
+  requirements: [IM-7, PA-7]
+  sufficiency: partial
+- countermeasure: sentinel-connector-coverage
+  requirements: [LT-1, LT-5]
+  sufficiency: partial
+- countermeasure: sentinel-rule-change-control
+  requirements: [LT-1, PA-7, DP-2]
+  sufficiency: partial
+- countermeasure: sentinel-watchlist-hygiene
+  requirements: [DP-2, IM-7]
+  sufficiency: partial
+- countermeasure: sf-cert-expiry-monitoring
+  requirements: [IM-8, DP-7]
+  sufficiency: partial
+- countermeasure: sf-network-isolation
+  requirements: [NS-1, NS-2]
+  sufficiency: partial
+- countermeasure: sf-secure-cluster-x509-entra
+  requirements: [IM-1, NS-2]
+  sufficiency: partial
+- countermeasure: sm-least-privilege-target
+  requirements: [PA-7, IM-7]
+  sufficiency: partial
+- countermeasure: sm-private-control-plane
+  requirements: [NS-2, DP-3]
+  sufficiency: partial
+- countermeasure: sm-remove-agent-access
+  requirements: [PA-4, PA-3]
+  sufficiency: partial
+- countermeasure: tm-alias-records
+  requirements: [NS-10]
+  sufficiency: partial
+- countermeasure: tm-https-monitoring
+  requirements: [DP-3, NS-2]
+  sufficiency: partial
+- countermeasure: tm-rbac-profiles
+  requirements: [PA-7, LT-3]
+  sufficiency: partial
+- countermeasure: vm-backup-immutable
+  requirements: [BR-1, BR-2]
+  sufficiency: partial
+- countermeasure: vm-brute-force-detection
+  requirements: [LT-1, NS-8]
+  sufficiency: partial
+- countermeasure: vm-disk-export-control
+  requirements: [DP-4, DP-5]
+  sufficiency: partial
+- countermeasure: vm-edr-antimalware
+  requirements: [ES-1, ES-2]
+  sufficiency: partial
+- countermeasure: vm-extension-allowlist
+  requirements: [PV-4, AM-5]
+  sufficiency: partial
+- countermeasure: vm-patch-management
+  requirements: [PV-5, PV-6]
+  sufficiency: partial
+- countermeasure: vm-restrict-management-ports
+  requirements: [NS-8, NS-1]
+  sufficiency: partial
+- countermeasure: vm-secure-baseline
+  requirements: [PV-3, PV-4]
+  sufficiency: partial
+- countermeasure: vmss-application-health
+  requirements: [PV-4, LT-1]
+  sufficiency: partial
+- countermeasure: vmss-automatic-os-upgrade
+  requirements: [PV-6, PV-3]
+  sufficiency: partial
+- countermeasure: vmss-instance-protection
+  requirements: [BR-1]
+  sufficiency: partial
+- countermeasure: vnet-private-endpoints
+  requirements: [NS-2, NS-1]
+  sufficiency: partial
+- countermeasure: vwan-custom-route-tables
+  requirements: [NS-1]
+  sufficiency: partial
+- countermeasure: vwan-p2s-entra-auth
+  requirements: [IM-6, IM-7]
+  sufficiency: partial
+- countermeasure: vwan-restrict-udr-permissions
+  requirements: [NS-1, PA-7]
+  sufficiency: partial
+- countermeasure: waf-diagnostic-logs
+  requirements: [NS-2, NS-6, NS-5]
+  sufficiency: partial
+- countermeasure: waf-prevention-mode
+  requirements: [NS-6]
+  sufficiency: partial
+- countermeasure: waf-rate-limit-bot
+  requirements: [NS-6, NS-5]
+  sufficiency: partial
+- countermeasure: cm-ai-search-security-trimming
+  requirements: [IM-7, DP-2]
+  sufficiency: partial
+- countermeasure: cm-ai-services-quota-limits
+  requirements: [IM-1, IM-3, IM-8]
+  sufficiency: partial
+- countermeasure: cm-apim-validate-jwt
+  requirements: [IM-1, NS-6]
+  sufficiency: partial
+- countermeasure: cm-app-configuration-purge-protection
+  requirements: [BR-2]
+  sufficiency: partial
+- countermeasure: cm-key-vault-secret-references
+  requirements: [IM-8]
+  sufficiency: partial
+- countermeasure: cm-trusted-registry-only
+  requirements: [DS-6, PV-6]
+  sufficiency: partial
+- countermeasure: det-rbac-assignment-alert
+  requirements: [PA-7, IM-7, PA-1]
+  sufficiency: partial
+- countermeasure: det-network-change-alert
+  requirements: [NS-2, NS-10, NS-1]
+  sufficiency: partial
+- countermeasure: det-critical-delete-alert
+  requirements: [BR-2, PA-1, BR-1]
+  sufficiency: partial
+- countermeasure: det-policy-compliance-alerts
+  requirements: [NS-2, DP-5, DP-3]
+  sufficiency: partial
+- countermeasure: det-retired-sku-service-health-alert
+  requirements: [PV-1, AM-2]
+  sufficiency: partial
+- countermeasure: det-credential-bearing-config-change-alert
+  requirements: [IM-8, IM-7, DP-4]
+  sufficiency: partial
+- countermeasure: det-orphaned-role-assignment-scan
+  requirements: [PA-4, PA-3]
+  sufficiency: partial
+- countermeasure: det-keyvault-access-anomaly-alert
+  requirements: [PA-7, IM-7, IM-8]
+  sufficiency: partial
+- countermeasure: det-terraform-state-access-monitoring
+  requirements: [IM-8, NS-9]
+  sufficiency: partial
+- countermeasure: det-key-expiry-event-alert
+  requirements: [DP-6, DP-5]
+  sufficiency: partial
+- countermeasure: det-managed-hsm-audit-alerts
+  requirements: [NS-2, DP-8, PA-1]
+  sufficiency: partial
+- countermeasure: det-dedicated-hsm-audit-forwarding
+  requirements: [IM-8, PA-1, IM-1]
+  sufficiency: partial
+- countermeasure: det-managed-identity-sign-in-anomaly
+  requirements: [IM-3, DP-4, PA-7]
+  sufficiency: partial
+- countermeasure: det-signin-ca-gap-detection
+  requirements: [IM-7, IM-6]
+  sufficiency: partial
+- countermeasure: det-entra-privileged-role-alerts
+  requirements: [IM-7, IM-6, PA-2]
+  sufficiency: partial
+- countermeasure: det-lockbox-request-alerts
+  requirements: [PA-8]
+  sufficiency: partial
+- countermeasure: det-b2c-spray-and-mfa-monitoring
+  requirements: [IM-6, LT-2]
+  sufficiency: partial
+- countermeasure: det-egress-anomaly-detection
+  requirements: [NS-2, NS-3, NS-1]
+  sufficiency: partial
+- countermeasure: det-waf-log-analysis
+  requirements: [NS-2, NS-6, NS-5]
+  sufficiency: partial
+- countermeasure: det-origin-direct-access-detection
+  requirements: [NS-2, NS-6]
+  sufficiency: partial
+- countermeasure: det-public-name-resolution-detection
+  requirements: [NS-10, NS-2, DP-3]
+  sufficiency: partial
+- countermeasure: det-packet-capture-alert
+  requirements: [PA-7, IM-7]
+  sufficiency: partial
+- countermeasure: det-vpn-tunnel-diagnostics
+  requirements: [IM-6, IM-7, IM-8]
+  sufficiency: partial
+- countermeasure: det-expressroute-bgp-monitoring
+  requirements: [DP-3, NS-9, NS-8]
+  sufficiency: partial
+- countermeasure: det-traffic-manager-endpoint-alert
+  requirements: [DP-3, NS-2]
+  sufficiency: partial
+- countermeasure: det-event-grid-failure-alert
+  requirements: [IM-1, DP-3]
+  sufficiency: partial
+- countermeasure: det-appservice-basic-auth-login-alert
+  requirements: [NS-2, IM-1]
+  sufficiency: partial
+- countermeasure: det-acr-push-delete-audit
+  requirements: [DS-6, PV-6]
+  sufficiency: partial
+- countermeasure: det-container-apps-log-alerts
+  requirements: [IM-8, IM-1, NS-6]
+  sufficiency: partial
+- countermeasure: det-redis-client-anomaly-alert
+  requirements: [DP-3, NS-2, IM-7]
+  sufficiency: partial
+- countermeasure: det-update-compliance-alerts
+  requirements: [PV-6, PV-3]
+  sufficiency: partial
+- countermeasure: det-windows-security-event-monitoring
+  requirements: [PA-7, IM-8, PA-1]
+  sufficiency: partial
+- countermeasure: det-avd-connection-anomaly-alert
+  requirements: [PV-3]
+  sufficiency: partial
+- countermeasure: det-ml-job-and-egress-audit
+  requirements: [IM-1, IM-3, IM-8]
+  sufficiency: partial
+- countermeasure: det-hdinsight-security-log-monitoring
+  requirements: [IM-1, IM-7, DP-3]
+  sufficiency: partial
+- countermeasure: det-service-fabric-endpoint-monitoring
+  requirements: [IM-1, NS-2, NS-1]
+  sufficiency: partial
+- countermeasure: det-backup-critical-operation-alerts
+  requirements: [BR-2, PA-1, NS-2]
+  sufficiency: partial
+- countermeasure: det-adx-command-audit
+  requirements: [PA-7, IM-7, NS-2]
+  sufficiency: partial
+- countermeasure: det-adls-acl-change-audit
+  requirements: [PA-4, IM-7]
+  sufficiency: partial
+- countermeasure: det-queue-write-audit
+  requirements: [IM-7, NS-2]
+  sufficiency: partial
+- countermeasure: det-files-auth-type-detection
+  requirements: [IM-1, IM-7, PA-7]
+  sufficiency: partial
+- countermeasure: det-domain-services-security-audit
+  requirements: [IM-6, DP-4, NS-8]
+  sufficiency: partial
+- countermeasure: det-iot-hub-connection-anomaly
+  requirements: [IM-3, DP-8]
+  sufficiency: partial
+- countermeasure: det-asr-event-alerts
+  requirements: [PA-7, PA-1]
+  sufficiency: partial
+- countermeasure: det-synapse-rbac-audit
+  requirements: [PA-7, PA-1]
+  sufficiency: partial
+- countermeasure: det-workspace-query-audit
+  requirements: [DP-2, IM-7, PA-7]
+  sufficiency: partial
+- countermeasure: det-app-insights-ingestion-anomaly
+  requirements: [IM-1]
+  sufficiency: partial
+- countermeasure: det-sensitive-data-in-logs-scan
+  requirements: [DP-2, DP-1]
+  sufficiency: partial
+- countermeasure: det-ai-services-request-audit
+  requirements: [NS-2, AI-2, AI-3]
+  sufficiency: partial
+- countermeasure: det-ai-search-query-audit
+  requirements: [IM-7, DP-2]
+  sufficiency: partial
+- countermeasure: det-apim-subscription-key-anomaly
+  requirements: [IM-8]
+  sufficiency: partial
+- countermeasure: det-logic-app-trigger-and-run-alerts
+  requirements: [IM-8, IM-3, IM-1]
+  sufficiency: partial

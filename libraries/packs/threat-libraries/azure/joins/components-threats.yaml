@@ -1,0 +1,949 @@
+mappings:
+- component: storage-account
+  threats:
+  - {threat: azure-storage-account-public-access, applies_to: component}
+  - {threat: azure-storage-account-shared-key-abuse, applies_to: component}
+  - {threat: azure-storage-account-sas-token-abuse, applies_to: component}
+  - {threat: azure-storage-account-public-network-exposure, applies_to: component}
+  - {threat: azure-storage-account-data-exfiltration, applies_to: component}
+  - {threat: azure-storage-account-insecure-transport, applies_to: both}
+  - {threat: azure-storage-account-malicious-content-upload, applies_to: component}
+  - {threat: azure-storage-account-data-destruction, applies_to: component}
+  - {threat: azure-storage-account-cmk-revocation, applies_to: component}
+  - {threat: azure-storage-account-missing-audit-logging, applies_to: component}
+  - {threat: azure-storage-account-control-plane-key-listing, applies_to: component}
+  - {threat: azure-storage-account-broad-data-plane-role, applies_to: component}
+  - {threat: azure-storage-account-platform-key-encryption, applies_to: component}
+  - {threat: azure-storage-account-no-threat-detection, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: blob-storage
+  threats:
+  - {threat: azure-storage-account-public-access, applies_to: component}
+  - {threat: azure-storage-account-shared-key-abuse, applies_to: component}
+  - {threat: azure-storage-account-sas-token-abuse, applies_to: component}
+  - {threat: azure-storage-account-public-network-exposure, applies_to: component}
+  - {threat: azure-storage-account-data-exfiltration, applies_to: component}
+  - {threat: azure-storage-account-insecure-transport, applies_to: both}
+  - {threat: azure-storage-account-malicious-content-upload, applies_to: component}
+  - {threat: azure-storage-account-data-destruction, applies_to: component}
+  - {threat: azure-storage-account-cmk-revocation, applies_to: component}
+  - {threat: azure-storage-account-missing-audit-logging, applies_to: component}
+  - {threat: azure-storage-account-control-plane-key-listing, applies_to: component}
+  - {threat: azure-storage-account-broad-data-plane-role, applies_to: component}
+  - {threat: azure-storage-account-no-threat-detection, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: data-lake
+  threats:
+  - {threat: azure-storage-account-public-access, applies_to: component}
+  - {threat: azure-storage-account-shared-key-abuse, applies_to: component}
+  - {threat: azure-storage-account-sas-token-abuse, applies_to: component}
+  - {threat: azure-storage-account-public-network-exposure, applies_to: component}
+  - {threat: azure-storage-account-data-exfiltration, applies_to: component}
+  - {threat: azure-storage-account-insecure-transport, applies_to: both}
+  - {threat: azure-storage-account-malicious-content-upload, applies_to: component}
+  - {threat: azure-storage-account-data-destruction, applies_to: component}
+  - {threat: azure-storage-account-cmk-revocation, applies_to: component}
+  - {threat: azure-storage-account-missing-audit-logging, applies_to: component}
+  - {threat: azure-storage-account-control-plane-key-listing, applies_to: component}
+  - {threat: azure-data-lake-acl-overgrant, applies_to: component}
+  - {threat: azure-data-lake-missing-dfs-private-endpoint, applies_to: component}
+  - {threat: azure-storage-account-broad-data-plane-role, applies_to: component}
+  - {threat: azure-storage-account-no-threat-detection, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: key-vault
+  threats:
+  - {threat: azure-key-vault-public-network-exposure, applies_to: component}
+  - {threat: azure-key-vault-access-policy-escalation, applies_to: component}
+  - {threat: azure-key-vault-overprivileged-secret-access, applies_to: component}
+  - {threat: azure-key-vault-secret-tampering, applies_to: component}
+  - {threat: azure-key-vault-stale-credentials, applies_to: component}
+  - {threat: azure-key-vault-secrets-in-terraform-state, applies_to: component}
+  - {threat: azure-key-vault-secret-deletion, applies_to: component}
+  - {threat: azure-key-vault-throttling, applies_to: component}
+  - {threat: azure-key-vault-missing-audit-logging, applies_to: component}
+  - {threat: azure-key-vault-platform-key-encryption-gap, applies_to: component}
+  - {threat: azure-key-vault-secrets-copied-into-code, applies_to: component}
+  - {threat: azure-key-vault-no-conditional-access, applies_to: component}
+  - {threat: azure-key-vault-no-threat-detection, applies_to: component}
+  - {threat: azure-service-principal-credential-theft, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: managed-identity
+  threats:
+  - {threat: azure-managed-identity-token-theft, applies_to: component}
+  - {threat: azure-managed-identity-token-replay, applies_to: component}
+  - {threat: azure-managed-identity-overprivileged-role, applies_to: component}
+  - {threat: azure-managed-identity-shared-identity-abuse, applies_to: component}
+  - {threat: azure-managed-identity-federated-credential-abuse, applies_to: component}
+  - {threat: azure-managed-identity-deletion-outage, applies_to: component}
+  - {threat: azure-managed-identity-unattributed-actions, applies_to: component}
+  - {threat: azure-managed-identity-role-changes-unmonitored, applies_to: component}
+  - {threat: azure-managed-identity-not-used, applies_to: component}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: aks
+  threats:
+  - {threat: azure-aks-public-api-server, applies_to: component}
+  - {threat: azure-aks-local-account-abuse, applies_to: component}
+  - {threat: azure-aks-run-command-abuse, applies_to: component}
+  - {threat: azure-aks-container-escape, applies_to: component}
+  - {threat: azure-aks-node-identity-abuse, applies_to: component}
+  - {threat: azure-aks-kubernetes-rbac-overprivilege, applies_to: component}
+  - {threat: azure-aks-flat-pod-network, applies_to: component}
+  - {threat: azure-aks-untrusted-image, applies_to: component}
+  - {threat: azure-aks-secrets-exposure, applies_to: component}
+  - {threat: azure-aks-missing-audit-logging, applies_to: component}
+  - {threat: azure-aks-resource-exhaustion, applies_to: component}
+  - {threat: azure-aks-outdated-components, applies_to: component}
+  - {threat: azure-managed-identity-token-theft, applies_to: component}
+  - {threat: azure-aks-insecure-ingress-transport, applies_to: both}
+  - {threat: azure-aks-insecure-cluster-configuration, applies_to: component}
+  - {threat: azure-aks-platform-key-encryption, applies_to: component}
+  - {threat: azure-flow-input-injection, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: app-service
+  threats:
+  - {threat: azure-app-service-missing-authentication, applies_to: component}
+  - {threat: azure-app-service-direct-origin-access, applies_to: component}
+  - {threat: azure-app-service-insecure-transport, applies_to: both}
+  - {threat: azure-app-service-publishing-credential-abuse, applies_to: component}
+  - {threat: azure-app-service-kudu-abuse, applies_to: component}
+  - {threat: azure-app-service-secrets-in-app-settings, applies_to: component}
+  - {threat: azure-app-service-subdomain-takeover, applies_to: component}
+  - {threat: azure-app-service-insecure-configuration, applies_to: component}
+  - {threat: azure-app-service-vnet-pivot, applies_to: component}
+  - {threat: azure-app-service-denial-of-service, applies_to: component}
+  - {threat: azure-app-service-missing-logging, applies_to: component}
+  - {threat: azure-managed-identity-token-theft, applies_to: component}
+  - {threat: azure-app-service-remote-code-execution, applies_to: both}
+  - {threat: azure-app-service-public-network-exposure, applies_to: both}
+  - {threat: azure-flow-input-injection, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: virtual-desktop
+  threats:
+  - {threat: azure-virtual-desktop-weak-user-authentication, applies_to: component}
+  - {threat: azure-virtual-desktop-rogue-session-host, applies_to: component}
+  - {threat: azure-virtual-desktop-session-host-exposure, applies_to: component}
+  - {threat: azure-virtual-desktop-data-exfiltration-redirection, applies_to: component}
+  - {threat: azure-virtual-desktop-profile-and-session-isolation, applies_to: component}
+  - {threat: azure-virtual-desktop-unpatched-session-hosts, applies_to: component}
+  - {threat: azure-virtual-desktop-public-workspace-access, applies_to: component}
+  - {threat: azure-virtual-desktop-overprivileged-assignments, applies_to: component}
+  - {threat: azure-virtual-desktop-capacity-exhaustion, applies_to: component}
+  - {threat: azure-virtual-desktop-missing-diagnostics, applies_to: component}
+- component: vnet
+  threats:
+  - {threat: azure-vnet-peering-lateral-movement, applies_to: component}
+  - {threat: azure-vnet-unauthorized-network-modification, applies_to: component}
+  - {threat: azure-vnet-dns-exfiltration, applies_to: component}
+  - {threat: azure-vnet-custom-dns-hijack, applies_to: component}
+  - {threat: azure-vnet-ddos, applies_to: component}
+  - {threat: azure-vnet-missing-flow-logs, applies_to: component}
+  - {threat: azure-vnet-public-paas-path, applies_to: both}
+  - {threat: azure-subnet-service-endpoint-exfiltration, applies_to: component}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+- component: subnet
+  threats:
+  - {threat: azure-subnet-missing-nsg, applies_to: component}
+  - {threat: azure-subnet-default-outbound-access, applies_to: component}
+  - {threat: azure-subnet-route-manipulation, applies_to: component}
+  - {threat: azure-subnet-service-endpoint-exfiltration, applies_to: component}
+  - {threat: azure-subnet-address-exhaustion, applies_to: component}
+  - {threat: azure-vnet-missing-flow-logs, applies_to: component}
+  - {threat: azure-private-endpoint-network-policies-disabled, applies_to: component}
+  - {threat: azure-nsg-permissive-inbound, applies_to: component}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+- component: nsg
+  threats:
+  - {threat: azure-nsg-permissive-inbound, applies_to: component}
+  - {threat: azure-nsg-broad-service-tag, applies_to: component}
+  - {threat: azure-nsg-unrestricted-outbound, applies_to: component}
+  - {threat: azure-nsg-rule-tampering, applies_to: component}
+  - {threat: azure-nsg-terraform-rule-drift, applies_to: component}
+  - {threat: azure-vnet-missing-flow-logs, applies_to: component}
+- component: firewall
+  threats:
+  - {threat: azure-firewall-permissive-rules, applies_to: component}
+  - {threat: azure-firewall-threat-detection-disabled, applies_to: component}
+  - {threat: azure-firewall-dnat-exposure, applies_to: component}
+  - {threat: azure-firewall-policy-tampering, applies_to: component}
+  - {threat: azure-firewall-snat-exhaustion, applies_to: component}
+  - {threat: azure-firewall-missing-logs, applies_to: component}
+  - {threat: azure-subnet-route-manipulation, applies_to: component}
+  - {threat: azure-vnet-dns-exfiltration, applies_to: component}
+  - {threat: azure-firewall-no-tls-inspection, applies_to: both}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+- component: waf
+  threats:
+  - {threat: azure-application-gateway-waf-ineffective, applies_to: component}
+  - {threat: azure-waf-detection-mode-in-production, applies_to: component}
+  - {threat: azure-waf-no-rate-limit-or-bot-protection, applies_to: component}
+  - {threat: azure-waf-missing-logging, applies_to: component}
+  - {threat: azure-waf-exclusions-and-stale-rule-sets, applies_to: component}
+  - {threat: azure-front-door-waf-ineffective, applies_to: component}
+  - {threat: azure-flow-input-injection, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: application-gateway
+  threats:
+  - {threat: azure-application-gateway-waf-ineffective, applies_to: component}
+  - {threat: azure-application-gateway-weak-tls, applies_to: both}
+  - {threat: azure-application-gateway-unencrypted-backend, applies_to: both}
+  - {threat: azure-application-gateway-certificate-exposure, applies_to: component}
+  - {threat: azure-application-gateway-header-spoofing, applies_to: component}
+  - {threat: azure-application-gateway-ddos, applies_to: component}
+  - {threat: azure-application-gateway-missing-logs, applies_to: component}
+  - {threat: azure-application-gateway-broad-management-rbac, applies_to: component}
+  - {threat: azure-flow-input-injection, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: private-endpoint
+  threats:
+  - {threat: azure-private-endpoint-exfiltration-to-foreign-resource, applies_to: component}
+  - {threat: azure-private-endpoint-unreviewed-inbound-connection, applies_to: component}
+  - {threat: azure-private-endpoint-network-policies-disabled, applies_to: component}
+  - {threat: azure-private-endpoint-public-access-retained, applies_to: component}
+  - {threat: azure-private-endpoint-dns-misconfiguration, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: private-dns-zone
+  threats:
+  - {threat: azure-private-dns-zone-record-tampering, applies_to: component}
+  - {threat: azure-private-dns-zone-resolution-failure, applies_to: component}
+  - {threat: azure-private-dns-zone-missing-logging, applies_to: component}
+  - {threat: azure-private-endpoint-dns-misconfiguration, applies_to: component}
+- component: bastion
+  threats:
+  - {threat: azure-bastion-overprivileged-access, applies_to: component}
+  - {threat: azure-bastion-feature-abuse, applies_to: component}
+  - {threat: azure-bastion-vm-credential-spoofing, applies_to: component}
+  - {threat: azure-bastion-subnet-nsg-misconfiguration, applies_to: component}
+  - {threat: azure-bastion-missing-audit, applies_to: component}
+  - {threat: azure-bastion-target-subnet-open-management-ports, applies_to: both}
+  - {threat: azure-bastion-vm-public-ip-bypass, applies_to: component}
+  - {threat: azure-flow-input-injection, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: sql-database
+  threats:
+  - {threat: azure-sql-database-public-network-exposure, applies_to: component}
+  - {threat: azure-sql-database-sql-authentication, applies_to: component}
+  - {threat: azure-sql-database-sql-injection, applies_to: component}
+  - {threat: azure-sql-database-excessive-privileges, applies_to: component}
+  - {threat: azure-sql-database-data-exfiltration, applies_to: component}
+  - {threat: azure-sql-database-insecure-transport, applies_to: both}
+  - {threat: azure-sql-database-sensitive-data-plaintext, applies_to: component}
+  - {threat: azure-sql-database-destruction, applies_to: component}
+  - {threat: azure-sql-database-missing-auditing, applies_to: component}
+  - {threat: azure-sql-database-insufficient-backup, applies_to: component}
+  - {threat: azure-sql-database-no-threat-detection, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: cosmosdb
+  threats:
+  - {threat: azure-cosmosdb-account-key-abuse, applies_to: component}
+  - {threat: azure-cosmosdb-control-plane-key-listing, applies_to: component}
+  - {threat: azure-cosmosdb-public-network-exposure, applies_to: component}
+  - {threat: azure-cosmosdb-query-injection, applies_to: component}
+  - {threat: azure-cosmosdb-data-deletion, applies_to: component}
+  - {threat: azure-cosmosdb-throughput-exhaustion, applies_to: component}
+  - {threat: azure-cosmosdb-missing-logging, applies_to: component}
+  - {threat: azure-cosmosdb-platform-key-encryption, applies_to: component}
+  - {threat: azure-cosmosdb-no-threat-detection, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: active-directory
+  threats:
+  - {threat: azure-ad-application-illicit-consent, applies_to: component}
+  - {threat: azure-ad-application-missing-audit, applies_to: component}
+- component: entra-app-registration
+  threats:
+  - {threat: azure-ad-application-client-secret-leak, applies_to: component}
+  - {threat: azure-ad-application-credential-backdoor, applies_to: component}
+  - {threat: azure-ad-application-excessive-api-permissions, applies_to: component}
+  - {threat: azure-ad-application-illicit-consent, applies_to: component}
+  - {threat: azure-ad-application-redirect-uri-hijack, applies_to: component}
+  - {threat: azure-ad-application-multitenant-misuse, applies_to: component}
+  - {threat: azure-ad-application-insecure-oauth-flows, applies_to: component}
+  - {threat: azure-ad-application-credential-expiry-outage, applies_to: component}
+  - {threat: azure-ad-application-missing-audit, applies_to: component}
+- component: service-principal
+  threats:
+  - {threat: azure-service-principal-overprivileged-rbac, applies_to: component}
+  - {threat: azure-service-principal-credential-theft, applies_to: component}
+  - {threat: azure-service-principal-directory-role-escalation, applies_to: component}
+  - {threat: azure-service-principal-credential-backdoor, applies_to: component}
+  - {threat: azure-service-principal-stale, applies_to: component}
+  - {threat: azure-service-principal-third-party-app-abuse, applies_to: component}
+  - {threat: azure-ad-application-missing-audit, applies_to: component}
+- component: functions
+  threats:
+  - {threat: azure-function-app-function-key-abuse, applies_to: component}
+  - {threat: azure-function-app-storage-takeover, applies_to: component}
+  - {threat: azure-function-app-trigger-input-injection, applies_to: component}
+  - {threat: azure-function-app-scale-cost-dos, applies_to: component}
+  - {threat: azure-app-service-direct-origin-access, applies_to: component}
+  - {threat: azure-app-service-insecure-transport, applies_to: both}
+  - {threat: azure-app-service-publishing-credential-abuse, applies_to: component}
+  - {threat: azure-app-service-kudu-abuse, applies_to: component}
+  - {threat: azure-app-service-secrets-in-app-settings, applies_to: component}
+  - {threat: azure-app-service-insecure-configuration, applies_to: component}
+  - {threat: azure-app-service-vnet-pivot, applies_to: component}
+  - {threat: azure-app-service-missing-logging, applies_to: component}
+  - {threat: azure-managed-identity-token-theft, applies_to: component}
+  - {threat: azure-app-service-remote-code-execution, applies_to: both}
+  - {threat: azure-app-service-public-network-exposure, applies_to: both}
+  - {threat: azure-flow-input-injection, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: container-registry
+  threats:
+  - {threat: azure-container-registry-admin-user, applies_to: component}
+  - {threat: azure-container-registry-anonymous-pull, applies_to: component}
+  - {threat: azure-container-registry-public-network-exposure, applies_to: component}
+  - {threat: azure-container-registry-image-poisoning, applies_to: component}
+  - {threat: azure-container-registry-vulnerable-images, applies_to: component}
+  - {threat: azure-container-registry-tasks-abuse, applies_to: component}
+  - {threat: azure-container-registry-image-deletion, applies_to: component}
+  - {threat: azure-container-registry-missing-logs, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: virtual-machines
+  threats:
+  - {threat: azure-virtual-machine-public-management-exposure, applies_to: component}
+  - {threat: azure-virtual-machine-password-authentication, applies_to: component}
+  - {threat: azure-virtual-machine-run-command-abuse, applies_to: component}
+  - {threat: azure-virtual-machine-disk-exfiltration, applies_to: component}
+  - {threat: azure-virtual-machine-disk-encryption-gaps, applies_to: component}
+  - {threat: azure-virtual-machine-boot-tampering, applies_to: component}
+  - {threat: azure-virtual-machine-unpatched, applies_to: component}
+  - {threat: azure-virtual-machine-ransomware, applies_to: component}
+  - {threat: azure-virtual-machine-missing-security-logging, applies_to: component}
+  - {threat: azure-managed-identity-token-theft, applies_to: component}
+  - {threat: azure-virtual-machine-configuration-drift, applies_to: component}
+  - {threat: azure-virtual-machine-no-endpoint-protection, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: log-analytics
+  threats:
+  - {threat: azure-log-analytics-sensitive-data-exposure, applies_to: component}
+  - {threat: azure-log-analytics-local-auth-log-injection, applies_to: component}
+  - {threat: azure-log-analytics-log-tampering, applies_to: component}
+  - {threat: azure-log-analytics-collection-disabled, applies_to: component}
+  - {threat: azure-log-analytics-public-access, applies_to: component}
+  - {threat: azure-log-analytics-daily-cap-blinding, applies_to: component}
+  - {threat: azure-log-analytics-insufficient-retention, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: defender
+  threats:
+  - {threat: azure-defender-plans-disabled, applies_to: component}
+  - {threat: azure-defender-alert-suppression-tampering, applies_to: component}
+  - {threat: azure-defender-alerts-unrouted, applies_to: component}
+  - {threat: azure-defender-posture-data-exposure, applies_to: component}
+  - {threat: azure-defender-unremediated-recommendations, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: ai-search
+  threats:
+  - {threat: azure-ai-search-public-exposure, applies_to: component}
+  - {threat: azure-ai-search-key-authentication, applies_to: component}
+  - {threat: azure-ai-search-index-data-overexposure, applies_to: component}
+  - {threat: azure-ai-search-platform-key-encryption, applies_to: component}
+  - {threat: azure-ai-search-missing-logging, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: ai-services
+  threats:
+  - {threat: azure-ai-services-public-endpoint, applies_to: component}
+  - {threat: azure-ai-services-api-key-exposure, applies_to: component}
+  - {threat: azure-ai-services-prompt-injection, applies_to: both}
+  - {threat: azure-ai-services-missing-logging, applies_to: component}
+  - {threat: azure-ai-services-unrestricted-outbound, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: api-center
+  threats:
+  - {threat: azure-api-center-test-console-credential-exposure, applies_to: component}
+  - {threat: azure-api-center-broad-key-vault-access, applies_to: component}
+  - {threat: azure-api-center-unregistered-api, applies_to: component}
+  - {threat: azure-flow-input-injection, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: api-management
+  threats:
+  - {threat: azure-api-management-public-exposure, applies_to: both}
+  - {threat: azure-api-management-weak-tls-protocols, applies_to: both}
+  - {threat: azure-api-management-legacy-platform-config, applies_to: component}
+  - {threat: azure-api-management-missing-api-authentication, applies_to: both}
+  - {threat: azure-api-management-subscription-key-and-secret-leakage, applies_to: component}
+  - {threat: azure-flow-input-injection, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: app-configuration
+  threats:
+  - {threat: azure-app-configuration-public-exposure, applies_to: component}
+  - {threat: azure-app-configuration-access-key-authentication, applies_to: component}
+  - {threat: azure-app-configuration-platform-key-encryption, applies_to: component}
+  - {threat: azure-app-configuration-deletion-without-recovery, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: app-insights
+  threats:
+  - {threat: azure-app-insights-key-and-connection-string-misuse, applies_to: component}
+  - {threat: azure-app-insights-sensitive-telemetry, applies_to: component}
+  - {threat: azure-app-insights-public-ingestion-and-query, applies_to: component}
+  - {threat: azure-app-insights-ingestion-flooding, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: arc-servers
+  threats:
+  - {threat: azure-arc-managed-identity-key-theft, applies_to: component}
+  - {threat: azure-arc-extension-code-execution, applies_to: component}
+  - {threat: azure-arc-onboarding-credential-abuse, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: automation
+  threats:
+  - {threat: azure-automation-public-exposure, applies_to: component}
+  - {threat: azure-automation-plaintext-credentials-and-variables, applies_to: component}
+  - {threat: azure-automation-local-authentication, applies_to: component}
+  - {threat: azure-automation-runbook-privilege-escalation, applies_to: component}
+  - {threat: azure-automation-webhook-url-exposure, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: azure-virtual-desktop-application-group
+  threats:
+  - {threat: azure-avd-desktop-group-overexposure, applies_to: component}
+  - {threat: azure-virtual-desktop-overprivileged-assignments, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: azure-virtual-desktop-workspace
+  threats:
+  - {threat: azure-avd-desktop-group-overexposure, applies_to: component}
+  - {threat: azure-virtual-desktop-weak-user-authentication, applies_to: component}
+  - {threat: azure-virtual-desktop-public-workspace-access, applies_to: component}
+  - {threat: azure-virtual-desktop-overprivileged-assignments, applies_to: component}
+  - {threat: azure-virtual-desktop-missing-diagnostics, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: azure-virtual-desktop-host-pool
+  threats:
+  - {threat: azure-avd-host-pool-identity-overprivileged, applies_to: component}
+  - {threat: azure-avd-domain-join-account-overprivileged, applies_to: component}
+  - {threat: azure-avd-scaling-plan-excessive-rights, applies_to: component}
+  - {threat: azure-virtual-desktop-rogue-session-host, applies_to: component}
+  - {threat: azure-virtual-desktop-data-exfiltration-redirection, applies_to: component}
+  - {threat: azure-virtual-desktop-public-workspace-access, applies_to: component}
+  - {threat: azure-virtual-desktop-overprivileged-assignments, applies_to: component}
+  - {threat: azure-virtual-desktop-capacity-exhaustion, applies_to: component}
+  - {threat: azure-virtual-desktop-missing-diagnostics, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: azure-virtual-desktop-session-host
+  threats:
+  - {threat: azure-avd-domain-join-account-overprivileged, applies_to: component}
+  - {threat: azure-avd-session-host-unrestricted-egress, applies_to: both}
+  - {threat: azure-avd-session-host-shared-local-admin, applies_to: component}
+  - {threat: azure-avd-session-host-user-admin-rights, applies_to: component}
+  - {threat: azure-avd-session-host-no-endpoint-protection, applies_to: component}
+  - {threat: azure-avd-fslogix-av-exclusion-malware, applies_to: component}
+  - {threat: azure-avd-idle-session-unlocked, applies_to: component}
+  - {threat: azure-virtual-desktop-session-host-exposure, applies_to: component}
+  - {threat: azure-virtual-desktop-data-exfiltration-redirection, applies_to: component}
+  - {threat: azure-virtual-desktop-profile-and-session-isolation, applies_to: component}
+  - {threat: azure-virtual-desktop-unpatched-session-hosts, applies_to: component}
+  - {threat: azure-virtual-desktop-missing-diagnostics, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: azure-virtual-desktop-scaling-plan
+  threats:
+  - {threat: azure-avd-scaling-plan-excessive-rights, applies_to: component}
+  - {threat: azure-virtual-desktop-capacity-exhaustion, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: azure-virtual-desktop-fslogix-profiles
+  threats:
+  - {threat: azure-avd-fslogix-av-exclusion-malware, applies_to: component}
+  - {threat: azure-virtual-desktop-profile-and-session-isolation, applies_to: component}
+  - {threat: azure-storage-account-public-network-exposure, applies_to: component}
+  - {threat: azure-storage-account-shared-key-abuse, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+  - {threat: azure-flow-smb-relay, applies_to: flow}
+- component: backup-vault
+  threats:
+  - {threat: azure-backup-vault-single-admin-destruction, applies_to: component}
+  - {threat: azure-backup-vault-soft-delete-disabled, applies_to: component}
+  - {threat: azure-backup-vault-mutable-recovery-points, applies_to: component}
+  - {threat: azure-backup-vault-public-network-access, applies_to: component}
+  - {threat: azure-backup-vault-restore-exfiltration, applies_to: component}
+  - {threat: azure-backup-vault-unmonitored-failures, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: batch
+  threats:
+  - {threat: azure-batch-public-exposure, applies_to: component}
+  - {threat: azure-batch-shared-key-authentication, applies_to: component}
+  - {threat: azure-batch-unencrypted-data, applies_to: component}
+  - {threat: azure-batch-task-privilege-and-secret-exposure, applies_to: component}
+  - {threat: azure-batch-compute-hijacking, applies_to: component}
+  - {threat: azure-batch-missing-logging, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: cache-redis
+  threats:
+  - {threat: azure-redis-public-exposure, applies_to: component}
+  - {threat: azure-redis-insecure-transport, applies_to: both}
+  - {threat: azure-redis-access-key-authentication, applies_to: component}
+  - {threat: azure-redis-persistence-and-key-exposure, applies_to: component}
+  - {threat: azure-redis-cache-poisoning, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: container-apps
+  threats:
+  - {threat: azure-container-apps-public-exposure, applies_to: both}
+  - {threat: azure-container-apps-insecure-ingress, applies_to: both}
+  - {threat: azure-container-apps-plaintext-secrets, applies_to: component}
+  - {threat: azure-container-apps-unauthenticated-ingress, applies_to: component}
+  - {threat: azure-container-apps-untrusted-image, applies_to: component}
+  - {threat: azure-container-apps-missing-logging, applies_to: component}
+  - {threat: azure-managed-identity-token-theft, applies_to: component}
+  - {threat: azure-flow-input-injection, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: container-instances
+  threats:
+  - {threat: azure-aci-plaintext-credentials, applies_to: component}
+  - {threat: azure-aci-untrusted-images, applies_to: component}
+  - {threat: azure-aci-no-network-segmentation, applies_to: both}
+  - {threat: azure-aci-privileged-runtime, applies_to: component}
+  - {threat: azure-aci-platform-key-encryption, applies_to: component}
+  - {threat: azure-managed-identity-token-theft, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: data-explorer
+  threats:
+  - {threat: azure-data-explorer-public-exposure, applies_to: component}
+  - {threat: azure-data-explorer-encryption-gaps, applies_to: component}
+  - {threat: azure-data-explorer-overbroad-roles, applies_to: component}
+  - {threat: azure-data-explorer-trusted-tenants-and-egress, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: data-factory
+  threats:
+  - {threat: azure-data-factory-public-exposure, applies_to: component}
+  - {threat: azure-data-factory-linked-service-credentials, applies_to: component}
+  - {threat: azure-data-factory-self-hosted-runtime-compromise, applies_to: component}
+  - {threat: azure-data-factory-pipeline-tampering, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: databricks
+  threats:
+  - {threat: azure-databricks-public-exposure, applies_to: both}
+  - {threat: azure-databricks-platform-key-encryption, applies_to: component}
+  - {threat: azure-databricks-storage-credential-exposure, applies_to: component}
+  - {threat: azure-databricks-code-execution-privilege-escalation, applies_to: component}
+  - {threat: azure-databricks-missing-logging, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: ddos-protection
+  threats:
+  - {threat: azure-ddos-protection-public-ip-unprotected, applies_to: component}
+  - {threat: azure-ddos-protection-unsupported-resources, applies_to: component}
+  - {threat: azure-ddos-protection-no-attack-telemetry, applies_to: component}
+  - {threat: azure-vnet-ddos, applies_to: component}
+  - {threat: azure-flow-input-injection, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: dedicated-hsm
+  threats:
+  - {threat: azure-dedicated-hsm-default-credentials, applies_to: component}
+  - {threat: azure-dedicated-hsm-role-lockout, applies_to: component}
+  - {threat: azure-dedicated-hsm-no-ha-backup, applies_to: component}
+  - {threat: azure-managed-hsm-missing-logging, applies_to: component}
+  - {threat: azure-managed-hsm-purge-protection-disabled, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: dns
+  threats:
+  - {threat: azure-dns-private-zone-link-misconfiguration, applies_to: component}
+  - {threat: azure-dns-no-dnssec-validation, applies_to: component}
+  - {threat: azure-dns-malicious-domain-resolution, applies_to: both}
+  - {threat: azure-dns-dangling-record-takeover, applies_to: component}
+  - {threat: azure-dns-zone-record-tampering, applies_to: component}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+- component: domain-services
+  threats:
+  - {threat: azure-domain-services-ntlm-hash-sync, applies_to: component}
+  - {threat: azure-domain-services-weak-protocols, applies_to: both}
+  - {threat: azure-domain-services-ldap-relay, applies_to: both}
+  - {threat: azure-domain-services-ldaps-internet-exposure, applies_to: component}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: elastic-san
+  threats:
+  - {threat: azure-elastic-san-public-network-access, applies_to: component}
+  - {threat: azure-elastic-san-implicit-subnet-access, applies_to: component}
+  - {threat: azure-elastic-san-no-transit-encryption-or-soft-delete, applies_to: both}
+  - {threat: azure-elastic-san-platform-key-encryption, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: entra-id
+  threats:
+  - {threat: azure-entra-token-theft, applies_to: both}
+  - {threat: azure-entra-password-spraying, applies_to: component}
+  - {threat: azure-entra-conditional-access-bypass, applies_to: component}
+  - {threat: azure-entra-standing-admin-access, applies_to: component}
+  - {threat: azure-entra-break-glass-misuse, applies_to: component}
+  - {threat: azure-entra-provider-support-access, applies_to: component}
+  - {threat: azure-entra-guest-and-external-collaboration-overexposure, applies_to: component}
+  - {threat: azure-entra-hybrid-identity-compromise, applies_to: component}
+  - {threat: azure-service-principal-credential-theft, applies_to: component}
+  - {threat: azure-ad-application-illicit-consent, applies_to: component}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: event-grid
+  threats:
+  - {threat: azure-event-grid-public-exposure, applies_to: both}
+  - {threat: azure-event-grid-key-authentication, applies_to: component}
+  - {threat: azure-event-grid-unauthenticated-webhook-delivery, applies_to: both}
+  - {threat: azure-event-grid-subscription-exfiltration, applies_to: component}
+  - {threat: azure-flow-message-tampering, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+- component: event-hubs
+  threats:
+  - {threat: azure-event-hubs-public-exposure, applies_to: both}
+  - {threat: azure-event-hubs-sas-key-authentication, applies_to: component}
+  - {threat: azure-event-hubs-weak-tls, applies_to: both}
+  - {threat: azure-event-hubs-platform-key-encryption, applies_to: component}
+  - {threat: azure-event-hubs-missing-logging, applies_to: component}
+  - {threat: azure-log-analytics-collection-disabled, applies_to: component}
+  - {threat: azure-flow-message-tampering, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+- component: expressroute
+  threats:
+  - {threat: azure-expressroute-unencrypted-private-peering, applies_to: both}
+  - {threat: azure-expressroute-unauthenticated-bgp, applies_to: component}
+  - {threat: azure-expressroute-broad-circuit-rbac, applies_to: component}
+  - {threat: azure-expressroute-authorization-key-abuse, applies_to: component}
+  - {threat: azure-expressroute-missing-logging, applies_to: component}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+- component: file-sync
+  threats:
+  - {threat: azure-file-sync-public-endpoint-exposure, applies_to: both}
+  - {threat: azure-file-sync-identity-misconfiguration, applies_to: component}
+  - {threat: azure-file-sync-no-backup, applies_to: component}
+  - {threat: azure-file-sync-registered-server-compromise, applies_to: component}
+  - {threat: azure-storage-account-shared-key-abuse, applies_to: component}
+  - {threat: azure-storage-account-public-network-exposure, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+  - {threat: azure-flow-smb-relay, applies_to: flow}
+- component: files
+  threats:
+  - {threat: azure-files-rbac-acl-misalignment, applies_to: component}
+  - {threat: azure-files-default-share-permission-overgrant, applies_to: component}
+  - {threat: azure-files-smb-unencrypted-transfer, applies_to: both}
+  - {threat: azure-files-share-destruction, applies_to: component}
+  - {threat: azure-storage-account-broad-data-plane-role, applies_to: component}
+  - {threat: azure-storage-account-no-threat-detection, applies_to: component}
+  - {threat: azure-storage-account-shared-key-abuse, applies_to: component}
+  - {threat: azure-storage-account-public-network-exposure, applies_to: component}
+  - {threat: azure-storage-account-sas-token-abuse, applies_to: component}
+  - {threat: azure-storage-account-missing-audit-logging, applies_to: component}
+  - {threat: azure-storage-account-data-exfiltration, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+  - {threat: azure-flow-smb-relay, applies_to: flow}
+- component: firewall-manager
+  threats:
+  - {threat: azure-firewall-manager-global-policy-change, applies_to: component}
+  - {threat: azure-firewall-manager-traffic-bypasses-firewall, applies_to: both}
+  - {threat: azure-firewall-manager-fqdn-filter-dns-mismatch, applies_to: component}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+- component: front-door
+  threats:
+  - {threat: azure-front-door-weak-tls, applies_to: both}
+  - {threat: azure-front-door-origin-bypass, applies_to: component}
+  - {threat: azure-front-door-waf-ineffective, applies_to: component}
+  - {threat: azure-front-door-missing-logging, applies_to: component}
+  - {threat: azure-front-door-dangling-custom-domain, applies_to: component}
+  - {threat: azure-flow-input-injection, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: hdinsight
+  threats:
+  - {threat: azure-hdinsight-no-esp-authentication, applies_to: component}
+  - {threat: azure-hdinsight-insecure-transport, applies_to: both}
+  - {threat: azure-hdinsight-keytab-exposure, applies_to: component}
+  - {threat: azure-hdinsight-public-gateway-and-ssh, applies_to: both}
+  - {threat: azure-hdinsight-encryption-gaps, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: iot-hub
+  threats:
+  - {threat: azure-iot-hub-public-exposure, applies_to: both}
+  - {threat: azure-iot-hub-shared-access-policy-abuse, applies_to: component}
+  - {threat: azure-iot-hub-device-credential-theft, applies_to: both}
+  - {threat: azure-iot-hub-weak-tls, applies_to: both}
+  - {threat: azure-iot-hub-routing-key-credentials, applies_to: component}
+  - {threat: azure-iot-hub-missing-logging, applies_to: component}
+  - {threat: azure-flow-message-tampering, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+- component: load-balancer
+  threats:
+  - {threat: azure-load-balancer-backend-directly-exposed, applies_to: both}
+  - {threat: azure-load-balancer-retired-basic-sku, applies_to: component}
+  - {threat: azure-load-balancer-unencrypted-application-traffic, applies_to: both}
+  - {threat: azure-load-balancer-open-inbound-rules, applies_to: component}
+  - {threat: azure-flow-input-injection, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: logic-apps
+  threats:
+  - {threat: azure-logic-apps-secrets-in-workflow, applies_to: component}
+  - {threat: azure-logic-apps-connection-credentials, applies_to: component}
+  - {threat: azure-logic-apps-anonymous-request-trigger, applies_to: both}
+  - {threat: azure-logic-apps-run-history-data-exposure, applies_to: component}
+  - {threat: azure-logic-apps-missing-logging, applies_to: component}
+  - {threat: azure-logic-apps-standard-public-and-basic-auth, applies_to: component}
+  - {threat: azure-flow-input-injection, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: machine-learning
+  threats:
+  - {threat: azure-ml-public-exposure, applies_to: both}
+  - {threat: azure-ml-compute-local-auth-and-ssh, applies_to: component}
+  - {threat: azure-ml-platform-key-encryption, applies_to: component}
+  - {threat: azure-ml-datastore-credential-exposure, applies_to: component}
+  - {threat: azure-ml-untrusted-model-and-environment, applies_to: component}
+  - {threat: azure-ml-outdated-compute-instances, applies_to: component}
+  - {threat: azure-ml-missing-logging, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: managed-grafana
+  threats:
+  - {threat: azure-managed-grafana-public-exposure, applies_to: component}
+  - {threat: azure-managed-grafana-api-keys-and-service-accounts, applies_to: component}
+  - {threat: azure-managed-grafana-datasource-credentials, applies_to: component}
+  - {threat: azure-managed-grafana-admin-role-overgrant, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: managed-hsm
+  threats:
+  - {threat: azure-managed-hsm-public-exposure, applies_to: component}
+  - {threat: azure-managed-hsm-purge-protection-disabled, applies_to: component}
+  - {threat: azure-managed-hsm-single-custodian-security-domain, applies_to: component}
+  - {threat: azure-managed-hsm-no-key-autorotation, applies_to: component}
+  - {threat: azure-managed-hsm-missing-logging, applies_to: component}
+  - {threat: azure-managed-hsm-overbroad-local-rbac, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: monitor
+  threats:
+  - {threat: azure-monitor-public-ingestion-and-query, applies_to: both}
+  - {threat: azure-monitor-platform-key-encryption, applies_to: component}
+  - {threat: azure-monitor-not-security-monitoring, applies_to: component}
+  - {threat: azure-monitor-container-insights-legacy-auth, applies_to: component}
+  - {threat: azure-monitor-alert-suppression, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: mysql
+  threats:
+  - {threat: azure-mysql-public-exposure, applies_to: both}
+  - {threat: azure-mysql-insecure-transport, applies_to: both}
+  - {threat: azure-mysql-password-authentication, applies_to: component}
+  - {threat: azure-mysql-platform-key-encryption, applies_to: component}
+  - {threat: azure-mysql-insufficient-backup, applies_to: component}
+  - {threat: azure-mysql-no-threat-detection, applies_to: component}
+  - {threat: azure-sql-database-sql-injection, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: postgresql
+  threats:
+  - {threat: azure-postgresql-public-exposure, applies_to: both}
+  - {threat: azure-postgresql-insecure-transport, applies_to: both}
+  - {threat: azure-postgresql-password-authentication, applies_to: component}
+  - {threat: azure-postgresql-platform-key-encryption, applies_to: component}
+  - {threat: azure-postgresql-insufficient-backup, applies_to: component}
+  - {threat: azure-postgresql-no-threat-detection, applies_to: component}
+  - {threat: azure-sql-database-sql-injection, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: nat-gateway
+  threats:
+  - {threat: azure-nat-gateway-outbound-unlogged, applies_to: both}
+  - {threat: azure-nat-gateway-snat-exhaustion, applies_to: component}
+  - {threat: azure-nat-gateway-unrestricted-egress, applies_to: both}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+- component: netapp-files
+  threats:
+  - {threat: azure-netapp-files-nfs-export-overexposure, applies_to: component}
+  - {threat: azure-netapp-files-dual-protocol-permission-mismatch, applies_to: component}
+  - {threat: azure-netapp-files-snapshot-and-backup-destruction, applies_to: component}
+  - {threat: azure-netapp-files-platform-only-keys, applies_to: component}
+  - {threat: azure-netapp-files-network-activity-unlogged, applies_to: both}
+  - {threat: azure-netapp-files-directory-credential-exposure, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+  - {threat: azure-flow-smb-relay, applies_to: flow}
+- component: network-watcher
+  threats:
+  - {threat: azure-network-watcher-overbroad-packet-capture, applies_to: component}
+  - {threat: azure-network-watcher-flow-log-storage-exposure, applies_to: component}
+  - {threat: azure-network-watcher-nsg-flow-log-retirement-gap, applies_to: component}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+- component: queue-storage
+  threats:
+  - {threat: azure-queue-storage-platform-key-encryption, applies_to: component}
+  - {threat: azure-queue-storage-message-injection, applies_to: both}
+  - {threat: azure-queue-storage-overbroad-queue-roles, applies_to: component}
+  - {threat: azure-storage-account-broad-data-plane-role, applies_to: component}
+  - {threat: azure-storage-account-no-threat-detection, applies_to: component}
+  - {threat: azure-storage-account-shared-key-abuse, applies_to: component}
+  - {threat: azure-storage-account-sas-token-abuse, applies_to: component}
+  - {threat: azure-storage-account-public-network-exposure, applies_to: component}
+  - {threat: azure-storage-account-insecure-transport, applies_to: component}
+  - {threat: azure-storage-account-missing-audit-logging, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: sentinel
+  threats:
+  - {threat: azure-sentinel-security-logs-not-ingested, applies_to: component}
+  - {threat: azure-sentinel-analytics-rule-tampering, applies_to: component}
+  - {threat: azure-sentinel-watchlist-data-exposure, applies_to: component}
+  - {threat: azure-sentinel-workspace-access-overbroad, applies_to: component}
+  - {threat: azure-sentinel-automation-privilege-abuse, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: service-bus
+  threats:
+  - {threat: azure-service-bus-public-exposure, applies_to: both}
+  - {threat: azure-service-bus-sas-key-authentication, applies_to: component}
+  - {threat: azure-service-bus-weak-tls, applies_to: both}
+  - {threat: azure-service-bus-platform-key-encryption, applies_to: component}
+  - {threat: azure-service-bus-missing-logging, applies_to: component}
+  - {threat: azure-flow-message-tampering, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+- component: service-fabric
+  threats:
+  - {threat: azure-service-fabric-unsecured-cluster, applies_to: component}
+  - {threat: azure-service-fabric-weak-client-authentication, applies_to: component}
+  - {threat: azure-service-fabric-shared-client-certificate, applies_to: component}
+  - {threat: azure-service-fabric-public-management-endpoints, applies_to: both}
+  - {threat: azure-service-fabric-reverse-proxy-exposure, applies_to: both}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: site-recovery
+  threats:
+  - {threat: azure-site-recovery-replication-over-public-endpoint, applies_to: both}
+  - {threat: azure-site-recovery-over-privileged-operator, applies_to: component}
+  - {threat: azure-site-recovery-replica-platform-keys, applies_to: component}
+  - {threat: azure-site-recovery-cache-storage-exposure, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: sql-managed-instance
+  threats:
+  - {threat: azure-sql-managed-instance-public-data-endpoint, applies_to: both}
+  - {threat: azure-sql-managed-instance-sql-authentication, applies_to: component}
+  - {threat: azure-sql-managed-instance-weak-tls, applies_to: both}
+  - {threat: azure-sql-managed-instance-platform-key-encryption, applies_to: component}
+  - {threat: azure-sql-managed-instance-no-threat-detection, applies_to: component}
+  - {threat: azure-sql-database-sql-injection, applies_to: component}
+  - {threat: azure-sql-database-excessive-privileges, applies_to: component}
+  - {threat: azure-sql-database-missing-auditing, applies_to: component}
+  - {threat: azure-sql-database-data-exfiltration, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: storage-mover
+  threats:
+  - {threat: azure-storage-mover-broad-target-rbac, applies_to: component}
+  - {threat: azure-storage-mover-orphaned-agent-roles, applies_to: component}
+  - {threat: azure-storage-mover-public-control-plane, applies_to: both}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+  - {threat: azure-flow-smb-relay, applies_to: flow}
+- component: stream-analytics
+  threats:
+  - {threat: azure-stream-analytics-platform-key-encryption, applies_to: component}
+  - {threat: azure-stream-analytics-connection-string-authentication, applies_to: component}
+  - {threat: azure-stream-analytics-missing-logging, applies_to: component}
+  - {threat: azure-stream-analytics-output-redirection, applies_to: component}
+  - {threat: azure-flow-message-tampering, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+- component: synapse
+  threats:
+  - {threat: azure-synapse-public-exposure, applies_to: both}
+  - {threat: azure-synapse-sql-authentication, applies_to: component}
+  - {threat: azure-synapse-platform-key-encryption, applies_to: component}
+  - {threat: azure-synapse-weak-tls, applies_to: both}
+  - {threat: azure-synapse-no-threat-detection, applies_to: component}
+  - {threat: azure-synapse-overbroad-roles, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: traffic-manager
+  threats:
+  - {threat: azure-traffic-manager-unauthorized-profile-change, applies_to: component}
+  - {threat: azure-traffic-manager-dangling-dns-takeover, applies_to: component}
+  - {threat: azure-traffic-manager-http-health-probes, applies_to: both}
+  - {threat: azure-traffic-manager-missing-logging, applies_to: component}
+  - {threat: azure-flow-input-injection, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: virtual-wan
+  threats:
+  - {threat: azure-virtual-wan-route-override-bypasses-hub-firewall, applies_to: component}
+  - {threat: azure-virtual-wan-flat-spoke-transit, applies_to: both}
+  - {threat: azure-virtual-wan-p2s-weak-authentication, applies_to: component}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+- component: vm-scale-sets
+  threats:
+  - {threat: azure-vmss-unpatched-instances, applies_to: component}
+  - {threat: azure-vmss-instance-protection-gaps, applies_to: component}
+  - {threat: azure-vmss-no-application-health, applies_to: both}
+  - {threat: azure-vmss-encryption-and-logging-gaps, applies_to: component}
+  - {threat: azure-virtual-machine-password-authentication, applies_to: component}
+  - {threat: azure-virtual-machine-run-command-abuse, applies_to: component}
+  - {threat: azure-virtual-machine-disk-encryption-gaps, applies_to: component}
+  - {threat: azure-virtual-machine-boot-tampering, applies_to: component}
+  - {threat: azure-virtual-machine-public-management-exposure, applies_to: component}
+  - {threat: azure-managed-identity-token-theft, applies_to: component}
+  - {threat: azure-virtual-machine-missing-security-logging, applies_to: component}
+  - {threat: azure-flow-plaintext-transport, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: vpn-gateway
+  threats:
+  - {threat: azure-vpn-gateway-weak-p2s-authentication, applies_to: component}
+  - {threat: azure-vpn-gateway-weak-ipsec-policy, applies_to: both}
+  - {threat: azure-vpn-gateway-shared-key-exposure, applies_to: component}
+  - {threat: azure-vpn-gateway-missing-logging, applies_to: component}
+  - {threat: azure-flow-input-injection, applies_to: flow}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}
+- component: ad-b2c
+  threats:
+  - {threat: azure-b2c-password-spraying, applies_to: component}
+  - {threat: azure-b2c-account-takeover-without-risk-policy, applies_to: component}
+  - {threat: azure-b2c-single-factor-sign-in, applies_to: component}
+  - {threat: azure-flow-token-replay, applies_to: flow}
+  - {threat: azure-flow-mitm-network-path, applies_to: flow}

@@ -1,0 +1,45 @@
+pack:
+  schema_version: 1
+  slug: nis2
+  name: NIS2 Directive
+  version: 1.0.0
+  pack_type: compliance
+  author: Precogly
+  description: 'Directive (EU) 2022/2555 (NIS2), Article 21(2): the ten minimum cybersecurity risk-management measures that
+    essential and important entities must take.'
+  tags:
+  - compliance
+  - security
+  - eu
+  - regulation
+frameworks:
+- slug: nis2-2022
+  name: NIS2 Directive
+  version: (EU) 2022/2555
+  issuer: European Union
+  description: Directive on measures for a high common level of cybersecurity across the Union, Article 21(2) risk-management
+    measures.
+  requirements:
+  - section_code: Art. 21(2)(a)
+    description: Policies on risk analysis and information system security
+  - section_code: Art. 21(2)(b)
+    description: Incident handling
+  - section_code: Art. 21(2)(c)
+    description: Business continuity, such as backup management and disaster recovery, and crisis management
+  - section_code: Art. 21(2)(d)
+    description: Supply chain security, including security-related aspects concerning the relationships between each entity
+      and its direct suppliers or service providers
+  - section_code: Art. 21(2)(e)
+    description: Security in network and information systems acquisition, development and maintenance, including vulnerability
+      handling and disclosure
+  - section_code: Art. 21(2)(f)
+    description: Policies and procedures to assess the effectiveness of cybersecurity risk-management measures
+  - section_code: Art. 21(2)(g)
+    description: Basic cyber hygiene practices and cybersecurity training
+  - section_code: Art. 21(2)(h)
+    description: Policies and procedures regarding the use of cryptography and, where appropriate, encryption
+  - section_code: Art. 21(2)(i)
+    description: Human resources security, access control policies and asset management
+  - section_code: Art. 21(2)(j)
+    description: The use of multi-factor authentication or continuous authentication solutions, secured voice, video and text
+      communications and secured emergency communication systems within the entity, where appropriate

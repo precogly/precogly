@@ -1,0 +1,151 @@
+pack:
+  schema_version: 1
+  slug: nist-800-53-r5
+  name: NIST SP 800-53 Rev. 5
+  version: 1.0.0
+  pack_type: compliance
+  author: Precogly
+  description: NIST SP 800-53 Revision 5 security and privacy controls. This pack contains the 65 base controls referenced
+    by the Microsoft cloud security benchmark v2 mapping; further controls can be added.
+  tags:
+  - compliance
+  - security
+  - government
+  - nist
+frameworks:
+- slug: nist-800-53-r5
+  name: NIST SP 800-53
+  version: Rev. 5
+  issuer: NIST
+  description: Security and privacy controls for information systems and organizations.
+  requirements:
+  - section_code: AC-2
+    description: 'Access Control: Account Management'
+  - section_code: AC-3
+    description: 'Access Control: Access Enforcement'
+  - section_code: AC-4
+    description: 'Access Control: Information Flow Enforcement'
+  - section_code: AC-5
+    description: 'Access Control: Separation of Duties'
+  - section_code: AC-6
+    description: 'Access Control: Least Privilege'
+  - section_code: AC-12
+    description: 'Access Control: Session Termination'
+  - section_code: AC-14
+    description: 'Access Control: Permitted Actions Without Identification or Authentication'
+  - section_code: AC-16
+    description: 'Access Control: Security and Privacy Attributes'
+  - section_code: AC-17
+    description: 'Access Control: Remote Access'
+  - section_code: AU-2
+    description: 'Audit and Accountability: Event Logging'
+  - section_code: AU-3
+    description: 'Audit and Accountability: Content of Audit Records'
+  - section_code: AU-4
+    description: 'Audit and Accountability: Audit Log Storage Capacity'
+  - section_code: AU-5
+    description: 'Audit and Accountability: Response to Audit Logging Process Failures'
+  - section_code: AU-6
+    description: 'Audit and Accountability: Audit Record Review, Analysis, and Reporting'
+  - section_code: AU-7
+    description: 'Audit and Accountability: Audit Record Reduction and Report Generation'
+  - section_code: AU-9
+    description: 'Audit and Accountability: Protection of Audit Information'
+  - section_code: AU-11
+    description: 'Audit and Accountability: Audit Record Retention'
+  - section_code: AU-12
+    description: 'Audit and Accountability: Audit Record Generation'
+  - section_code: CA-7
+    description: 'Assessment, Authorization, and Monitoring: Continuous Monitoring'
+  - section_code: CM-2
+    description: 'Configuration Management: Baseline Configuration'
+  - section_code: CM-3
+    description: 'Configuration Management: Configuration Change Control'
+  - section_code: CM-5
+    description: 'Configuration Management: Access Restrictions for Change'
+  - section_code: CM-6
+    description: 'Configuration Management: Configuration Settings'
+  - section_code: CM-7
+    description: 'Configuration Management: Least Functionality'
+  - section_code: CM-8
+    description: 'Configuration Management: System Component Inventory'
+  - section_code: CM-14
+    description: 'Configuration Management: Signed Components'
+  - section_code: CP-2
+    description: 'Contingency Planning: Contingency Plan'
+  - section_code: CP-9
+    description: 'Contingency Planning: System Backup'
+  - section_code: CP-10
+    description: 'Contingency Planning: System Recovery and Reconstitution'
+  - section_code: IA-2
+    description: 'Identification and Authentication: Identification and Authentication (Organizational Users)'
+  - section_code: IA-3
+    description: 'Identification and Authentication: Device Identification and Authentication'
+  - section_code: IA-4
+    description: 'Identification and Authentication: Identifier Management'
+  - section_code: IA-5
+    description: 'Identification and Authentication: Authenticator Management'
+  - section_code: IA-8
+    description: 'Identification and Authentication: Identification and Authentication (Non-Organizational Users)'
+  - section_code: IA-9
+    description: 'Identification and Authentication: Service Identification and Authentication'
+  - section_code: IR-4
+    description: 'Incident Response: Incident Handling'
+  - section_code: IR-5
+    description: 'Incident Response: Incident Monitoring'
+  - section_code: IR-6
+    description: 'Incident Response: Incident Reporting'
+  - section_code: RA-2
+    description: 'Risk Assessment: Security Categorization'
+  - section_code: RA-3
+    description: 'Risk Assessment: Risk Assessment'
+  - section_code: RA-5
+    description: 'Risk Assessment: Vulnerability Monitoring and Scanning'
+  - section_code: SA-3
+    description: 'System and Services Acquisition: System Development Life Cycle'
+  - section_code: SA-8
+    description: 'System and Services Acquisition: Security and Privacy Engineering Principles'
+  - section_code: SA-11
+    description: 'System and Services Acquisition: Developer Testing and Evaluation'
+  - section_code: SC-4
+    description: 'System and Communications Protection: Information in Shared System Resources'
+  - section_code: SC-5
+    description: 'System and Communications Protection: Denial-of-Service Protection'
+  - section_code: SC-6
+    description: 'System and Communications Protection: Resource Availability'
+  - section_code: SC-7
+    description: 'System and Communications Protection: Boundary Protection'
+  - section_code: SC-8
+    description: 'System and Communications Protection: Transmission Confidentiality and Integrity'
+  - section_code: SC-12
+    description: 'System and Communications Protection: Cryptographic Key Establishment and Management'
+  - section_code: SC-13
+    description: 'System and Communications Protection: Cryptographic Protection'
+  - section_code: SC-17
+    description: 'System and Communications Protection: Public Key Infrastructure Certificates'
+  - section_code: SC-22
+    description: 'System and Communications Protection: Architecture and Provisioning for Name/Address Resolution Service'
+  - section_code: SC-23
+    description: 'System and Communications Protection: Session Authenticity'
+  - section_code: SC-28
+    description: 'System and Communications Protection: Protection of Information at Rest'
+  - section_code: SC-32
+    description: 'System and Communications Protection: System Partitioning'
+  - section_code: SC-39
+    description: 'System and Communications Protection: Process Isolation'
+  - section_code: SC-41
+    description: 'System and Communications Protection: Port and I/O Device Access'
+  - section_code: SI-2
+    description: 'System and Information Integrity: Flaw Remediation'
+  - section_code: SI-3
+    description: 'System and Information Integrity: Malicious Code Protection'
+  - section_code: SI-4
+    description: 'System and Information Integrity: System Monitoring'
+  - section_code: SI-7
+    description: 'System and Information Integrity: Software, Firmware, and Information Integrity'
+  - section_code: SI-10
+    description: 'System and Information Integrity: Information Input Validation'
+  - section_code: SI-11
+    description: 'System and Information Integrity: Error Handling'
+  - section_code: SR-11
+    description: 'Supply Chain Risk Management: Component Authenticity'

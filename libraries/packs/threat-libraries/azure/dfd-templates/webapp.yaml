@@ -45,6 +45,7 @@ canvas_data:
       position: { x: 50, y: 80 }
       data:
         label: "Front Door"
+        component_ref: "front-door"
         technology: "Azure Front Door"
         description: "Global load balancer with WAF"
 
@@ -54,6 +55,7 @@ canvas_data:
       position: { x: 50, y: 200 }
       data:
         label: "Azure AD"
+        component_ref: "entra-id"
         technology: "Azure Active Directory"
         description: "Identity and access management"
 
@@ -63,6 +65,7 @@ canvas_data:
       position: { x: 250, y: 80 }
       data:
         label: "App Service"
+        component_ref: "app-service"
         technology: "Azure App Service"
         description: "Managed web application hosting"
 
@@ -72,6 +75,7 @@ canvas_data:
       position: { x: 450, y: 80 }
       data:
         label: "Azure SQL"
+        component_ref: "sql-database"
         technology: "Azure SQL Database"
         description: "Managed relational database"
         dataSensitivity: "confidential"
@@ -82,6 +86,7 @@ canvas_data:
       position: { x: 450, y: 200 }
       data:
         label: "Blob Storage"
+        component_ref: "blob-storage"
         technology: "Azure Blob Storage"
         description: "Object storage for files and media"
 

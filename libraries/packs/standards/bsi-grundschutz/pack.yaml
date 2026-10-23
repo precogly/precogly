@@ -1,0 +1,62 @@
+pack:
+  schema_version: 1
+  slug: bsi-grundschutz
+  name: BSI IT-Grundschutz Compendium
+  version: 1.0.0
+  pack_type: compliance
+  author: Precogly
+  description: BSI IT-Grundschutz Compendium, Edition 2023, at module (Baustein) level. Requirements are module identifiers
+    with short English titles; the individual BSI requirement texts (Anforderungen) are not reproduced. The BSI is moving
+    towards Grundschutz++, so check the current edition.
+  tags:
+  - compliance
+  - security
+  - germany
+  - bsi
+frameworks:
+- slug: bsi-grundschutz-2023
+  name: BSI IT-Grundschutz Compendium
+  version: Edition 2023
+  issuer: BSI
+  description: IT-Grundschutz modules (Bausteine) relevant to cloud and infrastructure systems.
+  requirements:
+  - section_code: NET.1.1
+    description: Network Architecture and Design (Netzarchitektur und -design)
+  - section_code: NET.3.2
+    description: Firewall
+  - section_code: NET.3.3
+    description: VPN
+  - section_code: CON.1
+    description: Crypto Concept (Kryptokonzept)
+  - section_code: CON.3
+    description: Data Backup Concept (Datensicherungskonzept)
+  - section_code: ORP.4
+    description: Identity and Access Management (Identitäts- und Berechtigungsmanagement)
+  - section_code: OPS.1.1.3
+    description: Patch and Change Management
+  - section_code: OPS.1.1.4
+    description: Protection Against Malware (Schutz vor Schadprogrammen)
+  - section_code: OPS.1.1.5
+    description: Logging (Protokollierung)
+  - section_code: OPS.2.2
+    description: Cloud Usage (Cloud-Nutzung)
+  - section_code: DER.1
+    description: Detection of Security-Relevant Events (Detektion von sicherheitsrelevanten Ereignissen)
+  - section_code: DER.2.1
+    description: Security Incident Handling (Behandlung von Sicherheitsvorfällen)
+  - section_code: APP.2.2
+    description: Active Directory Domain Services
+  - section_code: APP.3.1
+    description: Web Applications and Web Services (Webanwendungen und Webservices)
+  - section_code: APP.4.3
+    description: Relational Database Systems (Relationale Datenbanksysteme)
+  - section_code: APP.4.4
+    description: Kubernetes
+  - section_code: SYS.1.1
+    description: General Server (Allgemeiner Server)
+  - section_code: SYS.1.5
+    description: Virtualization (Virtualisierung)
+  - section_code: SYS.1.6
+    description: Containerization (Containerisierung)
+  - section_code: SYS.1.8
+    description: Storage Solutions (Speicherlösungen)
