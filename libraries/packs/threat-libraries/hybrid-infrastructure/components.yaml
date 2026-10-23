@@ -1,0 +1,43 @@
+components:
+- id: ad-ds
+  name: Active Directory Domain Services
+  category: process
+  type: Identity Service
+  provider: microsoft
+  description: On-premises directory service (domain controllers) for Kerberos and NTLM authentication, group policy, and identity for Windows workloads.
+- id: entra-connect
+  name: Microsoft Entra Connect Sync
+  category: process
+  type: Identity Synchronization
+  provider: microsoft
+  description: On-premises server that synchronizes AD DS objects and password hashes to Microsoft Entra ID. Holds sync-account credentials and is effectively Tier 0 for the hybrid identity.
+- id: smb-file-share
+  name: SMB File Share (Windows/Linux)
+  category: datastore
+  type: File Share
+  provider: on-prem
+  description: Network file share served over SMB by a Windows file server or Samba on Linux, typically authenticated through AD DS.
+- id: nfs-share
+  name: NFS Export
+  category: datastore
+  type: File Share
+  provider: on-prem
+  description: Network file system export served over NFS (v3 or v4.x) on a Linux or NAS system, commonly used by Unix and virtualization clients.
+- id: print-service
+  name: Windows Print Service
+  category: process
+  type: Print Service
+  provider: microsoft
+  description: Windows print service (Print Spooler) that manages print queues and installs printer drivers for clients. Can run on an on-premises server or on an Azure VM.
+- id: network-printer
+  name: Network Printer / MFP
+  category: process
+  type: Network Printer
+  provider: on-prem
+  description: Network-attached printer or multifunction device (print, scan, fax) with an embedded web server, IPP/RAW printing, and scan-to-email or LDAP integration.
+- id: azure-vm-domain-controller
+  name: Azure VM als Domain Controller
+  category: process
+  type: Domain Controller (IaaS)
+  provider: azure
+  description: Active Directory Domain Services auf einer Azure Virtual Machine. Tragt die AD-DS-Threats und die Host-Threats der VM.

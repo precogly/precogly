@@ -1,0 +1,10 @@
+pack:
+  schema_version: 1
+  slug: hybrid-infrastructure
+  name: Hybrid and Classic Infrastructure
+  version: 1.0.0
+  pack_type: full
+  description: 'Hybrid and classic on-premises infrastructure threats: Active Directory Domain Services, Microsoft Entra Connect, SMB and NFS file shares, Windows print servers, and network printers. Threats are derived from Microsoft Learn guidance (tier model, Defender for Identity, Entra Connect, SMB, LDAP, Point and Print) and cite their source. A composite component models a domain controller on an Azure VM and carries both the AD DS and the VM host threats.'
+  author: Precogly Team
+  depends_on: [taxonomies/stride-taxonomy, taxonomies/cwe, taxonomies/mitre-attack, threat-libraries/azure]
+  tags: [hybrid, on-prem, active-directory, entra-connect, smb, nfs, print-service, network-printer, file-share, infrastructure, full]

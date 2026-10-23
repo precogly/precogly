@@ -1,0 +1,76 @@
+threats:
+- id: ad-ds-tier0-daily-admin-use
+  name: Tier 0 Credentials Used on Lower-Tier Hosts
+  description: 'Tier 0 administrators use Domain Admins accounts for daily work and sign in on workstations and servers of lower tiers. Credentials are then exposed to the lower-trust environment and can be harvested. Quelle: Tier-Modell (Anti-Pattern: Daily work with Domain Admins).'
+- id: ad-ds-local-admin-identity-assets
+  name: Local Admins on Identity Assets
+  description: 'Local administrator accounts on domain controllers and other identity systems give indirect Domain Admin rights. Any compromise of such an account leads to full domain control. Quelle: Defender-Assessment „Remove local admins on identity assets“.'
+- id: ad-ds-dcsync
+  name: AD DS DCSync Credential Replication
+  description: 'An account with replication rights requests directory replication as if it were a domain controller and extracts password hashes for all accounts, including KRBTGT and Domain Admins. Quelle: Defender-Alerts „DCSync attack“ (T1003.006, alert 2006); Defender-Assessment „Remove non-admin accounts with DCSync permissions“.'
+- id: ad-ds-kerberoasting
+  name: AD DS Kerberoasting
+  description: 'Any domain user requests Kerberos service tickets for accounts with service principal names and cracks them offline. Recovered service account passwords are often weak and over-privileged. Quelle: Defender-Alerts „Possible Kerberoasting attack“ (T1558.003), „Suspected Kerberos SPN exposure“ (2410).'
+- id: ad-ds-as-rep-roasting
+  name: AD DS AS-REP Roasting
+  description: 'Accounts with Kerberos pre-authentication disabled return encrypted AS-REP data without a password check, which an attacker can crack offline. Quelle: Defender-Alerts „Suspected AS-REP Roasting attack“ (T1558.004, alert 2412, Prävention: Preauth aktivieren).'
+- id: ad-ds-golden-ticket
+  name: AD DS Golden Ticket Forgery
+  description: 'After the KRBTGT credentials are compromised, attackers forge Kerberos TGTs for any user with long lifetimes. Domain-wide access persists after individual password resets. Quelle: Defender-Alerts „Possible golden ticket attack“ (T1558.001, CVE-2021-42287).'
+- id: ad-ds-dc-print-spooler-coercion
+  name: Domain Controller Print Spooler Coercion
+  description: 'Any authenticated user can connect to the Print Spooler on a domain controller and make it notify a system with unconstrained delegation, which exposes the domain controller''s computer account credential. Quelle: Defender-Assessment „Disable Print spooler service on domain controllers“.'
+- id: entra-connect-tier0-takeover
+  name: Entra Connect Server Compromise to Cloud Admin
+  description: 'The Entra Connect server holds credentials for the on-premises and cloud sync accounts. Attackers who compromise this server gain a path from on-premises to cloud administrator rights. Quelle: Entra-Connect-Prerequisites „Harden your Microsoft Entra Connect server“ (Tier 0); Tier-Modell (Tier 0: Microsoft Entra Connect).'
+- id: entra-connect-sync-account-credential-exposure
+  name: Entra Connect Sync Account Credential Exposure
+  description: 'The AAD_ sync service account stores the passwords of the other Entra Connect accounts, encrypted in the local database. Access to the server or the database yields the credentials, and an AD DS connector account with excessive rights extends the reach to AD DS password data. Quelle: Entra-Connect-Accounts „AAD_ service account … stores passwords“; Entra-Connect-Version „Lock down access to the AD DS account“ (1.1.654.0).'
+- id: entra-connect-cloud-user-manipulation
+  name: Cloud User Manipulation via Provisioning Agent
+  description: 'An attacker who controls the Entra Connect or provisioning agent server can change users in Entra ID, for example by resetting passwords of synchronized accounts. Quelle: Governance-BP „Enable MFA … if an attacker can get control over the provisioning agent they can manipulate users in Microsoft Entra ID“.'
+- id: entra-hybrid-group-lateral-movement
+  name: Lateral Movement via Synchronized AD Groups
+  description: 'Security groups synchronized from AD DS grant access to cloud resources. A compromised on-premises account or group membership therefore gives access to cloud applications and roles. Quelle: Governance-BP „Preventing lateral movement“ (Entitlement Management statt synchronisierter Gruppen).'
+- id: smb-ntlm-relay
+  name: SMB NTLM Relay
+  description: 'Attackers capture NTLM authentication through poisoning or coercion and relay it to SMB, LDAP, or AD CS endpoints that do not require signing or channel binding. The relayed session runs as the victim. Quelle: SMB-Signing „SMB signing … prevent relay attacks“; LDAP-CBT „primary risk that channel binding addresses is NTLM credential relay“.'
+- id: smb-ntlm-brute-force-pass-the-hash
+  name: NTLM Brute Force and Pass-the-Hash on SMB
+  description: 'NTLM authentication over SMB is used for password guessing, offline cracking, and pass-the-hash. NTLM does not verify the server identity and can be sent to malicious servers. Quelle: SMB-NTLM-Blocking „mitigating brute force, cracking, relay, and pass-the-hash attacks“; SMB-Security-Hardening „SMB authentication rate limiter“.'
+- id: smb-unencrypted-transfer
+  name: Unencrypted SMB File Transfer
+  description: 'SMB encryption is optional on Windows Server 2022 and earlier, unless configured per share or server. File contents can be read by anyone on the network path. Quelle: SMB-Features „Optional encryption … not required by default“ (Server 2022); SMB-Interception-Defense „Protect SMB traffic from interception“.'
+- id: smb-legacy-smbv1-exploitation
+  name: SMBv1 Remote Code Execution
+  description: 'SMBv1 remains enabled on file servers or clients. Vulnerabilities in the SMBv1 server allow an authenticated attacker to execute code or crash the service. Quelle: SMB-Detect-Enable-Disable „SMBv1 has significant security vulnerabilities“; MS16-114 (CVE-2016-3345).'
+- id: nfs-unauthenticated-export-access
+  name: NFS Export Open to Any Client
+  description: 'Default NFS export rules allow any client (0.0.0.0/0) read and write access. Any host that reaches the export can mount it and read or modify files. Quelle: ANF-Export-Policy „Default policy rule“ (0.0.0.0/0, read & write).'
+- id: nfs-root-access-on-export
+  name: NFS Root Access on Export
+  description: 'With root access enabled, the client''s root user maps to root on the server. A compromised client gains root-level control over all files in the export. Quelle: ANF-NAS-Permissions „Root access: If set to On, the root is root“; ANF-Export-Policy „Root access On“ (default).'
+- id: nfs-unencrypted-traffic
+  name: NFS Traffic Without Encryption
+  description: 'NFSv3 has no encryption, and Kerberos krb5 only protects the initial authentication. Data in NFS traffic can be read on the network path. Quelle: ANF-Security-FAQ „NFSv3 protocol doesn''t provide support for encryption“; ANF-Data-Encryption „krb5 … NFS packets are not encrypted“.'
+- id: print-spooler-privilege-escalation
+  name: Print Spooler Privilege Escalation
+  description: 'Vulnerabilities in the Print Spooler let authenticated users load a DLL or run code with SYSTEM rights. The spooler runs as SYSTEM and loads third-party drivers at the same privilege level. Quelle: MS09-022 (CVE-2009-0230, Print Spooler Load Library); Protected-Print „Excessive permissions“ (Spooler läuft als SYSTEM).'
+- id: print-untrusted-driver-install
+  name: Untrusted Print Driver Installation
+  description: 'Point and Print lets clients install drivers from a print server. A rogue or man-in-the-middle print server can deliver a malicious driver, which is then executed by the spooler. Quelle: MS16-087 (CVE-2016-3238, rogue print server and MiTM); Point-and-Print „Point and Print Restrictions policies“.'
+- id: printer-unencrypted-ipp
+  name: Unencrypted IPP Printing
+  description: 'Printers can be installed and used over IPP without TLS (IPPS not required). Print jobs can be read or altered on the network path. Quelle: Ready-Print „RequireIppsPolicy“ (default 0: IPP ohne IPPS erlaubt); What-is-IPP „IPP supports transport encryption“.'
+- id: printer-tls-certificate-bypass
+  name: Printer TLS Certificate Errors Ignored
+  description: 'The default IPP TLS policy ignores all certificate errors. An attacker can impersonate the printer or the print server with a self-signed certificate, and capture print jobs or credentials. Quelle: Ready-Print „ConfigureIppTlsCertificatePolicy“ (default: alle Zertifikatsfehler ignoriert).'
+- id: print-service-coercion
+  name: Print Service Authentication Coercion
+  description: 'Any authenticated user can connect to the Print Spooler of a server and make it authenticate to an attacker host. Microsoft notes that any server, not only domain controllers, is potentially at risk. Quelle: Defender-Assessment „Disable Print spooler service on domain controllers“ (Hinweis: jeder Server kann betroffen sein).'
+- id: print-service-traffic-eavesdropping
+  name: Print Traffic Eavesdropping
+  description: 'Print jobs travel from client to print service without transport encryption, so anyone on the network path can read the document content. Quelle: Printing-Best-Practices „mitigate client-to-server eavesdropping“ (IPsec).'
+- id: printer-confidential-print-exposure
+  name: Confidential Prints Left at Network Printer
+  description: 'Confidential documents print immediately on a shared network printer and remain in the output tray, where anyone at the device can take them. Quelle: Printing-Best-Practices „Maintaining physical security“ (Druck erst nach Passwort-Eingabe am Gerät).'

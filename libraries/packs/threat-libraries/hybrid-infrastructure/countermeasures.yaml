@@ -1,0 +1,121 @@
+countermeasures:
+- id: ad-tier0-hardening
+  name: Tiered Administration Model and PAW Access
+  description: 'Keep Tier 0 small and use Tier 0 PAWs for Tier 0 administration; do not use Domain Admins accounts for daily work or on lower-tier hosts. Avoid jump servers outside Tier 0 for domain controllers and use JIT or vault access with approval. Quelle: Tier-Modell (Tier 0 klein halten, PAW, Anti-Pattern „Daily work with Domain Admins“).'
+  control_functions: [preventive]
+  cost: medium
+- id: ad-remove-local-admins-identity
+  name: Remove Local Admins on Identity Assets
+  description: 'Remove non-essential local administrator accounts on domain controllers, AD FS, AD CS, and Entra Connect servers. Every local admin on a Tier 0 system is an indirect Domain Admin. Quelle: Defender-Assessment „Remove local admins on identity assets“.'
+  control_functions: [preventive]
+  cost: low
+- id: ad-dcsync-permission-review
+  name: Review Replication Permissions
+  description: 'Remove the Replicating Directory Changes and Replicating Directory Changes All rights from non-admin accounts (including service accounts). Review the replication ACL on the domain root every quarter. Quelle: Defender-Assessment „Remove non-admin accounts with DCSync permissions“; Defender-Alerts DCSync (alert 2006).'
+  control_functions: [preventive]
+  cost: low
+- id: ad-dcsync-detection
+  name: DCSync Detection on Domain Controllers
+  description: 'Detection: alert when a directory replication request comes from a computer that is not a domain controller (Defender for Identity DCSync alert). Enable Directory Service Access auditing on domain controllers. Quelle: Defender-Alerts „DCSync attack (replication of directory services)“, detection rule: replication from non-DC.'
+  control_functions: [detective]
+  cost: low
+- id: ad-kerberos-service-account-hardening
+  name: Kerberos Pre-Auth and Strong Service Account Secrets
+  description: 'Require Kerberos pre-authentication on all accounts (AS-REP roasting protection) and use long random passwords or group managed service accounts for accounts with service principal names. Detection: Defender for Identity alerts for SPN exposure and suspicious TGS requests. Quelle: Defender-Alerts „Suspected Kerberos SPN exposure“ (2410), „Suspected AS-REP Roasting“ (2412, Prävention: Preauth aktivieren).'
+  control_functions: [preventive, detective]
+  cost: low
+- id: ad-krbtgt-reset
+  name: KRBTGT Password Reset After Compromise
+  description: 'Reset the KRBTGT password twice (with replication in between) after any suspected KRBTGT compromise, and patch domain controllers against forged PAC attacks (KB5008380 for CVE-2021-42287). Plan the reset in stages to avoid authentication outages. Quelle: Defender-Alerts „Possible golden ticket attack“ (CVE-2021-42287, KB5008380); KRBTGT-Doppel-Reset als Microsoft-Empfehlung, nicht separat geprüft.'
+  control_functions: [recovery]
+  cost: low
+- id: ad-dc-print-spooler-disable
+  name: Disable Print Spooler on Domain Controllers
+  description: 'Disable the Print Spooler service on domain controllers and Active Directory admin systems, using a GPO. Trade-off: print pruning of stale print queue objects must be handled separately. Quelle: Defender-Assessment „Disable Print spooler service on domain controllers“.'
+  control_functions: [preventive]
+  cost: low
+- id: entra-connect-tier0-isolation
+  name: Harden Entra Connect as Tier 0 Asset
+  description: 'Treat the Entra Connect server as a Tier 0 (Control Plane) asset. Restrict administrative access to domain administrators or tightly controlled groups, use dedicated admin accounts, and do not allow web browsing or email on the server. Quelle: Entra-Connect-Prerequisites „Harden your Microsoft Entra Connect server“; Tier-Modell (Entra Connect = Tier 0).'
+  control_functions: [preventive]
+  cost: medium
+- id: entra-connect-sync-account-scope
+  name: Lock Down the AD DS Connector Account
+  description: 'Limit the AD DS connector account to the permissions set by Set-ADSyncBasicReadPermissions and related cmdlets. Remove unnecessary ACEs and disable inheritance on the account object, as recommended for Entra Connect accounts created before version 1.1.654.0. Quelle: Entra-Connect-Version „1.1.654.0 Lock down access to the AD DS account“; Entra-Connect-Accounts (AAD_-Konto speichert Passwörter verschlüsselt).'
+  control_functions: [preventive]
+  cost: low
+- id: entra-connect-privileged-mfa
+  name: MFA for Privileged Identities and Provisioning Admins
+  description: 'Require MFA for all privileged identities in Entra ID and AD. If an attacker controls the provisioning agent, they can reset passwords and manipulate users; MFA still blocks login with the reset password. Quelle: Governance-BP „Enable MFA for users that have privileged access … provisioning agent“.'
+  control_functions: [preventive]
+  cost: low
+- id: entra-hybrid-group-entitlements
+  name: Entitlement Management Instead of Synced AD Groups
+  description: 'Grant access to sensitive cloud applications and roles through entitlement management, not through security groups synchronized from AD DS. Do not nest non-role-assignable groups in role-assignable groups used with PIM for groups. Quelle: Governance-BP „Preventing lateral movement“ (Entitlement Management statt hybrid groups; keine verschachtelten Gruppen mit PIM).'
+  control_functions: [preventive]
+  cost: medium
+- id: smb-signing-ntlm-restriction
+  name: SMB Signing, LDAP Channel Binding, and NTLM Blocking
+  description: 'Require SMB signing on servers and clients, enforce LDAP signing and channel binding (LdapEnforceChannelBinding = 2 where supported), and block outbound NTLM from SMB clients with Set-SmbClientConfiguration -BlockNTLM $true. Use Kerberos as the default authentication path. Quelle: SMB-Signing „Overview of Server Message Block signing“; LDAP-CBT „LDAP channel binding overview“; SMB-NTLM-Blocking „Block NTLM connections on SMB“; SMB-Security-Hardening (Authentication-Rate-Limiter).'
+  control_functions: [preventive]
+  cost: medium
+- id: smb-encryption-required
+  name: Require SMB Encryption on Shares
+  description: 'Enable SMB encryption per share or server where supported. On Windows Server 2025 and Windows 11 24H2, SMB encryption is required by default for outbound client connections; set it explicitly for older systems. Quelle: SMB-Features „Encryption required by default“ (Server 2025); SMB-Interception-Defense „Protect SMB traffic from interception“.'
+  control_functions: [preventive]
+  cost: low
+- id: smb-disable-v1
+  name: Disable SMBv1
+  description: 'Disable SMBv1 on all servers and clients with Set-SmbServerConfiguration -EnableSMB1Protocol $false, and remove the optional feature where possible. Microsoft recommends not using SMBv1; first inventory SMBv1 clients with the audit setting. Quelle: SMB-Detect-Enable-Disable „SMBv1 has significant security vulnerabilities … not to use“; MS16-114 (CVE-2016-3345).'
+  control_functions: [preventive]
+  cost: low
+- id: smb-smb1-ntlm-audit
+  name: SMBv1 and NTLM Usage Auditing
+  description: 'Detection: enable SMBv1 access auditing (Set-SmbServerConfiguration -AuditSmb1Access $true) and review Microsoft-Windows-SMBServer/Audit event 3000 for SMBv1 clients. Audit NTLM usage to find where Kerberos migration is still blocked. Quelle: SMB-Detect-Enable-Disable „Audit SMBv1 usage“ (Event 3000); SMB-Interception-Defense „Assessing NTLM usage“.'
+  control_functions: [detective]
+  cost: low
+- id: nfs-kerberos-only
+  name: NFSv4.1 with Kerberos Only
+  description: 'Use NFSv4.1 with Kerberos (krb5i or krb5p) and disallow AUTH_SYS access on exports. Kerberos-enabled exports reject AUTH_SYS clients. Prefer krb5p where the data is sensitive, accepting the performance cost. Quelle: ANF-Kerberos „Only Kerberos-enabled clients are able to access volumes … no AUTH_SYS access“; ANF-Data-Encryption (krb5/krb5i/krb5p).'
+  control_functions: [preventive]
+  cost: medium
+- id: nfs-export-restriction
+  name: Restrict NFS Export Rules and Root Access
+  description: 'Replace the default export rule (0.0.0.0/0 with read/write and root access on) with explicit client hosts or subnets. Set root access to off so that root is squashed to the anonymous user, and use read-only where possible. Quelle: ANF-Export-Policy „Default policy rule“ (0.0.0.0/0, Root access On); ANF-NAS-Permissions „Root access“ (root squashing).'
+  control_functions: [preventive]
+  cost: low
+- id: print-spooler-disable-servers
+  name: Disable Print Spooler Where Printing Is Not Needed
+  description: 'Disable the Print Spooler on servers that do not host printers. Where printing is required, apply the security updates and restrict remote spooler access. Note that disabling it stops local and remote printing. Quelle: MS09-022 Workaround „Disable the Print Spooler service“ (Auswirkung: kein Drucken); Defender-Assessment (jeder Server kann betroffen sein).'
+  control_functions: [preventive]
+  cost: low
+- id: print-point-and-print-restricted
+  name: Point and Print Restrictions
+  description: 'Enable the Point and Print Restrictions policy: users can point and print only to listed trusted print servers, install drivers without a warning for those servers only, and show a warning when updating drivers. Quelle: Point-and-Print „Point and Print Restrictions policies“; MS16-087 (CVE-2016-3238, Mitigating Factors).'
+  control_functions: [preventive]
+  cost: low
+- id: print-protected-print-mode
+  name: Windows Protected Print Mode and IPP Drivers
+  description: 'Where the printers support IPP, use the Microsoft IPP Class Driver with Windows protected print mode. This blocks third-party driver loading and reduces the privilege of the spooler worker process. Quelle: Protected-Print „Spooler security in Windows protected print mode“; Protected-Print „Excessive permissions“.'
+  control_functions: [preventive]
+  cost: medium
+- id: printer-ipps-required
+  name: Require IPPS for IPP Printers
+  description: 'Enable the RequireIpps policy so that only printers that support IPPS (TLS) can be installed, and disable RAW and unencrypted IPP where the printer allows it. The default allows IPP printers without IPPS. Quelle: Ready-Print „Policy CSP – Printers: RequireIppsPolicy“ (Default 0); What-is-IPP „IPP supports transport encryption“.'
+  control_functions: [preventive]
+  cost: low
+- id: printer-tls-certificate-validation
+  name: Enforce TLS Certificate Validation for IPP Printers
+  description: 'Set ConfigureIppTlsCertificatePolicy to enabled so that certificate checking is not bypassed. The default ignores all certificate errors, which allows man-in-the-middle attacks on printer connections; use an internal CA for printer certificates. Quelle: Ready-Print „Policy CSP – Printers: ConfigureIppTlsCertificatePolicy“ (Default: alle Zertifikatsfehler ignoriert).'
+  control_functions: [preventive]
+  cost: low
+- id: print-service-transport-encryption
+  name: Encrypt Print Traffic Between Client and Print Service
+  description: 'Protect client-to-print-service traffic with IPsec or SMB encryption, and use only authenticated spooler RPC between clients and the print service. Quelle: Printing-Best-Practices „Maintaining data security“ (IPsec gegen Client-zu-Server-Abhören).'
+  control_functions: [preventive]
+  cost: medium
+- id: printer-secure-print-release
+  name: Secure Print Release for Confidential Jobs
+  description: 'For confidential documents, use a printer that holds the job until the user authenticates at the device (PIN or badge), and keep printers that print confidential material in a locked room. Quelle: Printing-Best-Practices „Maintaining physical security“ und „Maintaining data security“ (Passwort-Freigabe am Gerät).'
+  control_functions: [preventive]
+  cost: low
