@@ -261,26 +261,33 @@ Open `https://precogly.example.com` in a browser and log in:
 
 ### Claude.ai
 
-1. Go to **Settings > Integrations > Add custom connector**.
+1. Go to **Settings > Connectors > Add custom connector**.
 2. Name: `Precogly`, URL: `https://precogly.example.com/mcp`.
 3. Keep the detected defaults (Sign in now, Register automatically).
 4. Authorize with `admin@precogly.dev` / `admin123`.
 
 ### Claude Code
 
-Add to your `.mcp.json`:
+Add the server from the command line:
+
+```bash
+claude mcp add --transport http precogly https://precogly.example.com/mcp
+```
+
+Or add it to the `.mcp.json` file in your project:
 
 ```json
 {
-  "mcp": {
+  "mcpServers": {
     "precogly": {
-      "type": "remote",
-      "url": "https://precogly.example.com/mcp",
-      "enabled": true
+      "type": "http",
+      "url": "https://precogly.example.com/mcp"
     }
   }
 }
 ```
+
+Then run `/mcp` inside Claude Code and choose **Authenticate** to sign in through your browser.
 
 ### Other MCP clients
 
