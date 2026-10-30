@@ -1,8 +1,16 @@
 version: 2
 
-# Version updates only. Security updates are a repository setting and are
-# already on, so an advisory opens a PR whether or not an ecosystem is listed
-# here, and regardless of open-pull-requests-limit. This file adds currency.
+# Security updates are a repository setting and are already on, so an advisory
+# opens a PR whether or not an ecosystem is listed here, and regardless of
+# open-pull-requests-limit. This file adds currency and groups those security
+# PRs for npm and uv.
+#
+# To keep the PR list short, every entry:
+# - ignores major versions. Majors are migrations, done by hand when chosen.
+#   The ignore only affects version updates, so a security fix that needs a
+#   major still opens a PR.
+# - waits 21 days after a release before proposing it (cooldown). Cooldown
+#   does not apply to security updates, which open as soon as an advisory lands.
 #
 # commit-message repeats per entry because dependabot.yml v2 has no top-level
 # defaults. prefix + include:scope gives "chore(deps): bump x from 1 to 2" —
@@ -14,11 +22,21 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 21
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       npm-minor-and-patch:
         update-types:
           - "minor"
           - "patch"
+      # One PR for all security fixes instead of one per package.
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
     commit-message:
       prefix: "chore"
       include: "scope"
@@ -31,11 +49,20 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 21
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       uv-minor-and-patch:
         update-types:
           - "minor"
           - "patch"
+      uv-security:
+        applies-to: security-updates
+        patterns:
+          - "*"
     commit-message:
       prefix: "chore"
       include: "scope"
@@ -44,6 +71,11 @@ updates:
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 21
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       docker-compose-minor-and-patch:
         update-types:
@@ -59,6 +91,11 @@ updates:
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 21
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       docker-minor-and-patch:
         update-types:
@@ -72,6 +109,11 @@ updates:
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 21
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       github-actions-minor-and-patch:
         update-types:
@@ -85,6 +127,11 @@ updates:
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 21
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       pre-commit-minor-and-patch:
         update-types:
