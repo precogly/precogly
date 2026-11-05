@@ -41,9 +41,15 @@ from .serializers import AIProviderConfigSerializer
 class AIProviderConfigViewSet(viewsets.ModelViewSet):
     """CRUD for per-tenant AI provider configs, plus a connection probe."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = AIProviderConfig.objects.none()
     serializer_class = AIProviderConfigSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter,
+    ]
     filterset_fields = ["organization", "enabled", "is_default"]
     search_fields = ["name", "model", "base_url"]
     ordering_fields = ["name", "created_at"]
@@ -239,15 +245,11 @@ class AIUsageSummaryView(APIView):
         """The requested org id, validated to one the caller belongs to."""
         raw = request.query_params.get("organization")
         if not raw:
-            raise ValidationError(
-                {"organization": "This query parameter is required."}
-            )
+            raise ValidationError({"organization": "This query parameter is required."})
         try:
             org_id = int(raw)
         except (TypeError, ValueError) as err:
-            raise ValidationError(
-                {"organization": "Must be an integer id."}
-            ) from err
+            raise ValidationError({"organization": "Must be an integer id."}) from err
         member_org_ids = request.user.organization_memberships.values_list(
             "organization_id", flat=True
         )
