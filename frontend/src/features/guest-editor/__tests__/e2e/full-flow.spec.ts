@@ -2,6 +2,11 @@ import { test, expect, type Page } from '@playwright/test'
 import { readFileSync } from 'fs'
 
 const GUEST_URL = '/guest'
+// Long enough to overflow the Threats column, so the test proves the row truncates
+// and its edit and delete buttons stay inside the viewport.
+const LONG_THREAT_NAME = 'Stolen or fixed session used to act as another registered user across every expense screen'
+const LONG_COUNTERMEASURE_DESCRIPTION =
+  'Validate, canonicalise and length-limit every user supplied field on the server before it reaches a query or a template'
 
 async function stubFileSystemAccess(page: Page) {
   await page.addInitScript(() => {
@@ -75,7 +80,7 @@ test.describe('full threat modeling workflow', () => {
 
     // Add a threat on the API server (preselected), also on the database
     await page.getByTestId('guest-add-threat').click()
-    await page.locator('#threat-name').fill('SQL Injection')
+    await page.locator('#threat-name').fill(LONG_THREAT_NAME)
     await page.locator('#threat-description').fill('Attacker injects malicious SQL')
     await page.locator('[role="dialog"]').getByLabel('Account DB').check()
     await page.locator('#threat-level').click()
@@ -84,14 +89,14 @@ test.describe('full threat modeling workflow', () => {
     await page.getByRole('option', { name: 'Tampering' }).click()
     await page.getByRole('button', { name: 'Add Threat' }).click()
 
-    const threatRow = page.getByTestId('guest-threat-row').filter({ hasText: 'SQL Injection' })
+    const threatRow = page.getByTestId('guest-threat-row').filter({ hasText: LONG_THREAT_NAME })
     await expect(threatRow).toBeVisible()
     await expect(threatRow).toContainText('T1')
     await expect(threatRow).toContainText('On: API Server, Account DB')
 
     // The same threat shows under the database too
     await page.locator('text=Account DB').first().click()
-    await expect(page.getByTestId('guest-threat-row').filter({ hasText: 'SQL Injection' })).toBeVisible()
+    await expect(page.getByTestId('guest-threat-row').filter({ hasText: LONG_THREAT_NAME })).toBeVisible()
     await page.locator('text=API Server').first().click()
 
     // Select the threat to reveal the countermeasures column
@@ -100,13 +105,20 @@ test.describe('full threat modeling workflow', () => {
     // Add a countermeasure (the selected threat is preselected under Mitigates)
     await page.getByTestId('guest-add-countermeasure').click()
     await page.locator('#countermeasure-name').fill('Input Validation')
-    await page.locator('#countermeasure-description').fill('Validate all user inputs')
+    await page.locator('#countermeasure-description').fill(LONG_COUNTERMEASURE_DESCRIPTION)
     await page.locator('[role="dialog"]').getByRole('button', { name: 'Add', exact: true }).click()
 
     const countermeasureRow = page.getByTestId('guest-countermeasure-row').filter({ hasText: 'Input Validation' })
     await expect(countermeasureRow).toBeVisible()
     await expect(countermeasureRow).toContainText('C1')
     await expect(countermeasureRow).toContainText('Applies to: whole system')
+
+    // Long names truncate inside the column; the edit and delete buttons must stay
+    // inside the viewport rather than being pushed past the column's right edge.
+    await expect(threatRow.getByRole('button', { name: /^Edit T1/ })).toBeInViewport()
+    await expect(threatRow.getByRole('button', { name: /^Delete T1/ })).toBeInViewport()
+    await expect(countermeasureRow.getByRole('button', { name: /^Edit C1/ })).toBeInViewport()
+    await expect(countermeasureRow.getByRole('button', { name: /^Delete C1/ })).toBeInViewport()
 
     // Edit the threat: triage as Mitigate
     await threatRow.hover()
@@ -161,7 +173,7 @@ test.describe('full threat modeling workflow', () => {
     await page.getByRole('button', { name: 'Analyze Threats' }).click()
     await page.waitForURL('**/guest/threats')
     await page.locator('text=API Server').first().click()
-    const reopenedRow = page.getByTestId('guest-threat-row').filter({ hasText: 'SQL Injection' })
+    const reopenedRow = page.getByTestId('guest-threat-row').filter({ hasText: LONG_THREAT_NAME })
     await expect(reopenedRow).toBeVisible({ timeout: 5_000 })
     await expect(reopenedRow).toContainText('T1')
     await expect(reopenedRow).toContainText('mitigate')

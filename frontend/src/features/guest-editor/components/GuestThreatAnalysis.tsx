@@ -427,7 +427,10 @@ export function GuestThreatAnalysis() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 touch:opacity-100"
+                                  className={cn(
+                                    'h-6 w-6 p-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 touch:opacity-100',
+                                    selectedThreatId === threat.id && 'opacity-100'
+                                  )}
                                   aria-label={`Edit ${threatDisplayNumber(threat)}`}
                                   onClick={(e) => {
                                     e.stopPropagation()
@@ -439,7 +442,10 @@ export function GuestThreatAnalysis() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 touch:opacity-100 text-muted-foreground hover:text-red-600"
+                                  className={cn(
+                                    'h-6 w-6 p-0 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 touch:opacity-100 text-muted-foreground hover:text-red-600',
+                                    selectedThreatId === threat.id && 'opacity-100'
+                                  )}
                                   aria-label={`Delete ${threatDisplayNumber(threat)}`}
                                   onClick={(e) => {
                                     e.stopPropagation()
@@ -545,7 +551,14 @@ export function GuestThreatAnalysis() {
                                   </Badge>
                                 </div>
                                 <div className="min-w-0">
-                                  <span className="truncate block">{countermeasure.name}</span>
+                                  <button
+                                    type="button"
+                                    className="truncate block w-full text-left hover:underline"
+                                    aria-label={`Open ${countermeasureDisplayNumber(countermeasure)} ${countermeasure.name}`}
+                                    onClick={() => handleEditCountermeasure(countermeasure)}
+                                  >
+                                    {countermeasure.name}
+                                  </button>
                                   {countermeasure.description && (
                                     <span className="text-xs text-muted-foreground truncate block">
                                       {countermeasure.description}
@@ -557,7 +570,7 @@ export function GuestThreatAnalysis() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 touch:opacity-100"
+                                  className="h-6 w-6 p-0 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 touch:opacity-100"
                                   aria-label={`Edit ${countermeasureDisplayNumber(countermeasure)}`}
                                   onClick={() => handleEditCountermeasure(countermeasure)}
                                 >
@@ -566,7 +579,7 @@ export function GuestThreatAnalysis() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 touch:opacity-100 text-muted-foreground hover:text-red-600"
+                                  className="h-6 w-6 p-0 opacity-60 group-hover:opacity-100 group-focus-within:opacity-100 touch:opacity-100 text-muted-foreground hover:text-red-600"
                                   aria-label={`Delete ${countermeasureDisplayNumber(countermeasure)}`}
                                   onClick={() => guestEditor.removeCountermeasure(countermeasure.id)}
                                 >

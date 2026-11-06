@@ -6,15 +6,17 @@
  * "Flows" and a "Boundaries" group per blueprint.
  *
  * A threat with several targets appears under each target; counts use a set
- * of threat ids, so each scenario counts once at every level. Built from the
- * backend rows, not the canvas, so targets off any canvas are listed too.
+ * of threat ids, so each scenario counts once at every level. Every row,
+ * System included, counts its whole subtree, and the Threats pane lists the
+ * same set, so a row's count and its list agree. Built from the backend rows,
+ * not the canvas, so targets off any canvas are listed too.
  */
 
 import type { ZoneType } from '@/types/domain'
 import type { AnalysisThreat, TargetType } from '../../types/threat-analysis'
 import { deriveThreatStatus } from '../../types/threat-analysis'
 import { isActiveThreat } from '@/types/triage'
-import { SYSTEM_SELECTION, targetSelection, type AnalysisSelection } from './analysis-selection'
+import { SYSTEM_SELECTION, targetSelection, targetTreeKey, type AnalysisSelection } from './analysis-selection'
 
 export type AnalysisTreeNodeKind =
   | 'system'
@@ -245,7 +247,7 @@ export function buildAnalysisTree(input: AnalysisTreeInput): AnalysisTree {
     const nextVisited = new Set(visited).add(component.id)
     placedComponents.add(component.id)
     const node = makeNode(
-      `component-${component.id}`,
+      targetTreeKey('component', component.id),
       'component',
       component.name,
       targetSelection('component', component.id),
@@ -269,7 +271,7 @@ export function buildAnalysisTree(input: AnalysisTreeInput): AnalysisTree {
     if (visited.has(zone.id) || placedZones.has(zone.id)) return null
     const nextVisited = new Set(visited).add(zone.id)
     placedZones.add(zone.id)
-    const node = makeNode(`zone-${zone.id}`, 'zone', zone.name, targetSelection('zone', zone.id), {
+    const node = makeNode(targetTreeKey('zone', zone.id), 'zone', zone.name, targetSelection('zone', zone.id), {
       backendId: zone.id,
       blueprintId: zone.blueprint,
       zoneType: zone.zoneType,
@@ -316,7 +318,7 @@ export function buildAnalysisTree(input: AnalysisTreeInput): AnalysisTree {
       const group = makeNode(`flows-${blueprintId}`, 'flowsGroup', 'Flows', null, { blueprintId })
       for (const flow of flows) {
         group.children.push(
-          makeNode(`flow-${flow.id}`, 'flow', flowLabel(flow), targetSelection('flow', flow.id), {
+          makeNode(targetTreeKey('flow', flow.id), 'flow', flowLabel(flow), targetSelection('flow', flow.id), {
             secondaryLabel:
               flow.label && (flow.sourceComponentName || flow.destComponentName)
                 ? `${flow.sourceComponentName ?? '?'} to ${flow.destComponentName ?? '?'}`
@@ -336,7 +338,7 @@ export function buildAnalysisTree(input: AnalysisTreeInput): AnalysisTree {
       for (const boundary of boundaries) {
         group.children.push(
           makeNode(
-            `boundary-${boundary.id}`,
+            targetTreeKey('boundary', boundary.id),
             'boundary',
             boundaryLabel(boundary),
             targetSelection('boundary', boundary.id),
@@ -384,9 +386,8 @@ export function buildAnalysisTree(input: AnalysisTreeInput): AnalysisTree {
     for (const blueprintId of blueprintIds) buildBlueprintContent(blueprintId, root)
   }
 
-  // Depths, subtree sets and counts in one pass. The root counts only its
-  // own whole-system threats (the mockup's "System (2)"); every other row
-  // counts its subtree, each scenario once.
+  // Depths, subtree sets and counts in one pass. Every row counts its
+  // subtree, each scenario once; `directThreatIds` keeps the row's own.
   const finish = (node: AnalysisTreeNode, depth: number) => {
     node.depth = depth
     const subtree = new Set(node.directThreatIds)
@@ -395,7 +396,7 @@ export function buildAnalysisTree(input: AnalysisTreeInput): AnalysisTree {
       for (const id of child.subtreeThreatIds) subtree.add(id)
     }
     node.subtreeThreatIds = subtree
-    node.counts = countThreats(node.kind === 'system' ? node.directThreatIds : subtree, threatsById)
+    node.counts = countThreats(subtree, threatsById)
     byKey.set(node.key, node)
   }
   finish(root, 0)
@@ -407,7 +408,9 @@ export function buildAnalysisTree(input: AnalysisTreeInput): AnalysisTree {
  * Where the analysis screen starts when nothing is selected, so it never
  * opens on two empty panes: the system when it has whole-system threats,
  * else the first component in tree order with a threat on it, else the
- * first other row (zone, flow, boundary) with one, else the system.
+ * first other row (zone, flow, boundary) with one, else the system. Own
+ * threats decide: a parent with only inherited ones is no better start than
+ * its child.
  */
 export function initialAnalysisSelection(root: AnalysisTreeNode): AnalysisSelection {
   const systemSelection = root.selection ?? SYSTEM_SELECTION
