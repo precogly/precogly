@@ -8,7 +8,7 @@ an in-process request addressed like `RequestFactory`'s default fails in product
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 
-from apps.core import mcp
+from apps.core.mcp import api as mcp
 from apps.organizations.models import Organization, OrganizationMember
 from apps.threat_models.models import ThreatModel
 

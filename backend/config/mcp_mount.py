@@ -23,7 +23,7 @@ from a2wsgi import ASGIMiddleware
 from django.conf import settings
 from precogly_mcp.server import asgi_app
 
-from apps.core.mcp import DjangoAccessTokenVerifier
+from apps.core.mcp.token_verifier import DjangoAccessTokenVerifier
 
 WSGIApplication = Callable[[dict[str, Any], Callable[..., Any]], Iterable[bytes]]
 
