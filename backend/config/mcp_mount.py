@@ -23,6 +23,7 @@ from a2wsgi import ASGIMiddleware
 from django.conf import settings
 from precogly_mcp.server import asgi_app
 
+from apps.core.mcp.api import request
 from apps.core.mcp.token_verifier import DjangoAccessTokenVerifier
 
 WSGIApplication = Callable[[dict[str, Any], Callable[..., Any]], Iterable[bytes]]
@@ -79,6 +80,7 @@ def mount(django_application: WSGIApplication) -> WSGIApplication:
     issuer_url = settings.MCP_ISSUER_URL
 
     app = asgi_app(
+        request=request,
         token_verifier=DjangoAccessTokenVerifier(resource_url),
         issuer_url=issuer_url,
         resource_url=resource_url,

@@ -1,11 +1,13 @@
 """The Precogly MCP server, mounted inside Precogly at `/mcp`.
 
-Tokens are checked by a `TokenVerifier` the mounting application supplies, so this
-package never imports Django.
+The mounting application supplies the `TokenVerifier` that checks tokens and the
+`Request` the tools call the API through, so this package never imports Django.
 """
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from importlib.metadata import version
 
 from mcp.server import MCPServer
@@ -13,23 +15,37 @@ from mcp.server.auth.provider import TokenVerifier
 from mcp.server.auth.settings import AuthSettings
 from starlette.applications import Starlette
 
+from precogly_mcp.tools import Request
+
 
 def build_server(
     *,
+    request: Request,
     auth: AuthSettings | None = None,
     token_verifier: TokenVerifier | None = None,
 ) -> MCPServer:
-    """Assemble the server."""
+    """Assemble the server.
+
+    Tools reach `request` through the lifespan, the only place a server-wide value can
+    live.
+    """
+
+    @asynccontextmanager
+    async def lifespan(_: MCPServer) -> AsyncGenerator[Request]:
+        yield request
+
     return MCPServer(
         "precogly",
         version=version("precogly-mcp"),
         auth=auth,
         token_verifier=token_verifier,
+        lifespan=lifespan,
     )
 
 
 def asgi_app(
     *,
+    request: Request,
     token_verifier: TokenVerifier,
     issuer_url: str,
     resource_url: str,
@@ -49,6 +65,7 @@ def asgi_app(
     `stateless_http`: the targeted transport revision has no protocol-level sessions.
     """
     server = build_server(
+        request=request,
         # Strings, not `AnyHttpUrl`. Pydantic's default normalization appends a
         # trailing slash to a path-less issuer, and RFC 8414 compares issuers as
         # exact strings, so the client would reject its own issuer. `AuthSettings`
