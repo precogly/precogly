@@ -5,12 +5,14 @@ to `ALLOWED_HOSTS` and leaves `SECURE_SSL_REDIRECT` off, which would hide both w
 an in-process request addressed like `RequestFactory`'s default fails in production.
 """
 
+import pytest
 from asgiref.sync import async_to_sync
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from mcp.server.auth.provider import AccessToken
 
 from apps.core.mcp import api as mcp
+from apps.core.mcp.errors import APIError
 from apps.organizations.models import Organization, OrganizationMember
 from apps.threat_models.models import ThreatModel
 
@@ -70,9 +72,26 @@ class DispatchTests(TestCase):
             subject=str(self.kestrel_user.pk),
         )
 
-        status, body = async_to_sync(mcp.request)(
-            access_token, "get", "/api/threat-models/"
-        )
+        body = async_to_sync(mcp.request)(access_token, "get", "/api/threat-models/")
 
-        assert status == 200, body
         assert [row["name"] for row in body["results"]] == ["Ingest pipeline"]
+
+    def test_request_raises_on_an_error_status_with_drfs_reason(self):
+        # Kestrel's user cannot see Contoso's model, so the viewset answers 404.
+        access_token = AccessToken(
+            token="t",
+            client_id="c",
+            scopes=["read"],
+            subject=str(self.kestrel_user.pk),
+        )
+        contoso_model = ThreatModel.objects.get(name="Contoso ledger")
+
+        with pytest.raises(APIError) as raised:
+            async_to_sync(mcp.request)(
+                access_token, "GET", f"/api/threat-models/{contoso_model.pk}/"
+            )
+
+        assert str(raised.value) == (
+            f"GET /api/threat-models/{contoso_model.pk}/ returned 404: "
+            "No ThreatModel matches the given query."
+        )

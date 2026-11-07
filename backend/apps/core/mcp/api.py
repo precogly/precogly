@@ -64,15 +64,6 @@ def dispatch(user: AbstractBaseUser, method: str, path: str) -> tuple[int, Any]:
     return response.status_code, response.content.decode("utf-8", errors="replace")
 
 
-def _dispatch_as(user_id: int, method: str, path: str) -> tuple[int, Any]:
-    """Load the user and dispatch, both outside the event loop."""
-    #   `get`, not `filter().first()`: the verifier accepted a token naming this user
-    #   moments ago, so a missing row is a broken invariant, not an answer.
-
-    user = get_user_model().objects.get(pk=user_id)
-    return dispatch(user, method, path)
-
-
 async def request(access_token: AccessToken, method: str, path: str) -> Any:
     """The API call the agent's code makes: `method` on `path`, as the token's user."""
     method = method.upper()
@@ -89,9 +80,37 @@ async def request(access_token: AccessToken, method: str, path: str) -> Any:
     if access_token.subject is None:
         raise RuntimeError("MCP request reached dispatch without a resolved user")
 
-    # The ORM raises `SynchronousOnlyOperation` inside the event loop.
-    # `thread_sensitive` keeps the query on the thread that owns the connection, as
-    # the verifier does.
-    return await sync_to_async(_dispatch_as, thread_sensitive=True)(
-        int(access_token.subject), method, path
+    # `aget`, not a filter that may come back empty: the verifier accepted a token
+    # naming this user moments ago, so a missing row is a broken invariant.
+    user = await get_user_model().objects.aget(pk=int(access_token.subject))
+
+    # `dispatch` is sync and runs views that query the ORM, which raises
+    # `SynchronousOnlyOperation` inside the event loop. `thread_sensitive` keeps it on
+    # the thread that owns the connection, as the verifier does.
+    status, body = await sync_to_async(dispatch, thread_sensitive=True)(
+        user, method, path
     )
+    if status >= 400:
+        raise APIError(f"{method} {path} returned {status}: {_describe(body)}")
+    return body
+
+
+def _describe(body: object) -> str:
+    """Flatten a DRF error body into one line.
+
+    Exceptions come as `{"detail": ...}`, validation errors keyed by field. Field names
+    are kept: they tell the agent which parameter was wrong.
+    """
+    if isinstance(body, dict):
+        detail = body.get("detail")
+        if isinstance(detail, str):
+            return detail
+        fields = [
+            f"{key}: {'; '.join(str(m) for m in value)}"
+            if isinstance(value, list)
+            else f"{key}: {value}"
+            for key, value in body.items()
+        ]
+        if fields:
+            return ", ".join(fields)
+    return str(body)
