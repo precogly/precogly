@@ -5,8 +5,10 @@ to `ALLOWED_HOSTS` and leaves `SECURE_SSL_REDIRECT` off, which would hide both w
 an in-process request addressed like `RequestFactory`'s default fails in production.
 """
 
+from asgiref.sync import async_to_sync
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
+from mcp.server.auth.provider import AccessToken
 
 from apps.core.mcp import api as mcp
 from apps.organizations.models import Organization, OrganizationMember
@@ -57,3 +59,20 @@ class DispatchTests(TestCase):
 
         assert status == 404
         assert isinstance(body, str)
+
+    def test_request_reads_as_the_user_the_token_names(self):
+        # `async_to_sync` over `sync_to_async(thread_sensitive=True)` keeps the query
+        # on this thread, inside this TestCase's transaction.
+        access_token = AccessToken(
+            token="t",
+            client_id="c",
+            scopes=["read"],
+            subject=str(self.kestrel_user.pk),
+        )
+
+        status, body = async_to_sync(mcp.request)(
+            access_token, "get", "/api/threat-models/"
+        )
+
+        assert status == 200, body
+        assert [row["name"] for row in body["results"]] == ["Ingest pipeline"]
