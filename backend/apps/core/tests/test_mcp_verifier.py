@@ -125,8 +125,8 @@ class AnIssuedTokensAudience(TestCase):
         resolved = verify(self.token_for(RESOURCE))
 
         assert resolved is not None
-        # `subject` is the authorization boundary rather than a log field: it is the
-        # only thing `reader_for` uses to scope every row a tool sees.
+        # `subject` is the authorization boundary rather than a log field: tools act
+        # as this user.
         assert resolved.subject == str(self.user.pk)
         assert resolved.scopes == ["read"]
 
