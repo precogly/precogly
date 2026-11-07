@@ -27,9 +27,8 @@ class DjangoAccessTokenVerifier:
         return await sync_to_async(self._verify, thread_sensitive=True)(token)
 
     def _verify(self, token: str) -> AccessToken | None:
-        # Tokens are looked up by checksum, not by value: `token_checksum` is the
-        # indexed column, and it is what django-oauth-toolkit's own introspection
-        # endpoint matches on.
+        # By checksum, not value: `token_checksum` is the indexed column, and
+        # django-oauth-toolkit's own introspection matches on it.
         checksum = hashlib.sha256(token.encode("utf-8")).hexdigest()
         try:
             stored = (
@@ -43,28 +42,21 @@ class DjangoAccessTokenVerifier:
         if not stored.is_valid():
             return None
 
-        # Every tool reads as a user and nothing here has an application-only meaning,
-        # so a token naming no user — one issued by client credentials — is refused
-        # rather than resolved to nobody. That also makes `subject` below always set.
+        # Tools always act as a user, so a token naming none (client credentials) is
+        # refused.
         #
-        # `is_active` is checked here rather than left to `is_valid()`, which is
-        # django-oauth-toolkit's and covers expiry and scope. Disabling an account is
-        # how access is taken away in practice, and django-oauth-toolkit does not
-        # notice: measured against the dev stack, a disabled account's OAuth token
-        # still returns 200 from `/api/threat-models/` while its JWT returns 401 "User
-        # is inactive", because simplejwt checks and `validate_bearer_token` does not.
-        # The REST API side of that is Precogly's to fix in its authentication classes;
-        # this endpoint authenticates here, so this is where it belongs.
+        # `is_valid()` covers expiry and scope but not `is_active`. Measured on the dev
+        # stack: a disabled account's OAuth token still got 200 from
+        # `/api/threat-models/` while its JWT got 401, because simplejwt checks
+        # `is_active` and `validate_bearer_token` does not. The REST side needs its own
+        # fix in the authentication classes.
         if stored.user is None or not stored.user.is_active:
             return None
 
-        # RFC 8707, which the MCP specification makes a MUST: a token is only
-        # acceptable here if it was issued for this resource. The comparison is
-        # deliberately not `stored.allows_audience()`, on two counts. That helper
-        # returns True for a token carrying no resource indicator at all, which is
-        # the case this check exists to refuse; and it matches by URL prefix, so a
-        # token issued for the origin would satisfy it. Exact membership is what the
-        # audience of this endpoint means.
+        # RFC 8707, a MUST in the MCP specification: accept only tokens issued for
+        # this resource. Not `stored.allows_audience()`: it returns True for a token
+        # with no resource indicator, the case this check exists to refuse, and it
+        # matches by URL prefix, so a token issued for the origin would pass.
         audiences = stored.resource or []
         if self.resource_url not in audiences:
             return None
