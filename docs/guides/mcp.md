@@ -17,7 +17,7 @@ All parameters are optional. Leave them out to get everything.
 
 **`list_threat_models`** returns a `models` list and a `total`. Each model has its name, description, criticality, owner (email), owning team, business unit, compliance frameworks, risk scoring method, methodologies, lifecycle phase, approval date, primary system name, serial number, version, blueprint count, and created and updated times. It does not return the contents of a model.
 
-`frameworks` shows which frameworks at least one countermeasure maps to. It does not mean the model is compliant. Check `total` before saying how many models exist. Over the stdio transport, only the first 20 are returned.
+`frameworks` shows which frameworks at least one countermeasure maps to. It does not mean the model is compliant. Check `total` before saying how many models exist.
 
 **The three library searches** return `matches`, `matched` (how many matched), and `catalogSize` (how many the library holds). The libraries are shared by all organizations and filled by installed packs. They are templates, not the threats, countermeasures, or components in a particular model.
 
@@ -120,33 +120,6 @@ Do not run gunicorn with `--preload`. The MCP endpoint starts its own background
 
 For a complete setup with Caddy and automatic TLS, see [Self-Hosting on AWS](self-hosting-aws.md).
 
-## Stdio transport
-
-Developers can also run the MCP server as a local process that talks over stdio. The tools are the same. The difference is the credential: there is no browser sign-in. You supply a token yourself, and the server passes it to the Precogly REST API without checking it.
-
-| Variable | Meaning |
-| --- | --- |
-| `PRECOGLY_TOKEN` | Bearer token for the Precogly API. Required. |
-| `PRECOGLY_URL` | Base URL of your Precogly. Default `http://localhost:8000`. |
-
-Tokens last 60 minutes. When one expires, get a new one and export it again. Over stdio, `list_threat_models` returns one page of 20 models, so read `total`.
-
-For a local dev instance, you can get a token from the login endpoint:
-
-```bash
-export PRECOGLY_URL=http://localhost:8000
-export PRECOGLY_TOKEN=$(curl -s -X POST "$PRECOGLY_URL/api/auth/login/" \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"admin@precogly.dev","password":"admin123"}' \
-  | python3 -c "import sys,json;print(json.load(sys.stdin)['access'])")
-```
-
-Then run the server from the `mcp/` directory of the repository:
-
-```bash
-uv run precogly-mcp
-```
-
 ## Troubleshooting
 
 **The client says it cannot discover or register.** The proxy may not be routing `/.well-known/*` and `/o/*` to the backend. The client finds the sign-in address from the 401 response of `/mcp`, so all three paths must work.
@@ -158,7 +131,3 @@ uv run precogly-mcp
 **421 "Invalid Host header".** The MCP server only accepts requests addressed to `localhost`, `127.0.0.1` or `::1`. Behind a reverse proxy that forwards your public host name, it rejects every request. This is a known issue and is not yet fixed.
 
 **Redirect loop on login.** The proxy headers are not trusted by Django. See the matching entry in the [AWS guide](self-hosting-aws.md).
-
-**The list of threat models looks short.** Compare the number returned with `total`. Over stdio, only the first 20 are returned.
-
-**Tools stopped working after a while.** Over stdio, the token expired after 60 minutes. Export a new `PRECOGLY_TOKEN`.
