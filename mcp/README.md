@@ -98,4 +98,6 @@ Precogly's serializers return, wants a run against a seeded stack before it is b
 - [0009](docs/0009-the-auth-pages-are-built-not-copied.md) — the authorization pages are built, not copied
 - [0010](docs/0010-the-mcp-app-owns-its-resource-metadata.md) — the MCP app owns its resource metadata
 - [0011](docs/0011-the-mcp-package-lives-in-this-repository.md) — the MCP package lives in this repository (supersedes 0008's submodule)
+- [0012](docs/0012-code-mode-over-the-api-schema.md) — code mode over the API schema
 - [0013](docs/0013-the-server-is-mounted-only.md) — the server is mounted only (supersedes stdio)
+- [0014](docs/0014-tools-call-the-api-in-process.md) — tools call the API in-process
