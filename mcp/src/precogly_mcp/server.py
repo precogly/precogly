@@ -13,9 +13,10 @@ from importlib.metadata import version
 from mcp.server import MCPServer
 from mcp.server.auth.provider import TokenVerifier
 from mcp.server.auth.settings import AuthSettings
+from mcp.types import ToolAnnotations
 from starlette.applications import Starlette
 
-from precogly_mcp.tools import Request
+from precogly_mcp.tools import Request, whoami
 
 
 def build_server(
@@ -34,13 +35,33 @@ def build_server(
     async def lifespan(_: MCPServer) -> AsyncGenerator[Request]:
         yield request
 
-    return MCPServer(
+    server = MCPServer(
         "precogly",
         version=version("precogly-mcp"),
         auth=auth,
         token_verifier=token_verifier,
         lifespan=lifespan,
     )
+    # title = the display name
+    #
+    # The annotations are hints a client uses to decide whether to ask a human before
+    # a call. Nothing enforces them; the `write` scope check in `request` does.
+    # - read_only_hint: the tool changes nothing.
+    # - idempotent_hint: repeating a call with the same arguments has no further
+    #   effect. The spec reads it only when read_only_hint is false, so it says
+    #   nothing here; it starts to matter on tools that write.
+    # - open_world_hint=False: the tool touches only this deployment's own records,
+    #   not external systems the way a web search does.
+    server.add_tool(
+        whoami,
+        title="Who am I",
+        annotations=ToolAnnotations(
+            read_only_hint=True,
+            idempotent_hint=True,
+            open_world_hint=False,
+        ),
+    )
+    return server
 
 
 def asgi_app(
