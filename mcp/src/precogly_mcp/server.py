@@ -1,7 +1,8 @@
 """The Precogly MCP server, mounted inside Precogly at `/mcp`.
 
-The mounting application supplies the `TokenVerifier` that checks tokens and the
-`Request` the tools call the API through, so this package never imports Django.
+The mounting application supplies the `TokenVerifier` that checks tokens, the
+`Request` the tools call the API through, and the `Schema` `search` reads, so this
+package never imports Django.
 """
 
 from __future__ import annotations
@@ -17,12 +18,14 @@ from mcp.types import ToolAnnotations
 from pydantic_monty import AsyncMonty
 from starlette.applications import Starlette
 
-from precogly_mcp.tools import Request, ToolContext, whoami
+from precogly_mcp.spec import process_spec
+from precogly_mcp.tools import Request, Schema, ToolContext, whoami
 
 
 def build_server(
     *,
     request: Request,
+    schema: Schema,
     auth: AuthSettings | None = None,
     token_verifier: TokenVerifier | None = None,
 ) -> MCPServer:
@@ -34,10 +37,20 @@ def build_server(
 
     # Yielding inside `async with` keeps the sandbox pool open for the server's life
     # and stops its worker processes at shutdown.
+    #
+    # The one-off costs are paid here, at startup, rather than by the first `search`:
+    # generating the schema (~0.4 s) and the pool's first worker (~0.4 s), measured
+    # on a laptop. A schema that fails to generate stops the server starting, rather
+    # than surfacing as a broken tool.
     @asynccontextmanager
     async def lifespan(_: MCPServer) -> AsyncGenerator[ToolContext]:
+        spec = process_spec(await schema())
         async with AsyncMonty() as sandbox:
-            yield ToolContext(request=request, sandbox=sandbox)
+            # Warm-up: the first run in a pool is slow (~0.4 s), and this also proves
+            # the sandbox binary runs here before any tool depends on it.
+            async with sandbox.checkout() as session:
+                await session.feed_run("None")
+            yield ToolContext(request=request, sandbox=sandbox, spec=spec)
 
     server = MCPServer(
         "precogly",
@@ -71,6 +84,7 @@ def build_server(
 def asgi_app(
     *,
     request: Request,
+    schema: Schema,
     token_verifier: TokenVerifier,
     issuer_url: str,
     resource_url: str,
@@ -91,6 +105,7 @@ def asgi_app(
     """
     server = build_server(
         request=request,
+        schema=schema,
         # Strings, not `AnyHttpUrl`. Pydantic's default normalization appends a
         # trailing slash to a path-less issuer, and RFC 8414 compares issuers as
         # exact strings, so the client would reject its own issuer. `AuthSettings`

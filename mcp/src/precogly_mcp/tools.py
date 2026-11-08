@@ -16,6 +16,10 @@ from pydantic_monty import AsyncMonty
 # never imports Django.
 type Request = Callable[[AccessToken, str, str], Awaitable[Any]]
 
+# Return Precogly's OpenAPI schema. Supplied by the mounting application for the same
+# reason as `Request`.
+type Schema = Callable[[], Awaitable[dict[str, Any]]]
+
 
 @dataclass(frozen=True)
 class ToolContext:
@@ -24,6 +28,8 @@ class ToolContext:
     request: Request
     # A pool of sandbox worker processes that run model-written code.
     sandbox: AsyncMonty
+    # The schema reduced by `process_spec`: what `search` code reads as `spec`.
+    spec: dict[str, Any]
 
 
 async def whoami(ctx: Context[ToolContext, Any]) -> dict[str, Any]:

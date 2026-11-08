@@ -10,12 +10,16 @@ import functools
 from typing import Any
 
 from asgiref.sync import sync_to_async
+from drf_spectacular.drainage import GENERATOR_STATS
 from drf_spectacular.generators import SchemaGenerator
 
 
 @functools.cache
 def _generate_schema() -> dict[str, Any]:
-    return SchemaGenerator().get_schema(request=None, public=True)
+    # Silenced: this runs as each worker starts, and would repeat every schema warning
+    # into the production logs on every boot. `manage.py spectacular` reports them.
+    with GENERATOR_STATS.silence():
+        return SchemaGenerator().get_schema(request=None, public=True)
 
 
 async def schema() -> dict[str, Any]:

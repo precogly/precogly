@@ -17,6 +17,7 @@ from typing import Any
 
 import pytest
 from mcp.client import Client
+from mcp.server import MCPServer
 from mcp.server.auth.middleware.auth_context import auth_context_var
 from mcp.server.auth.middleware.bearer_auth import AuthenticatedUser
 from mcp.server.auth.provider import AccessToken
@@ -52,6 +53,14 @@ RESPONSES: dict[str, Any] = {
 }
 
 
+async def fake_schema() -> dict[str, Any]:
+    return {"paths": {"/api/auth/user/": {"get": {"summary": "Current user"}}}}
+
+
+def server(request: FakeRequest) -> MCPServer:
+    return build_server(request=request, schema=fake_schema)
+
+
 class FakeRequest:
     def __init__(self) -> None:
         self.calls: list[tuple[AccessToken, str, str]] = []
@@ -72,7 +81,7 @@ def access_token() -> Iterator[AccessToken]:
 
 
 async def call_whoami(request: FakeRequest) -> Any:
-    async with Client(build_server(request=request)) as client:
+    async with Client(server(request)) as client:
         return await client.call_tool("whoami", {})
 
 
@@ -102,7 +111,7 @@ async def test_whoami_refuses_to_run_without_a_token() -> None:
 
 
 async def test_whoami_is_advertised_read_only_with_no_arguments() -> None:
-    async with Client(build_server(request=FakeRequest())) as client:
+    async with Client(server(FakeRequest())) as client:
         (tool,) = (await client.list_tools()).tools
 
     assert tool.name == "whoami"
