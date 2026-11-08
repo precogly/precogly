@@ -19,14 +19,12 @@ from apps.threat_models.models import ThreatModel
 User = get_user_model()
 
 
-def member_of(organization, email):
+def member_of(organization, email, role="member"):
     """A user whose only membership is `organization`, whatever the signal granted."""
     user = User.objects.create_user(username=email, email=email, password="testpass123")
     user.organization_memberships.all().delete()
     user.team_memberships.all().delete()
-    OrganizationMember.objects.create(
-        organization=organization, user=user, role="member"
-    )
+    OrganizationMember.objects.create(organization=organization, user=user, role=role)
     return user
 
 
@@ -61,6 +59,54 @@ class DispatchTests(TestCase):
 
         assert status == 404
         assert isinstance(body, str)
+
+    def test_params_become_the_query_string(self):
+        ThreatModel.objects.create(
+            organization=self.kestrel_user.organization_memberships.get().organization,
+            name="Card vault",
+        )
+
+        status, body = mcp.dispatch(
+            self.kestrel_user,
+            "GET",
+            "/api/threat-models/",
+            params={"search": "vault"},
+        )
+
+        assert status == 200, body
+        assert [row["name"] for row in body["results"]] == ["Card vault"]
+
+    def test_body_is_sent_as_json(self):
+        model = ThreatModel.objects.get(name="Ingest pipeline")
+        # A plain member gets 403 here: editing a threat model is security team work.
+        editor = member_of(model.organization, "lee@kestrel.test", role="security_team")
+
+        status, body = mcp.dispatch(
+            editor,
+            "PATCH",
+            f"/api/threat-models/{model.pk}/",
+            body={"name": "Ingest pipeline v2"},
+        )
+
+        assert status == 200, body
+        model.refresh_from_db()
+        assert model.name == "Ingest pipeline v2"
+
+    def test_request_refuses_a_query_in_both_the_path_and_params(self):
+        access_token = AccessToken(
+            token="t",
+            client_id="c",
+            scopes=["read"],
+            subject=str(self.kestrel_user.pk),
+        )
+
+        with pytest.raises(APIError, match="not both"):
+            async_to_sync(mcp.request)(
+                access_token,
+                "GET",
+                "/api/threat-models/?search=a",
+                params={"search": "b"},
+            )
 
     def test_request_reads_as_the_user_the_token_names(self):
         # `async_to_sync` over `sync_to_async(thread_sensitive=True)` keeps the query

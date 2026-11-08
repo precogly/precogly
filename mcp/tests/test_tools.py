@@ -12,7 +12,7 @@ starts, so the server's tasks inherit it.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from typing import Any
 
 import anyio
@@ -68,7 +68,14 @@ class FakeRequest:
     def __init__(self) -> None:
         self.calls: list[tuple[AccessToken, str, str]] = []
 
-    async def __call__(self, access_token: AccessToken, method: str, path: str) -> Any:
+    async def __call__(
+        self,
+        access_token: AccessToken,
+        method: str,
+        path: str,
+        params: Mapping[str, Any] | None = None,
+        body: Any = None,
+    ) -> Any:
         self.calls.append((access_token, method, path))
         return RESPONSES[path]
 

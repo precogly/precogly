@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Protocol
 
 from mcp.server.auth.middleware.auth_context import get_access_token
 from mcp.server.auth.provider import AccessToken
@@ -30,10 +30,23 @@ SEARCH_TIME_LIMIT_SECS = 2.0
 # its searches sooner; higher spends more of its context on each result.
 SEARCH_RESULT_MAX_CHARS = 24_000
 
-# Call Precogly's REST API as the token's user: `(access_token, method, path)` returns
-# the parsed body or raises. Supplied by the mounting application, since this package
-# never imports Django.
-type Request = Callable[[AccessToken, str, str], Awaitable[Any]]
+
+class Request(Protocol):
+    """Call Precogly's REST API as the token's user; returns the parsed body or raises.
+
+    `params` becomes the query string and `body` is sent as JSON. Supplied by the
+    mounting application, since this package never imports Django.
+    """
+
+    async def __call__(
+        self,
+        access_token: AccessToken,
+        method: str,
+        path: str,
+        params: Mapping[str, Any] | None = None,
+        body: Any = None,
+    ) -> Any: ...
+
 
 # Return Precogly's OpenAPI schema. Supplied by the mounting application for the same
 # reason as `Request`.

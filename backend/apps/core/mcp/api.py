@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import functools
 import json
+from collections.abc import Mapping
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -34,8 +35,16 @@ def _handler() -> BaseHandler:
     return handler
 
 
-def dispatch(user: AbstractBaseUser, method: str, path: str) -> tuple[int, Any]:
+def dispatch(
+    user: AbstractBaseUser,
+    method: str,
+    path: str,
+    params: Mapping[str, Any] | None = None,
+    body: Any = None,
+) -> tuple[int, Any]:
     """Run one API request in-process as `user`, through the full middleware chain.
+
+    `params` becomes the query string and `body`, if given, is sent as JSON.
 
     Returns the status and the parsed JSON body; `None` for an empty body, and the
     text for anything else, such as Django's HTML 404 for an unrouted path.
@@ -48,6 +57,9 @@ def dispatch(user: AbstractBaseUser, method: str, path: str) -> tuple[int, Any]:
     request = RequestFactory().generic(
         method,
         path,
+        data=json.dumps(body) if body is not None else "",
+        content_type="application/json",
+        query_params=params,
         secure=origin.scheme == "https",
         HTTP_HOST=origin.netloc,
     )
@@ -64,9 +76,23 @@ def dispatch(user: AbstractBaseUser, method: str, path: str) -> tuple[int, Any]:
     return response.status_code, response.content.decode("utf-8", errors="replace")
 
 
-async def request(access_token: AccessToken, method: str, path: str) -> Any:
+async def request(
+    access_token: AccessToken,
+    method: str,
+    path: str,
+    params: Mapping[str, Any] | None = None,
+    body: Any = None,
+) -> Any:
     """The API call the agent's code makes: `method` on `path`, as the token's user."""
     method = method.upper()
+
+    # `RequestFactory` drops a query string in the path when `params` is also given,
+    # so half the query would vanish without a word.
+    if params and "?" in path:
+        raise APIError(
+            f"Pass query parameters either in the path or as `params`, not both: "
+            f"{path!r} and {dict(params)!r}."
+        )
 
     if method not in SAFE_METHODS and "write" not in access_token.scopes:
         granted = " ".join(access_token.scopes) or "no scopes"
@@ -87,12 +113,12 @@ async def request(access_token: AccessToken, method: str, path: str) -> Any:
     # `dispatch` is sync and runs views that query the ORM, which raises
     # `SynchronousOnlyOperation` inside the event loop. `thread_sensitive` keeps it on
     # the thread that owns the connection, as the verifier does.
-    status, body = await sync_to_async(dispatch, thread_sensitive=True)(
-        user, method, path
+    status, result = await sync_to_async(dispatch, thread_sensitive=True)(
+        user, method, path, params, body
     )
     if status >= 400:
-        raise APIError(f"{method} {path} returned {status}: {_describe(body)}")
-    return body
+        raise APIError(f"{method} {path} returned {status}: {_describe(result)}")
+    return result
 
 
 def _describe(body: object) -> str:

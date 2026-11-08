@@ -47,7 +47,9 @@ class WriteScopeTests(TestCase):
     def test_a_write_token_is_dispatched_as_its_user(self):
         self.call(self.token("read", "write"), "post")
 
-        self.dispatched.assert_called_once_with(self.user, "POST", "/api/zones/")
+        self.dispatched.assert_called_once_with(
+            self.user, "POST", "/api/zones/", None, None
+        )
 
     def test_reads_need_no_write_scope(self):
         for method in ["GET", "HEAD", "OPTIONS", "get"]:
