@@ -10,7 +10,13 @@ from typing import Any
 from mcp.server.auth.middleware.auth_context import get_access_token
 from mcp.server.auth.provider import AccessToken
 from mcp.server.mcpserver.context import Context
-from pydantic_monty import AsyncMonty, ResourceLimits
+from mcp.server.mcpserver.exceptions import ToolError
+from pydantic_monty import (
+    AsyncMonty,
+    MontyRuntimeError,
+    MontySyntaxError,
+    ResourceLimits,
+)
 
 # Arbitrary, with wide margins: a search over the whole spec measured ~41 ms. Lower
 # risks cutting off a legitimate scan of every operation; higher lets a runaway loop
@@ -44,12 +50,26 @@ async def search(ctx: Context[ToolContext, Any], code: str) -> str:
     # One run per checkout, so a run stopped by the limit never reuses its session,
     # whose heap the library no longer vouches for.
     limits = ResourceLimits(max_feed_duration_secs=SEARCH_TIME_LIMIT_SECS)
-    async with tool.sandbox.checkout(limits=limits) as session:
-        result = await session.feed_run(code, inputs={"spec": tool.spec})
+    # The model's own mistakes are raised as `ToolError`, whose message the SDK passes
+    # to the client; a traceback into its code is what lets it fix the code. Anything
+    # else, such as `MontyCrashedError` for a dead worker, is left to the SDK, which
+    # reports it without detail.
+    try:
+        async with tool.sandbox.checkout(limits=limits) as session:
+            result = await session.feed_run(code, inputs={"spec": tool.spec})
+    except (MontySyntaxError, MontyRuntimeError) as err:
+        raise ToolError(err.display("traceback")) from err
+
     # Serialized here, not left to the SDK: it turns a returned list into one content
     # block per item, so `[("/api/zones/", "get")]` would reach the model as two
     # unrelated strings. Compact separators: indented JSON is twice the size.
-    return json.dumps(result, separators=(",", ":"))
+    try:
+        return json.dumps(result, separators=(",", ":"))
+    except TypeError as err:
+        raise ToolError(
+            f"The result must be JSON: lists, dicts, strings, numbers, booleans or "
+            f"None. {err}"
+        ) from err
 
 
 async def whoami(ctx: Context[ToolContext, Any]) -> dict[str, Any]:

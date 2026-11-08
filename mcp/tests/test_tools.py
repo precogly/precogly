@@ -145,7 +145,31 @@ async def test_search_stops_code_that_runs_too_long(
     monkeypatch.setattr(tools, "SEARCH_TIME_LIMIT_SECS", 0.2)
 
     with anyio.fail_after(10):
-        async with Client(server(FakeRequest())) as client:
-            result = await client.call_tool("search", {"code": "while True:\n    pass"})
+        error = await search_error("while True:\n    pass")
 
+    assert "TimeoutError" in error
+
+
+async def search_error(code: str) -> str:
+    """The message the model gets for `code` that fails."""
+    async with Client(server(FakeRequest())) as client:
+        result = await client.call_tool("search", {"code": code})
     assert result.is_error
+    (content,) = result.content
+    assert isinstance(content, TextContent)
+    return content.text
+
+
+async def test_an_exception_in_the_code_reaches_the_model_with_its_traceback() -> None:
+    error = await search_error('spec["nope"]')
+
+    assert "KeyError" in error
+    assert "nope" in error
+
+
+async def test_a_syntax_error_reaches_the_model() -> None:
+    assert "SyntaxError" in await search_error("for path in spec[")
+
+
+async def test_a_result_that_is_not_json_is_explained() -> None:
+    assert "must be JSON" in await search_error("{1, 2}")

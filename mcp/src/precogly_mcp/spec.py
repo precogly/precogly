@@ -38,7 +38,9 @@ def resolve_refs(
             return {"$circular": ref}
         target: Any = spec
         for part in ref.removeprefix("#/").split("/"):
-            target = target[part]
+            # JSON Pointer escapes `/` as `~1` and `~` as `~0` (RFC 6901, section 4),
+            # decoded in this order so `~01` becomes `~1`, not `/`.
+            target = target[part.replace("~1", "/").replace("~0", "~")]
         return resolve_refs(target, spec, ancestors | {ref})
 
     return {key: resolve_refs(value, spec, ancestors) for key, value in node.items()}

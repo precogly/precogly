@@ -96,6 +96,16 @@ def test_only_a_genuine_cycle_is_marked() -> None:
     }
 
 
+def test_json_pointer_escapes_are_decoded() -> None:
+    spec = {"components": {"schemas": {"a/b": {"type": "string"}, "~1": {"x": 1}}}}
+
+    assert resolve_refs({"$ref": "#/components/schemas/a~1b"}, spec) == {
+        "type": "string"
+    }
+    # `~01` is the escaped name `~1`, not `/`.
+    assert resolve_refs({"$ref": "#/components/schemas/~01"}, spec) == {"x": 1}
+
+
 def test_operations_keep_only_what_a_search_reads() -> None:
     item = process_spec(SPEC)["paths"]["/api/threat-models/"]
 
