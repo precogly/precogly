@@ -10,7 +10,12 @@ from typing import Any
 from mcp.server.auth.middleware.auth_context import get_access_token
 from mcp.server.auth.provider import AccessToken
 from mcp.server.mcpserver.context import Context
-from pydantic_monty import AsyncMonty
+from pydantic_monty import AsyncMonty, ResourceLimits
+
+# Arbitrary, with wide margins: a search over the whole spec measured ~41 ms. Lower
+# risks cutting off a legitimate scan of every operation; higher lets a runaway loop
+# hold a sandbox worker, and the `/mcp` request waiting on it, for longer.
+SEARCH_TIME_LIMIT_SECS = 2.0
 
 # Call Precogly's REST API as the token's user: `(access_token, method, path)` returns
 # the parsed body or raises. Supplied by the mounting application, since this package
@@ -36,7 +41,10 @@ class ToolContext:
 async def search(ctx: Context[ToolContext, Any], code: str) -> str:
     """TODO: the description the model reads, with worked examples."""
     tool = ctx.request_context.lifespan_context
-    async with tool.sandbox.checkout() as session:
+    # One run per checkout, so a run stopped by the limit never reuses its session,
+    # whose heap the library no longer vouches for.
+    limits = ResourceLimits(max_feed_duration_secs=SEARCH_TIME_LIMIT_SECS)
+    async with tool.sandbox.checkout(limits=limits) as session:
         result = await session.feed_run(code, inputs={"spec": tool.spec})
     # Serialized here, not left to the SDK: it turns a returned list into one content
     # block per item, so `[("/api/zones/", "get")]` would reach the model as two

@@ -15,6 +15,7 @@ import json
 from collections.abc import Iterator
 from typing import Any
 
+import anyio
 import pytest
 from mcp.client import Client
 from mcp.server import MCPServer
@@ -23,6 +24,7 @@ from mcp.server.auth.middleware.bearer_auth import AuthenticatedUser
 from mcp.server.auth.provider import AccessToken
 from mcp.types import TextContent
 
+from precogly_mcp import tools
 from precogly_mcp.server import build_server
 
 pytestmark = pytest.mark.anyio
@@ -135,3 +137,15 @@ async def test_search_runs_code_over_the_spec_in_the_sandbox() -> None:
     (content,) = result.content
     assert isinstance(content, TextContent)
     assert json.loads(content.text) == [["/api/auth/user/", "get"]]
+
+
+async def test_search_stops_code_that_runs_too_long(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(tools, "SEARCH_TIME_LIMIT_SECS", 0.2)
+
+    with anyio.fail_after(10):
+        async with Client(server(FakeRequest())) as client:
+            result = await client.call_tool("search", {"code": "while True:\n    pass"})
+
+    assert result.is_error
