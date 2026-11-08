@@ -49,14 +49,33 @@ def process_spec(raw: dict[str, Any]) -> dict[str, Any]:
     paths: dict[str, Any] = {}
     for path, item in raw.get("paths", {}).items():
         operations = {
-            method: {
-                field: resolve_refs(item[method][field], raw)
-                for field in KEPT
-                if field in item[method]
-            }
+            method: _operation(item[method], raw)
             for method in HTTP_METHODS
             if method in item
         }
         if operations:
             paths[path] = operations
     return {"paths": paths}
+
+
+def _operation(operation: dict[str, Any], raw: dict[str, Any]) -> dict[str, Any]:
+    reduced = {
+        field: resolve_refs(operation[field], raw)
+        for field in KEPT
+        if field in operation
+    }
+
+    # DRF describes every request body three times, as JSON, form and multipart,
+    # because the API accepts all three. `request()` only ever sends JSON, so the
+    # other two are dead weight: 38% of the reduced spec.
+    body = reduced.get("requestBody")
+    if isinstance(body, dict) and "content" in body:
+        reduced["requestBody"] = {
+            **body,
+            "content": {
+                media_type: schema
+                for media_type, schema in body["content"].items()
+                if media_type == "application/json"
+            },
+        }
+    return reduced

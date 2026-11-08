@@ -23,7 +23,20 @@ SPEC: dict[str, Any] = {
                 },
             },
             "post": {
-                "requestBody": {"$ref": "#/components/schemas/ThreatModel"},
+                # The shape drf-spectacular emits: one body per parser DRF accepts.
+                "requestBody": {
+                    "content": {
+                        media_type: {
+                            "schema": {"$ref": "#/components/schemas/ThreatModel"}
+                        }
+                        for media_type in [
+                            "application/json",
+                            "application/x-www-form-urlencoded",
+                            "multipart/form-data",
+                        ]
+                    },
+                    "required": True,
+                },
                 "responses": {"201": {"$ref": "#/components/schemas/ThreatModel"}},
             },
         },
@@ -52,8 +65,18 @@ SPEC: dict[str, Any] = {
 
 def test_references_are_inlined() -> None:
     post = process_spec(SPEC)["paths"]["/api/threat-models/"]["post"]
+    body = post["requestBody"]["content"]["application/json"]["schema"]
 
-    assert post["requestBody"]["properties"]["organization"] == ORGANIZATION
+    assert body["properties"]["organization"] == ORGANIZATION
+
+
+def test_request_bodies_keep_only_json() -> None:
+    # `request()` sends JSON only; the form and multipart copies were 38% of the
+    # reduced spec.
+    body = process_spec(SPEC)["paths"]["/api/threat-models/"]["post"]["requestBody"]
+
+    assert list(body["content"]) == ["application/json"]
+    assert body["required"] is True
 
 
 def test_a_component_used_twice_is_inlined_both_times() -> None:
