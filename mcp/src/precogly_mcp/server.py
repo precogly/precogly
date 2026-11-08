@@ -14,9 +14,10 @@ from mcp.server import MCPServer
 from mcp.server.auth.provider import TokenVerifier
 from mcp.server.auth.settings import AuthSettings
 from mcp.types import ToolAnnotations
+from pydantic_monty import AsyncMonty
 from starlette.applications import Starlette
 
-from precogly_mcp.tools import Request, whoami
+from precogly_mcp.tools import Request, ToolContext, whoami
 
 
 def build_server(
@@ -27,13 +28,16 @@ def build_server(
 ) -> MCPServer:
     """Assemble the server.
 
-    Tools reach `request` through the lifespan, the only place a server-wide value can
-    live.
+    Tools reach their `ToolContext` through the lifespan, the only place a server-wide
+    value can live.
     """
 
+    # Yielding inside `async with` keeps the sandbox pool open for the server's life
+    # and stops its worker processes at shutdown.
     @asynccontextmanager
-    async def lifespan(_: MCPServer) -> AsyncGenerator[Request]:
-        yield request
+    async def lifespan(_: MCPServer) -> AsyncGenerator[ToolContext]:
+        async with AsyncMonty() as sandbox:
+            yield ToolContext(request=request, sandbox=sandbox)
 
     server = MCPServer(
         "precogly",

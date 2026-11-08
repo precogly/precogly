@@ -14,6 +14,7 @@ authors = [
 dependencies = [
     "mcp[cli]==2.2.*",
     "pydantic>=2.13.4",
+    "pydantic-monty==1.5.0",
 ]
 
 [dependency-groups]
