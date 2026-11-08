@@ -19,7 +19,14 @@ from pydantic_monty import AsyncMonty
 from starlette.applications import Starlette
 
 from precogly_mcp.spec import process_spec
-from precogly_mcp.tools import Request, Schema, ToolContext, search, whoami
+from precogly_mcp.tools import (
+    SEARCH_DESCRIPTION,
+    Request,
+    Schema,
+    ToolContext,
+    search,
+    whoami,
+)
 
 
 def build_server(
@@ -82,6 +89,7 @@ def build_server(
     server.add_tool(
         search,
         title="Search the API",
+        description=SEARCH_DESCRIPTION,
         annotations=ToolAnnotations(
             read_only_hint=True,
             idempotent_hint=True,

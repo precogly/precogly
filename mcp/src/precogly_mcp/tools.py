@@ -51,8 +51,49 @@ class ToolContext:
     spec: dict[str, Any]
 
 
+# Run against the real schema by `backend/apps/core/tests/test_mcp_search_examples.py`,
+# so an example the API no longer supports fails a test instead of misleading a model.
+SEARCH_EXAMPLES = (
+    """\
+[(method.upper(), path, op["tags"])
+ for path, ops in spec["paths"].items()
+ for method, op in ops.items()
+ if "zones" in path]""",
+    """\
+[(p["name"], p["in"], p.get("schema", {}).get("type"))
+ for p in spec["paths"]["/api/zones/"]["get"].get("parameters", [])]""",
+    """\
+body = spec["paths"]["/api/zones/"]["post"]["requestBody"]
+schema = body["content"]["application/json"]["schema"]
+{name: field.get("type")
+ for name, field in schema["properties"].items()
+ if not field.get("readOnly")}""",
+)
+
+SEARCH_DESCRIPTION = f"""\
+Search Precogly's REST API by running Python over its OpenAPI schema.
+
+Write Python; the value of the last expression is the result. It runs in a sandbox \
+with no network or filesystem access, for at most {SEARCH_TIME_LIMIT_SECS:g} seconds.
+
+`spec` is the schema as a dict. `spec["paths"][path][method]` is one operation, with \
+`description`, `tags`, `parameters`, `requestBody` and `responses`. Methods are \
+lowercase, every `$ref` is already inlined, and request bodies are JSON only.
+
+Field names in the schema are snake_case, but response bodies arrive in camelCase: \
+`zone_type` is returned as `zoneType`. Request bodies accept snake_case. Query \
+parameters are used exactly as named.
+
+Results over about {SEARCH_RESULT_MAX_CHARS:,} characters are cut, and each cut is \
+marked `--- TRUNCATED ---`. Return the parts you need, not whole operations.
+
+Examples:
+
+""" + "\n\n".join(SEARCH_EXAMPLES)
+
+
 async def search(ctx: Context[ToolContext, Any], code: str) -> str:
-    """TODO: the description the model reads, with worked examples."""
+    """Run `code` over the reduced schema; the model reads `SEARCH_DESCRIPTION`."""
     tool = ctx.request_context.lifespan_context
     # One run per checkout, so a run stopped by the limit never reuses its session,
     # whose heap the library no longer vouches for.
