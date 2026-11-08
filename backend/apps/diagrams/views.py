@@ -32,6 +32,8 @@ _MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 MB
 class DFDViewSet(viewsets.ModelViewSet):
     """ViewSet for DFD CRUD operations."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = DFD.objects.none()
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [
         DjangoFilterBackend,
