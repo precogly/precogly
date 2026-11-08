@@ -38,8 +38,14 @@ A planned in-app assistant needs the same capabilities. Two separate surfaces wo
 - **Unsafe methods require the `write` scope**, checked in `request()`. This covers MCP02
   in #487.
 - **Results are capped**, with truncation marked. The size is unset until measured.
-- **The four existing tools stay** as shortcuts. No new tool is added for a question
-  `execute` can answer.
+- **`request_all(path)` follows pagination**, so reading one page and counting it is
+  not the easy path.
+- **`execute` returns the code it ran with its result.** The same code on the same data
+  gives the same answer, so any answer can be audited and reproduced.
+- **The hand-written tools are removed**
+  ([0014](0014-tools-call-the-api-in-process.md)). A deterministic shortcut tool or a
+  reviewed recipe comes back only for a question that needs one consistent answer, chosen
+  by the evaluation below.
 - **The in-app assistant calls the same three functions.** This needs
   `ChatProvider.complete()` to accept tool definitions.
 
@@ -47,6 +53,14 @@ A planned in-app assistant needs the same capabilities. Two separate surfaces wo
 
 - **An accurate schema.** `execute` can only call what `search` finds. On `main`,
   `spectacular` reports 151 unique warnings and 7 unique errors.
+- **A reviewed schema.** `search` reads the schema live, so a viewset change can alter
+  what agents find without anyone seeing it. A committed `backend/openapi.yml` with a CI
+  drift check makes every change to the API surface show in a pull request's diff. #666's
+  72 missing query parameters are what it would have caught. Its own pull request, since
+  it changes every API pull request.
+- **A measured consistency baseline.** About 20 questions with known answers on seeded
+  data, each run several times, with and without code mode, counting wrong answers and
+  disagreements. It decides which questions get a shortcut tool or recipe.
 - **Central tenancy enforcement.** `execute` reaches every viewset. #405 is open; this
   waits on #441 step 3, where an unscoped query fails closed.
 
@@ -66,8 +80,14 @@ A planned in-app assistant needs the same capabilities. Two separate surfaces wo
 - **Security rests on enforcement, not construction.** A tool does only what it was
   written to do; `execute` does whatever the user's REST permissions allow. Hence #441 is a
   prerequisite.
-- **Small local models write worse code.** The shortcut tools remain for models that
-  cannot carry code mode.
+- **The same question can get different answers.** Hand-written tools already left the
+  choice of tool, arguments and summary to the model; code mode adds endpoints, filters,
+  pagination and arithmetic. The client, not the server, controls sampling, so the server
+  can only make wrong programs harder to write (`request_all`, capped results, worked
+  examples in the tool descriptions) and answers auditable (returned code). Only a
+  deterministic tool guarantees one answer, and only for the question it covers.
+- **Small local models write worse code.** The evaluation shows whether they need
+  shortcut tools.
 - **`pydantic-monty` is experimental.** Pin it.
 - **Prompt injection can act.** Tenant-authored text reaches the agent unmarked (#487,
   MCP06). Writes stay behind the scope check, and the in-app assistant returns writes as
@@ -75,9 +95,10 @@ A planned in-app assistant needs the same capabilities. Two separate surfaces wo
 
 ## Open
 
-- How `request()` dispatches: test client, `RequestFactory`, or loopback HTTP. Loopback
-  exposes the sandbox to every service on the host.
 - The result cap.
+- Whether recipes are tools, or skills served as in `cloudflare/skills`
+  (`src/skills/sync.ts` in the Cloudflare server at `e8bc56f`). Relates to the Skills Hub
+  discussion, #178.
 
 ## References
 
