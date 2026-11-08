@@ -18,10 +18,17 @@ from pydantic_monty import (
     ResourceLimits,
 )
 
+from precogly_mcp.truncate import dumps, fit
+
 # Arbitrary, with wide margins: a search over the whole spec measured ~41 ms. Lower
 # risks cutting off a legitimate scan of every operation; higher lets a runaway loop
 # hold a sandbox worker, and the `/mcp` request waiting on it, for longer.
 SEARCH_TIME_LIMIT_SECS = 2.0
+
+# Cloudflare's cap, ~6,000 tokens at 4 characters each, not measured here: room for
+# about eight median operations or one of the largest. Lower makes the model narrow
+# its searches sooner; higher spends more of its context on each result.
+SEARCH_RESULT_MAX_CHARS = 24_000
 
 # Call Precogly's REST API as the token's user: `(access_token, method, path)` returns
 # the parsed body or raises. Supplied by the mounting application, since this package
@@ -62,14 +69,16 @@ async def search(ctx: Context[ToolContext, Any], code: str) -> str:
 
     # Serialized here, not left to the SDK: it turns a returned list into one content
     # block per item, so `[("/api/zones/", "get")]` would reach the model as two
-    # unrelated strings. Compact separators: indented JSON is twice the size.
+    # unrelated strings. Round-tripped before `fit` so it measures plain JSON, with
+    # tuples as lists and non-string keys as strings, exactly as they are returned.
     try:
-        return json.dumps(result, separators=(",", ":"))
-    except TypeError as err:
+        data = json.loads(dumps(result))
+    except (TypeError, ValueError) as err:
         raise ToolError(
-            f"The result must be JSON: lists, dicts, strings, numbers, booleans or "
-            f"None. {err}"
+            f"The result must be JSON: lists, dicts, strings, finite numbers, "
+            f"booleans or None. {err}"
         ) from err
+    return dumps(fit(data, SEARCH_RESULT_MAX_CHARS))
 
 
 async def whoami(ctx: Context[ToolContext, Any]) -> dict[str, Any]:

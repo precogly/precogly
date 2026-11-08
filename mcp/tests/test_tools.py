@@ -173,3 +173,21 @@ async def test_a_syntax_error_reaches_the_model() -> None:
 
 async def test_a_result_that_is_not_json_is_explained() -> None:
     assert "must be JSON" in await search_error("{1, 2}")
+
+
+async def test_an_oversized_result_is_cut_to_the_cap_and_stays_json(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(tools, "SEARCH_RESULT_MAX_CHARS", 300)
+    code = '[{"path": f"/api/{i}/", "summary": "x" * 50} for i in range(100)]'
+
+    async with Client(server(FakeRequest())) as client:
+        result = await client.call_tool("search", {"code": code})
+
+    assert not result.is_error, result.content
+    (content,) = result.content
+    assert isinstance(content, TextContent)
+    assert len(content.text) <= 300
+    *kept, marker = json.loads(content.text)
+    assert kept[0] == {"path": "/api/0/", "summary": "x" * 50}
+    assert marker == f"--- TRUNCATED --- {100 - len(kept)} more items"
