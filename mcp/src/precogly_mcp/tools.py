@@ -130,6 +130,72 @@ async def search(ctx: Context[ToolContext, Any], code: str) -> str:
     )
 
 
+# Run against the real API with seeded data by
+# `backend/apps/core/tests/test_mcp_execute_examples.py`, for the same reason as
+# `SEARCH_EXAMPLES`.
+EXECUTE_EXAMPLES = (
+    """\
+body = await request("GET", "/api/threat-models/", params={"search": "payments"})
+[(model["id"], model["name"]) for model in body["results"]]""",
+    """\
+# Lists come a page at a time: follow `next` until it is null.
+rows, page = [], 1
+while True:
+    body = await request("GET", "/api/threat-models/", params={"page": page})
+    rows += body["results"]
+    if not body["next"]:
+        break
+    page += 1
+len(rows)""",
+    """\
+import asyncio
+
+listing = await request("GET", "/api/threat-models/")
+model_ids = [model["id"] for model in listing["results"][:5]]
+details = await asyncio.gather(
+    *[request("GET", f"/api/threat-models/{model_id}/") for model_id in model_ids]
+)
+[(model["name"], model["criticality"]) for model in details]""",
+    """\
+listing = await request("GET", "/api/threat-models/", params={"search": "payments"})
+model = listing["results"][0]
+await request(
+    "PATCH", f"/api/threat-models/{model['id']}/", body={"criticality": "high"}
+)""",
+)
+
+EXECUTE_DESCRIPTION = f"""\
+Run Python that calls Precogly's REST API as the signed-in user, and return what \
+it computes.
+
+Use `search` first to find the endpoint, its parameters and its body. Then write \
+Python; the value of the last expression is the result. Do not name a comprehension \
+variable after a builtin such as `id` or `type`: in this sandbox the builtin wins, \
+so `[f"/x/{{id}}/" for id in ids]` puts the `id` function in the path.
+
+`await request(method, path, params=None, body=None)` calls the API: `params` is the \
+query string, `body` is sent as JSON, and it returns the parsed response. A failed \
+call raises with the method, path, status and the API's reason, such as which field \
+was invalid. `request` must be awaited; use `asyncio.gather` to run calls at once.
+
+Calls run as the user, so they see only the user's organizations and are refused \
+where the user is. Calls that change data need the connection's `write` scope; \
+`whoami` shows the scopes.
+
+Response bodies use camelCase field names (`zoneType`). Lists are paginated: \
+`{{count, next, previous, results}}`, 20 rows per page unless `page_size` says \
+otherwise.
+
+Each run may make {EXECUTE_MAX_REQUESTS} requests, compute for \
+{EXECUTE_TIME_LIMIT_SECS:g} seconds and take {EXECUTE_WALL_CLOCK_SECS:g} seconds in \
+all. Results over about {RESULT_MAX_CHARS:,} characters are cut, and each cut is \
+marked `--- TRUNCATED ---`: return what the question needs, not whole responses.
+
+Examples:
+
+""" + "\n\n".join(EXECUTE_EXAMPLES)
+
+
 async def execute(ctx: Context[ToolContext, Any], code: str) -> str:
     """Run `code` with an async `request` bound to the caller's token."""
     tool = ctx.request_context.lifespan_context

@@ -20,6 +20,7 @@ from starlette.applications import Starlette
 
 from precogly_mcp.spec import process_spec
 from precogly_mcp.tools import (
+    EXECUTE_DESCRIPTION,
     SEARCH_DESCRIPTION,
     Request,
     Schema,
@@ -103,6 +104,7 @@ def build_server(
     server.add_tool(
         execute,
         title="Run code against the API",
+        description=EXECUTE_DESCRIPTION,
         annotations=ToolAnnotations(
             read_only_hint=False,
             idempotent_hint=False,

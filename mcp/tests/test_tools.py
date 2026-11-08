@@ -285,3 +285,13 @@ async def test_a_request_that_was_never_awaited_is_explained(
 
     assert result.is_error
     assert "never awaited" in text(result)
+
+
+async def test_the_sandbox_still_lets_a_builtin_beat_a_comprehension_variable() -> None:
+    # Pins a pydantic-monty 1.5.0 bug that `execute`'s description warns about:
+    # CPython gives ["7"]. When this starts failing, monty has fixed it; drop the
+    # warning from EXECUTE_DESCRIPTION along with this test.
+    async with Client(server(FakeRequest())) as client:
+        result = await client.call_tool("search", {"code": '[f"{id}" for id in [7]]'})
+
+    assert json.loads(text(result)) == ["<built-in function id>"]
