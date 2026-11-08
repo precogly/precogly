@@ -176,7 +176,8 @@ export interface ReportFlow {
   source: string | null
   destination: string | null
   protocol: string
-  encrypted: boolean
+  /** null when the flow says nothing about encryption. */
+  encrypted: boolean | null
   flowType: FlowType
   /** Read it with `isAuthenticated` from lib/authentication.ts (I5). */
   authentication: string[]

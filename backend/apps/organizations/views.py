@@ -22,6 +22,7 @@ from apps.threat_models.analysis_service import (
     SHARED,
     SHARED_THREAT_MODEL_KEYS,
     build_threat_analysis,
+    shared_technologies,
 )
 
 from .models import (
@@ -652,6 +653,9 @@ class MagicLinkAccessView(APIView):
             },
             "stats": stats,
             "threat_analysis": threat_analysis,
+            # The technologies the diagrams reference, so an anonymous viewer's
+            # nodes get their icons and names without the component library API.
+            "technologies": shared_technologies(link.threat_model),
             "read_only": True,
             "expires_at": link.expires_at,
             "is_authenticated": is_authenticated,

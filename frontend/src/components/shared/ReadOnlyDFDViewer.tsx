@@ -8,6 +8,8 @@ import { ReactFlow, Background, Controls, ReactFlowProvider, useReactFlow, type 
 import '@xyflow/react/dist/style.css'
 import { nodeTypes, edgeTypes } from '@/features/dfd-editor/components'
 import { DFDNotationProvider } from '@/features/dfd-editor/context/DFDNotationContext'
+import { TechnologyCatalogProvider } from '@/features/dfd-editor/context/TechnologyCatalogContext'
+import type { TechnologyCatalogEntry } from '@/features/dfd-editor/lib/technology-catalog'
 import { DEFAULT_NOTATION } from '@/features/dfd-editor/types/notation'
 import type { FlowType } from '@/types/domain'
 import { captureDiagramImage } from '@/features/dfd-editor/lib/export-diagram-image'
@@ -24,6 +26,12 @@ interface CanvasData {
 interface ReadOnlyDFDViewerProps {
   canvasData: CanvasData
   className?: string
+  /**
+   * The technologies the diagram references, when the payload carries them (the
+   * magic link share page). Nodes read icons and names from here instead of the
+   * component library API, which an anonymous viewer cannot fetch.
+   */
+  technologies?: readonly TechnologyCatalogEntry[]
 }
 
 export interface ReadOnlyDFDViewerHandle {
@@ -31,7 +39,7 @@ export interface ReadOnlyDFDViewerHandle {
 }
 
 const DFDViewerContent = forwardRef<ReadOnlyDFDViewerHandle, ReadOnlyDFDViewerProps>(function DFDViewerContent(
-  { canvasData, className },
+  { canvasData, className, technologies },
   ref,
 ) {
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -59,6 +67,7 @@ const DFDViewerContent = forwardRef<ReadOnlyDFDViewerHandle, ReadOnlyDFDViewerPr
   return (
     <div ref={wrapperRef} className={className}>
       <DFDNotationProvider notationStyle={notationStyle} visibleFlowTypes={canvasData.visibleFlowTypes}>
+        <TechnologyCatalogProvider technologies={technologies}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -96,6 +105,7 @@ const DFDViewerContent = forwardRef<ReadOnlyDFDViewerHandle, ReadOnlyDFDViewerPr
           <Background gap={15} size={1} />
           <Controls showInteractive={false} />
         </ReactFlow>
+        </TechnologyCatalogProvider>
       </DFDNotationProvider>
     </div>
   )

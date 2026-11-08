@@ -44,12 +44,16 @@ from .models import (
 )
 from .scoring.registry import get_engine
 
+# The effectiveness a control counts for when none was assessed, by status.
+# Non-decreasing along the lifecycle (Gap, Planned, In Progress, Implemented,
+# Verified), so moving a control forward never makes a residual worse. Waived
+# and Decommissioned contribute nothing.
 STATUS_EFFECTIVENESS_FALLBACK = {
     "verified": 1.0,
     "platform": 1.0,
     "implemented": 0.7,
-    "in_progress": 0.3,
-    "planned": 0.5,
+    "in_progress": 0.5,
+    "planned": 0.3,
     "gap": 0.0,
     "waived": 0.0,
     "decommissioned": 0.0,
@@ -927,12 +931,22 @@ def recalculate_residual(risk) -> None:
 
     The inherent rating's own engine reduces likelihood and re-bands; with
     nothing contributing, the residual is a copy of the inherent rating.
+
+    When the engine cannot reduce (a level-only rating, or scores off the
+    engine's scale) there is nothing to compute from, so a residual the risk
+    already has (imported, for example) is left as it is. Only a risk with no
+    residual yet gets a copy of the inherent.
     """
     from .scoring.base import copy_rating
 
-    effectiveness = countermeasure_effectiveness_for_risk(risk)
     engine = get_engine(risk.inherent.methodology)
-    if effectiveness is None or engine is None:
+    if engine is None or not engine.can_reduce(risk.inherent):
+        if risk.residual_id is None:
+            apply_rating(risk, "residual", copy_rating(risk.inherent))
+        return
+
+    effectiveness = countermeasure_effectiveness_for_risk(risk)
+    if effectiveness is None:
         residual = copy_rating(risk.inherent)
     else:
         residual = engine.rate_residual(risk.inherent, effectiveness)

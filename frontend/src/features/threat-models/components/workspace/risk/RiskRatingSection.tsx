@@ -3,12 +3,16 @@
  * edited with the shared RatingForm; residual is computed from the linked
  * countermeasures and can be recalculated; target is read-only because the
  * risk serializer takes no target inputs (only `rating_inputs` for inherent).
+ * A level-only inherent rating has nothing to reduce from, so its residual is
+ * never recalculated (the backend keeps whatever it holds) and the refresh
+ * button is disabled. The info popover beside "Ratings" states the rules.
  */
 
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Loader2, Pencil, RefreshCw } from 'lucide-react'
+import { Info, Loader2, Pencil, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useRecalculateRisk, useUpdateRisk } from '@/features/threat-models/api/risks'
 import {
   RatingBadge,
@@ -31,6 +35,19 @@ function scaleFor(rating: Rating | null, scoringMethods: ScoringMethod[] | undef
   if (!rating) return null
   return scoringMethods?.find((method) => method.key === rating.methodology)?.scoreScale ?? null
 }
+
+/** Whether the inherent rating has a likelihood the backend can scale by control effectiveness. */
+function residualIsRecalculated(inherent: Rating | null): boolean {
+  return inherent !== null && inherent.methodology !== 'manual' && inherent.likelihood !== null
+}
+
+const RESIDUAL_RULES =
+  'Residual is the inherent rating after the linked threats\' countermeasures. Each countermeasure counts its ' +
+  'effectiveness, or when not assessed a default by status: Verified and Platform 100%, Implemented 70%, ' +
+  'In Progress 50%, Planned 30%, Gap, Waived and Decommissioned 0%. The average lowers the likelihood; impact ' +
+  'does not change. Level-only ratings are not recalculated.'
+
+const LEVEL_ONLY_RECALCULATE_TITLE = 'Level-only ratings are not recalculated. The residual keeps the level it was given.'
 
 export function RiskRatingSection({ threatModelId, risk, scoringMethod, scoringMethods }: RiskRatingSectionProps) {
   const updateRisk = useUpdateRisk(threatModelId)
@@ -63,9 +80,23 @@ export function RiskRatingSection({ threatModelId, risk, scoringMethod, scoringM
     })
   }
 
+  const canRecalculate = residualIsRecalculated(risk.inherent)
+
   return (
     <div className="space-y-2" data-testid="risk-ratings">
-      <p className="text-xs text-muted-foreground">Ratings</p>
+      <div className="flex items-center gap-1">
+        <p className="text-xs text-muted-foreground">Ratings</p>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-5 w-5 p-0" aria-label="How the residual rating is calculated">
+              <Info className="h-3 w-3 text-muted-foreground" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 text-xs leading-relaxed" data-testid="residual-rules">
+            {RESIDUAL_RULES}
+          </PopoverContent>
+        </Popover>
+      </div>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
         <span className="flex items-center gap-1.5">
           <span className="text-muted-foreground">Inherent:</span>
@@ -78,9 +109,9 @@ export function RiskRatingSection({ threatModelId, risk, scoringMethod, scoringM
             variant="ghost"
             size="sm"
             className="h-6 w-6 p-0"
-            title="Recalculate residual rating"
+            title={canRecalculate ? 'Recalculate residual rating' : LEVEL_ONLY_RECALCULATE_TITLE}
             aria-label="Recalculate residual rating"
-            disabled={recalculateRisk.isPending}
+            disabled={recalculateRisk.isPending || !canRecalculate}
             onClick={recalculate}
           >
             <RefreshCw className={`h-3 w-3 text-muted-foreground ${recalculateRisk.isPending ? 'animate-spin' : ''}`} />
