@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
@@ -30,6 +31,17 @@ class ToolContext:
     sandbox: AsyncMonty
     # The schema reduced by `process_spec`: what `search` code reads as `spec`.
     spec: dict[str, Any]
+
+
+async def search(ctx: Context[ToolContext, Any], code: str) -> str:
+    """TODO: the description the model reads, with worked examples."""
+    tool = ctx.request_context.lifespan_context
+    async with tool.sandbox.checkout() as session:
+        result = await session.feed_run(code, inputs={"spec": tool.spec})
+    # Serialized here, not left to the SDK: it turns a returned list into one content
+    # block per item, so `[("/api/zones/", "get")]` would reach the model as two
+    # unrelated strings. Compact separators: indented JSON is twice the size.
+    return json.dumps(result, separators=(",", ":"))
 
 
 async def whoami(ctx: Context[ToolContext, Any]) -> dict[str, Any]:

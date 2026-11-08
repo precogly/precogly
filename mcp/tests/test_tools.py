@@ -21,6 +21,7 @@ from mcp.server import MCPServer
 from mcp.server.auth.middleware.auth_context import auth_context_var
 from mcp.server.auth.middleware.bearer_auth import AuthenticatedUser
 from mcp.server.auth.provider import AccessToken
+from mcp.types import TextContent
 
 from precogly_mcp.server import build_server
 
@@ -112,9 +113,9 @@ async def test_whoami_refuses_to_run_without_a_token() -> None:
 
 async def test_whoami_is_advertised_read_only_with_no_arguments() -> None:
     async with Client(server(FakeRequest())) as client:
-        (tool,) = (await client.list_tools()).tools
+        tools = {tool.name: tool for tool in (await client.list_tools()).tools}
+    tool = tools["whoami"]
 
-    assert tool.name == "whoami"
     assert tool.title == "Who am I"
     # `ctx` is stripped by its `Context` annotation. A wrong annotation would
     # advertise it as an argument no caller can supply.
@@ -122,3 +123,15 @@ async def test_whoami_is_advertised_read_only_with_no_arguments() -> None:
     assert tool.annotations is not None
     assert tool.annotations.read_only_hint is True
     assert tool.annotations.open_world_hint is False
+
+
+async def test_search_runs_code_over_the_spec_in_the_sandbox() -> None:
+    code = '[(path, method) for path, ops in spec["paths"].items() for method in ops]'
+
+    async with Client(server(FakeRequest())) as client:
+        result = await client.call_tool("search", {"code": code})
+
+    assert not result.is_error, result.content
+    (content,) = result.content
+    assert isinstance(content, TextContent)
+    assert json.loads(content.text) == [["/api/auth/user/", "get"]]

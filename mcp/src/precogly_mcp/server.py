@@ -19,7 +19,7 @@ from pydantic_monty import AsyncMonty
 from starlette.applications import Starlette
 
 from precogly_mcp.spec import process_spec
-from precogly_mcp.tools import Request, Schema, ToolContext, whoami
+from precogly_mcp.tools import Request, Schema, ToolContext, search, whoami
 
 
 def build_server(
@@ -72,6 +72,16 @@ def build_server(
     server.add_tool(
         whoami,
         title="Who am I",
+        annotations=ToolAnnotations(
+            read_only_hint=True,
+            idempotent_hint=True,
+            open_world_hint=False,
+        ),
+    )
+    # Reads the schema only, in a sandbox with no network: read-only and closed.
+    server.add_tool(
+        search,
+        title="Search the API",
         annotations=ToolAnnotations(
             read_only_hint=True,
             idempotent_hint=True,
