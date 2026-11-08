@@ -37,7 +37,11 @@ A planned in-app assistant needs the same capabilities. Two separate surfaces wo
 - **`whoami`** returns the user, their organizations, and the token's scopes.
 - **Unsafe methods require the `write` scope**, checked in `request()`. This covers MCP02
   in #487.
-- **Results are capped**, with truncation marked. The size is unset until measured.
+- **`search` reads a reduced spec.** `$ref`s are inlined, each operation keeps only
+  `summary`, `description`, `tags`, `parameters`, `requestBody` and `responses`, and
+  request bodies keep only `application/json`. See Schema size.
+- **Results are capped**, with truncation marked, and returned as compact JSON, about
+  half the size of indented JSON. The size is unset until measured.
 - **`request_all(path)` follows pagination**, so reading one page and counting it is
   not the easy path.
 - **`execute` returns the code it ran with its result.** The same code on the same data
@@ -63,6 +67,41 @@ A planned in-app assistant needs the same capabilities. Two separate surfaces wo
   disagreements. It decides which questions get a shortcut tool or recipe.
 - **Central tenancy enforcement.** `execute` reaches every viewset. #405 is open; this
   waits on #441 step 3, where an unscoped query fails closed.
+
+## Schema size
+
+The spec never enters the model's context; what `search` returns does, a few inlined
+operations at a time. Measured 2026-11-07 on this branch, 352 operations, compact JSON,
+tokens estimated as characters / 4:
+
+| | |
+| --- | --- |
+| raw schema | 0.41 MB |
+| reduced, `$ref`s inlined | 1.47 MB |
+| reduced, JSON request bodies only | 0.92 MB |
+| one operation, median / p90 / max | ~725 / ~2,100 / ~5,200 tokens |
+| spec passed into the sandbox per `search` | ~41 ms, at 1.47 MB, before the JSON-only cut |
+
+What each further cut would save, over all operations:
+
+| Cut | Saves | Lossless |
+| --- | --- | --- |
+| form and multipart copies of request bodies (done) | 38% | yes: `request()` sends JSON |
+| `readOnly` fields in request bodies | 20% | yes: the server ignores them |
+| every `description` | 33% | no: field and enum meanings |
+| all `responses` | 34% | no: the model reads results by them |
+| non-2xx responses | 0% | drf-spectacular emits none |
+
+The largest operations (`add_pack` and similar actions, ~21k characters) are unannotated
+custom actions that drf-spectacular describes with the full threat model serializer,
+#261. Fixing the annotations is smaller and correct.
+
+Tool-surface compression ([mcp-compressor](https://www.atlassian.com/blog/developer/mcp-compression-preventing-tool-bloat-in-ai-agents))
+and response filtering with `jq` ([Stainless](https://www.stainless.com/changelog/mcp-servers-now-support-response-data-filtering-using-jq/))
+solve problems code mode does not have: the schema is loaded on demand, and the model's
+code filters responses before returning them. [TOON](https://github.com/toon-format/toon)
+reports fewer tokens than JSON on its own benchmarks, but its README says compact JSON
+often wins on deeply nested, non-uniform data, which an OpenAPI operation is.
 
 ## Alternatives
 
@@ -96,6 +135,10 @@ A planned in-app assistant needs the same capabilities. Two separate surfaces wo
 ## Open
 
 - The result cap.
+- `readOnly` fields in request bodies. drf-spectacular's `COMPONENT_SPLIT_REQUEST`
+  splits request and response components, which removes them at the source and makes
+  the committed schema more accurate for every reader. It changes `backend/openapi.yml`,
+  so it belongs with that file's pull request.
 - Whether recipes are tools, or skills served as in `cloudflare/skills`
   (`src/skills/sync.ts` in the Cloudflare server at `e8bc56f`). Relates to the Skills Hub
   discussion, #178.
