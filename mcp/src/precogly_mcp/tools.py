@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
@@ -27,8 +28,21 @@ SEARCH_TIME_LIMIT_SECS = 2.0
 
 # Cloudflare's cap, ~6,000 tokens at 4 characters each, not measured here: room for
 # about eight median operations or one of the largest. Lower makes the model narrow
-# its searches sooner; higher spends more of its context on each result.
-SEARCH_RESULT_MAX_CHARS = 24_000
+# its code sooner; higher spends more of its context on each result.
+RESULT_MAX_CHARS = 24_000
+
+# The sandbox clock stops while `execute` waits on `request`, so this bounds the
+# model's own computation, as for `search`; the two limits below bound the waiting.
+EXECUTE_TIME_LIMIT_SECS = 2.0
+
+# Arbitrary: enough to page through any listing here, few enough that a runaway loop
+# cannot hammer the API. Measured: one awaited `request` costs one suspension, so 100
+# allows 100 sequential calls (99 when gathered).
+EXECUTE_MAX_REQUESTS = 100
+
+# Arbitrary: 100 requests at ~50 ms each spend ~5 s waiting, none of it on the sandbox
+# clock. Past this the run is cancelled.
+EXECUTE_WALL_CLOCK_SECS = 30.0
 
 
 class Request(Protocol):
@@ -97,7 +111,7 @@ Field names in the schema are snake_case, but response bodies arrive in camelCas
 `zone_type` is returned as `zoneType`. Request bodies accept snake_case. Query \
 parameters are used exactly as named.
 
-Results over about {SEARCH_RESULT_MAX_CHARS:,} characters are cut, and each cut is \
+Results over about {RESULT_MAX_CHARS:,} characters are cut, and each cut is \
 marked `--- TRUNCATED ---`. Return the parts you need, not whole operations.
 
 Examples:
@@ -108,16 +122,70 @@ Examples:
 async def search(ctx: Context[ToolContext, Any], code: str) -> str:
     """Run `code` over the reduced schema; the model reads `SEARCH_DESCRIPTION`."""
     tool = ctx.request_context.lifespan_context
-    # One run per checkout, so a run stopped by the limit never reuses its session,
+    return await _run(
+        tool.sandbox,
+        code,
+        ResourceLimits(max_feed_duration_secs=SEARCH_TIME_LIMIT_SECS),
+        inputs={"spec": tool.spec},
+    )
+
+
+async def execute(ctx: Context[ToolContext, Any], code: str) -> str:
+    """Run `code` with an async `request` bound to the caller's token."""
+    tool = ctx.request_context.lifespan_context
+    access_token = get_access_token()
+    if access_token is None:
+        raise RuntimeError("The server was run without auth")
+
+    # A closure, so the sandboxed code calls the API without ever holding the token.
+    async def request(
+        method: str,
+        path: str,
+        params: Mapping[str, Any] | None = None,
+        body: Any = None,
+    ) -> Any:
+        return await tool.request(access_token, method, path, params, body)
+
+    try:
+        async with asyncio.timeout(EXECUTE_WALL_CLOCK_SECS):
+            return await _run(
+                tool.sandbox,
+                code,
+                ResourceLimits(
+                    max_feed_duration_secs=EXECUTE_TIME_LIMIT_SECS,
+                    max_suspensions=EXECUTE_MAX_REQUESTS,
+                ),
+                external_lookup={"request": request},
+            )
+    except TimeoutError as err:
+        # Cancelling does not undo what already ran: a write may have landed.
+        raise ToolError(
+            f"The code ran longer than {EXECUTE_WALL_CLOCK_SECS:g} seconds and was "
+            f"stopped. Requests it had already made may have taken effect."
+        ) from err
+
+
+async def _run(
+    sandbox: AsyncMonty,
+    code: str,
+    limits: ResourceLimits,
+    *,
+    inputs: dict[str, Any] | None = None,
+    external_lookup: dict[str, Any] | None = None,
+) -> str:
+    """Run `code` once in a fresh sandbox session and return its result as JSON."""
+    # One run per checkout, so a run stopped by a limit never reuses its session,
     # whose heap the library no longer vouches for.
-    limits = ResourceLimits(max_feed_duration_secs=SEARCH_TIME_LIMIT_SECS)
+    #
     # The model's own mistakes are raised as `ToolError`, whose message the SDK passes
     # to the client; a traceback into its code is what lets it fix the code. Anything
     # else, such as `MontyCrashedError` for a dead worker, is left to the SDK, which
     # reports it without detail.
     try:
-        async with tool.sandbox.checkout(limits=limits) as session:
-            result = await session.feed_run(code, inputs={"spec": tool.spec})
+        async with sandbox.checkout(limits=limits) as session:
+            result = await session.feed_run(
+                code, inputs=inputs, external_lookup=external_lookup
+            )
     except (MontySyntaxError, MontyRuntimeError) as err:
         raise ToolError(err.display("traceback")) from err
 
@@ -132,7 +200,7 @@ async def search(ctx: Context[ToolContext, Any], code: str) -> str:
             f"The result must be JSON: lists, dicts, strings, finite numbers, "
             f"booleans or None. {err}"
         ) from err
-    return dumps(fit(data, SEARCH_RESULT_MAX_CHARS))
+    return dumps(fit(data, RESULT_MAX_CHARS))
 
 
 async def whoami(ctx: Context[ToolContext, Any]) -> dict[str, Any]:

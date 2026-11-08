@@ -24,6 +24,7 @@ from precogly_mcp.tools import (
     Request,
     Schema,
     ToolContext,
+    execute,
     search,
     whoami,
 )
@@ -93,6 +94,18 @@ def build_server(
         annotations=ToolAnnotations(
             read_only_hint=True,
             idempotent_hint=True,
+            open_world_hint=False,
+        ),
+    )
+    # Can change data, so a client should ask before running it. `destructive_hint`
+    # is left at its default, true: code can delete. The `write` scope check in
+    # `request` is what actually stops a read-only connection writing.
+    server.add_tool(
+        execute,
+        title="Run code against the API",
+        annotations=ToolAnnotations(
+            read_only_hint=False,
+            idempotent_hint=False,
             open_world_hint=False,
         ),
     )

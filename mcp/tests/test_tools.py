@@ -66,7 +66,7 @@ def server(request: FakeRequest) -> MCPServer:
 
 class FakeRequest:
     def __init__(self) -> None:
-        self.calls: list[tuple[AccessToken, str, str]] = []
+        self.calls: list[tuple[AccessToken, str, str, Any, Any]] = []
 
     async def __call__(
         self,
@@ -76,7 +76,12 @@ class FakeRequest:
         params: Mapping[str, Any] | None = None,
         body: Any = None,
     ) -> Any:
-        self.calls.append((access_token, method, path))
+        self.calls.append((access_token, method, path, params, body))
+        if path == "/api/missing/":
+            # The shape of the backend's `APIError` message.
+            raise LookupError(f"{method} {path} returned 404: Not found.")
+        if path == "/api/slow/":
+            await anyio.sleep(5)
         return RESPONSES[path]
 
 
@@ -109,8 +114,8 @@ async def test_whoami_returns_the_user_their_organizations_and_scopes(
         "scopes": ["read"],
     }
     assert request.calls == [
-        (access_token, "GET", "/api/auth/user/"),
-        (access_token, "GET", "/api/organizations/"),
+        (access_token, "GET", "/api/auth/user/", None, None),
+        (access_token, "GET", "/api/organizations/", None, None),
     ]
 
 
@@ -185,7 +190,7 @@ async def test_a_result_that_is_not_json_is_explained() -> None:
 async def test_an_oversized_result_is_cut_to_the_cap_and_stays_json(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(tools, "SEARCH_RESULT_MAX_CHARS", 300)
+    monkeypatch.setattr(tools, "RESULT_MAX_CHARS", 300)
     code = '[{"path": f"/api/{i}/", "summary": "x" * 50} for i in range(100)]'
 
     async with Client(server(FakeRequest())) as client:
@@ -198,3 +203,74 @@ async def test_an_oversized_result_is_cut_to_the_cap_and_stays_json(
     *kept, marker = json.loads(content.text)
     assert kept[0] == {"path": "/api/0/", "summary": "x" * 50}
     assert marker == f"--- TRUNCATED --- {100 - len(kept)} more items"
+
+
+async def call_execute(code: str, request: FakeRequest | None = None) -> Any:
+    async with Client(server(request or FakeRequest())) as client:
+        return await client.call_tool("execute", {"code": code})
+
+
+def text(result: Any) -> str:
+    (content,) = result.content
+    assert isinstance(content, TextContent)
+    return content.text
+
+
+async def test_execute_calls_the_api_as_the_caller(access_token: AccessToken) -> None:
+    request = FakeRequest()
+    code = 'await request("GET", "/api/organizations/", params={"page": 1})'
+
+    result = await call_execute(code, request)
+
+    assert not result.is_error, result.content
+    assert json.loads(text(result)) == RESPONSES["/api/organizations/"]
+    assert request.calls == [
+        (access_token, "GET", "/api/organizations/", {"page": 1}, None)
+    ]
+
+
+async def test_an_api_error_reaches_the_model(access_token: AccessToken) -> None:
+    result = await call_execute('await request("GET", "/api/missing/")')
+
+    assert result.is_error
+    assert "GET /api/missing/ returned 404: Not found." in text(result)
+
+
+async def test_execute_stops_after_too_many_requests(
+    access_token: AccessToken, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(tools, "EXECUTE_MAX_REQUESTS", 3)
+    code = 'for i in range(5):\n    await request("GET", "/api/auth/user/")'
+
+    result = await call_execute(code)
+
+    assert result.is_error
+    assert "suspension limit 3 exceeded" in text(result)
+
+
+async def test_execute_stops_a_run_that_waits_too_long(
+    access_token: AccessToken, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # The sandbox clock stops while it waits on `request`, so only the wall-clock
+    # limit can end this.
+    monkeypatch.setattr(tools, "EXECUTE_WALL_CLOCK_SECS", 0.2)
+
+    with anyio.fail_after(10):
+        result = await call_execute('await request("GET", "/api/slow/")')
+
+    assert result.is_error
+    assert "may have taken effect" in text(result)
+
+
+async def test_execute_refuses_to_run_without_a_token() -> None:
+    assert (await call_execute("1")).is_error
+
+
+async def test_execute_is_advertised_as_able_to_change_data() -> None:
+    async with Client(server(FakeRequest())) as client:
+        tools_by_name = {tool.name: tool for tool in (await client.list_tools()).tools}
+    annotations = tools_by_name["execute"].annotations
+
+    assert annotations is not None
+    assert annotations.read_only_hint is False
+    assert annotations.destructive_hint is not False
