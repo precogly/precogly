@@ -4,27 +4,22 @@ MCP server for Precogly threat modeling.
 
 ## Status
 
-Early. Four tools, all read-only:
+Code mode ([0012](docs/0012-code-mode-over-the-api-schema.md)): three tools over
+Precogly's REST API instead of one tool per question.
 
-- `list_threat_models` — threat models in the caller's organizations, most recently
-  updated first, with `total` beside them.
-- `search_threat_library`, `search_countermeasure_library`, `search_component_library` —
-  the shared catalogs installed packs populate, with `matched` and `catalogSize` beside
-  the rows. Component rows carry `kind` (the CycloneDX asset type) and take a `kind`
-  filter; countermeasure queries match the description as well as the name.
+- `whoami` — the user, their organizations and roles, and the token's scopes.
+- `search` — runs model-written Python over the OpenAPI schema, reduced and with
+  `$ref`s inlined (`spec.py`).
+- `execute` — runs model-written Python with an async `request()` that calls the API
+  in-process as the token's user ([0014](docs/0014-tools-call-the-api-in-process.md)).
+  Writes need the `write` scope.
 
-The schema alignment work (precogly/precogly#583, #584) changed the output shapes in one
-go: `list_threat_models` rows gained `methodologies`, `lifecycle_phase`, `approved_at`,
-`primary_system_name`, `serial_number`, `version` and `blueprint_count`, and
-`risk_scoring_method` is now `qualitative-matrix`, `owasp-risk-rating`, `fair` or
-`mozilla-rra`. Tool names and shapes are not versioned, so a client that pinned the old
-values updates with the server. The planned per-model tools are redesigned on the new
-model before they are built ([0002](docs/0002-tool-implementation-order.md), last
-section).
+Model-written code runs in a `pydantic-monty` sandbox pool opened in the server's
+lifespan. Results are capped at 24,000 characters and stay valid JSON (`truncate.py`).
 
-A tool reads Precogly through a protocol the mounting application supplies rather than
-by forwarding the caller's token, which is audience-bound to `/mcp` and invalid at
-Precogly's REST API ([0008](docs/0008-the-mcp-server-runs-inside-precogly.md)).
+The mounting application supplies the token verifier, `request()` and the schema, so
+this package never imports Django: `backend/apps/core/mcp/` and
+`backend/config/mcp_mount.py` are the other half.
 
 ## Connecting
 
@@ -77,8 +72,10 @@ The git hooks are the repository's, installed once from the root with
 `uv run pre-commit install`.
 
 Tests need no running Precogly. `mcp.client.Client` drives the server over in-memory
-streams, so `tools/list` and `tools/call` are exercised as a client sees them, and
-`tests.support.FakeReader` stands in for Precogly.
+streams, so `tools/list` and `tools/call` are exercised as a client sees them, and a
+fake `request` in `tests/test_tools.py` stands in for Precogly. The sandbox is real.
+The tools' examples run against the real schema and API in the backend's
+`apps/core/tests/test_mcp_*_examples.py`.
 
 The fake is also their blind spot: once, every test passed against a version of
 `tools/call` that failed on the first real request, because the fake never enforced the
