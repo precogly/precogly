@@ -9,12 +9,24 @@ paths:
       operationId: ai_providers_list
       description: CRUD for per-tenant AI provider configs, plus a connection probe.
       parameters:
+      - in: query
+        name: enabled
+        schema:
+          type: boolean
+      - in: query
+        name: is_default
+        schema:
+          type: boolean
       - name: ordering
         required: false
         in: query
         description: Which field to use when ordering the results.
         schema:
           type: string
+      - in: query
+        name: organization
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -78,7 +90,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this ai provider config.
         required: true
       tags:
       - ai-providers
@@ -98,7 +111,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this ai provider config.
         required: true
       tags:
       - ai-providers
@@ -130,7 +144,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this ai provider config.
         required: true
       tags:
       - ai-providers
@@ -161,7 +176,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this ai provider config.
         required: true
       tags:
       - ai-providers
@@ -184,7 +200,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this ai provider config.
         required: true
       tags:
       - ai-providers
@@ -624,6 +641,28 @@ paths:
       operationId: boundaries_list
       description: ViewSet for Boundary CRUD operations.
       parameters:
+      - in: query
+        name: boundary_type
+        schema:
+          type: string
+          enum:
+          - data
+          - functional
+          - network
+          - organizational
+          - physical
+          - process
+          - trust
+        description: |-
+          CycloneDX boundary type
+
+          * `data` - data
+          * `functional` - functional
+          * `network` - network
+          * `organizational` - organizational
+          * `physical` - physical
+          * `process` - process
+          * `trust` - trust
       - name: page
         required: false
         in: query
@@ -642,6 +681,14 @@ paths:
         description: A search term.
         schema:
           type: string
+      - in: query
+        name: zone_a
+        schema:
+          type: integer
+      - in: query
+        name: zone_b
+        schema:
+          type: integer
       tags:
       - boundaries
       security:
@@ -687,7 +734,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this boundary.
         required: true
       tags:
       - boundaries
@@ -707,7 +755,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this boundary.
         required: true
       tags:
       - boundaries
@@ -739,7 +788,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this boundary.
         required: true
       tags:
       - boundaries
@@ -770,7 +820,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this boundary.
         required: true
       tags:
       - boundaries
@@ -790,6 +841,10 @@ paths:
         description: Which field to use when ordering the results.
         schema:
           type: string
+      - in: query
+        name: organization
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -800,6 +855,10 @@ paths:
         required: false
         in: query
         description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: parent
         schema:
           type: integer
       - name: search
@@ -853,7 +912,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this business unit.
         required: true
       tags:
       - business-units
@@ -873,7 +933,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this business unit.
         required: true
       tags:
       - business-units
@@ -905,7 +966,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this business unit.
         required: true
       tags:
       - business-units
@@ -936,7 +998,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this business unit.
         required: true
       tags:
       - business-units
@@ -950,6 +1013,14 @@ paths:
       operationId: component_data_assets_list
       description: ViewSet for ComponentDataAsset CRUD operations.
       parameters:
+      - in: query
+        name: component
+        schema:
+          type: integer
+      - in: query
+        name: data_asset
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -1007,7 +1078,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this component data asset.
         required: true
       tags:
       - component-data-assets
@@ -1027,7 +1099,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this component data asset.
         required: true
       tags:
       - component-data-assets
@@ -1059,7 +1132,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this component data asset.
         required: true
       tags:
       - component-data-assets
@@ -1090,7 +1164,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this component data asset.
         required: true
       tags:
       - component-data-assets
@@ -1410,6 +1485,70 @@ paths:
       operationId: components_list
       description: ViewSet for OrgsystemComponent CRUD operations.
       parameters:
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - actor
+          - agent
+          - api
+          - broker
+          - cache
+          - component
+          - container
+          - data
+          - data-store
+          - device
+          - endpoint
+          - function
+          - gateway
+          - infrastructure
+          - interface
+          - model
+          - module
+          - network
+          - process
+          - queue
+          - resource
+          - service
+          - stream
+          - subsystem
+          - system
+          - tool
+        description: |-
+          CycloneDX asset type; copied from the library, editable; blank derives from the category
+
+          * `actor` - actor
+          * `agent` - agent
+          * `api` - api
+          * `broker` - broker
+          * `cache` - cache
+          * `component` - component
+          * `container` - container
+          * `data` - data
+          * `data-store` - data-store
+          * `device` - device
+          * `endpoint` - endpoint
+          * `function` - function
+          * `gateway` - gateway
+          * `infrastructure` - infrastructure
+          * `interface` - interface
+          * `model` - model
+          * `module` - module
+          * `network` - network
+          * `process` - process
+          * `queue` - queue
+          * `resource` - resource
+          * `service` - service
+          * `stream` - stream
+          * `subsystem` - subsystem
+          * `system` - system
+          * `tool` - tool
+      - in: query
+        name: orgsystem
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -1428,6 +1567,10 @@ paths:
         description: A search term.
         schema:
           type: string
+      - in: query
+        name: zone
+        schema:
+          type: integer
       tags:
       - components
       security:
@@ -1473,7 +1616,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this orgsystem component.
         required: true
       tags:
       - components
@@ -1493,7 +1637,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this orgsystem component.
         required: true
       tags:
       - components
@@ -1525,7 +1670,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this orgsystem component.
         required: true
       tags:
       - components
@@ -1556,7 +1702,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this orgsystem component.
         required: true
       tags:
       - components
@@ -1581,7 +1728,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this orgsystem component.
         required: true
       tags:
       - components
@@ -1611,6 +1759,10 @@ paths:
       operationId: countermeasure_comments_list
       description: ViewSet for CountermeasureComment (comment/history log on countermeasures).
       parameters:
+      - in: query
+        name: countermeasure
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -1668,7 +1820,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this countermeasure comment.
         required: true
       tags:
       - countermeasure-comments
@@ -1688,7 +1841,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this countermeasure comment.
         required: true
       tags:
       - countermeasure-comments
@@ -1720,7 +1874,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this countermeasure comment.
         required: true
       tags:
       - countermeasure-comments
@@ -1751,7 +1906,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this countermeasure comment.
         required: true
       tags:
       - countermeasure-comments
@@ -2121,6 +2277,14 @@ paths:
       operationId: countermeasures_list
       description: Unified ViewSet for InstanceCountermeasure (component and flow).
       parameters:
+      - in: query
+        name: countermeasure_library
+        schema:
+          type: integer
+      - in: query
+        name: number
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -2131,6 +2295,36 @@ paths:
         required: false
         in: query
         description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: required_for_release
+        schema:
+          type: boolean
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - decommissioned
+          - gap
+          - implemented
+          - in_progress
+          - planned
+          - platform
+          - verified
+          - waived
+        description: |-
+          * `gap` - Gap
+          * `planned` - Planned
+          * `in_progress` - In Progress
+          * `implemented` - Implemented
+          * `verified` - Verified
+          * `waived` - Waived
+          * `platform` - Platform
+          * `decommissioned` - Decommissioned
+      - in: query
+        name: threat_model
         schema:
           type: integer
       tags:
@@ -2178,7 +2372,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance countermeasure.
         required: true
       tags:
       - countermeasures
@@ -2198,7 +2393,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance countermeasure.
         required: true
       tags:
       - countermeasures
@@ -2230,7 +2426,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance countermeasure.
         required: true
       tags:
       - countermeasures
@@ -2261,7 +2458,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance countermeasure.
         required: true
       tags:
       - countermeasures
@@ -2278,7 +2476,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance countermeasure.
         required: true
       tags:
       - countermeasures
@@ -2315,7 +2514,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance countermeasure.
         required: true
       tags:
       - countermeasures
@@ -2353,7 +2553,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance countermeasure.
         required: true
       tags:
       - countermeasures
@@ -2422,6 +2623,22 @@ paths:
       operationId: data_assets_list
       description: ViewSet for DataAsset CRUD operations.
       parameters:
+      - in: query
+        name: classification
+        schema:
+          type: string
+      - in: query
+        name: confidentiality
+        schema:
+          type: string
+          enum:
+          - high
+          - low
+          - medium
+        description: |-
+          * `low` - Low
+          * `medium` - Medium
+          * `high` - High
       - name: page
         required: false
         in: query
@@ -2485,7 +2702,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this data asset.
         required: true
       tags:
       - data-assets
@@ -2505,7 +2723,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this data asset.
         required: true
       tags:
       - data-assets
@@ -2537,7 +2756,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this data asset.
         required: true
       tags:
       - data-assets
@@ -2568,7 +2788,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this data asset.
         required: true
       tags:
       - data-assets
@@ -2680,6 +2901,18 @@ paths:
       operationId: diagrams_list
       description: ViewSet for DFD CRUD operations.
       parameters:
+      - in: query
+        name: diagram_type
+        schema:
+          type: string
+          enum:
+          - context
+          - level1
+          - level2
+        description: |-
+          * `context` - Context
+          * `level1` - Level 1
+          * `level2` - Level 2
       - name: ordering
         required: false
         in: query
@@ -2754,7 +2987,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this DFD.
         required: true
       tags:
       - diagrams
@@ -2774,7 +3008,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this DFD.
         required: true
       tags:
       - diagrams
@@ -2806,7 +3041,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this DFD.
         required: true
       tags:
       - diagrams
@@ -2842,7 +3078,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this DFD.
         required: true
       tags:
       - diagrams
@@ -2865,7 +3102,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this DFD.
         required: true
       tags:
       - diagrams
@@ -2980,6 +3218,14 @@ paths:
       operationId: flow_assets_list
       description: ViewSet for FlowAsset CRUD operations.
       parameters:
+      - in: query
+        name: data_asset
+        schema:
+          type: integer
+      - in: query
+        name: flow
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -3037,7 +3283,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this flow asset.
         required: true
       tags:
       - flow-assets
@@ -3057,7 +3304,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this flow asset.
         required: true
       tags:
       - flow-assets
@@ -3089,7 +3337,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this flow asset.
         required: true
       tags:
       - flow-assets
@@ -3120,7 +3369,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this flow asset.
         required: true
       tags:
       - flow-assets
@@ -3134,6 +3384,36 @@ paths:
       operationId: flows_list
       description: ViewSet for Flow CRUD operations.
       parameters:
+      - in: query
+        name: crosses_boundary
+        schema:
+          type: boolean
+      - in: query
+        name: flow_type
+        schema:
+          type: string
+          enum:
+          - control
+          - data
+          - energy
+          - event
+          - financial
+          - message
+          - physical
+          - process
+          - signal
+        description: |-
+          CycloneDX flow type
+
+          * `control` - control
+          * `data` - data
+          * `energy` - energy
+          * `event` - event
+          * `financial` - financial
+          * `message` - message
+          * `physical` - physical
+          * `process` - process
+          * `signal` - signal
       - name: page
         required: false
         in: query
@@ -3146,6 +3426,10 @@ paths:
         description: Number of results to return per page.
         schema:
           type: integer
+      - in: query
+        name: protocol
+        schema:
+          type: string
       tags:
       - flows
       security:
@@ -3191,7 +3475,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this flow.
         required: true
       tags:
       - flows
@@ -3211,7 +3496,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this flow.
         required: true
       tags:
       - flows
@@ -3243,7 +3529,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this flow.
         required: true
       tags:
       - flows
@@ -3274,7 +3561,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this flow.
         required: true
       tags:
       - flows
@@ -3462,6 +3750,10 @@ paths:
 
         These mappings override library-level compliance mappings for specific countermeasure instances.
       parameters:
+      - in: query
+        name: countermeasure
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -3474,6 +3766,20 @@ paths:
         description: Number of results to return per page.
         schema:
           type: integer
+      - in: query
+        name: requirement
+        schema:
+          type: integer
+      - in: query
+        name: sufficiency
+        schema:
+          type: string
+          enum:
+          - full
+          - partial
+        description: |-
+          * `full` - Full
+          * `partial` - Partial
       tags:
       - instance-countermeasure-standards
       security:
@@ -3525,7 +3831,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this Countermeasure compliance
+          mapping.
         required: true
       tags:
       - instance-countermeasure-standards
@@ -3548,7 +3856,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this Countermeasure compliance
+          mapping.
         required: true
       tags:
       - instance-countermeasure-standards
@@ -3583,7 +3893,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this Countermeasure compliance
+          mapping.
         required: true
       tags:
       - instance-countermeasure-standards
@@ -3617,7 +3929,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this Countermeasure compliance
+          mapping.
         required: true
       tags:
       - instance-countermeasure-standards
@@ -3631,6 +3945,10 @@ paths:
       operationId: integrations_list
       description: ViewSet for IntegrationSource CRUD operations.
       parameters:
+      - in: query
+        name: orgsystem
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -3649,6 +3967,34 @@ paths:
         description: A search term.
         schema:
           type: string
+      - in: query
+        name: source_type
+        schema:
+          type: string
+          enum:
+          - cspm
+          - github
+          - manual
+          - sbom
+          - terraform
+        description: |-
+          * `github` - GitHub
+          * `cspm` - CSPM
+          * `terraform` - Terraform
+          * `sbom` - SBOM
+          * `manual` - Manual
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - active
+          - error
+          - inactive
+        description: |-
+          * `active` - Active
+          * `inactive` - Inactive
+          * `error` - Error
       tags:
       - integrations
       security:
@@ -3694,7 +4040,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this integration source.
         required: true
       tags:
       - integrations
@@ -3714,7 +4061,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this integration source.
         required: true
       tags:
       - integrations
@@ -3746,7 +4094,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this integration source.
         required: true
       tags:
       - integrations
@@ -3777,7 +4126,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this integration source.
         required: true
       tags:
       - integrations
@@ -3824,6 +4174,10 @@ paths:
       operationId: magic_links_list
       description: ViewSet for MagicLink CRUD operations.
       parameters:
+      - in: query
+        name: is_revoked
+        schema:
+          type: boolean
       - name: page
         required: false
         in: query
@@ -3834,6 +4188,10 @@ paths:
         required: false
         in: query
         description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: threat_model
         schema:
           type: integer
       tags:
@@ -3882,6 +4240,8 @@ paths:
         name: id
         schema:
           type: string
+          format: uuid
+        description: A UUID string identifying this magic link.
         required: true
       tags:
       - magic-links
@@ -3902,6 +4262,8 @@ paths:
         name: id
         schema:
           type: string
+          format: uuid
+        description: A UUID string identifying this magic link.
         required: true
       tags:
       - magic-links
@@ -3934,6 +4296,8 @@ paths:
         name: id
         schema:
           type: string
+          format: uuid
+        description: A UUID string identifying this magic link.
         required: true
       tags:
       - magic-links
@@ -3965,6 +4329,8 @@ paths:
         name: id
         schema:
           type: string
+          format: uuid
+        description: A UUID string identifying this magic link.
         required: true
       tags:
       - magic-links
@@ -3982,6 +4348,8 @@ paths:
         name: id
         schema:
           type: string
+          format: uuid
+        description: A UUID string identifying this magic link.
         required: true
       tags:
       - magic-links
@@ -4011,6 +4379,10 @@ paths:
       operationId: memberships_list
       description: ViewSet for OrganizationMember CRUD operations.
       parameters:
+      - in: query
+        name: organization
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -4021,6 +4393,20 @@ paths:
         required: false
         in: query
         description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: role
+        schema:
+          type: string
+          enum:
+          - member
+          - security_team
+        description: |-
+          * `security_team` - Security Team
+          * `member` - Member
+      - in: query
+        name: user
         schema:
           type: integer
       tags:
@@ -4068,7 +4454,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this organization member.
         required: true
       tags:
       - memberships
@@ -4088,7 +4475,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this organization member.
         required: true
       tags:
       - memberships
@@ -4120,7 +4508,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this organization member.
         required: true
       tags:
       - memberships
@@ -4151,7 +4540,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this organization member.
         required: true
       tags:
       - memberships
@@ -4183,6 +4573,18 @@ paths:
         description: Number of results to return per page.
         schema:
           type: integer
+      - in: query
+        name: plan
+        schema:
+          type: string
+          enum:
+          - enterprise
+          - free
+          - pro
+        description: |-
+          * `free` - Free
+          * `pro` - Pro
+          * `enterprise` - Enterprise
       - name: search
         required: false
         in: query
@@ -4234,7 +4636,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this organization.
         required: true
       tags:
       - organizations
@@ -4254,7 +4657,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this organization.
         required: true
       tags:
       - organizations
@@ -4286,7 +4690,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this organization.
         required: true
       tags:
       - organizations
@@ -4317,7 +4722,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this organization.
         required: true
       tags:
       - organizations
@@ -4334,7 +4740,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this organization.
         required: true
       tags:
       - organizations
@@ -4367,7 +4774,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this organization.
         required: true
       tags:
       - organizations
@@ -4388,7 +4796,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this organization.
         required: true
       tags:
       - organizations
@@ -4766,6 +5175,26 @@ paths:
         description: Number of results to return per page.
         schema:
           type: integer
+      - in: query
+        name: reconciliation_status
+        schema:
+          type: string
+          enum:
+          - false_positive
+          - matched
+          - unpredicted
+        description: |-
+          * `matched` - Matched
+          * `unpredicted` - Unpredicted
+          * `false_positive` - False Positive
+      - in: query
+        name: severity
+        schema:
+          type: string
+      - in: query
+        name: threat_model
+        schema:
+          type: integer
       tags:
       - pentest-findings
       security:
@@ -4811,7 +5240,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this pentest finding.
         required: true
       tags:
       - pentest-findings
@@ -4831,7 +5261,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this pentest finding.
         required: true
       tags:
       - pentest-findings
@@ -4863,7 +5294,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this pentest finding.
         required: true
       tags:
       - pentest-findings
@@ -4894,7 +5326,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this pentest finding.
         required: true
       tags:
       - pentest-findings
@@ -4977,7 +5410,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model reference
+          image.
         required: true
       tags:
       - reference-images
@@ -4997,7 +5432,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model reference
+          image.
         required: true
       tags:
       - reference-images
@@ -5029,7 +5466,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model reference
+          image.
         required: true
       tags:
       - reference-images
@@ -5060,7 +5499,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model reference
+          image.
         required: true
       tags:
       - reference-images
@@ -5328,7 +5769,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this Shared with me.
         required: true
       tags:
       - shared-with-me
@@ -5349,7 +5791,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this Shared with me.
         required: true
       tags:
       - shared-with-me
@@ -5363,12 +5806,42 @@ paths:
       operationId: systems_list
       description: ViewSet for Orgsystem CRUD operations.
       parameters:
+      - in: query
+        name: criticality
+        schema:
+          type: string
+          enum:
+          - critical
+          - high
+          - low
+          - medium
+        description: |-
+          * `low` - Low
+          * `medium` - Medium
+          * `high` - High
+          * `critical` - Critical
+      - in: query
+        name: lifecycle_state
+        schema:
+          type: string
+          enum:
+          - decommissioned
+          - development
+          - production
+        description: |-
+          * `development` - Development
+          * `production` - Production
+          * `decommissioned` - Decommissioned
       - name: ordering
         required: false
         in: query
         description: Which field to use when ordering the results.
         schema:
           type: string
+      - in: query
+        name: organization
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -5432,7 +5905,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this orgsystem.
         required: true
       tags:
       - systems
@@ -5452,7 +5926,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this orgsystem.
         required: true
       tags:
       - systems
@@ -5484,7 +5959,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this orgsystem.
         required: true
       tags:
       - systems
@@ -5518,7 +5994,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this orgsystem.
         required: true
       tags:
       - systems
@@ -5638,6 +6115,24 @@ paths:
         description: Number of results to return per page.
         schema:
           type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - accepted
+          - expired
+          - pending
+          - revoked
+        description: |-
+          * `pending` - Pending
+          * `accepted` - Accepted
+          * `expired` - Expired
+          * `revoked` - Revoked
+      - in: query
+        name: team
+        schema:
+          type: integer
       tags:
       - team-invitations
       security:
@@ -5684,6 +6179,8 @@ paths:
         name: id
         schema:
           type: string
+          format: uuid
+        description: A UUID string identifying this team invitation.
         required: true
       tags:
       - team-invitations
@@ -5704,6 +6201,8 @@ paths:
         name: id
         schema:
           type: string
+          format: uuid
+        description: A UUID string identifying this team invitation.
         required: true
       tags:
       - team-invitations
@@ -5736,6 +6235,8 @@ paths:
         name: id
         schema:
           type: string
+          format: uuid
+        description: A UUID string identifying this team invitation.
         required: true
       tags:
       - team-invitations
@@ -5767,6 +6268,8 @@ paths:
         name: id
         schema:
           type: string
+          format: uuid
+        description: A UUID string identifying this team invitation.
         required: true
       tags:
       - team-invitations
@@ -5784,6 +6287,8 @@ paths:
         name: id
         schema:
           type: string
+          format: uuid
+        description: A UUID string identifying this team invitation.
         required: true
       tags:
       - team-invitations
@@ -5813,12 +6318,24 @@ paths:
       operationId: teams_list
       description: ViewSet for Team CRUD operations.
       parameters:
+      - in: query
+        name: business_unit
+        schema:
+          type: integer
+      - in: query
+        name: is_default
+        schema:
+          type: boolean
       - name: ordering
         required: false
         in: query
         description: Which field to use when ordering the results.
         schema:
           type: string
+      - in: query
+        name: organization
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -5882,7 +6399,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this team.
         required: true
       tags:
       - teams
@@ -5902,7 +6420,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this team.
         required: true
       tags:
       - teams
@@ -5934,7 +6453,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this team.
         required: true
       tags:
       - teams
@@ -5965,7 +6485,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this team.
         required: true
       tags:
       - teams
@@ -5984,7 +6505,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this team.
         required: true
       tags:
       - teams
@@ -6017,7 +6539,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this team.
         required: true
       tags:
       - teams
@@ -6053,7 +6576,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this team.
         required: true
       tags:
       - teams
@@ -6088,7 +6612,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this team.
         required: true
       tags:
       - teams
@@ -6121,7 +6646,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this team.
         required: true
       tags:
       - teams
@@ -6142,7 +6668,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this team.
         required: true
       tags:
       - teams
@@ -6338,6 +6865,10 @@ paths:
         description: Which field to use when ordering the results.
         schema:
           type: string
+      - in: query
+        name: organization
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -6401,7 +6932,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6421,7 +6953,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6453,7 +6986,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6484,7 +7018,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6506,7 +7041,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6541,7 +7077,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6574,7 +7111,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6607,7 +7145,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6628,7 +7167,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6653,7 +7193,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6679,7 +7220,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6702,7 +7244,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6735,7 +7278,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6768,7 +7312,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6801,7 +7346,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6834,7 +7380,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6867,7 +7414,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6888,7 +7436,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6909,7 +7458,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -6946,7 +7496,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model.
         required: true
       tags:
       - threat-models
@@ -7039,7 +7590,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this abuse case.
         required: true
       - in: path
         name: threat_model_pk
@@ -7066,7 +7618,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this abuse case.
         required: true
       - in: path
         name: threat_model_pk
@@ -7105,7 +7658,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this abuse case.
         required: true
       - in: path
         name: threat_model_pk
@@ -7143,7 +7697,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this abuse case.
         required: true
       - in: path
         name: threat_model_pk
@@ -7168,7 +7723,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this abuse case.
         required: true
       - in: path
         name: threat_model_pk
@@ -7207,7 +7763,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this abuse case.
         required: true
       - in: path
         name: threat_model_pk
@@ -7243,6 +7800,10 @@ paths:
       operationId: threat_models_assumptions_list
       description: '``/api/threat-models/{id}/assumptions/``; filter ``blueprint``.'
       parameters:
+      - in: query
+        name: blueprint
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -7261,6 +7822,40 @@ paths:
           type: string
           pattern: ^\d+$
         required: true
+      - in: query
+        name: topic
+        schema:
+          type: string
+          enum:
+          - availability
+          - business
+          - compliance
+          - operational
+          - performance
+          - security
+          - technical
+        description: |-
+          * `availability` - availability
+          * `business` - business
+          * `compliance` - compliance
+          * `operational` - operational
+          * `performance` - performance
+          * `security` - security
+          * `technical` - technical
+      - in: query
+        name: validity
+        schema:
+          type: string
+          enum:
+          - invalid
+          - unknown
+          - unverified
+          - verified
+        description: |-
+          * `unverified` - Unverified
+          * `verified` - Verified
+          * `invalid` - Invalid
+          * `unknown` - Unknown
       tags:
       - threat-models
       security:
@@ -7313,7 +7908,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this assumption.
         required: true
       - in: path
         name: threat_model_pk
@@ -7339,7 +7935,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this assumption.
         required: true
       - in: path
         name: threat_model_pk
@@ -7377,7 +7974,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this assumption.
         required: true
       - in: path
         name: threat_model_pk
@@ -7414,7 +8012,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this assumption.
         required: true
       - in: path
         name: threat_model_pk
@@ -7521,7 +8120,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this blueprint.
         required: true
       - in: path
         name: threat_model_pk
@@ -7552,7 +8152,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this blueprint.
         required: true
       - in: path
         name: threat_model_pk
@@ -7595,7 +8196,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this blueprint.
         required: true
       - in: path
         name: threat_model_pk
@@ -7632,7 +8234,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this blueprint.
         required: true
       - in: path
         name: threat_model_pk
@@ -7655,7 +8258,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this blueprint.
         required: true
       - in: path
         name: threat_model_pk
@@ -7751,7 +8355,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this business objective.
         required: true
       - in: path
         name: threat_model_pk
@@ -7777,7 +8382,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this business objective.
         required: true
       - in: path
         name: threat_model_pk
@@ -7815,7 +8421,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this business objective.
         required: true
       - in: path
         name: threat_model_pk
@@ -7852,7 +8459,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this business objective.
         required: true
       - in: path
         name: threat_model_pk
@@ -7954,7 +8562,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this out of scope item.
         required: true
       - in: path
         name: threat_model_pk
@@ -7980,7 +8589,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this out of scope item.
         required: true
       - in: path
         name: threat_model_pk
@@ -8018,7 +8628,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this out of scope item.
         required: true
       - in: path
         name: threat_model_pk
@@ -8055,7 +8666,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this out of scope item.
         required: true
       - in: path
         name: threat_model_pk
@@ -8157,7 +8769,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model reference
+          image.
         required: true
       - in: path
         name: threat_model_pk
@@ -8183,7 +8797,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model reference
+          image.
         required: true
       - in: path
         name: threat_model_pk
@@ -8221,7 +8837,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model reference
+          image.
         required: true
       - in: path
         name: threat_model_pk
@@ -8258,7 +8876,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat model reference
+          image.
         required: true
       - in: path
         name: threat_model_pk
@@ -8312,12 +8932,36 @@ paths:
       operationId: threat_models_risks_list
       description: ViewSet for Risk CRUD operations, nested under threat models.
       parameters:
+      - in: query
+        name: assigned_to
+        schema:
+          type: integer
+      - in: query
+        name: inherent__level
+        schema:
+          type: string
+          enum:
+          - critical
+          - high
+          - info
+          - low
+          - medium
+        description: |-
+          * `info` - Info
+          * `low` - Low
+          * `medium` - Medium
+          * `high` - High
+          * `critical` - Critical
       - name: ordering
         required: false
         in: query
         description: Which field to use when ordering the results.
         schema:
           type: string
+      - in: query
+        name: owner
+        schema:
+          type: integer
       - name: page
         required: false
         in: query
@@ -8330,12 +8974,46 @@ paths:
         description: Number of results to return per page.
         schema:
           type: integer
+      - in: query
+        name: residual__level
+        schema:
+          type: string
+          enum:
+          - critical
+          - high
+          - info
+          - low
+          - medium
+        description: |-
+          * `info` - Info
+          * `low` - Low
+          * `medium` - Medium
+          * `high` - High
+          * `critical` - Critical
       - name: search
         required: false
         in: query
         description: A search term.
         schema:
           type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - accepted
+          - assessed
+          - identified
+          - mitigated
+          - retired
+          - transferred
+        description: |-
+          * `identified` - Identified
+          * `assessed` - Assessed
+          * `mitigated` - Mitigated
+          * `accepted` - Accepted
+          * `transferred` - Transferred
+          * `retired` - Retired
       - in: path
         name: threat_model_pk
         schema:
@@ -8394,7 +9072,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this risk.
         required: true
       - in: path
         name: threat_model_pk
@@ -8420,7 +9099,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this risk.
         required: true
       - in: path
         name: threat_model_pk
@@ -8458,7 +9138,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this risk.
         required: true
       - in: path
         name: threat_model_pk
@@ -8495,7 +9176,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this risk.
         required: true
       - in: path
         name: threat_model_pk
@@ -8518,7 +9200,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this risk.
         required: true
       - in: path
         name: threat_model_pk
@@ -8557,7 +9240,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this risk.
         required: true
       - in: path
         name: threat_model_pk
@@ -8596,7 +9280,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this risk.
         required: true
       - in: path
         name: threat_model_pk
@@ -8726,7 +9411,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this risk response.
         required: true
       - in: path
         name: risk_pk
@@ -8758,7 +9444,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this risk response.
         required: true
       - in: path
         name: risk_pk
@@ -8802,7 +9489,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this risk response.
         required: true
       - in: path
         name: risk_pk
@@ -8845,7 +9533,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this risk response.
         required: true
       - in: path
         name: risk_pk
@@ -8978,7 +9667,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat persona.
         required: true
       - in: path
         name: threat_model_pk
@@ -9004,7 +9694,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat persona.
         required: true
       - in: path
         name: threat_model_pk
@@ -9042,7 +9733,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat persona.
         required: true
       - in: path
         name: threat_model_pk
@@ -9079,7 +9771,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this threat persona.
         required: true
       - in: path
         name: threat_model_pk
@@ -9174,7 +9867,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this use case.
         required: true
       - in: path
         name: threat_model_pk
@@ -9201,7 +9895,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this use case.
         required: true
       - in: path
         name: threat_model_pk
@@ -9240,7 +9935,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this use case.
         required: true
       - in: path
         name: threat_model_pk
@@ -9278,7 +9974,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this use case.
         required: true
       - in: path
         name: threat_model_pk
@@ -9386,6 +10083,14 @@ paths:
         description: Number of results to return per page.
         schema:
           type: integer
+      - in: query
+        name: taxonomy_entry
+        schema:
+          type: integer
+      - in: query
+        name: threat
+        schema:
+          type: integer
       tags:
       - threat-taxonomy-entries
       security:
@@ -9431,7 +10136,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance threat taxonomy
+          entry.
         required: true
       tags:
       - threat-taxonomy-entries
@@ -9451,7 +10158,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance threat taxonomy
+          entry.
         required: true
       tags:
       - threat-taxonomy-entries
@@ -9483,7 +10192,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance threat taxonomy
+          entry.
         required: true
       tags:
       - threat-taxonomy-entries
@@ -9514,7 +10225,9 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance threat taxonomy
+          entry.
         required: true
       tags:
       - threat-taxonomy-entries
@@ -9534,6 +10247,10 @@ paths:
         ``triage_status``, ``number``, ``whole_system``. ``search`` matches the name,
         and ``T7`` or ``7`` matches the number.
       parameters:
+      - in: query
+        name: number
+        schema:
+          type: integer
       - name: ordering
         required: false
         in: query
@@ -9552,6 +10269,62 @@ paths:
         description: Number of results to return per page.
         schema:
           type: integer
+      - in: query
+        name: rating__level
+        schema:
+          type: string
+          enum:
+          - critical
+          - high
+          - info
+          - low
+          - medium
+        description: |-
+          * `info` - Info
+          * `low` - Low
+          * `medium` - Medium
+          * `high` - High
+          * `critical` - Critical
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - addressable
+          - exposed
+          - mitigated
+        description: |-
+          * `exposed` - Exposed
+          * `addressable` - Addressable
+          * `mitigated` - Mitigated
+      - in: query
+        name: threat_library
+        schema:
+          type: integer
+      - in: query
+        name: threat_model
+        schema:
+          type: integer
+      - in: query
+        name: triage_status
+        schema:
+          type: string
+          enum:
+          - accept
+          - delegate
+          - eliminate
+          - mitigate
+          - open
+        description: |-
+          * `open` - Open
+          * `accept` - Accept
+          * `mitigate` - Mitigate
+          * `delegate` - Delegate
+          * `eliminate` - Eliminate
+      - in: query
+        name: whole_system
+        schema:
+          type: boolean
       tags:
       - threats
       security:
@@ -9609,7 +10382,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance threat.
         required: true
       tags:
       - threats
@@ -9635,7 +10409,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance threat.
         required: true
       tags:
       - threats
@@ -9673,7 +10448,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance threat.
         required: true
       tags:
       - threats
@@ -9710,7 +10486,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance threat.
         required: true
       tags:
       - threats
@@ -9733,7 +10510,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance threat.
         required: true
       tags:
       - threats
@@ -9766,7 +10544,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance threat.
         required: true
       tags:
       - threats
@@ -9803,7 +10582,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance threat.
         required: true
       tags:
       - threats
@@ -9841,7 +10621,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this instance threat.
         required: true
       tags:
       - threats
@@ -9943,6 +10724,18 @@ paths:
       operationId: verification_tests_list
       description: ViewSet for VerificationTest.
       parameters:
+      - in: query
+        name: method
+        schema:
+          type: string
+          enum:
+          - auto
+          - code_review
+          - pentest
+        description: |-
+          * `pentest` - Penetration Test
+          * `auto` - Automated Scan
+          * `code_review` - Code Review
       - name: page
         required: false
         in: query
@@ -9955,6 +10748,10 @@ paths:
         description: Number of results to return per page.
         schema:
           type: integer
+      - in: query
+        name: passed
+        schema:
+          type: boolean
       - name: search
         required: false
         in: query
@@ -10006,7 +10803,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this verification test.
         required: true
       tags:
       - verification-tests
@@ -10026,7 +10824,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this verification test.
         required: true
       tags:
       - verification-tests
@@ -10058,7 +10857,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this verification test.
         required: true
       tags:
       - verification-tests
@@ -10089,7 +10889,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this verification test.
         required: true
       tags:
       - verification-tests
@@ -10115,12 +10916,50 @@ paths:
         description: Number of results to return per page.
         schema:
           type: integer
+      - in: query
+        name: parent
+        schema:
+          type: integer
       - name: search
         required: false
         in: query
         description: A search term.
         schema:
           type: string
+      - in: query
+        name: zone_type
+        schema:
+          type: string
+          enum:
+          - availability
+          - compliance
+          - data
+          - deployment
+          - functional
+          - geographic
+          - logical
+          - network
+          - organizational
+          - physical
+          - process
+          - tenant
+          - trust
+        description: |-
+          CycloneDX zone type
+
+          * `availability` - availability
+          * `compliance` - compliance
+          * `data` - data
+          * `deployment` - deployment
+          * `functional` - functional
+          * `geographic` - geographic
+          * `logical` - logical
+          * `network` - network
+          * `organizational` - organizational
+          * `physical` - physical
+          * `process` - process
+          * `tenant` - tenant
+          * `trust` - trust
       tags:
       - zones
       security:
@@ -10166,7 +11005,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this zone.
         required: true
       tags:
       - zones
@@ -10186,7 +11026,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this zone.
         required: true
       tags:
       - zones
@@ -10218,7 +11059,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this zone.
         required: true
       tags:
       - zones
@@ -10249,7 +11091,8 @@ paths:
       - in: path
         name: id
         schema:
-          type: string
+          type: integer
+        description: A unique integer value identifying this zone.
         required: true
       tags:
       - zones
@@ -11460,6 +12303,7 @@ components:
           nullable: true
         encrypted:
           type: boolean
+          nullable: true
         authentication: {}
         authorization: {}
         requires_authentication:
@@ -14187,6 +15031,7 @@ components:
           nullable: true
         encrypted:
           type: boolean
+          nullable: true
         authentication: {}
         authorization: {}
         requires_authentication:
