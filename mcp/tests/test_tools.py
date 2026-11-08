@@ -274,3 +274,14 @@ async def test_execute_is_advertised_as_able_to_change_data() -> None:
     assert annotations is not None
     assert annotations.read_only_hint is False
     assert annotations.destructive_hint is not False
+
+
+async def test_a_request_that_was_never_awaited_is_explained(
+    access_token: AccessToken,
+) -> None:
+    # Without the guard this returns the string "<coroutine external_future(0)>"
+    # as if it were data.
+    result = await call_execute('request("GET", "/api/auth/user/")')
+
+    assert result.is_error
+    assert "never awaited" in text(result)

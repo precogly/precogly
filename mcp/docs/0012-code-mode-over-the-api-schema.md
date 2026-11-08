@@ -42,10 +42,23 @@ A planned in-app assistant needs the same capabilities. Two separate surfaces wo
   request bodies keep only `application/json`. See Schema size.
 - **Results are capped**, with truncation marked, and returned as compact JSON, about
   half the size of indented JSON. The size is unset until measured.
-- **`request_all(path)` follows pagination**, so reading one page and counting it is
-  not the easy path.
-- **`execute` returns the code it ran with its result.** The same code on the same data
-  gives the same answer, so any answer can be audited and reproduced.
+- **Pagination is the model's code to write**, as in Cloudflare's `execute` and
+  Anthropic's [code execution guidance](https://www.anthropic.com/engineering/code-execution-with-mcp),
+  neither of which ships a paging helper. `execute`'s description carries a worked
+  paging loop, run against the real API by a test. Every page is a `request`, so the
+  request budget covers paging. A `request_all` helper is added only if the
+  consistency baseline shows models stopping after one page.
+- **`execute` returns only its result, not the code it ran.** The client already records
+  each call with its `code`, so an echo would duplicate the transcript and spend the
+  result cap on code. The same code on the same data gives the same answer, so the
+  recorded call is enough to reproduce one. Cloudflare's `execute` does not echo
+  either.
+- **Auditing belongs to the API, not the MCP layer.** `request()` runs every call
+  through the full middleware chain as the token's user
+  ([0014](0014-tools-call-the-api-in-process.md)), so an application-wide audit log at
+  the API layer records agent actions with no MCP-specific code, as Cloudflare's
+  account audit log records its MCP server's calls. MCP adds only a marker of the
+  request's origin (client and tool), once such a log exists to read it.
 - **The hand-written tools are removed**
   ([0014](0014-tools-call-the-api-in-process.md)). A deterministic shortcut tool or a
   reviewed recipe comes back only for a question that needs one consistent answer, chosen
@@ -122,8 +135,8 @@ often wins on deeply nested, non-uniform data, which an OpenAPI operation is.
 - **The same question can get different answers.** Hand-written tools already left the
   choice of tool, arguments and summary to the model; code mode adds endpoints, filters,
   pagination and arithmetic. The client, not the server, controls sampling, so the server
-  can only make wrong programs harder to write (`request_all`, capped results, worked
-  examples in the tool descriptions) and answers auditable (returned code). Only a
+  can only make wrong programs harder to write (capped results, worked examples in the
+  tool descriptions, tested against the real API) and answers auditable. Only a
   deterministic tool guarantees one answer, and only for the question it covers.
 - **Small local models write worse code.** The evaluation shows whether they need
   shortcut tools.

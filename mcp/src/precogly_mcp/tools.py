@@ -194,13 +194,21 @@ async def _run(
     # unrelated strings. Round-tripped before `fit` so it measures plain JSON, with
     # tuples as lists and non-string keys as strings, exactly as they are returned.
     try:
-        data = json.loads(dumps(result))
+        text = dumps(result)
     except (TypeError, ValueError) as err:
         raise ToolError(
             f"The result must be JSON: lists, dicts, strings, finite numbers, "
             f"booleans or None. {err}"
         ) from err
-    return dumps(fit(data, RESULT_MAX_CHARS))
+
+    # `request` is async. A call returned without `await` raises nothing: it arrives
+    # here as the string `<coroutine external_future(N)>`, which would read as data.
+    if "<coroutine external_future(" in text:
+        raise ToolError(
+            "The result holds a `request(...)` call that was never awaited. "
+            "`request` is async: write `await request(...)`."
+        )
+    return dumps(fit(json.loads(text), RESULT_MAX_CHARS))
 
 
 async def whoami(ctx: Context[ToolContext, Any]) -> dict[str, Any]:
