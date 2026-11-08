@@ -148,6 +148,8 @@ def zone_subtree_ids(zone):
 class OrgsystemViewSet(viewsets.ModelViewSet):
     """ViewSet for Orgsystem CRUD operations."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = Orgsystem.objects.none()
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [
         DjangoFilterBackend,
@@ -209,6 +211,8 @@ class ZoneViewSet(
 ):
     """ViewSet for Zone CRUD operations."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = Zone.objects.none()
     serializer_class = ZoneSerializer
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -230,6 +234,8 @@ class BoundaryViewSet(
 ):
     """ViewSet for Boundary CRUD operations."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = Boundary.objects.none()
     serializer_class = BoundarySerializer
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -288,6 +294,8 @@ class OrgsystemComponentViewSet(
 ):
     """ViewSet for OrgsystemComponent CRUD operations."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = OrgsystemComponent.objects.none()
     serializer_class = OrgsystemComponentSerializer
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -343,6 +351,8 @@ class OrgsystemComponentViewSet(
 class DataAssetViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
     """ViewSet for DataAsset CRUD operations."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = DataAsset.objects.none()
     serializer_class = DataAssetSerializer
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -361,6 +371,8 @@ class FlowViewSet(
 ):
     """ViewSet for Flow CRUD operations."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = Flow.objects.none()
     serializer_class = FlowSerializer
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [DjangoFilterBackend]
@@ -403,6 +415,8 @@ class FlowViewSet(
 class IntegrationSourceViewSet(viewsets.ModelViewSet):
     """ViewSet for IntegrationSource CRUD operations."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = IntegrationSource.objects.none()
     serializer_class = IntegrationSourceSerializer
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
@@ -423,6 +437,8 @@ class IntegrationSourceViewSet(viewsets.ModelViewSet):
 class ComponentDataAssetViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
     """ViewSet for ComponentDataAsset CRUD operations."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = ComponentDataAsset.objects.none()
     serializer_class = ComponentDataAssetSerializer
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [DjangoFilterBackend]
@@ -440,6 +456,8 @@ class ComponentDataAssetViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
 class FlowAssetViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
     """ViewSet for FlowAsset CRUD operations."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = FlowAsset.objects.none()
     serializer_class = FlowAssetSerializer
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [DjangoFilterBackend]

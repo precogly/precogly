@@ -96,13 +96,14 @@ class QualitativeMatrixEngine(BaseScoringEngine):
             str(inputs.get("rationale") or ""),
         )
 
-    def rate_residual(self, inherent, effectiveness: float):
+    def can_reduce(self, inherent) -> bool:
         # An imported rating keeps whatever scores the file had (#31 comment
-        # 2.7). Off the 1 to 5 scale there is no matrix cell to reduce from,
-        # so the residual is a copy, as with no contributing controls (R13).
-        if not (
-            _on_scale(inherent.likelihood_score) and _on_scale(inherent.impact_score)
-        ):
+        # 2.7). Off the 1 to 5 scale there is no matrix cell to reduce from.
+        return _on_scale(inherent.likelihood_score) and _on_scale(inherent.impact_score)
+
+    def rate_residual(self, inherent, effectiveness: float):
+        # Off scale the residual is a copy, as with no contributing controls (R13).
+        if not self.can_reduce(inherent):
             return copy_rating(inherent)
         reduced = max(1, round(inherent.likelihood_score * (1 - effectiveness)))
         residual = self._build(

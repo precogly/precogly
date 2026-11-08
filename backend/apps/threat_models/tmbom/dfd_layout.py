@@ -84,6 +84,53 @@ def _place(nodes: list[dict], origin_x: int, origin_y: int) -> tuple[int, int]:
     return width, height
 
 
+def _order_by_connections(zones: list, weight: dict[tuple[int, int], int]) -> list:
+    """Walk the zones so each sits beside the one it is most connected to.
+
+    ``weight`` counts boundaries and flows between two zone ids (either
+    order). Starts from the first zone in id order and takes the strongest
+    link each step, so a boundary line is drawn between neighbours and does
+    not cut through an unrelated zone.
+    """
+
+    def link(a, b):
+        return weight.get((a.id, b.id), 0) + weight.get((b.id, a.id), 0)
+
+    remaining = list(zones)
+    ordered = []
+    while remaining:
+        chosen = remaining[0]
+        if ordered:
+            best = 0
+            for candidate in remaining:
+                score = link(ordered[-1], candidate)
+                if score > best:
+                    best, chosen = score, candidate
+        ordered.append(chosen)
+        remaining.remove(chosen)
+    return ordered
+
+
+def _handles(
+    source: tuple[int, int], target: tuple[int, int], pair_joined: bool
+) -> dict:
+    """Handles a flow leaves and enters by, from the two node centres.
+
+    Same rule as ``getSmartHandles`` in the editor: the main axis between the
+    nodes, or the other axis when a flow already joins the pair.
+    """
+    dx = target[0] - source[0]
+    dy = target[1] - source[1]
+    horizontal = abs(dx) <= abs(dy) if pair_joined else abs(dx) > abs(dy)
+    if horizontal:
+        if dx >= 0:
+            return {"source_handle": "right-source", "target_handle": "left-target"}
+        return {"source_handle": "left-source", "target_handle": "right-target"}
+    if dy >= 0:
+        return {"source_handle": "bottom-source", "target_handle": "top-target"}
+    return {"source_handle": "top-source", "target_handle": "bottom-target"}
+
+
 def build_canvas(blueprint) -> dict:
     components = list(
         blueprint.components.select_related("component_library").order_by("id")
@@ -150,20 +197,53 @@ def build_canvas(blueprint) -> dict:
             "height": sizes[zone.id][1],
         }
 
-    # Top-level zones side by side, then the loose components below them.
+    # Top-level zones side by side, most connected neighbours first, then
+    # the loose components below them.
+    def top_zone_id(zone_id):
+        current = next((z for z in zones if z.id == zone_id), None)
+        while current and current.parent_id:
+            current = next((z for z in zones if z.id == current.parent_id), None)
+        return current.id if current else None
+
+    weight: dict[tuple[int, int], int] = {}
+    for boundary in boundaries:
+        pair = (top_zone_id(boundary.zone_a_id), top_zone_id(boundary.zone_b_id))
+        if None not in pair and pair[0] != pair[1]:
+            weight[pair] = weight.get(pair, 0) + 100
+    zone_of_component = {component.id: component.zone_id for component in components}
+    for flow in flows:
+        pair = (
+            top_zone_id(zone_of_component.get(flow.source_component_id)),
+            top_zone_id(zone_of_component.get(flow.dest_component_id)),
+        )
+        if None not in pair and pair[0] != pair[1]:
+            weight[pair] = weight.get(pair, 0) + 1
+
     cursor_x = 0
     tallest = 0
-    for zone in zones:
-        if zone.parent_id:
-            continue
+    top_level = [zone for zone in zones if not zone.parent_id]
+    for zone in _order_by_connections(top_level, weight):
         zone_nodes[zone.id]["position"] = {"x": cursor_x, "y": 0}
         width, height = sizes[zone.id]
         cursor_x += width + GAP
         tallest = max(tallest, height)
     _place(by_zone.get(None, []), 0, tallest + GAP if zones else 0)
 
+    node_by_id = {node["id"]: node for node in nodes}
+
+    def centre(node_id):
+        node = node_by_id[node_id]
+        x = node["position"]["x"] + NODE_WIDTH // 2
+        y = node["position"]["y"] + NODE_HEIGHT // 2
+        while node.get("parent_id"):
+            node = node_by_id[node["parent_id"]]
+            x += node["position"]["x"]
+            y += node["position"]["y"]
+        return x, y
+
     component_node_id = {component.id: f"n-{component.id}" for component in components}
     edges = []
+    joined: set[tuple[str, str]] = set()
     for flow in flows:
         data = {
             "label": flow.label,
@@ -176,18 +256,24 @@ def build_canvas(blueprint) -> dict:
         }
         if flow.is_data_like:
             data["protocol"] = flow.protocol
-            data["encrypted"] = flow.encrypted
+            if flow.encrypted is not None:
+                data["encrypted"] = flow.encrypted
             if flow.port is not None:
                 data["port"] = flow.port
+        source_id = component_node_id[flow.source_component_id]
+        target_id = component_node_id[flow.dest_component_id]
+        pair = tuple(sorted((source_id, target_id)))
         edges.append(
             {
                 "id": f"e-{flow.id}",
                 "type": "dataFlow",
-                "source": component_node_id[flow.source_component_id],
-                "target": component_node_id[flow.dest_component_id],
+                "source": source_id,
+                "target": target_id,
+                **_handles(centre(source_id), centre(target_id), pair in joined),
                 "data": data,
             }
         )
+        joined.add(pair)
     for boundary in boundaries:
         data = {
             "label": boundary.label,

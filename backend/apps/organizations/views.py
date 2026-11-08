@@ -22,6 +22,7 @@ from apps.threat_models.analysis_service import (
     SHARED,
     SHARED_THREAT_MODEL_KEYS,
     build_threat_analysis,
+    shared_technologies,
 )
 
 from .models import (
@@ -54,6 +55,8 @@ User = get_user_model()
 class OrganizationViewSet(viewsets.ModelViewSet):
     """ViewSet for Organization CRUD operations."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = Organization.objects.none()
     permission_classes = [IsAuthenticated]
     filter_backends = [
         DjangoFilterBackend,
@@ -153,6 +156,8 @@ class OrganizationViewSet(viewsets.ModelViewSet):
 class OrganizationMemberViewSet(viewsets.ModelViewSet):
     """ViewSet for OrganizationMember CRUD operations."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = OrganizationMember.objects.none()
     serializer_class = OrganizationMemberSerializer
     permission_classes = [IsAuthenticated, IsSecurityTeam]
     filter_backends = [DjangoFilterBackend]
@@ -184,6 +189,8 @@ class OrganizationMemberViewSet(viewsets.ModelViewSet):
 class BusinessUnitViewSet(viewsets.ModelViewSet):
     """ViewSet for BusinessUnit CRUD operations."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = BusinessUnit.objects.none()
     serializer_class = BusinessUnitSerializer
     permission_classes = [IsAuthenticated, IsSecurityTeam]
     filter_backends = [
@@ -235,6 +242,8 @@ class IsTeamMember(permissions.BasePermission):
 class TeamViewSet(viewsets.ModelViewSet):
     """ViewSet for Team CRUD operations."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = Team.objects.none()
     permission_classes = [IsAuthenticated, IsTeamMember]
     filter_backends = [
         DjangoFilterBackend,
@@ -559,6 +568,8 @@ class TeamViewSet(viewsets.ModelViewSet):
 class MagicLinkViewSet(viewsets.ModelViewSet):
     """ViewSet for MagicLink CRUD operations."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = MagicLink.objects.none()
     serializer_class = MagicLinkSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
@@ -652,6 +663,9 @@ class MagicLinkAccessView(APIView):
             },
             "stats": stats,
             "threat_analysis": threat_analysis,
+            # The technologies the diagrams reference, so an anonymous viewer's
+            # nodes get their icons and names without the component library API.
+            "technologies": shared_technologies(link.threat_model),
             "read_only": True,
             "expires_at": link.expires_at,
             "is_authenticated": is_authenticated,
@@ -772,6 +786,8 @@ class MagicLinkAccessView(APIView):
 class TeamInvitationViewSet(viewsets.ModelViewSet):
     """Manage team invitations (for admins/leads)."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = TeamInvitation.objects.none()
     serializer_class = TeamInvitationSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend]
@@ -887,6 +903,8 @@ class SharedWithMeViewSet(viewsets.ReadOnlyModelViewSet):
     Read-only - users cannot modify these records directly.
     """
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = SharedWithMe.objects.none()
     serializer_class = SharedWithMeSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.OrderingFilter]

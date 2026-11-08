@@ -14,7 +14,10 @@ function ScrollArea({
       className={cn("relative overflow-hidden", className)}
       {...props}
     >
-      <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">
+      {/* Radix wraps the content in `display: table; min-width: 100%`, which grows
+          to fit long text instead of being constrained by the viewport, so `truncate`
+          never engages and anything at the row's right edge is clipped. Force block. */}
+      <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit] [&>div]:block!">
         {children}
       </ScrollAreaPrimitive.Viewport>
       <ScrollBar />

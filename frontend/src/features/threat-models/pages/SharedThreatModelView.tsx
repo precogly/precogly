@@ -479,6 +479,7 @@ export function SharedThreatModelView() {
                               </div>
                               <ReadOnlyDFDViewer
                                 canvasData={dfd.canvasData as { nodes?: unknown[]; edges?: unknown[] }}
+                                technologies={data.technologies}
                                 className="h-[500px] w-full"
                               />
                             </div>
