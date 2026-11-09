@@ -66,10 +66,17 @@ A planned in-app assistant needs the same capabilities. Two separate surfaces wo
 - **The in-app assistant calls the same three functions.** This needs
   `ChatProvider.complete()` to accept tool definitions.
 
-## Prerequisites
+## Related work
+
+Code mode ships without waiting for these. Each is separate work that changes how well it
+works, and each improves it without changes here.
 
 - **An accurate schema.** `execute` can only call what `search` finds. On `main`,
-  `spectacular` reports 151 unique warnings and 7 unique errors.
+  `spectacular` reports 151 unique warnings and 7 unique errors. Measured 2026-11-08 on
+  the dev DB, comparing top-level response keys: none of 15 custom GET actions return what
+  the schema documents, 44 of 48 standard GETs do, and 36 of 46 custom write actions
+  document the viewset's default serializer. In a live test this made a model report "no
+  severity ratings" on 71 threats that are all rated medium.
 - **A reviewed schema.** `search` reads the schema live, so a viewset change can alter
   what agents find without anyone seeing it. A committed `backend/openapi.yml` with a CI
   drift check makes every change to the API surface show in a pull request's diff. #666's
@@ -77,9 +84,11 @@ A planned in-app assistant needs the same capabilities. Two separate surfaces wo
   it changes every API pull request.
 - **A measured consistency baseline.** About 20 questions with known answers on seeded
   data, each run several times, with and without code mode, counting wrong answers and
-  disagreements. It decides which questions get a shortcut tool or recipe.
-- **Central tenancy enforcement.** `execute` reaches every viewset. #405 is open; this
-  waits on #441 step 3, where an unscoped query fails closed.
+  disagreements. It decides which questions get a shortcut tool or recipe. It runs after
+  the schema fixes; before them it mostly measures the schema.
+- **Central tenancy enforcement.** `execute` reaches every viewset, so it relies on each
+  viewset's own tenancy scoping until #441 step 3 makes an unscoped query fail closed.
+  #405 is a known gap of this kind.
 
 ## Schema size
 
@@ -130,8 +139,8 @@ often wins on deeply nested, non-uniform data, which an OpenAPI operation is.
 ## Trade-offs
 
 - **Security rests on enforcement, not construction.** A tool does only what it was
-  written to do; `execute` does whatever the user's REST permissions allow. Hence #441 is a
-  prerequisite.
+  written to do; `execute` does whatever the user's REST permissions allow, so a gap in a
+  viewset's tenancy scoping is reachable from it until #441 step 3 lands.
 - **The same question can get different answers.** Hand-written tools already left the
   choice of tool, arguments and summary to the model; code mode adds endpoints, filters,
   pagination and arithmetic. The client, not the server, controls sampling, so the server
