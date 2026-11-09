@@ -6,14 +6,16 @@ import asyncio
 import json
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Annotated, Any, Protocol
 
 from mcp.server.auth.middleware.auth_context import get_access_token
 from mcp.server.auth.provider import AccessToken
 from mcp.server.mcpserver.context import Context
 from mcp.server.mcpserver.exceptions import ToolError
+from pydantic import Field
 from pydantic_monty import (
     AsyncMonty,
+    CollectString,
     MontyRuntimeError,
     MontySyntaxError,
     ResourceLimits,
@@ -30,6 +32,11 @@ SEARCH_TIME_LIMIT_SECS = 2.0
 # about eight median operations or one of the largest. Lower makes the model narrow
 # its code sooner; higher spends more of its context on each result.
 RESULT_MAX_CHARS = 24_000
+
+# Arbitrary: a sixth of the result cap, so debugging prints cannot crowd out the
+# result. Printed output is returned only when there is some, as
+# `{"result": ..., "printed": ...}`.
+PRINTED_MAX_CHARS = 4_000
 
 # The sandbox clock stops while `execute` waits on `request`, so this bounds the
 # model's own computation, as for `search`; the two limits below bound the waiting.
@@ -97,11 +104,17 @@ schema = body["content"]["application/json"]["schema"]
  if not field.get("readOnly")}""",
 )
 
+# The first line of each description must work alone, in at most 120 characters:
+# opencode's Code Mode catalog shows a tool as its signature plus the description's
+# first line, cut to 120 characters, and nothing else (opencode 2.0.25,
+# `line: \`  - ${signature} // ${desc}\``). The rest is for clients that show it all.
 SEARCH_DESCRIPTION = f"""\
-Search Precogly's REST API by running Python over its OpenAPI schema.
+Python over the API's OpenAPI schema: read `spec["paths"][path][method]`; the last \
+expression is returned.
 
-Write Python; the value of the last expression is the result. It runs in a sandbox \
-with no network or filesystem access, for at most {SEARCH_TIME_LIMIT_SECS:g} seconds.
+Write Python; the value of the last expression is the result, and anything printed \
+comes back too. It runs in a sandbox with no network or filesystem access, for at \
+most {SEARCH_TIME_LIMIT_SECS:g} seconds.
 
 `spec` is the schema as a dict. `spec["paths"][path][method]` is one operation, with \
 `description`, `tags`, `parameters`, `requestBody` and `responses`. Methods are \
@@ -119,7 +132,16 @@ Examples:
 """ + "\n\n".join(SEARCH_EXAMPLES)
 
 
-async def search(ctx: Context[ToolContext, Any], code: str) -> str:
+async def search(
+    ctx: Context[ToolContext, Any],
+    code: Annotated[
+        str,
+        Field(
+            description="Python. `spec` is the OpenAPI schema as a dict: "
+            '`spec["paths"][path][method]`. The last expression is returned.'
+        ),
+    ],
+) -> str:
     """Run `code` over the reduced schema; the model reads `SEARCH_DESCRIPTION`."""
     tool = ctx.request_context.lifespan_context
     return await _run(
@@ -127,6 +149,7 @@ async def search(ctx: Context[ToolContext, Any], code: str) -> str:
         code,
         ResourceLimits(max_feed_duration_secs=SEARCH_TIME_LIMIT_SECS),
         inputs={"spec": tool.spec},
+        provided="`spec`, the OpenAPI schema as a dict",
     )
 
 
@@ -165,11 +188,12 @@ await request(
 )
 
 EXECUTE_DESCRIPTION = f"""\
-Run Python that calls Precogly's REST API as the signed-in user, and return what \
-it computes.
+Python calling the API as you: `await request(method, path, params, body)`; the last \
+expression is returned.
 
 Use `search` first to find the endpoint, its parameters and its body. Then write \
-Python; the value of the last expression is the result. Do not name a comprehension \
+Python; the value of the last expression is the result, and anything printed comes \
+back too. Do not name a comprehension \
 variable after a builtin such as `id` or `type`: in this sandbox the builtin wins, \
 so `[f"/x/{{id}}/" for id in ids]` puts the `id` function in the path.
 
@@ -196,7 +220,17 @@ Examples:
 """ + "\n\n".join(EXECUTE_EXAMPLES)
 
 
-async def execute(ctx: Context[ToolContext, Any], code: str) -> str:
+async def execute(
+    ctx: Context[ToolContext, Any],
+    code: Annotated[
+        str,
+        Field(
+            description="Python. Call the API with "
+            "`await request(method, path, params=None, body=None)`. "
+            "The last expression is returned."
+        ),
+    ],
+) -> str:
     """Run `code` with an async `request` bound to the caller's token."""
     tool = ctx.request_context.lifespan_context
     access_token = get_access_token()
@@ -222,6 +256,8 @@ async def execute(ctx: Context[ToolContext, Any], code: str) -> str:
                     max_suspensions=EXECUTE_MAX_REQUESTS,
                 ),
                 external_lookup={"request": request},
+                provided="`request`, called as "
+                "`await request(method, path, params=None, body=None)`",
             )
     except TimeoutError as err:
         # Cancelling does not undo what already ran: a write may have landed.
@@ -238,8 +274,12 @@ async def _run(
     *,
     inputs: dict[str, Any] | None = None,
     external_lookup: dict[str, Any] | None = None,
+    provided: str,
 ) -> str:
-    """Run `code` once in a fresh sandbox session and return its result as JSON."""
+    """Run `code` once in a fresh sandbox session and return its result as JSON.
+
+    `provided` names what the sandbox gives the code, for the `NameError` hint.
+    """
     # One run per checkout, so a run stopped by a limit never reuses its session,
     # whose heap the library no longer vouches for.
     #
@@ -247,13 +287,31 @@ async def _run(
     # to the client; a traceback into its code is what lets it fix the code. Anything
     # else, such as `MontyCrashedError` for a dead worker, is left to the SDK, which
     # reports it without detail.
+    #
+    # Printed output is collected rather than left to the default, which writes it to
+    # the server's stdout: the model never saw it, and the server's logs did. Past
+    # `max_bytes` the collector fails the whole run rather than truncating, so the
+    # bound is generous (1 MB, arbitrary) and `fit` does the trimming afterwards.
+    printed = CollectString(max_bytes=1_000_000)
     try:
         async with sandbox.checkout(limits=limits) as session:
             result = await session.feed_run(
-                code, inputs=inputs, external_lookup=external_lookup
+                code,
+                inputs=inputs,
+                external_lookup=external_lookup,
+                print_callback=printed,
             )
     except (MontySyntaxError, MontyRuntimeError) as err:
-        raise ToolError(err.display("traceback")) from err
+        message = err.display("traceback")
+        # A model that has not seen the description guesses names (`client`,
+        # `token`, `schema`) or imports (`requests`, `urllib`); without this it
+        # guesses again.
+        if "NameError" in message or "ModuleNotFoundError" in message:
+            message += (
+                f"\n\nThe only name provided here is {provided}. There is no client, "
+                f"token or HTTP library."
+            )
+        raise ToolError(message) from err
 
     # Serialized here, not left to the SDK: it turns a returned list into one content
     # block per item, so `[("/api/zones/", "get")]` would reach the model as two
@@ -274,7 +332,11 @@ async def _run(
             "The result holds a `request(...)` call that was never awaited. "
             "`request` is async: write `await request(...)`."
         )
-    return dumps(fit(json.loads(text), RESULT_MAX_CHARS))
+    data = json.loads(text)
+    output = printed.output
+    if output:
+        data = {"result": data, "printed": fit(output, PRINTED_MAX_CHARS)}
+    return dumps(fit(data, RESULT_MAX_CHARS))
 
 
 async def whoami(ctx: Context[ToolContext, Any]) -> dict[str, Any]:

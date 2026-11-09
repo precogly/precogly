@@ -295,3 +295,38 @@ async def test_the_sandbox_still_lets_a_builtin_beat_a_comprehension_variable() 
         result = await client.call_tool("search", {"code": '[f"{id}" for id in [7]]'})
 
     assert json.loads(text(result)) == ["<built-in function id>"]
+
+
+def test_each_description_works_from_its_first_line_alone() -> None:
+    # opencode's Code Mode shows only the first line, cut to 120 characters; a model
+    # given nothing more guessed `client`, `token` and `schema` for a dozen calls.
+    for name, description, names in [
+        ("search", tools.SEARCH_DESCRIPTION, "spec"),
+        ("execute", tools.EXECUTE_DESCRIPTION, "await request("),
+    ]:
+        first = description.split("\n", 1)[0]
+        assert len(first) <= 120, (name, len(first))
+        assert names in first, name
+
+
+async def test_printed_output_comes_back_with_the_result() -> None:
+    async with Client(server(FakeRequest())) as client:
+        result = await client.call_tool(
+            "search", {"code": 'print("paths:", len(spec["paths"]))\n42'}
+        )
+
+    assert json.loads(text(result)) == {"result": 42, "printed": "paths: 1\n"}
+
+
+async def test_an_unknown_name_says_what_is_provided() -> None:
+    error = await search_error('schema["paths"]')
+
+    assert "NameError" in error
+    assert "The only name provided here is `spec`" in error
+
+
+async def test_a_missing_module_says_what_is_provided() -> None:
+    error = await search_error("import requests")
+
+    assert "ModuleNotFoundError" in error
+    assert "The only name provided here is `spec`" in error
