@@ -92,11 +92,17 @@ def build_server(
             open_world_hint=False,
         ),
     )
+    # `structured_output=False` on `search` and `execute`: they return JSON already
+    # serialized, so the SDK would add `structuredContent` `{"result": "<that JSON>"}`.
+    # Claude Code shows the model the structured part when there is one, so every
+    # result arrived as a JSON string inside JSON.
+    #
     # Reads the schema only, in a sandbox with no network: read-only and closed.
     server.add_tool(
         search,
         title="Search the API",
         description=SEARCH_DESCRIPTION,
+        structured_output=False,
         annotations=ToolAnnotations(
             read_only_hint=True,
             idempotent_hint=True,
@@ -110,6 +116,7 @@ def build_server(
         execute,
         title="Run code against the API",
         description=EXECUTE_DESCRIPTION,
+        structured_output=False,
         annotations=ToolAnnotations(
             read_only_hint=False,
             idempotent_hint=False,

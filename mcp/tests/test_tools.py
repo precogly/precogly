@@ -149,6 +149,19 @@ async def test_the_tool_list_is_advertised_as_fixed() -> None:
     assert not capabilities.tools.list_changed
 
 
+async def test_code_results_come_back_as_text_only() -> None:
+    # Claude Code shows the model `structuredContent` when there is one; with the
+    # SDK's `{"result": <str>}` wrapper, that was our JSON as a string inside JSON.
+    async with Client(server(FakeRequest())) as client:
+        tools_by_name = {tool.name: tool for tool in (await client.list_tools()).tools}
+        result = await client.call_tool("search", {"code": "1"})
+
+    assert tools_by_name["search"].output_schema is None
+    assert tools_by_name["execute"].output_schema is None
+    assert result.structured_content is None
+    assert text(result) == "1"
+
+
 async def test_search_runs_code_over_the_spec_in_the_sandbox() -> None:
     code = '[(path, method) for path, ops in spec["paths"].items() for method in ops]'
 
