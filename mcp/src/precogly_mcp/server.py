@@ -61,12 +61,17 @@ def build_server(
                 await session.feed_run("None")
             yield ToolContext(request=request, sandbox=sandbox, spec=spec)
 
+    # `subscriptions=False`: the tool list never changes, so there is nothing to
+    # notify. Served, `subscriptions/listen` is a long-lived SSE response, which under
+    # WSGI holds a worker thread per client, and its `Connection` header is one WSGI
+    # forbids an application to set (Django's dev server fails it with a 500).
     server = MCPServer(
         "precogly",
         version=version("precogly-mcp"),
         auth=auth,
         token_verifier=token_verifier,
         lifespan=lifespan,
+        subscriptions=False,
     )
     # title = the display name
     #

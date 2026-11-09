@@ -139,6 +139,16 @@ async def test_whoami_is_advertised_read_only_with_no_arguments() -> None:
     assert tool.annotations.open_world_hint is False
 
 
+async def test_the_tool_list_is_advertised_as_fixed() -> None:
+    # Advertising `listChanged` invites Claude Code to open `subscriptions/listen`,
+    # which Django's WSGI server fails with a 500 on every retry.
+    async with Client(server(FakeRequest())) as client:
+        capabilities = client.server_capabilities
+
+    assert capabilities.tools is not None
+    assert not capabilities.tools.list_changed
+
+
 async def test_search_runs_code_over_the_spec_in_the_sandbox() -> None:
     code = '[(path, method) for path, ops in spec["paths"].items() for method in ops]'
 
