@@ -39,7 +39,7 @@ from oauth2_provider.models import (
     set_token_value,
 )
 
-from apps.core.mcp import DjangoAccessTokenVerifier
+from apps.core.mcp.token_verifier import DjangoAccessTokenVerifier
 
 User = get_user_model()
 AccessToken = get_access_token_model()
@@ -125,13 +125,13 @@ class AnIssuedTokensAudience(TestCase):
         resolved = verify(self.token_for(RESOURCE))
 
         assert resolved is not None
-        # `subject` is the authorization boundary rather than a log field: it is the
-        # only thing `reader_for` uses to scope every row a tool sees.
+        # `subject` is the authorization boundary rather than a log field: tools act
+        # as this user.
         assert resolved.subject == str(self.user.pk)
         assert resolved.scopes == ["read"]
 
     def test_a_token_issued_without_a_resource_is_refused(self):
-        # The case the check exists for, and the reason `apps.core.mcp` compares
+        # The case the check exists for, and the reason the verifier compares
         # audiences itself: `AccessToken.allows_audience()` returns True for an empty
         # `resource` list, treating an unbound token as valid for everything. RFC 8707
         # is a MUST in the MCP specification, so an audience nobody asked for is not

@@ -1,8 +1,10 @@
 # 0007: The second sign-in is the point
 
-Status: accepted
+Status: accepted; the password is asked on the consent page rather than a second login
+page since [0015](0015-consent-is-a-page-of-the-application.md)
 Date: 2026-08-08
-Relates to: [0003](0003-oauth-authorization-server.md), [0004](0004-where-the-user-authorizes.md)
+Relates to: [0003](0003-oauth-authorization-server.md), [0004](0004-where-the-user-authorizes.md),
+[0015](0015-consent-is-a-page-of-the-application.md)
 
 A user who is already signed into Precogly is asked for their password again when they
 authorize an MCP client. That stays, and the login page says why.

@@ -4,49 +4,27 @@ MCP server for Precogly threat modeling.
 
 ## Status
 
-Early. Four tools, all read-only:
+Code mode ([0012](docs/0012-code-mode-over-the-api-schema.md)): three tools over
+Precogly's REST API instead of one tool per question.
 
-- `list_threat_models` — threat models in the caller's organizations, most recently
-  updated first, with `total` beside them. Mounted, that is everything the caller can
-  read; over stdio it is one page of twenty, so `total` is how you tell the difference.
-- `search_threat_library`, `search_countermeasure_library`, `search_component_library` —
-  the shared catalogs installed packs populate, with `matched` and `catalogSize` beside
-  the rows. Component rows carry `kind` (the CycloneDX asset type) and take a `kind`
-  filter; countermeasure queries match the description as well as the name.
+- `whoami` — the user, their organizations and roles, and the token's scopes.
+- `search` — runs model-written Python over the OpenAPI schema, reduced and with
+  `$ref`s inlined (`spec.py`).
+- `execute` — runs model-written Python with an async `request()` that calls the API
+  in-process as the token's user ([0014](docs/0014-tools-call-the-api-in-process.md)).
+  Writes need the `write` scope.
 
-The schema alignment work (precogly/precogly#583, #584) changed the output shapes in one
-go: `list_threat_models` rows gained `methodologies`, `lifecycle_phase`, `approved_at`,
-`primary_system_name`, `serial_number`, `version` and `blueprint_count`, and
-`risk_scoring_method` is now `qualitative-matrix`, `owasp-risk-rating`, `fair` or
-`mozilla-rra`. Tool names and shapes are not versioned, so a client that pinned the old
-values updates with the server. The planned per-model tools are redesigned on the new
-model before they are built ([0002](docs/0002-tool-implementation-order.md), last
-section).
+Model-written code runs in a `pydantic-monty` sandbox pool opened in the server's
+lifespan. Results are capped at 24,000 characters and stay valid JSON (`truncate.py`).
 
-Both transports work end to end. A tool reads Precogly through a protocol the mounting
-application supplies rather than by forwarding the caller's token, which cannot work
-mounted: a token issued for the MCP endpoint is audience-bound and invalid at Precogly's
-REST API by construction ([0008](docs/0008-the-mcp-server-runs-inside-precogly.md)).
+The mounting application supplies the token verifier, `request()` and the schema, so
+this package never imports Django: `backend/apps/core/mcp/` and
+`backend/config/mcp_mount.py` are the other half.
 
-## Two transports
+## Connecting
 
-Which one you run decides where the credential comes from. The tools, their schemas
-and their results are identical.
-
-| | mounted in Precogly | stdio |
-|---|---|---|
-| credential | a user authorizes in a browser; the token is the caller's | `PRECOGLY_TOKEN` from the environment |
-| lifetime | 10 hours, refreshed by the client without a prompt | 60 minutes, re-exported by hand |
-| acts as | the user who authorized it | whoever the token belongs to |
-| verified by | the mounting application, against its own tables | not verified; forwarded as-is |
-
-The mounted transport is the product ([0008](docs/0008-the-mcp-server-runs-inside-precogly.md));
-stdio is what predates it and what the MCP specification prescribes for a server that
-speaks over a pipe.
-
-### Mounted
-
-Precogly serves the endpoint from its own WSGI process at `/mcp`, and supplies a token
+The server runs only mounted inside Precogly; there is no stdio transport
+([0013](docs/0013-the-server-is-mounted-only.md)). Precogly serves the endpoint from its own WSGI process at `/mcp`, and supplies a token
 verifier — this package never imports Django. `backend/config/mcp_mount.py` is the
 whole of the wiring. A client then needs no configuration beyond the URL:
 
@@ -75,40 +53,7 @@ The client discovers where to authorize from the 401 this endpoint returns, regi
 itself, and sends the user to Precogly's own login and consent screens
 ([0004](docs/0004-where-the-user-authorizes.md),
 [0009](docs/0009-the-auth-pages-are-built-not-copied.md)). Nothing is pasted anywhere.
-
-### Stdio
-
-Two environment variables, both read by the server process:
-
-| | |
-|---|---|
-| `PRECOGLY_TOKEN` | Bearer token for the Precogly API. Required. |
-| `PRECOGLY_URL` | Base URL of the deployment. Defaults to `http://localhost:8000`. |
-
-Against a locally seeded instance, a token comes from the login endpoint:
-
-```bash
-export PRECOGLY_URL=http://localhost:8000
-export PRECOGLY_TOKEN=$(curl -s -X POST "$PRECOGLY_URL/api/auth/login/" \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"admin@precogly.dev","password":"admin123"}' \
-  | python3 -c "import sys,json;print(json.load(sys.stdin)['access'])")
-```
-
-Either entry point runs it:
-
-```bash
-uv run precogly-mcp                  # console script
-uv run python -m precogly_mcp.server # equivalent
-```
-
-The MCP Inspector runs it too, for poking at schemas by hand. `--with-editable .` is required —
-`mcp dev` runs the file in an ephemeral environment containing only `mcp`, so without it
-nothing in this package imports:
-
-```bash
-uv run mcp dev src/precogly_mcp/server.py --with-editable .
-```
+For Claude Code, see `docs/guides/mcp.md` at the repository root.
 
 ## Development
 
@@ -127,10 +72,12 @@ The git hooks are the repository's, installed once from the root with
 `uv run pre-commit install`.
 
 Tests need no running Precogly. `mcp.client.Client` drives the server over in-memory
-streams, so `tools/list` and `tools/call` are exercised as a client sees them, and
-`httpx2.MockTransport` stands in for the API.
+streams, so `tools/list` and `tools/call` are exercised as a client sees them, and a
+fake `request` in `tests/test_tools.py` stands in for Precogly. The sandbox is real.
+The tools' examples run against the real schema and API in the backend's
+`apps/core/tests/test_mcp_*_examples.py`.
 
-That transport is also their blind spot: every test passed against a version of
+The fake is also their blind spot: once, every test passed against a version of
 `tools/call` that failed on the first real request, because the fake never enforced the
 audience binding a live token carries. A change to how tools reach data, or to what
 Precogly's serializers return, wants a run against a seeded stack before it is believed.
@@ -148,3 +95,6 @@ Precogly's serializers return, wants a run against a seeded stack before it is b
 - [0009](docs/0009-the-auth-pages-are-built-not-copied.md) — the authorization pages are built, not copied
 - [0010](docs/0010-the-mcp-app-owns-its-resource-metadata.md) — the MCP app owns its resource metadata
 - [0011](docs/0011-the-mcp-package-lives-in-this-repository.md) — the MCP package lives in this repository (supersedes 0008's submodule)
+- [0012](docs/0012-code-mode-over-the-api-schema.md) — code mode over the API schema
+- [0013](docs/0013-the-server-is-mounted-only.md) — the server is mounted only (supersedes stdio)
+- [0014](docs/0014-tools-call-the-api-in-process.md) — tools call the API in-process

@@ -1,33 +1,20 @@
 # MCP Server
 
-Precogly includes an MCP server. It lets AI assistants such as Claude.ai, Claude Code, and other MCP clients read data from your Precogly instance. Today the server is read-only. It cannot create or change anything.
+Precogly includes an MCP server. It lets AI assistants such as Claude.ai, Claude Code, and other MCP clients work with your Precogly instance through its REST API, as you.
 
 ## Available tools
 
-| Tool | What it does | Key parameters |
-| --- | --- | --- |
-| `list_threat_models` | Lists the threat models in your organizations, most recently updated first. | `organization_id` (optional) |
-| `search_threat_library` | Searches the shared library of threat templates. | `query` |
-| `search_countermeasure_library` | Searches the shared library of countermeasure templates. | `query`, `control_function`, `control_nature`, `cost` |
-| `search_component_library` | Searches the shared library of component templates. | `query`, `category`, `kind` |
+| Tool | What it does |
+| --- | --- |
+| `whoami` | Shows who the connection acts as: your user, your organizations and your role in each, and the connection's scopes. |
+| `search` | Finds API endpoints. The assistant writes Python that searches the API's OpenAPI schema for the endpoints, parameters, and request bodies it needs. |
+| `execute` | Calls the API. The assistant writes Python that makes the calls and works out the answer, for example counting threats across every page of a listing. |
 
-All parameters are optional. Leave them out to get everything.
+The assistant's code runs in a sandbox with no network or file access. Its only way to reach Precogly is the API, as you, so it sees only your organizations and can do only what you can. Each `execute` run may make 100 API calls and take 30 seconds.
 
-### What comes back
+### Reading and changing data
 
-**`list_threat_models`** returns a `models` list and a `total`. Each model has its name, description, criticality, owner (email), owning team, business unit, compliance frameworks, risk scoring method, methodologies, lifecycle phase, approval date, primary system name, serial number, version, blueprint count, and created and updated times. It does not return the contents of a model.
-
-`frameworks` shows which frameworks at least one countermeasure maps to. It does not mean the model is compliant. Check `total` before saying how many models exist. Over the stdio transport, only the first 20 are returned.
-
-**The three library searches** return `matches`, `matched` (how many matched), and `catalogSize` (how many the library holds). The libraries are shared by all organizations and filled by installed packs. They are templates, not the threats, countermeasures, or components in a particular model.
-
-| Tool | Matching rules | Fields in each row |
-| --- | --- | --- |
-| `search_threat_library` | `query` matches name, description, and taxonomy titles. A taxonomy ID such as `CWE-20` must match in full. | Name, description, pack name, taxonomy entries (taxonomy, external ID, title) |
-| `search_countermeasure_library` | `query` matches name and description. `control_function` is for example `preventive`, `detective`, or `corrective`. `control_nature` is `technical`, `administrative`, or `physical`. `cost` is `low`, `medium`, or `high`. | Name, description, control functions, control nature, cost, default status (`gap` or `platform`), pack name |
-| `search_component_library` | `query` matches name, component type, provider, and qualified slug. `category` is `process`, `datastore`, `external_human_actor`, or `external_system_actor`. `kind` is a CycloneDX asset type such as `device`, `service`, or `data-store`. | Qualified slug, name, category, kind, effective kind, component type, provider, pack name |
-
-All text matching ignores case.
+A connection can read by default. Changing data, such as creating or editing a threat model, needs the `write` scope, which the client has to ask for and you have to approve when you sign in. Without it, any call that changes data is refused. Your MCP client may ask before running `execute`, because the tool can change data.
 
 ## Connect an MCP client
 
@@ -120,33 +107,6 @@ Do not run gunicorn with `--preload`. The MCP endpoint starts its own background
 
 For a complete setup with Caddy and automatic TLS, see [Self-Hosting on AWS](self-hosting-aws.md).
 
-## Stdio transport
-
-Developers can also run the MCP server as a local process that talks over stdio. The tools are the same. The difference is the credential: there is no browser sign-in. You supply a token yourself, and the server passes it to the Precogly REST API without checking it.
-
-| Variable | Meaning |
-| --- | --- |
-| `PRECOGLY_TOKEN` | Bearer token for the Precogly API. Required. |
-| `PRECOGLY_URL` | Base URL of your Precogly. Default `http://localhost:8000`. |
-
-Tokens last 60 minutes. When one expires, get a new one and export it again. Over stdio, `list_threat_models` returns one page of 20 models, so read `total`.
-
-For a local dev instance, you can get a token from the login endpoint:
-
-```bash
-export PRECOGLY_URL=http://localhost:8000
-export PRECOGLY_TOKEN=$(curl -s -X POST "$PRECOGLY_URL/api/auth/login/" \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"admin@precogly.dev","password":"admin123"}' \
-  | python3 -c "import sys,json;print(json.load(sys.stdin)['access'])")
-```
-
-Then run the server from the `mcp/` directory of the repository:
-
-```bash
-uv run precogly-mcp
-```
-
 ## Troubleshooting
 
 **The client says it cannot discover or register.** The proxy may not be routing `/.well-known/*` and `/o/*` to the backend. The client finds the sign-in address from the 401 response of `/mcp`, so all three paths must work.
@@ -158,7 +118,3 @@ uv run precogly-mcp
 **421 "Invalid Host header".** The MCP server only accepts requests addressed to `localhost`, `127.0.0.1` or `::1`. Behind a reverse proxy that forwards your public host name, it rejects every request. This is a known issue and is not yet fixed.
 
 **Redirect loop on login.** The proxy headers are not trusted by Django. See the matching entry in the [AWS guide](self-hosting-aws.md).
-
-**The list of threat models looks short.** Compare the number returned with `total`. Over stdio, only the first 20 are returned.
-
-**Tools stopped working after a while.** Over stdio, the token expired after 60 minutes. Export a new `PRECOGLY_TOKEN`.
