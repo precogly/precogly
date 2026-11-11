@@ -410,6 +410,13 @@ SPECTACULAR_SETTINGS = {
     # release-please's generic updater rewrites only lines carrying this marker.
     "VERSION": "0.4.0",  # x-release-please-version
     "SERVE_INCLUDE_SCHEMA": False,
+    # The API renders and parses camelCase (djangorestframework-camel-case, with the
+    # `ignore_keys` in JSON_CAMEL_CASE), so the schema has to name fields the same way.
+    # This list replaces the default, so the default enum hook is repeated.
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+        "drf_spectacular.contrib.djangorestframework_camel_case.camelize_serializer_fields",
+    ],
 }
 
 
