@@ -407,7 +407,8 @@ SILENCED_SYSTEM_CHECKS = [
 SPECTACULAR_SETTINGS = {
     "TITLE": "Precogly API",
     "DESCRIPTION": "Threat Modeling Platform API",
-    "VERSION": "0.3.0",
+    # release-please's generic updater rewrites only lines carrying this marker.
+    "VERSION": "0.4.0",  # x-release-please-version
     "SERVE_INCLUDE_SCHEMA": False,
 }
 

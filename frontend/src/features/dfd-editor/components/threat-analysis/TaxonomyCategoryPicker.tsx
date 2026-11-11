@@ -5,6 +5,8 @@
  *
  * Fixed categories are shown with a lock and are not edited here: the library
  * threat's own, and snapshot ones kept from a library that is not installed.
+ * Fixed and picked badges are coloured by taxonomy and open the entry's
+ * reference (cwe.mitre.org, attack.mitre.org) when it has one.
  */
 import { useMemo, useState } from 'react'
 import { Check, Lock, Plus, X } from 'lucide-react'
@@ -20,7 +22,13 @@ import {
 } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
-import { DEFAULT_METHODOLOGIES, type TaxonomyEntry } from '@/types/domain'
+import {
+  DEFAULT_METHODOLOGIES,
+  getTaxonomyEntryBgClass,
+  getTaxonomyEntryColor,
+  type TaxonomyEntry,
+} from '@/types/domain'
+import { referenceLinkProps } from '@/components/shared/taxonomy-reference-link'
 import { useTaxonomyEntries } from '@/features/libraries/api/libraries'
 import { useThreatModel } from '@/features/threat-models/api/threat-models'
 import {
@@ -34,6 +42,16 @@ import {
   taxonomyEntrySearchText,
   toggleEntryId,
 } from './taxonomy-picker-utils'
+
+/** Taxonomy colouring as TaxonomyBadges does it: a class, or an inline colour for STRIDE. */
+function taxonomyBadgeColor(entry: TaxonomyEntry) {
+  const backgroundClass = getTaxonomyEntryBgClass(entry)
+  if (backgroundClass) return { className: backgroundClass, style: undefined }
+  const color = getTaxonomyEntryColor(entry)
+  return { className: undefined, style: { borderColor: color, color } }
+}
+
+const REFERENCE_LINK_CLASS = 'cursor-pointer hover:opacity-80'
 
 interface TaxonomyCategoryPickerProps {
   threatModelId: string
@@ -126,31 +144,55 @@ export function TaxonomyCategoryPicker({
 
       {(otherSelected.length > 0 || otherLocked.length > 0) && (
         <div className="flex flex-wrap gap-1">
-          {otherLocked.map((entry) => (
-            <Badge
-              key={`locked-${taxonomyEntryKey(entry)}`}
-              variant="secondary"
-              className="gap-1 text-xs font-normal"
-              title={fixedEntryHint(entry)}
-            >
-              <Lock className="h-3 w-3" />
-              {taxonomyEntryLabel(entry)}
-            </Badge>
-          ))}
-          {otherSelected.map((entry) => (
-            <Badge key={entry.id} variant="outline" className="gap-1 text-xs font-normal">
-              {taxonomyEntryLabel(entry)}
-              <button
-                type="button"
-                className="rounded-sm hover:text-destructive disabled:opacity-50"
-                aria-label={`Remove ${taxonomyEntryLabel(entry)}`}
-                disabled={disabled}
-                onClick={() => toggle(entry)}
+          {otherLocked.map((entry) => {
+            const badgeColor = taxonomyBadgeColor(entry)
+            return (
+              <Badge
+                key={`locked-${taxonomyEntryKey(entry)}`}
+                variant="outline"
+                className={cn(
+                  'gap-1 text-xs font-normal',
+                  badgeColor.className,
+                  entry.referenceUrl && REFERENCE_LINK_CLASS
+                )}
+                style={badgeColor.style}
+                title={fixedEntryHint(entry)}
+                {...referenceLinkProps(entry)}
               >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
+                <Lock className="h-3 w-3" />
+                {taxonomyEntryLabel(entry)}
+              </Badge>
+            )
+          })}
+          {otherSelected.map((entry) => {
+            const badgeColor = taxonomyBadgeColor(entry)
+            return (
+              <Badge
+                key={entry.id}
+                variant="outline"
+                className={cn('gap-1 text-xs font-normal', badgeColor.className)}
+                style={badgeColor.style}
+              >
+                {/* The link sits on the label so the remove button still only removes. */}
+                <span
+                  className={cn(entry.referenceUrl && REFERENCE_LINK_CLASS)}
+                  title={entry.title}
+                  {...referenceLinkProps(entry)}
+                >
+                  {taxonomyEntryLabel(entry)}
+                </span>
+                <button
+                  type="button"
+                  className="rounded-sm hover:text-destructive disabled:opacity-50"
+                  aria-label={`Remove ${taxonomyEntryLabel(entry)}`}
+                  disabled={disabled}
+                  onClick={() => toggle(entry)}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )
+          })}
         </div>
       )}
 

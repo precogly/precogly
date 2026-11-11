@@ -86,7 +86,7 @@ export function ReferenceImageUploader({
       setPreview(null)
       setDescription('')
       setError(null)
-    } catch (err) {
+    } catch {
       setError('Failed to upload image')
     }
   }

@@ -1,3 +1,5 @@
+import { lazy } from 'react'
+
 export { Dashboard } from '@/features/dashboard'
 export { ThreatModels, ThreatModelDetail, SharedThreatModelView } from '@/features/threat-models'
 export { default as DFDEditor } from '@/features/dfd-editor'
@@ -18,3 +20,9 @@ export {
   SystemsSettings,
 } from '@/features/organization'
 export { AIProviderSettings } from '@/features/ai'
+
+export const GuestThreatAnalysis = lazy(() =>
+  import('@/features/guest-editor/components/GuestThreatAnalysis').then((m) => ({
+    default: m.GuestThreatAnalysis,
+  }))
+)

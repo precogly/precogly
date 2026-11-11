@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { Navbar } from './Navbar'
-import { WorkspaceProvider } from '@/contexts/WorkspaceContext'
+import { WorkspaceProvider } from '@/contexts/WorkspaceProvider'
 
 // Routes that should use full-width layout (no container)
 const FULL_WIDTH_ROUTES = ['/diagrams/', '/threat-models/']

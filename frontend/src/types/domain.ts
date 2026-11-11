@@ -96,6 +96,7 @@ export const TAXONOMY_COLOR_CONFIG: Record<string, { bg: string; text: string; b
   capec: { bg: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200' },
   cwe: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
   'mitre-attack': { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
+  'mitre-attack-ics': { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200' },
 }
 
 const TAXONOMY_COLOR_FALLBACK = { bg: 'bg-slate-50', text: 'text-slate-600', border: 'border-slate-200' }
@@ -103,7 +104,7 @@ const TAXONOMY_COLOR_FALLBACK = { bg: 'bg-slate-50', text: 'text-slate-600', bor
 /**
  * Returns a human-readable display label for a taxonomy entry.
  * - STRIDE → human-readable label (e.g., "Tampering")
- * - CAPEC → "CAPEC-{externalId}" (e.g., "CAPEC-88")
+ * - CAPEC → externalId as-is (e.g., "CAPEC-88"); a bare "88" from older data gets the prefix
  * - CWE → externalId as-is (e.g., "CWE-78")
  * - ATT&CK → externalId as-is (e.g., "T1190")
  * - Unknown → externalId or title
@@ -114,7 +115,7 @@ export function formatTaxonomyEntryLabel(entry: TaxonomyBadgeEntry): string {
     return strideConfig?.label ?? entry.externalId
   }
   if (entry.taxonomySlug === 'capec') {
-    return `CAPEC-${entry.externalId}`
+    return entry.externalId.startsWith('CAPEC-') ? entry.externalId : `CAPEC-${entry.externalId}`
   }
   // CWE and ATT&CK externalIds already include their prefix
   if (entry.taxonomySlug === 'cwe' || entry.taxonomySlug === 'mitre-attack') {
@@ -124,8 +125,9 @@ export function formatTaxonomyEntryLabel(entry: TaxonomyBadgeEntry): string {
 }
 
 /**
- * Returns the hex color string for a taxonomy entry.
- * STRIDE entries use per-category colors; others return a neutral gray.
+ * Returns the hex color string for a STRIDE entry, used as an inline style.
+ * Other taxonomies are coloured by getTaxonomyEntryBgClass; for them this
+ * returns a neutral gray fallback.
  */
 export function getTaxonomyEntryColor(entry: TaxonomyBadgeEntry): string {
   if (entry.taxonomySlug === 'stride') {

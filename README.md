@@ -29,7 +29,7 @@ Open http://localhost:5173 and log in with admin@precogly.dev / admin123. Two fu
 
 ### Video Walkthrough
 
-[![Precogly Walkthrough](https://img.youtube.com/vi/5sSuZOAtyn4/maxresdefault.jpg)](https://www.youtube.com/watch?v=5sSuZOAtyn4)
+[![Precogly Walkthrough](https://img.youtube.com/vi/iSDU88X0XMw/maxresdefault.jpg)](https://www.youtube.com/watch?v=iSDU88X0XMw)
 
 ### Why Precogly?
 
@@ -39,10 +39,14 @@ Precogly bridges this gap and democratizes threat modeling for every org in the 
 
 ### Key Features
 
-- Import and export TM-BOM style JSON files - improves interoperability with other threat modeling platforms
+- Import and export CycloneDX 2.0 Threat Modeling BOM (TM-BOM) files. Every export passes the schema, and imports from other tools never fail: anything Precogly cannot store becomes a warning and is written back on export.
 - A threat modeling workspace allows for team collaboration
 - An advanced DFD editor (allows for nested components, typed zones, boundaries and flows, and much more)
+- Use cases and abuse cases linked to threats and countermeasures, so you can analyze a system by what users do as well as by its diagram
+- A risk register with ratings, owners and responses, plus tracking of overdue countermeasures
+- Review and approval sign-off, with a clear flag when a model has changed since it was approved
 - Community library packs with links to taxonomies like MITRE ATT&CK, CAPEC, LINDDUN, STRIDE etc. - allows your team to quickly create high quality threat models
+- An MCP server so AI agents like Claude can read your threat models and search your threat, component and countermeasure libraries
 
 ### Who is Precogly for?
 
@@ -57,7 +61,7 @@ Precogly is designed for enterprise workflows, but smaller organizations can als
 
 - **Compliance-aware** — Built-in traceability to DORA, CRA, ASVS, NIST CSF, SOC 2, and more. Threats can link to security taxonomies, while countermeasures map to framework requirements.
 - **Structured library packs** — Not just brainstorming. Curated packs with components, threats, countermeasures, and taxonomy links (MITRE ATT&CK, CAPEC, CWE, STRIDE) give your team a structured starting point.
-- **AI-agent ready architecture** — A clean REST API with full OpenAPI docs, designed to be a foundation for AI-powered threat modeling assistants.
+- **AI-agent ready architecture** — An MCP server and a clean REST API with full OpenAPI docs, designed to be a foundation for AI-powered threat modeling assistants. See [Self-hosting on AWS with remote MCP](docs/guides/self-hosting-aws.md) and [AI threat model generation](docs/guides/ai-threat-model-generation.md).
 - **Pack ecosystem** — Community and official packs for AWS, Azure, GCP, banking, and compliance frameworks. Extend or create your own.
 
 ### Our AI Philosophy
@@ -80,9 +84,9 @@ Precogly is designed for enterprise workflows, but smaller organizations can als
   - See threat modeling coverage and risk management progress across the organization
   - Report on risk ownership, treatment status and overdue actions by business unit, team and product
   - Align program management with the [Threat Modeling Capabilities](https://www.threatmodelingmanifesto.org/capabilities/), especially the Measurement and Program Management areas
-  - Align Precogly's system representation with the TM-BOM System concepts in the upcoming CycloneDX 2.0
+  - Align Precogly's data model with the CycloneDX 2.0 TM-BOM (done on `main`, not yet released; see the [changelog](docs/changelog.md))
 - **0.6: Risk Management**
-  - Record risks from threat modeling, vulnerabilities and assessments in one risk register
+  - Extend the risk register to record risks from vulnerabilities and assessments, alongside those from threat modeling
   - Assign risk owners, record treatment decisions and track residual risk
   - Run risk assessments and produce reports that support compliance, including the EU CRA
 - **0.7: Security Controls Management**

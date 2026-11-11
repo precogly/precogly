@@ -19,5 +19,23 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      'react-refresh/only-export-components': [
+        'error',
+        {
+          allowConstantExport: true,
+          allowCompoundComponents: true,
+          // Wrap a node or edge component with a threat badge (GuestNodeWrapper)
+          extraHOCs: ['withThreatBadge', 'withEdgeThreatBadge'],
+        },
+      ],
+    },
+  },
+  {
+    // shadcn/ui components export their cva variants next to the component
+    files: ['src/components/ui/**/*.tsx'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
   },
 ])

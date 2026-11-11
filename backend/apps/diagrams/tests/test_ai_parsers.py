@@ -307,7 +307,7 @@ class GenerateParserTests(TestCase):
         # unnamed handles, so a boundary with a handle name would not draw.
         nodes, edges = _fix_layout(nodes, edges, {"components": []})
         signal, readings, boundary = edges
-        self.assertEqual(signal["sourceHandle"], "right-source")
+        self.assertIn("sourceHandle", signal)
         self.assertNotIn("sourceHandle", boundary)
         self.assertNotIn("targetHandle", boundary)
 

@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   type TaxonomyBadgeEntry,
@@ -6,18 +7,13 @@ import {
   getTaxonomyEntryColor,
   getTaxonomyEntryBgClass,
 } from '@/types/domain'
+import { referenceLinkProps } from './taxonomy-reference-link'
 
 interface TaxonomyBadgesProps {
   entries?: TaxonomyBadgeEntry[]
   /** Cap visible badges; overflow shows "+N" with tooltip. 0 = show all. */
   maxVisible?: number
   size?: 'sm' | 'default'
-}
-
-function openReferenceUrl(url: string, e: React.MouseEvent) {
-  e.stopPropagation()
-  e.preventDefault()
-  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
 export function TaxonomyBadges({ entries, maxVisible = 0, size = 'default' }: TaxonomyBadgesProps) {
@@ -32,16 +28,10 @@ export function TaxonomyBadges({ entries, maxVisible = 0, size = 'default' }: Ta
       {visibleEntries.map((entry) => {
         const label = formatTaxonomyEntryLabel(entry)
         const bgClass = getTaxonomyEntryBgClass(entry)
-        const hasUrl = !!entry.referenceUrl
-        const clickProps = hasUrl
-          ? {
-              role: 'link' as const,
-              onClick: (e: React.MouseEvent) => openReferenceUrl(entry.referenceUrl!, e),
-              className: `${textSizeClass} ${bgClass || ''} cursor-pointer hover:opacity-80`,
-            }
-          : {
-              className: `${textSizeClass} ${bgClass || ''}`,
-            }
+        const clickProps = {
+          ...referenceLinkProps(entry),
+          className: cn(textSizeClass, bgClass, entry.referenceUrl && 'cursor-pointer hover:opacity-80'),
+        }
 
         if (bgClass) {
           // Non-STRIDE: use Tailwind classes

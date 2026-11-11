@@ -1,7 +1,8 @@
 /**
- * "Manage personas" (plan J10): list, create, edit and delete the model's
- * threat personas. Delete says how many threats use the persona; the
- * backend clears the key on those threats.
+ * "Manage threat actors" (plan J10): list, create, edit and delete the
+ * model's threat actors (stored as personas), and add a common one with one
+ * click. Delete says how many threats use the actor; the backend clears the
+ * key on those threats.
  */
 
 import { useState } from 'react'
@@ -41,6 +42,7 @@ import {
   type UpdateThreatPersonaInput,
 } from '@/features/threat-models/api/threats'
 import { symbolicNameFromName } from './persona-utils'
+import { commonActorPersonaInput, commonActorsNotYetAdded, type PredefinedActor } from './actor-utils'
 
 const SKILL_LEVELS = ['none', 'minimal', 'operational', 'adept'] as const
 
@@ -100,6 +102,20 @@ export function ManagePersonasDialog({ open, onOpenChange, threatModelId }: Mana
   const [deleting, setDeleting] = useState<ThreatPersona | null>(null)
 
   const isSaving = createPersona.isPending || updatePersona.isPending
+  const commonActors = commonActorsNotYetAdded(personas)
+
+  const dialogTitle = !editing
+    ? 'Manage threat actors'
+    : editing.personaId === null
+      ? 'New threat actor'
+      : 'Edit threat actor'
+
+  const addCommonActor = (actor: PredefinedActor) => {
+    createPersona.mutate(commonActorPersonaInput(actor), {
+      onSuccess: () => toast.success(`${actor.label} added to this model's threat actors`),
+      onError: () => toast.error(`Could not add ${actor.label} to the threat actors`),
+    })
+  }
 
   const handleSave = () => {
     if (!editing || !editing.form.name.trim()) return
@@ -137,9 +153,11 @@ export function ManagePersonasDialog({ open, onOpenChange, threatModelId }: Mana
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Threat actors</DialogTitle>
+            <DialogTitle>{dialogTitle}</DialogTitle>
             <DialogDescription>
-              The attackers this model considers. Threats and abuse cases pick their threat actor from this list; picking a common one (State Actor, Hacktivist and so on) adds it here.
+              {editing
+                ? 'Describe the attacker. The name is required.'
+                : 'The attackers this model considers. Threats and abuse cases pick from this list.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -273,6 +291,27 @@ export function ManagePersonasDialog({ open, onOpenChange, threatModelId }: Mana
                     </li>
                   ))}
                 </ul>
+              )}
+              {!isLoading && commonActors.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-muted-foreground">Add a common threat actor</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {commonActors.map((actor) => (
+                      <Button
+                        key={actor.value}
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 gap-1 px-2 text-xs"
+                        disabled={createPersona.isPending}
+                        onClick={() => addCommonActor(actor)}
+                      >
+                        <Plus className="h-3 w-3" />
+                        {actor.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
               )}
               <DialogFooter>
                 <Button variant="outline" onClick={() => onOpenChange(false)}>

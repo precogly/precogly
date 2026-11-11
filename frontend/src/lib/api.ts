@@ -89,7 +89,7 @@ export async function apiFetch<T>(
   }
 
   // Add auth token if available
-  let token = getAccessToken()
+  const token = getAccessToken()
   if (token) {
     headers.set('Authorization', `Bearer ${token}`)
   }
@@ -174,7 +174,7 @@ export const api = {
 
     // Build headers (don't set Content-Type - browser sets it with boundary for FormData)
     const headers = new Headers()
-    let token = getAccessToken()
+    const token = getAccessToken()
     if (token) {
       headers.set('Authorization', `Bearer ${token}`)
     }

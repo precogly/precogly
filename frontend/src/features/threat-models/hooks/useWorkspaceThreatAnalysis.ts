@@ -446,7 +446,7 @@ export function useWorkspaceThreatAnalysis(
   )
 
   // Toggle checklist item: no-op since all items are now auto-computed by the backend
-  const toggleChecklistItem = useCallback((_itemId: string, _checked: boolean) => {
+  const toggleChecklistItem = useCallback<(itemId: string, checked: boolean) => void>(() => {
     // All checklist items are auto-computed by the backend; no local state to update
   }, [])
 

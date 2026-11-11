@@ -36,7 +36,7 @@ import { useCreateNode, useHandleDrop } from '@/features/dfd-editor/hooks/useCre
 import { NOTATION_NODE_SIZES } from '@/features/dfd-editor/types/notation'
 import { GuestThreatSection } from './components/GuestThreatSection'
 import { targetTypeForNode } from './lib/guest-model'
-import { guestNodeTypes, guestEdgeTypes } from './components/GuestNodeWrapper'
+import { guestNodeTypes, guestEdgeTypes } from './components/guestNodeTypes'
 import { useGuestEditor } from './context/GuestEditorContext'
 import type { GuestDiagramOutletContext } from './GuestLayout'
 

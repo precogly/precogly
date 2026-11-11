@@ -32,7 +32,7 @@ dependencies = [
     "drf-spectacular>=0.28,<1.0",
     "djangorestframework-camel-case>=1.4.2,<2.0",
     "python-dateutil>=2.9,<3.0",
-    "Pillow>=12.3,<13.0",
+    "Pillow>=13.0,<14.0",
     # Symmetric encryption for per-tenant AI provider API keys at rest (Fernet)
     "cryptography>=50.0,<51.0",
     "jsonschema>=4.25,<5.0",

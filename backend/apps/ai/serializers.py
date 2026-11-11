@@ -14,6 +14,7 @@ contract the settings UI consumes.
 """
 
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from .models import AIProviderConfig
 from .url_policy import URLPolicyError, check_url
@@ -53,6 +54,23 @@ class AIProviderConfigSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["id", "has_api_key", "created_at", "updated_at"]
+
+    def get_validators(self):
+        """Drop the validator DRF derives from the one-default-per-org constraint.
+
+        Since DRF 3.18 a conditional UniqueConstraint becomes a serializer
+        validator, which would reject promoting a new default while the old one
+        still exists. The viewset demotes the old default in the same transaction
+        as the save, and the DB constraint still backs that up.
+        """
+        return [
+            validator
+            for validator in super().get_validators()
+            if not (
+                isinstance(validator, UniqueTogetherValidator)
+                and getattr(validator, "condition", None) is not None
+            )
+        ]
 
     def get_has_api_key(self, obj: AIProviderConfig) -> bool:
         return bool(obj.api_key_encrypted)

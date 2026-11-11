@@ -9,9 +9,6 @@ import { HumanActorNode } from '@/features/dfd-editor/components/nodes/HumanActo
 import { SystemActorNode } from '@/features/dfd-editor/components/nodes/SystemActorNode'
 import { TrustZoneNode } from '@/features/dfd-editor/components/nodes/TrustZoneNode'
 import { SystemScopeNode } from '@/features/dfd-editor/components/nodes/SystemScopeNode'
-import { StickyNoteNode } from '@/features/dfd-editor/components/nodes/StickyNoteNode'
-import { TableNode } from '@/features/dfd-editor/components/nodes/TableNode'
-import type { DiagramNodeType } from '@/features/dfd-editor/types'
 import { DataFlowEdge as DataFlowEdgeComponent } from '@/features/dfd-editor/components/edges/DataFlowEdge'
 import { TrustBoundaryEdge as TrustBoundaryEdgeComponent } from '@/features/dfd-editor/components/edges/TrustBoundaryEdge'
 
@@ -42,21 +39,13 @@ function withThreatBadge<P extends NodeProps>(NodeComponent: ComponentType<P>) {
   return WrappedNode
 }
 
-// Wrapped node types with threat badges
-export const guestNodeTypes = {
-  process: withThreatBadge(ProcessNode),
-  datastore: withThreatBadge(DataStoreNode),
-  humanActor: withThreatBadge(HumanActorNode),
-  systemActor: withThreatBadge(SystemActorNode),
-  trustZone: withThreatBadge(TrustZoneNode),
-  systemScope: withThreatBadge(SystemScopeNode),
-  stickyNote: StickyNoteNode,
-  table: TableNode,
-  // `satisfies` makes a missing node type a build error. React Flow's own
-  // behaviour for an unregistered type is to silently substitute its default
-  // node, which renders as a small box containing the label and reads as a
-  // broken component rather than a missing registration.
-} as const satisfies Record<DiagramNodeType, unknown>
+// Node components wrapped with threat badges
+export const GuestProcessNode = withThreatBadge(ProcessNode)
+export const GuestDataStoreNode = withThreatBadge(DataStoreNode)
+export const GuestHumanActorNode = withThreatBadge(HumanActorNode)
+export const GuestSystemActorNode = withThreatBadge(SystemActorNode)
+export const GuestTrustZoneNode = withThreatBadge(TrustZoneNode)
+export const GuestSystemScopeNode = withThreatBadge(SystemScopeNode)
 
 // Edge wrapper that adds a threat count badge
 function withEdgeThreatBadge<P extends EdgeProps>(EdgeComponent: ComponentType<P>) {
@@ -90,9 +79,6 @@ function withEdgeThreatBadge<P extends EdgeProps>(EdgeComponent: ComponentType<P
   return WrappedEdge
 }
 
-// Wrapped edge types with threat badges
-export const guestEdgeTypes = {
-  dataFlow: withEdgeThreatBadge(DataFlowEdgeComponent),
-  // Boundaries take threats too (plan 11.9).
-  trustBoundary: withEdgeThreatBadge(TrustBoundaryEdgeComponent),
-} as const
+// Edge components wrapped with threat badges
+export const GuestDataFlowEdge = withEdgeThreatBadge(DataFlowEdgeComponent)
+export const GuestTrustBoundaryEdge = withEdgeThreatBadge(TrustBoundaryEdgeComponent)

@@ -59,6 +59,8 @@ logger = logging.getLogger(__name__)
 class ThreatModelViewSet(viewsets.ModelViewSet):
     """ViewSet for ThreatModel CRUD operations."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = ThreatModel.objects.none()
     permission_classes = [IsAuthenticated, CanWrite]
     filter_backends = [
         DjangoFilterBackend,
@@ -661,6 +663,8 @@ class ThreatModelViewSet(viewsets.ModelViewSet):
 class ThreatModelReferenceImageViewSet(viewsets.ModelViewSet):
     """ViewSet for managing threat model reference images."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = ThreatModelReferenceImage.objects.none()
     permission_classes = [IsAuthenticated, CanWrite]
     serializer_class = ThreatModelReferenceImageSerializer
 
@@ -728,6 +732,8 @@ class ThreatModelReferenceImageViewSet(viewsets.ModelViewSet):
 class OutOfScopeItemViewSet(viewsets.ModelViewSet):
     """ViewSet for OutOfScopeItem CRUD, nested under threat models."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = OutOfScopeItem.objects.none()
     serializer_class = OutOfScopeItemSerializer
     permission_classes = [IsAuthenticated, CanWrite]
 
@@ -788,6 +794,8 @@ class _ThreatModelNestedViewSet(viewsets.ModelViewSet):
 class AssumptionViewSet(_ThreatModelNestedViewSet):
     """``/api/threat-models/{id}/assumptions/``; filter ``blueprint``."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = Assumption.objects.none()
     serializer_class = AssumptionSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["blueprint", "validity", "topic"]
@@ -807,6 +815,8 @@ class AssumptionViewSet(_ThreatModelNestedViewSet):
 class BusinessObjectiveViewSet(_ThreatModelNestedViewSet):
     """``/api/threat-models/{id}/business-objectives/``."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = BusinessObjective.objects.none()
     serializer_class = BusinessObjectiveSerializer
     pagination_class = None
 
@@ -831,6 +841,8 @@ _TARGET_PREFETCH = (
 class UseCaseViewSet(_ThreatModelNestedViewSet):
     """``/api/threat-models/{id}/use-cases/``: create, read, update, delete."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = UseCase.objects.none()
     serializer_class = UseCaseSerializer
     pagination_class = None
 
@@ -851,6 +863,8 @@ class UseCaseViewSet(_ThreatModelNestedViewSet):
 class AbuseCaseViewSet(_ThreatModelNestedViewSet):
     """``/api/threat-models/{id}/abuse-cases/``: create, read, update, delete."""
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = AbuseCase.objects.none()
     serializer_class = AbuseCaseSerializer
     pagination_class = None
 
@@ -915,6 +929,8 @@ class BlueprintViewSet(viewsets.ModelViewSet):
     cascades and the threats on those rows go too.
     """
 
+    # drf-spectacular reads the model from here; requests go through get_queryset().
+    queryset = Blueprint.objects.none()
     serializer_class = BlueprintSerializer
     permission_classes = [IsAuthenticated, CanWrite]
     pagination_class = None

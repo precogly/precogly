@@ -39,16 +39,8 @@ import {
   type TableCellRange,
   type TableNodeData,
 } from '../../types'
-import {
-  BUTTON,
-  CORNERS,
-  DIVIDER_HIT,
-  GAP,
-  HANDLE,
-  TableActionButton,
-  TableAxisGrip,
-  TableFillSubmenu,
-} from './table-chrome'
+import { TableActionButton, TableAxisGrip, TableFillSubmenu } from './table-chrome'
+import { BUTTON, CORNERS, DIVIDER_HIT, GAP, HANDLE } from './table-chrome-sizes'
 
 type TableNodeType = Node<TableNodeData, 'table'>
 

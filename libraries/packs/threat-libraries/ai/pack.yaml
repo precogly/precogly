@@ -2,7 +2,7 @@ pack:
   schema_version: 1
   slug: ai
   name: AI / ML
-  version: 1.0.0
+  version: 1.0.1
   pack_type: full
   author: Precogly
   description: |

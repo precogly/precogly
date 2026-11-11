@@ -8,7 +8,7 @@
 Open-source threat modeling tools lack enterprise features. Commercial tools come with heavy price tags and vendor lock-in. Precogly bridges this gap and democratizes threat modeling for every organization in the world.
 
 <div style="text-align: center;" markdown>
-  <iframe width="720" height="405" src="https://www.youtube.com/embed/5sSuZOAtyn4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  <iframe width="720" height="405" src="https://www.youtube.com/embed/iSDU88X0XMw" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
 ## Key Features

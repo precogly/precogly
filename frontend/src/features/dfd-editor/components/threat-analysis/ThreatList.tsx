@@ -6,6 +6,10 @@
  * "By use case" view, so a threat is the same row in both and every edit
  * applies to the one scenario.
  *
+ * The component view also passes the threats inherited from the rows beneath
+ * the selection. They follow the row's own threats under a small heading,
+ * tagged with their target, and are not draggable: reorder is per target.
+ *
  * The open modal can be controlled by the caller (the page keeps it in the
  * URL as `?threat=T17`); without that the list keeps it itself.
  */
@@ -33,6 +37,10 @@ export interface ThreatListProps {
   threatModelId: string
   /** The threats of the selection, in any order. */
   threats: AnalysisThreat[]
+  /** Ids of the threats in `threats` that sit on rows beneath the selection rather than on it. */
+  inheritedThreatIds?: ReadonlySet<string>
+  /** The muted suffix after an inherited threat's name, for example "on API Gateway". */
+  inheritedTargetLabel?: (threat: AnalysisThreat) => string | null
   /** Whether anything is selected; the empty messages show only then. */
   hasSelection: boolean
   /** The tree selection, so the modal's targets list marks the one already shown. */
@@ -59,6 +67,8 @@ export interface ThreatListProps {
 export function ThreatList({
   threatModelId,
   threats,
+  inheritedThreatIds,
+  inheritedTargetLabel,
   hasSelection,
   selection = null,
   selectedThreatId,
@@ -84,14 +94,25 @@ export function ThreatList({
     else setLocalOpenThreatNumber(displayNumber)
   }
 
+  const isInherited = (threat: AnalysisThreat) => inheritedThreatIds?.has(threat.id) ?? false
+  // The row's own active threats, in their saved order.
   const activeThreats = useMemo(
     () =>
       threats
-        .filter((threat) => isActiveThreat(threat.triageStatus))
+        .filter((threat) => isActiveThreat(threat.triageStatus) && !(inheritedThreatIds?.has(threat.id) ?? false))
         .sort((left, right) => (left.displayOrder ?? 0) - (right.displayOrder ?? 0) || left.number - right.number),
-    [threats]
+    [threats, inheritedThreatIds]
   )
-  const triagedThreats = threats.filter((threat) => !isActiveThreat(threat.triageStatus))
+  // The active threats beneath the row, by number; their order belongs to their own rows.
+  const inheritedThreats = useMemo(
+    () =>
+      threats
+        .filter((threat) => isActiveThreat(threat.triageStatus) && (inheritedThreatIds?.has(threat.id) ?? false))
+        .sort((left, right) => left.number - right.number),
+    [threats, inheritedThreatIds]
+  )
+  const triagedThreats = threats.filter((threat) => !isActiveThreat(threat.triageStatus) && !isInherited(threat))
+  const hasAnyActive = activeThreats.length > 0 || inheritedThreats.length > 0
   const openThreat = openThreatNumber
     ? threats.find((threat) => threat.displayNumber === openThreatNumber) ?? null
     : null
@@ -107,8 +128,13 @@ export function ThreatList({
   }
 
   /** Number, title and a pill; the drag handle and the use case view's Unlink sit beside them. */
-  const renderRow = (threat: AnalysisThreat, pill: ReactNode, options: { dragHandleRef?: React.RefCallback<HTMLElement>; struckThrough?: boolean; trailing?: ReactNode }) => {
+  const renderRow = (
+    threat: AnalysisThreat,
+    pill: ReactNode,
+    options: { dragHandleRef?: React.RefCallback<HTMLElement>; struckThrough?: boolean; trailing?: ReactNode; inherited?: boolean }
+  ) => {
     const isOpen = openThreat?.id === threat.id
+    const targetLabel = options.inherited ? inheritedTargetLabel?.(threat) ?? null : null
     return (
       <div
         className={cn(
@@ -117,6 +143,7 @@ export function ThreatList({
         )}
         data-threat-number={threat.displayNumber}
         data-selected={threat.id === selectedThreatId ? 'true' : undefined}
+        data-inherited={options.inherited ? 'true' : undefined}
       >
         {/* No handle where the order is not saved (the use case view and the triaged group). */}
         {options.dragHandleRef && (
@@ -138,6 +165,11 @@ export function ThreatList({
           <span className={cn('truncate text-sm font-medium', options.struckThrough && 'text-muted-foreground line-through')}>
             {threat.threatName || 'Unnamed threat'}
           </span>
+          {targetLabel && (
+            <span className="shrink-0 truncate text-xs text-muted-foreground" title={targetLabel}>
+              {targetLabel}
+            </span>
+          )}
         </button>
         {pill}
         {onUnlink && (
@@ -161,6 +193,9 @@ export function ThreatList({
     renderRow(threat, <ThreatStatusBadge status={deriveThreatStatus(threat.countermeasures)} />, {
       dragHandleRef: onReorder ? dragHandleRef : undefined,
     })
+
+  const renderInheritedRow = (threat: AnalysisThreat) =>
+    renderRow(threat, <ThreatStatusBadge status={deriveThreatStatus(threat.countermeasures)} />, { inherited: true })
 
   const renderTriagedRow = (threat: AnalysisThreat) => {
     const triageLabel = TRIAGE_STATUSES.find((entry) => entry.value === threat.triageStatus)?.label || threat.triageStatus
@@ -202,14 +237,27 @@ export function ThreatList({
               activeThreats.map((threat) => <div key={threat.id}>{renderActiveRow(threat)}</div>)
             ))}
 
-          {hasSelection && activeThreats.length === 0 && triagedThreats.length === 0 && (
+          {inheritedThreats.length > 0 && (
+            <div className={cn(activeThreats.length > 0 && 'mt-3 border-t pt-2')} data-testid="inherited-threats">
+              <p className="px-2 pb-1 text-xs font-medium text-muted-foreground">
+                {activeThreats.length > 0 ? 'Beneath this row' : 'On rows beneath this one'}
+              </p>
+              <div className="space-y-1">
+                {inheritedThreats.map((threat) => (
+                  <div key={threat.id}>{renderInheritedRow(threat)}</div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {hasSelection && !hasAnyActive && triagedThreats.length === 0 && (
             <div className="py-8 text-center text-muted-foreground">
               <p className="text-sm">No threats here yet.</p>
               {emptyActions && <div className="mt-3 flex justify-center">{emptyActions}</div>}
             </div>
           )}
 
-          {hasSelection && activeThreats.length === 0 && triagedThreats.length > 0 && (
+          {hasSelection && !hasAnyActive && triagedThreats.length > 0 && (
             <div className="py-8 text-center text-muted-foreground">
               <p className="text-sm">All threats have been triaged.</p>
               <p className="mt-1 text-xs">Reopen from the section below if needed.</p>

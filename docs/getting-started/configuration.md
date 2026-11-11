@@ -61,6 +61,20 @@ Neither value permits private or link-local ranges: `169.254.169.254` and
 `10.0.0.0/8` are refused under both. `allow-loopback` reaches a model on the same
 host; it does not reach the cloud metadata service.
 
+### MCP endpoint
+
+Precogly serves an [MCP server](../guides/mcp.md) at `/mcp`. These two variables
+tell it the public address it is reached at.
+
+| Variable           | Default                     | Description |
+| ------------------ | --------------------------- | ----------- |
+| `MCP_RESOURCE_URL` | `http://localhost:8000/mcp` | Full public URL of the MCP endpoint, for example `https://yourdomain.com/mcp`. |
+| `MCP_ISSUER_URL`   | `http://localhost:8000`     | Public root URL of Precogly, for example `https://yourdomain.com`. MCP clients sign in through it. |
+
+The defaults work for a local install. On any other address, set both.
+`MCP_RESOURCE_URL` must be the exact URL clients connect to: tokens are issued for
+that address and checked against it, so a mismatch rejects every token.
+
 ## Settings Modules
 
 Precogly uses split settings for different environments:
@@ -94,7 +108,11 @@ ALLOWED_HOSTS=yourdomain.com
 CORS_ALLOWED_ORIGINS=https://yourdomain.com
 FRONTEND_URL=https://yourdomain.com
 DJANGO_SETTINGS_MODULE=config.settings.production
+MCP_RESOURCE_URL=https://yourdomain.com/mcp
+MCP_ISSUER_URL=https://yourdomain.com
 ```
+
+Without the two `MCP_` variables, the [MCP endpoint](../guides/mcp.md) keeps its `localhost` defaults and every client fails to sign in.
 
 !!! warning
     Never use the default `SECRET_KEY` or `POSTGRES_PASSWORD` in production. Generate a random secret key with:

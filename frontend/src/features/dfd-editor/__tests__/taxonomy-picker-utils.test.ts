@@ -24,7 +24,7 @@ const attack = Array.from({ length: MAX_CHIP_ENTRIES + 5 }, (_, index) =>
   entry('mitre-attack', 'ATT&CK Enterprise Techniques', `T10${index}`, `Technique ${index}`)
 )
 const stride = ['spoofing', 'tampering', 'repudiation'].map((id) => entry('stride', 'STRIDE Threat Model', id, id))
-const capec = [entry('capec', 'CAPEC Attack Patterns', '66', 'SQL Injection')]
+const capec = [entry('capec', 'CAPEC Attack Patterns', 'CAPEC-66', 'SQL Injection')]
 const groups = groupTaxonomyEntries([...attack, ...stride, ...capec])
 
 describe('methodology taxonomies', () => {
@@ -56,7 +56,7 @@ describe('labels and search', () => {
     expect(taxonomyEntryLabel({ taxonomySlug: 'mitre-attack', externalId: 'T1005', title: 'Data from Local System' })).toBe(
       'T1005 Data from Local System'
     )
-    expect(taxonomyEntryLabel({ taxonomySlug: 'capec', externalId: '66', title: 'SQL Injection' })).toBe(
+    expect(taxonomyEntryLabel({ taxonomySlug: 'capec', externalId: 'CAPEC-66', title: 'SQL Injection' })).toBe(
       'CAPEC-66 SQL Injection'
     )
     expect(taxonomyEntryLabel({ taxonomySlug: 'stride', externalId: 'tampering', title: 'Tampering' })).toBe('Tampering')
@@ -89,7 +89,7 @@ describe('selection', () => {
 describe('fixed categories', () => {
   const library: TaxonomyEntry = { id: 1, taxonomySlug: 'stride', externalId: 'spoofing', title: 'Spoofing', source: 'library' }
   const snapshot: TaxonomyEntry = { taxonomySlug: 'mitre-attack', externalId: 'T1005', title: 'Data', source: 'snapshot' }
-  const instance: TaxonomyEntry = { id: 2, taxonomySlug: 'capec', externalId: '66', title: 'SQLi', source: 'instance' }
+  const instance: TaxonomyEntry = { id: 2, taxonomySlug: 'capec', externalId: 'CAPEC-66', title: 'SQLi', source: 'instance' }
   const unmarked: TaxonomyEntry = { id: 3, taxonomySlug: 'capec', externalId: '1', title: 'One' }
 
   it('keep library, snapshot and unmarked entries, and leave out editable instance ones', () => {

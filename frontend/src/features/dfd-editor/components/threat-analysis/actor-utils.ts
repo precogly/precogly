@@ -2,20 +2,22 @@
  * The one-actor rule's value helpers (plan J10, K3), kept out of the picker
  * component so fast refresh works.
  */
+import type { CreateThreatPersonaInput } from '@/features/threat-models/api/threats'
 
 /**
  * The common threat actors (once called built-in actors). Picking one adds it
  * to the model's threat actors, stored as a persona whose symbolic name is the
  * CycloneDX persona archetype, so the export keeps the type (section 9.4, G4).
  * "Opportunist" has no archetype of its own and exports as "attacker".
+ * `isPerson` marks the ones that are usually one individual.
  */
 export const PREDEFINED_ACTORS = [
-  { value: 'state-actor', label: 'State Actor', symbolicName: 'nation-state' },
-  { value: 'hacktivist', label: 'Hacktivist', symbolicName: 'hacktivist' },
-  { value: 'insider-threat', label: 'Insider Threat', symbolicName: 'insider-threat' },
-  { value: 'competitor', label: 'Competitor', symbolicName: 'competitor' },
-  { value: 'opportunist', label: 'Opportunist', symbolicName: 'opportunist' },
-  { value: 'organized-crime', label: 'Organized Crime', symbolicName: 'organized-crime' },
+  { value: 'state-actor', label: 'State Actor', symbolicName: 'nation-state', isPerson: false },
+  { value: 'hacktivist', label: 'Hacktivist', symbolicName: 'hacktivist', isPerson: false },
+  { value: 'insider-threat', label: 'Insider Threat', symbolicName: 'insider-threat', isPerson: true },
+  { value: 'competitor', label: 'Competitor', symbolicName: 'competitor', isPerson: false },
+  { value: 'opportunist', label: 'Opportunist', symbolicName: 'opportunist', isPerson: true },
+  { value: 'organized-crime', label: 'Organized Crime', symbolicName: 'organized-crime', isPerson: false },
 ] as const
 
 export type PredefinedActor = (typeof PREDEFINED_ACTORS)[number]
@@ -39,6 +41,16 @@ export function commonActorsNotYetAdded<Persona extends { id: number; symbolicNa
   personas: Persona[]
 ): PredefinedActor[] {
   return PREDEFINED_ACTORS.filter((actor) => !personaForCommonActor(personas, actor))
+}
+
+/** The new threat actor a common one adds to the model, from the picker or the Manage dialog. */
+export function commonActorPersonaInput(actor: PredefinedActor): CreateThreatPersonaInput {
+  return {
+    symbolicName: actor.symbolicName,
+    name: actor.label,
+    isPerson: actor.isPerson,
+    maliciousIntent: true,
+  }
 }
 
 export const PERSONA_PREFIX = 'persona:'

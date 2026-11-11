@@ -21,6 +21,8 @@ const CM_STATUS_COLORS: Record<string, string> = {
   waived: 'bg-blue-100 text-blue-700',
 }
 
+const WRAPPING_CELL = 'align-top whitespace-normal break-words'
+
 function threatStatusClass(status: string): string {
   return THREAT_STATUS_CONFIG[status as keyof typeof THREAT_STATUS_CONFIG]?.bgColor ?? 'bg-gray-100 text-gray-700'
 }
@@ -29,6 +31,9 @@ function threatStatusClass(status: string): string {
  * One row per scenario (plan 11.6): its number, its targets, the rating as a
  * badge and its controls by number. A threat on several targets appears once;
  * a whole-system threat says so.
+ *
+ * Fixed layout with wrapping cells, so the table fits the report page instead
+ * of growing past it (the shared Table cells default to nowrap).
  */
 export function ThreatAnalysisSection({ threatAnalysis }: ThreatAnalysisSectionProps) {
   const { threats } = threatAnalysis
@@ -43,23 +48,24 @@ export function ThreatAnalysisSection({ threatAnalysis }: ThreatAnalysisSectionP
 
   return (
     <ReportSection title={`Threat Detail (${threats.length})`}>
-      <Table data-testid="report-threat-table">
+      <Table className="table-fixed" data-testid="report-threat-table">
         <TableHeader>
           <TableRow>
-            <TableHead className="w-16">#</TableHead>
-            <TableHead>Threat</TableHead>
-            <TableHead>Targets</TableHead>
-            <TableHead>Classifications</TableHead>
-            <TableHead>Rating</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead className="w-14">#</TableHead>
+            <TableHead className="w-[26%]">Threat</TableHead>
+            <TableHead className="w-[12%]">Targets</TableHead>
+            <TableHead className="w-[16%]">Classifications</TableHead>
+            <TableHead className="w-[8%]">Rating</TableHead>
+            <TableHead className="w-[9%]">Status</TableHead>
+            {/* Controls take the rest, the widest column: it holds the most text. */}
             <TableHead>Controls</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {threats.map((threat) => (
             <TableRow key={threat.id} data-testid="report-threat-row">
-              <TableCell className="font-mono text-xs font-semibold align-top">{threat.displayNumber}</TableCell>
-              <TableCell className="align-top">
+              <TableCell className={`font-mono text-xs font-semibold ${WRAPPING_CELL}`}>{threat.displayNumber}</TableCell>
+              <TableCell className={WRAPPING_CELL}>
                 <div className="font-medium text-sm">{threat.threatName}</div>
                 {threat.threatDescription && (
                   <div className="text-xs text-muted-foreground line-clamp-2">{threat.threatDescription}</div>
@@ -70,23 +76,23 @@ export function ThreatAnalysisSection({ threatAnalysis }: ThreatAnalysisSectionP
                   </div>
                 )}
               </TableCell>
-              <TableCell className="text-sm align-top">
+              <TableCell className={`text-sm ${WRAPPING_CELL}`}>
                 {threat.wholeSystem ? (
                   <span className="italic">Whole system</span>
                 ) : (
                   targetsText(threat.targets)
                 )}
               </TableCell>
-              <TableCell className="align-top">
+              <TableCell className={WRAPPING_CELL}>
                 <TaxonomyBadges entries={threat.taxonomyEntries} maxVisible={3} size="sm" />
               </TableCell>
-              <TableCell className="align-top">
+              <TableCell className={WRAPPING_CELL}>
                 <ReportRatingBadge rating={threat.rating} />
               </TableCell>
-              <TableCell className="align-top">
+              <TableCell className={WRAPPING_CELL}>
                 <Badge className={threatStatusClass(threat.status)}>{threatStatusLabel(threat.status)}</Badge>
               </TableCell>
-              <TableCell className="align-top">
+              <TableCell className={WRAPPING_CELL}>
                 {threat.countermeasures.length === 0 ? (
                   <span className="text-xs text-muted-foreground">None</span>
                 ) : (
@@ -95,9 +101,11 @@ export function ThreatAnalysisSection({ threatAnalysis }: ThreatAnalysisSectionP
                       <div key={countermeasure.id} className="flex flex-col">
                         <Badge
                           variant="outline"
-                          className={`text-xs justify-start ${CM_STATUS_COLORS[countermeasure.status] || ''}`}
+                          // Badges are nowrap inline-flex pills; block lets a long control name fold inside
+                          // the column, and rounded-md keeps the pill's curve from clipping the wrapped text.
+                          className={`block rounded-md text-xs text-left whitespace-normal break-words ${CM_STATUS_COLORS[countermeasure.status] || ''}`}
                         >
-                          <span className="font-mono mr-1">{countermeasure.displayNumber}</span>
+                          <span className="font-mono">{countermeasure.displayNumber}</span>{' '}
                           {countermeasure.countermeasureName}: {countermeasureStatusLabel(countermeasure.status)}
                         </Badge>
                         {countermeasure.complianceStandards && countermeasure.complianceStandards.length > 0 && (

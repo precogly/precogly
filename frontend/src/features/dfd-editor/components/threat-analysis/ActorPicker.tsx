@@ -32,6 +32,7 @@ import {
   PERSONA_PREFIX,
   PREDEFINED_ACTORS,
   actorSelectValue,
+  commonActorPersonaInput,
   commonActorsNotYetAdded,
   personaForCommonActor,
   type ActorValue,
@@ -81,12 +82,7 @@ export function ActorPicker({
       return
     }
     try {
-      const created = await createPersona.mutateAsync({
-        symbolicName: actor.symbolicName,
-        name: actor.label,
-        isPerson: false,
-        maliciousIntent: true,
-      })
+      const created = await createPersona.mutateAsync(commonActorPersonaInput(actor))
       onChange({ actorPersona: created.id, threatActorText: '' })
     } catch {
       toast.error(`Could not add ${actor.label} to the threat actors`)

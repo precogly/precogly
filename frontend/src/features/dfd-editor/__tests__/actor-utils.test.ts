@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   PREDEFINED_ACTORS,
   actorSelectValue,
+  commonActorPersonaInput,
   commonActorsNotYetAdded,
   personaForCommonActor,
 } from '../components/threat-analysis/actor-utils'
@@ -36,6 +37,20 @@ describe('common threat actors', () => {
     const remaining = commonActorsNotYetAdded([{ id: 1, symbolicName: 'nation-state', name: 'State Actor' }])
     expect(remaining.map((actor) => actor.value)).not.toContain('state-actor')
     expect(remaining).toHaveLength(PREDEFINED_ACTORS.length - 1)
+  })
+
+  it('add a common one as a malicious threat actor with its archetype and label', () => {
+    expect(commonActorPersonaInput(stateActor)).toEqual({
+      symbolicName: 'nation-state',
+      name: 'State Actor',
+      isPerson: false,
+      maliciousIntent: true,
+    })
+  })
+
+  it('add insider threats and opportunists as people, the rest as groups', () => {
+    const people = PREDEFINED_ACTORS.filter((actor) => commonActorPersonaInput(actor).isPerson).map((actor) => actor.value)
+    expect(people).toEqual(['insider-threat', 'opportunist'])
   })
 
   it('still reads a threat that stores a common actor as text', () => {

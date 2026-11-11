@@ -70,7 +70,7 @@ export const canvasNodeTypes = {
   // Annotations carry no threats, so no badge wrapper.
   stickyNote: StickyNoteNode,
   table: TableNode,
-  // See GuestNodeWrapper: an unregistered type silently falls back to React
+  // See guestNodeTypes: an unregistered type silently falls back to React
   // Flow's default node instead of failing.
 } as const satisfies Record<DiagramNodeType, unknown>
 

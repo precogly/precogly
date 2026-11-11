@@ -23,14 +23,9 @@ import {
   BusinessUnitsSettings,
   SystemsSettings,
   AIProviderSettings,
+  GuestThreatAnalysis,
 } from '@/pages'
-import { lazy, Suspense } from 'react'
-
-const GuestThreatAnalysis = lazy(() =>
-  import('@/features/guest-editor/components/GuestThreatAnalysis').then((m) => ({
-    default: m.GuestThreatAnalysis,
-  }))
-)
+import { Suspense } from 'react'
 
 // When VITE_GUEST_ONLY is set, auth pages redirect to the guest editor
 const isGuestOnly = import.meta.env.VITE_GUEST_ONLY === 'true'

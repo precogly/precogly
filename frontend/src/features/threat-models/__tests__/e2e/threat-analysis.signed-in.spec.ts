@@ -21,7 +21,7 @@ async function openThreatAnalysis(page: Page) {
 
 /** The number badge of the first threat row in the Threats column. */
 async function firstThreatNumber(page: Page): Promise<string> {
-  const row = page.locator('[data-threat-number]').first()
+  const row = page.locator('[data-threat-number]:not([data-inherited])').first()
   await expect(row).toBeVisible()
   return (await row.getAttribute('data-threat-number')) ?? ''
 }
@@ -36,7 +36,8 @@ async function selectComponentWithThreats(page: Page): Promise<void> {
   for (let index = 0; index < candidateCount; index += 1) {
     await candidates.nth(index).click()
     await expect(page.getByTestId('selection-label')).toContainText('(component)')
-    if ((await page.locator('[data-threat-number]').count()) > 0) return
+    // A parent lists the threats beneath it too (tagged inherited); this needs one of the row's own.
+    if ((await page.locator('[data-threat-number]:not([data-inherited])').count()) > 0) return
   }
   throw new Error('No component with threats of its own in the sample model')
 }
@@ -293,7 +294,7 @@ test.describe('threat analysis screen', () => {
     await page.keyboard.press('Escape')
 
     await dialog.getByRole('button', { name: 'Manage threat actors' }).click()
-    const manage = page.getByRole('dialog', { name: 'Threat actors' })
+    const manage = page.getByRole('dialog', { name: 'Manage threat actors' })
     await expect(manage.getByText('Insider Threat', { exact: true })).toBeVisible()
     await manage.getByRole('button', { name: 'Close' }).first().click()
 

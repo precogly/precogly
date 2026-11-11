@@ -65,6 +65,7 @@ nav:
       - Collaborative Review and Handoff: guides/collaborative-review-and-handoff.md
       - AI Features: guides/ai-features.md
       - AI Threat Model Generation: guides/ai-threat-model-generation.md
+      - MCP Server: guides/mcp.md
   - Recipes:
       - IEC 62443: recipes/iec-62443.md
       - EU Banking: recipes/eu-banking.md

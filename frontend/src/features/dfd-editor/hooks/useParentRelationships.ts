@@ -50,8 +50,8 @@ function getAbsoluteBoundingBox(
 
   // Prefer measured dimensions (actual rendered size) over style (may be stale/default)
   // This is important for resized boundaries where style might not be updated
-  const width = node.measured?.width || (node.style?.width as number) || (node as any).width || 150
-  const height = node.measured?.height || (node.style?.height as number) || (node as any).height || 60
+  const width = node.measured?.width || (node.style?.width as number) || node.width || 150
+  const height = node.measured?.height || (node.style?.height as number) || node.height || 60
 
   return { x, y, width, height }
 }

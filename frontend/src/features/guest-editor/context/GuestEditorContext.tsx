@@ -1,4 +1,4 @@
-import { createContext, useContext, type ReactNode } from 'react'
+import { createContext, useContext } from 'react'
 import type { DiagramNode, DiagramEdge } from '@/features/dfd-editor/types'
 import type {
   GuestSessionMetadata,
@@ -43,21 +43,7 @@ export interface GuestEditorContextType extends GuestModel {
   getSystemContext: () => GuestSystemContext
 }
 
-const GuestEditorContext = createContext<GuestEditorContextType | null>(null)
-
-export function GuestEditorProvider({
-  children,
-  value,
-}: {
-  children: ReactNode
-  value: GuestEditorContextType
-}) {
-  return (
-    <GuestEditorContext.Provider value={value}>
-      {children}
-    </GuestEditorContext.Provider>
-  )
-}
+export const GuestEditorContext = createContext<GuestEditorContextType | null>(null)
 
 export function useGuestEditor(): GuestEditorContextType | null {
   return useContext(GuestEditorContext)
