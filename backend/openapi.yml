@@ -17577,6 +17577,8 @@ components:
           maxLength: 255
         description:
           type: string
+        organization:
+          type: integer
         criticality:
           $ref: '#/components/schemas/CriticalityE88Enum'
         owner:
@@ -17647,6 +17649,7 @@ components:
       - frameworks
       - id
       - name
+      - organization
       - owner
       - owning_team_name
       - primary_system_name
