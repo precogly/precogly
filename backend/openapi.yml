@@ -11116,9 +11116,9 @@ components:
           type: string
           description: Operator-facing label, e.g. 'Local LM Studio' or 'Team OpenAI'.
           maxLength: 255
-        provider_type:
+        providerType:
           $ref: '#/components/schemas/ProviderTypeEnum'
-        base_url:
+        baseUrl:
           type: string
           format: uri
           description: OpenAI-style root exposing /chat/completions, e.g. http://localhost:1234/v1.
@@ -11127,41 +11127,41 @@ components:
           type: string
           description: Model name/identifier the endpoint expects.
           maxLength: 255
-        request_timeout:
+        requestTimeout:
           type: integer
           maximum: 2147483647
           minimum: 0
           description: Seconds to wait for the model before failing with an error.
-        is_default:
+        isDefault:
           type: boolean
           default: false
         enabled:
           type: boolean
-        api_key:
+        apiKey:
           type: string
           writeOnly: true
           description: Leave blank to keep the existing key; send a value to replace
             it.
-        has_api_key:
+        hasApiKey:
           type: boolean
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - base_url
-      - created_at
-      - has_api_key
+      - baseUrl
+      - createdAt
+      - hasApiKey
       - id
       - model
       - name
       - organization
-      - updated_at
+      - updatedAt
     AbuseCase:
       type: object
       description: |-
@@ -11178,49 +11178,49 @@ components:
           maxLength: 255
         description:
           type: string
-        flow_data:
+        flowData:
           description: preconditions, main_flow, detection_opportunities
-        display_order:
+        displayOrder:
           type: integer
           maximum: 2147483647
           minimum: 0
-        use_case_ids:
+        useCaseIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        component_ids:
+        componentIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        flow_ids:
+        flowIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        threat_ids:
+        threatIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        abuser_id:
+        abuserId:
           type: integer
           writeOnly: true
           nullable: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
+      - createdAt
       - id
       - name
-      - updated_at
+      - updatedAt
     AccessLevelEnum:
       enum:
       - none
@@ -11268,45 +11268,45 @@ components:
         owner:
           type: integer
           nullable: true
-        owner_email:
+        ownerEmail:
           type: string
           format: email
           readOnly: true
-        owner_name:
+        ownerName:
           type: string
           description: An owner who is not a user
           maxLength: 255
-        validation_method:
+        validationMethod:
           type: string
-        validation_date:
+        validationDate:
           type: string
           format: date-time
           nullable: true
-        component_ids:
+        componentIds:
           type: array
           items:
             type: integer
-        display_order:
+        displayOrder:
           type: integer
           maximum: 2147483647
           minimum: 0
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
+      - createdAt
       - description
-      - format_metadata
+      - formatMetadata
       - id
-      - owner_email
-      - updated_at
+      - ownerEmail
+      - updatedAt
     AvailabilityEnum:
       enum:
       - low
@@ -11327,7 +11327,7 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
           readOnly: true
         name:
@@ -11335,31 +11335,31 @@ components:
           maxLength: 255
         description:
           type: string
-        model_types:
+        modelTypes:
           description: CycloneDX model types this blueprint represents; at least one
-        scope_description:
+        scopeDescription:
           type: string
-        display_order:
+        displayOrder:
           type: integer
           maximum: 2147483647
           minimum: 0
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
-      - format_metadata
+      - createdAt
+      - formatMetadata
       - id
       - name
-      - threat_model
-      - updated_at
+      - threatModel
+      - updatedAt
     Boundary:
       type: object
       description: Serializer for Boundary model.
@@ -11369,14 +11369,14 @@ components:
           readOnly: true
         blueprint:
           type: integer
-        zone_a:
+        zoneA:
           type: integer
-        zone_a_name:
+        zoneAName:
           type: string
           readOnly: true
-        zone_b:
+        zoneB:
           type: integer
-        zone_b_name:
+        zoneBName:
           type: string
           readOnly: true
         label:
@@ -11384,11 +11384,11 @@ components:
           maxLength: 255
         description:
           type: string
-        edge_id:
+        edgeId:
           type: string
           description: DFD edge ID this boundary was created from
           maxLength: 100
-        boundary_type:
+        boundaryType:
           allOf:
           - $ref: '#/components/schemas/BoundaryTypeEnum'
           description: |-
@@ -11403,49 +11403,49 @@ components:
             * `trust` - trust
         authentication: {}
         authorization: {}
-        requires_authentication:
+        requiresAuthentication:
           type: boolean
           readOnly: true
-        requires_authorization:
+        requiresAuthorization:
           type: boolean
           readOnly: true
-        data_validation:
+        dataValidation:
           type: boolean
-        data_transformation:
+        dataTransformation:
           type: boolean
         logging:
           type: boolean
         monitoring:
           type: boolean
-        rate_limit:
+        rateLimit:
           type: string
           description: Policy text; blank means none
           maxLength: 255
         protocols: {}
-        session_management:
+        sessionManagement:
           description: The spec's nine sessionManagement keys
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
       - blueprint
-      - created_at
-      - format_metadata
+      - createdAt
+      - formatMetadata
       - id
-      - requires_authentication
-      - requires_authorization
-      - updated_at
-      - zone_a
-      - zone_a_name
-      - zone_b
-      - zone_b_name
+      - requiresAuthentication
+      - requiresAuthorization
+      - updatedAt
+      - zoneA
+      - zoneAName
+      - zoneB
+      - zoneBName
     BoundaryTypeEnum:
       enum:
       - data
@@ -11470,7 +11470,7 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
           readOnly: true
         name:
@@ -11485,43 +11485,43 @@ components:
         owner:
           type: integer
           nullable: true
-        owner_email:
+        ownerEmail:
           type: string
           format: email
           readOnly: true
-        owner_name:
+        ownerName:
           type: string
           maxLength: 255
-        display_order:
+        displayOrder:
           type: integer
           maximum: 2147483647
           minimum: 0
-        threat_count:
+        threatCount:
           type: string
           readOnly: true
-        risk_count:
+        riskCount:
           type: string
           readOnly: true
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
-      - format_metadata
+      - createdAt
+      - formatMetadata
       - id
       - name
-      - owner_email
-      - risk_count
-      - threat_count
-      - threat_model
-      - updated_at
+      - ownerEmail
+      - riskCount
+      - threatCount
+      - threatModel
+      - updatedAt
     BusinessObjectiveCriticalityEnum:
       enum:
       - minimal
@@ -11557,24 +11557,24 @@ components:
         parent:
           type: integer
           nullable: true
-        team_count:
+        teamCount:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
+      - createdAt
       - id
       - name
       - organization
-      - team_count
-      - updated_at
+      - teamCount
+      - updatedAt
     CategoryEnum:
       enum:
       - process
@@ -11596,37 +11596,37 @@ components:
           readOnly: true
         component:
           type: integer
-        component_name:
+        componentName:
           type: string
           readOnly: true
-        data_asset:
+        dataAsset:
           type: integer
-        data_asset_name:
+        dataAssetName:
           type: string
           readOnly: true
-        data_state:
+        dataState:
           $ref: '#/components/schemas/DataStateEnum'
         volume:
           type: string
           maxLength: 100
         encrypted:
           type: boolean
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
       - component
-      - component_name
-      - created_at
-      - data_asset
-      - data_asset_name
+      - componentName
+      - createdAt
+      - dataAsset
+      - dataAssetName
       - id
-      - updated_at
+      - updatedAt
     ComponentLibrary:
       type: object
       description: Serializer for ComponentLibrary model.
@@ -11642,7 +11642,7 @@ components:
             pattern: ^[-a-zA-Z0-9_]+$
           - type: string
             maxLength: 0
-        qualified_slug:
+        qualifiedSlug:
           type: string
           readOnly: true
           nullable: true
@@ -11685,48 +11685,48 @@ components:
           oneOf:
           - $ref: '#/components/schemas/KindEnum'
           - $ref: '#/components/schemas/BlankEnum'
-        effective_kind:
+        effectiveKind:
           type: string
           readOnly: true
-        component_type:
+        componentType:
           type: string
           maxLength: 100
         provider:
           type: string
           maxLength: 100
-        icon_svg:
+        iconSvg:
           type: string
           readOnly: true
-        source_pack:
+        sourcePack:
           type: integer
           nullable: true
           description: Pack this item came from (null = custom or legacy)
-        source_pack_name:
+        sourcePackName:
           type: string
           readOnly: true
-        source_pack_slug:
+        sourcePackSlug:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
       - category
-      - component_type
-      - created_at
-      - effective_kind
-      - icon_svg
+      - componentType
+      - createdAt
+      - effectiveKind
+      - iconSvg
       - id
       - name
-      - qualified_slug
-      - source_pack_name
-      - source_pack_slug
-      - updated_at
+      - qualifiedSlug
+      - sourcePackName
+      - sourcePackSlug
+      - updatedAt
     ComponentLibraryThreat:
       type: object
       description: Serializer for ComponentLibraryThreat associations.
@@ -11734,17 +11734,17 @@ components:
         id:
           type: integer
           readOnly: true
-        component_library:
+        componentLibrary:
           type: integer
-        component_name:
+        componentName:
           type: string
           readOnly: true
-        threat_library:
+        threatLibrary:
           type: integer
-        threat_name:
+        threatName:
           type: string
           readOnly: true
-        default_level:
+        defaultLevel:
           allOf:
           - $ref: '#/components/schemas/DefaultLevelEnum'
           description: |-
@@ -11755,24 +11755,24 @@ components:
             * `medium` - Medium
             * `high` - High
             * `critical` - Critical
-        applies_to:
+        appliesTo:
           $ref: '#/components/schemas/AppliesToEnum'
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - component_library
-      - component_name
-      - created_at
+      - componentLibrary
+      - componentName
+      - createdAt
       - id
-      - threat_library
-      - threat_name
-      - updated_at
+      - threatLibrary
+      - threatName
+      - updatedAt
     ConfidentialityEnum:
       enum:
       - low
@@ -11804,7 +11804,7 @@ components:
           type: integer
           readOnly: true
           nullable: true
-        author_email:
+        authorEmail:
           type: string
           format: email
           readOnly: true
@@ -11812,25 +11812,25 @@ components:
           type: integer
         body:
           type: string
-        change_summary:
+        changeSummary:
           type: string
           maxLength: 255
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
       - author
-      - author_email
+      - authorEmail
       - body
       - countermeasure
-      - created_at
+      - createdAt
       - id
-      - updated_at
+      - updatedAt
     CountermeasureLibrary:
       type: object
       description: Serializer for CountermeasureLibrary model.
@@ -11843,42 +11843,42 @@ components:
           maxLength: 255
         description:
           type: string
-        control_functions:
+        controlFunctions:
           description: List of control functions, e.g. ['preventive', 'detective']
-        control_nature:
+        controlNature:
           type: string
           description: 'Control nature: technical, administrative, or physical'
           maxLength: 20
         cost:
           $ref: '#/components/schemas/Cost3cdEnum'
-        default_status:
+        defaultStatus:
           $ref: '#/components/schemas/DefaultStatusEnum'
-        source_pack:
+        sourcePack:
           type: integer
           nullable: true
           description: Pack this item came from (null = custom or legacy)
-        source_pack_name:
+        sourcePackName:
           type: string
           readOnly: true
-        source_pack_slug:
+        sourcePackSlug:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
+      - createdAt
       - description
       - id
       - name
-      - source_pack_name
-      - source_pack_slug
-      - updated_at
+      - sourcePackName
+      - sourcePackSlug
+      - updatedAt
     CountermeasureLibraryList:
       type: object
       description: Lightweight serializer for countermeasure library listing.
@@ -11891,32 +11891,32 @@ components:
           maxLength: 255
         description:
           type: string
-        control_functions:
+        controlFunctions:
           description: List of control functions, e.g. ['preventive', 'detective']
-        control_nature:
+        controlNature:
           type: string
           description: 'Control nature: technical, administrative, or physical'
           maxLength: 20
         cost:
           $ref: '#/components/schemas/Cost3cdEnum'
-        default_status:
+        defaultStatus:
           $ref: '#/components/schemas/DefaultStatusEnum'
-        source_pack:
+        sourcePack:
           type: integer
           nullable: true
           description: Pack this item came from (null = custom or legacy)
-        source_pack_name:
+        sourcePackName:
           type: string
           readOnly: true
-        source_pack_slug:
+        sourcePackSlug:
           type: string
           readOnly: true
       required:
       - description
       - id
       - name
-      - source_pack_name
-      - source_pack_slug
+      - sourcePackName
+      - sourcePackSlug
     CountermeasureLibraryStandard:
       type: object
       description: Serializer for countermeasure-standard mappings.
@@ -11924,24 +11924,24 @@ components:
         id:
           type: integer
           readOnly: true
-        countermeasure_library:
+        countermeasureLibrary:
           type: integer
         requirement:
           type: integer
           nullable: true
-        requirement_code:
+        requirementCode:
           type: string
           readOnly: true
-        framework_name:
+        frameworkName:
           type: string
           readOnly: true
         sufficiency:
           $ref: '#/components/schemas/SufficiencyEnum'
       required:
-      - countermeasure_library
-      - framework_name
+      - countermeasureLibrary
+      - frameworkName
       - id
-      - requirement_code
+      - requirementCode
     CountermeasureThreatLink:
       type: object
       description: Read-only serializer for linked scenarios on a countermeasure.
@@ -11949,28 +11949,28 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_id:
+        threatId:
           type: integer
           readOnly: true
-        display_number:
+        displayNumber:
           type: string
           readOnly: true
-        threat_name:
+        threatName:
           type: string
           readOnly: true
         targets:
           type: string
           readOnly: true
-        display_order:
+        displayOrder:
           type: integer
           readOnly: true
       required:
-      - display_number
-      - display_order
+      - displayNumber
+      - displayOrder
       - id
       - targets
-      - threat_id
-      - threat_name
+      - threatId
+      - threatName
     CriticalityE88Enum:
       enum:
       - low
@@ -12009,45 +12009,45 @@ components:
         name:
           type: string
           maxLength: 255
-        diagram_type:
+        diagramType:
           $ref: '#/components/schemas/DiagramTypeEnum'
         blueprint:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
           readOnly: true
-        is_primary:
+        isPrimary:
           type: boolean
           default: false
           description: Only the primary DFD of a blueprint syncs nodes to components/threats.
-        canvas_data: {}
-        template_library:
+        canvasData: {}
+        templateLibrary:
           type: integer
           nullable: true
-        updated_by:
+        updatedBy:
           type: integer
           nullable: true
-        updated_by_email:
+        updatedByEmail:
           type: string
           format: email
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
       - blueprint
-      - created_at
+      - createdAt
       - id
       - name
-      - threat_model
-      - updated_at
-      - updated_by_email
+      - threatModel
+      - updatedAt
+      - updatedByEmail
     DFDList:
       type: object
       description: Lightweight serializer for DFD listing.
@@ -12058,15 +12058,15 @@ components:
         name:
           type: string
           maxLength: 255
-        diagram_type:
+        diagramType:
           $ref: '#/components/schemas/DiagramTypeEnum'
         blueprint:
           type: integer
-        is_primary:
+        isPrimary:
           type: boolean
           default: false
           description: Only the primary DFD of a blueprint syncs nodes to components/threats.
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -12074,7 +12074,7 @@ components:
       - blueprint
       - id
       - name
-      - updated_at
+      - updatedAt
     DFDTemplatesLibrary:
       type: object
       description: Serializer for DFD templates.
@@ -12091,36 +12091,36 @@ components:
           type: string
           description: Freeform category (e.g., webapp, serverless, microservices)
           maxLength: 50
-        diagram_type:
+        diagramType:
           $ref: '#/components/schemas/DiagramTypeEnum'
-        canvas_data: {}
-        source_pack:
+        canvasData: {}
+        sourcePack:
           type: integer
           nullable: true
           description: Pack this item came from (null = custom or legacy)
-        source_pack_name:
+        sourcePackName:
           type: string
           readOnly: true
-        source_pack_slug:
+        sourcePackSlug:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
       - category
-      - created_at
-      - diagram_type
+      - createdAt
+      - diagramType
       - id
       - name
-      - source_pack_name
-      - source_pack_slug
-      - updated_at
+      - sourcePackName
+      - sourcePackSlug
+      - updatedAt
     DataAsset:
       type: object
       description: Serializer for DataAsset model.
@@ -12142,32 +12142,32 @@ components:
           $ref: '#/components/schemas/IntegrityEnum'
         availability:
           $ref: '#/components/schemas/AvailabilityEnum'
-        compliance_tags: {}
-        data_sensitivity: {}
+        complianceTags: {}
+        dataSensitivity: {}
         blueprint:
           type: integer
-        threat_model:
+        threatModel:
           type: integer
           readOnly: true
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
       - blueprint
       - classification
-      - created_at
-      - format_metadata
+      - createdAt
+      - formatMetadata
       - id
       - name
-      - threat_model
-      - updated_at
+      - threatModel
+      - updatedAt
     DataStateEnum:
       enum:
       - at_rest
@@ -12224,7 +12224,7 @@ components:
           maxLength: 255
         description:
           type: string
-        source_url:
+        sourceUrl:
           oneOf:
           - type: string
             format: uri
@@ -12234,14 +12234,14 @@ components:
         version:
           type: string
           maxLength: 20
-        source_pack:
+        sourcePack:
           type: integer
           nullable: true
-        entry_count:
+        entryCount:
           type: string
           readOnly: true
       required:
-      - entry_count
+      - entryCount
       - id
       - name
       - slug
@@ -12258,14 +12258,14 @@ components:
           readOnly: true
         blueprint:
           type: integer
-        source_component:
+        sourceComponent:
           type: integer
-        source_component_name:
+        sourceComponentName:
           type: string
           readOnly: true
-        dest_component:
+        destComponent:
           type: integer
-        dest_component_name:
+        destComponentName:
           type: string
           readOnly: true
         label:
@@ -12274,11 +12274,11 @@ components:
           maxLength: 255
         description:
           type: string
-        edge_id:
+        edgeId:
           type: string
           description: DFD edge ID this flow was created from
           maxLength: 100
-        flow_type:
+        flowType:
           allOf:
           - $ref: '#/components/schemas/FlowTypeEnum'
           description: |-
@@ -12306,36 +12306,36 @@ components:
           nullable: true
         authentication: {}
         authorization: {}
-        requires_authentication:
+        requiresAuthentication:
           type: boolean
           readOnly: true
-        crosses_boundary:
+        crossesBoundary:
           type: boolean
           readOnly: true
-        has_sensitive_data:
+        hasSensitiveData:
           type: boolean
-        data_classification: {}
-        format_metadata:
+        dataClassification: {}
+        formatMetadata:
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
-      - crosses_boundary
-      - dest_component
-      - dest_component_name
-      - format_metadata
+      - createdAt
+      - crossesBoundary
+      - destComponent
+      - destComponentName
+      - formatMetadata
       - id
-      - requires_authentication
-      - source_component
-      - source_component_name
-      - updated_at
+      - requiresAuthentication
+      - sourceComponent
+      - sourceComponentName
+      - updatedAt
     FlowAsset:
       type: object
       description: Serializer for FlowAsset model.
@@ -12345,41 +12345,41 @@ components:
           readOnly: true
         flow:
           type: integer
-        flow_name:
+        flowName:
           type: string
           readOnly: true
-        data_asset:
+        dataAsset:
           type: integer
-        data_asset_name:
+        dataAssetName:
           type: string
           readOnly: true
-        protection_method:
+        protectionMethod:
           $ref: '#/components/schemas/ProtectionMethodEnum'
-        encryption_type:
+        encryptionType:
           type: string
           maxLength: 50
         format:
           type: string
           maxLength: 50
-        sensitivity_override:
+        sensitivityOverride:
           type: string
           maxLength: 20
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
-      - data_asset
-      - data_asset_name
+      - createdAt
+      - dataAsset
+      - dataAssetName
       - flow
-      - flow_name
+      - flowName
       - id
-      - updated_at
+      - updatedAt
     FlowTypeEnum:
       enum:
       - control
@@ -12414,34 +12414,34 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
-        countermeasure_library:
+        countermeasureLibrary:
           type: integer
           nullable: true
           description: Null means orphaned/custom countermeasure (library item was
             removed)
-        countermeasure_name:
+        countermeasureName:
           type: string
           writeOnly: true
-        countermeasure_name_display:
+        countermeasureNameDisplay:
           type: string
           readOnly: true
-        countermeasure_description:
+        countermeasureDescription:
           type: string
           writeOnly: true
-        control_functions:
+        controlFunctions:
           type: array
           items:
             type: string
           writeOnly: true
-        control_functions_display:
+        controlFunctionsDisplay:
           type: string
           readOnly: true
-        control_nature:
+        controlNature:
           type: string
           writeOnly: true
-        control_nature_display:
+        controlNatureDisplay:
           type: string
           readOnly: true
         effectiveness:
@@ -12457,12 +12457,12 @@ components:
         priority:
           type: string
           maxLength: 10
-        due_date:
+        dueDate:
           type: string
           format: date
           nullable: true
           description: Target completion date
-        external_ticket_url:
+        externalTicketUrl:
           description: Link to Jira/GitHub/etc. ticket
           oneOf:
           - type: string
@@ -12470,42 +12470,42 @@ components:
             maxLength: 200
           - type: string
             maxLength: 0
-        verified_by:
+        verifiedBy:
           type: integer
           nullable: true
-        verified_by_email:
+        verifiedByEmail:
           type: string
           format: email
           readOnly: true
-        evidence_url:
+        evidenceUrl:
           oneOf:
           - type: string
             format: uri
             maxLength: 200
           - type: string
             maxLength: 0
-        waiver_reason:
+        waiverReason:
           type: string
-        required_for_release:
+        requiredForRelease:
           type: boolean
-        assigned_owner:
+        assignedOwner:
           type: integer
           nullable: true
-        assigned_owner_email:
+        assignedOwnerEmail:
           type: string
           format: email
           readOnly: true
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        threat_links:
+        threatLinks:
           type: array
           items:
             $ref: '#/components/schemas/CountermeasureThreatLink'
           readOnly: true
-        threat_id:
+        threatId:
           type: integer
           writeOnly: true
-        auto_generated:
+        autoGenerated:
           type: boolean
           readOnly: true
           description: Set by library generation, cleared on the first user edit
@@ -12514,10 +12514,10 @@ components:
           readOnly: true
           description: Unique within the threat model, assigned once, never reused
             (C3 is 3)
-        display_number:
+        displayNumber:
           type: string
           readOnly: true
-        days_overdue:
+        daysOverdue:
           type: integer
           nullable: true
           description: |-
@@ -12528,11 +12528,11 @@ components:
           readOnly: true
         targets:
           type: string
-        implemented_by:
+        implementedBy:
           type: array
           items:
             type: integer
-        implemented_by_party:
+        implementedByParty:
           type: string
           description: The provider that implements the control, as text (until a
             party model exists)
@@ -12542,30 +12542,30 @@ components:
           description: 'Where the control came from: a compliance tool, a pentest,
             a vendor list'
           maxLength: 255
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - assigned_owner_email
-      - auto_generated
-      - control_functions_display
-      - control_nature_display
-      - countermeasure_name_display
-      - created_at
-      - days_overdue
-      - display_number
-      - format_metadata
+      - assignedOwnerEmail
+      - autoGenerated
+      - controlFunctionsDisplay
+      - controlNatureDisplay
+      - countermeasureNameDisplay
+      - createdAt
+      - daysOverdue
+      - displayNumber
+      - formatMetadata
       - id
       - number
-      - threat_links
-      - threat_model
-      - updated_at
-      - verified_by_email
+      - threatLinks
+      - threatModel
+      - updatedAt
+      - verifiedByEmail
     InstanceCountermeasureStandard:
       type: object
       description: Serializer for InstanceCountermeasureStandard (instance-level compliance
@@ -12579,37 +12579,37 @@ components:
         requirement:
           type: integer
           nullable: true
-        framework_name:
+        frameworkName:
           type: string
           readOnly: true
-        framework_slug:
+        frameworkSlug:
           type: string
           readOnly: true
-        section_code:
+        sectionCode:
           type: string
           readOnly: true
-        requirement_description:
+        requirementDescription:
           type: string
           readOnly: true
         sufficiency:
           $ref: '#/components/schemas/SufficiencyEnum'
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
       - countermeasure
-      - created_at
-      - framework_name
-      - framework_slug
+      - createdAt
+      - frameworkName
+      - frameworkSlug
       - id
-      - requirement_description
-      - section_code
-      - updated_at
+      - requirementDescription
+      - sectionCode
+      - updatedAt
     InstanceCountermeasureStatusEnum:
       enum:
       - gap
@@ -12642,89 +12642,89 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
         number:
           type: integer
           readOnly: true
           description: Unique within the threat model, assigned once, never reused
             (T7 is 7)
-        display_number:
+        displayNumber:
           type: string
           readOnly: true
-        whole_system:
+        wholeSystem:
           type: boolean
           description: 'True: applies to the whole system and has no targets'
         targets:
           type: string
-        auto_generated:
+        autoGenerated:
           type: boolean
           readOnly: true
           description: Set by library generation, cleared on the first user edit
-        threat_library:
+        threatLibrary:
           type: integer
           nullable: true
           description: Null means orphaned/custom threat (library item was removed)
-        threat_name:
+        threatName:
           type: string
           writeOnly: true
-        threat_description:
+        threatDescription:
           type: string
           writeOnly: true
-        threat_name_display:
+        threatNameDisplay:
           type: string
           readOnly: true
-        taxonomy_entries:
+        taxonomyEntries:
           type: string
           readOnly: true
         rating:
           type: string
           readOnly: true
-        rating_inputs:
+        ratingInputs:
           writeOnly: true
-        business_objective_ids:
+        businessObjectiveIds:
           type: array
           items:
             type: integer
-        threat_source_ids:
-          type: array
-          items:
-            type: integer
-          writeOnly: true
-        abuse_case_ids:
+        threatSourceIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        abuse_cases:
+        abuseCaseIds:
+          type: array
+          items:
+            type: integer
+          writeOnly: true
+        abuseCases:
           type: string
           readOnly: true
-        business_objectives:
+        businessObjectives:
           type: string
           readOnly: true
         status:
           $ref: '#/components/schemas/InstanceThreatStatusEnum'
-        triage_status:
+        triageStatus:
           $ref: '#/components/schemas/TriageStatusEnum'
-        decision_rationale:
+        decisionRationale:
           type: string
           description: Rationale for triage decision (recommended for accept/delegate/eliminate)
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        display_order:
+        displayOrder:
           type: integer
           maximum: 2147483647
           minimum: 0
-        impact_description:
+        impactDescription:
           type: string
           description: Narrative description of what the attacker achieves
-        actor_persona:
+        actorPersona:
           type: integer
           nullable: true
-        actor_persona_name:
+        actorPersonaName:
           type: string
           readOnly: true
-        threat_actor_text:
+        threatActorText:
           type: string
           description: Free-text threat actor (e.g. 'state actor', 'hacktivist')
           maxLength: 100
@@ -12739,7 +12739,7 @@ components:
           oneOf:
           - $ref: '#/components/schemas/IntentEnum'
           - $ref: '#/components/schemas/BlankEnum'
-        access_level:
+        accessLevel:
           description: |-
             Access level required: none, external, internal, privileged, or physical
 
@@ -12751,33 +12751,33 @@ components:
           oneOf:
           - $ref: '#/components/schemas/AccessLevelEnum'
           - $ref: '#/components/schemas/BlankEnum'
-        threat_sources:
+        threatSources:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - abuse_cases
-      - actor_persona_name
-      - auto_generated
-      - business_objectives
-      - created_at
-      - display_number
-      - format_metadata
+      - abuseCases
+      - actorPersonaName
+      - autoGenerated
+      - businessObjectives
+      - createdAt
+      - displayNumber
+      - formatMetadata
       - id
       - number
       - rating
-      - taxonomy_entries
-      - threat_model
-      - threat_name_display
-      - threat_sources
-      - updated_at
+      - taxonomyEntries
+      - threatModel
+      - threatNameDisplay
+      - threatSources
+      - updatedAt
     InstanceThreatStatusEnum:
       enum:
       - exposed
@@ -12795,45 +12795,45 @@ components:
         id:
           type: integer
           readOnly: true
-        taxonomy_entry:
+        taxonomyEntry:
           type: integer
         threat:
           type: integer
-        taxonomy_slug:
+        taxonomySlug:
           type: string
           readOnly: true
-        taxonomy_name:
+        taxonomyName:
           type: string
           readOnly: true
-        external_id:
+        externalId:
           type: string
           readOnly: true
         title:
           type: string
           readOnly: true
-        reference_url:
+        referenceUrl:
           type: string
           format: uri
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
-      - external_id
+      - createdAt
+      - externalId
       - id
-      - reference_url
-      - taxonomy_entry
-      - taxonomy_name
-      - taxonomy_slug
+      - referenceUrl
+      - taxonomyEntry
+      - taxonomyName
+      - taxonomySlug
       - threat
       - title
-      - updated_at
+      - updatedAt
     IntegrationSource:
       type: object
       description: Serializer for IntegrationSource model.
@@ -12844,32 +12844,32 @@ components:
         name:
           type: string
           maxLength: 255
-        source_type:
+        sourceType:
           $ref: '#/components/schemas/SourceTypeEnum'
-        connection_details: {}
+        connectionDetails: {}
         status:
           $ref: '#/components/schemas/IntegrationSourceStatusEnum'
-        last_sync_at:
+        lastSyncAt:
           type: string
           format: date-time
           nullable: true
         orgsystem:
           type: integer
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
+      - createdAt
       - id
       - name
       - orgsystem
-      - source_type
-      - updated_at
+      - sourceType
+      - updatedAt
     IntegrationSourceStatusEnum:
       enum:
       - active
@@ -12979,19 +12979,19 @@ components:
         id:
           type: integer
           readOnly: true
-        depends_on_pack:
+        dependsOnPack:
           type: integer
           description: The pack being depended upon
-        depends_on_pack_name:
+        dependsOnPackName:
           type: string
           readOnly: true
-        depends_on_pack_slug:
+        dependsOnPackSlug:
           type: string
           readOnly: true
       required:
-      - depends_on_pack
-      - depends_on_pack_name
-      - depends_on_pack_slug
+      - dependsOnPack
+      - dependsOnPackName
+      - dependsOnPackSlug
       - id
     LibraryPackDetail:
       type: object
@@ -13014,7 +13014,7 @@ components:
           type: string
           description: Semantic version, e.g., '1.2.0'
           maxLength: 20
-        pack_type:
+        packType:
           $ref: '#/components/schemas/PackTypeEnum'
         author:
           type: string
@@ -13031,32 +13031,32 @@ components:
           items:
             $ref: '#/components/schemas/LibraryPackDependency'
           readOnly: true
-        content_summary:
+        contentSummary:
           type: string
           readOnly: true
-        is_imported:
+        isImported:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
       - author
-      - content_summary
-      - created_at
+      - contentSummary
+      - createdAt
       - dependencies
       - description
       - id
-      - is_imported
+      - isImported
       - name
-      - pack_type
+      - packType
       - slug
-      - updated_at
+      - updatedAt
       - version
     LibraryPackList:
       type: object
@@ -13079,7 +13079,7 @@ components:
           type: string
           description: Semantic version, e.g., '1.2.0'
           maxLength: 20
-        pack_type:
+        packType:
           $ref: '#/components/schemas/PackTypeEnum'
         author:
           type: string
@@ -13091,16 +13091,16 @@ components:
             type: string
             maxLength: 50
           description: Tags for search/filtering, e.g., ['aws', 'cloud', 'serverless']
-        is_imported:
+        isImported:
           type: string
           readOnly: true
       required:
       - author
       - description
       - id
-      - is_imported
+      - isImported
       - name
-      - pack_type
+      - packType
       - slug
       - version
     LifecyclePhaseEnum:
@@ -13161,9 +13161,9 @@ components:
           type: string
           format: uuid
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
-        threat_model_name:
+        threatModelName:
           type: string
           readOnly: true
         token:
@@ -13172,34 +13172,34 @@ components:
         url:
           type: string
           readOnly: true
-        expires_at:
+        expiresAt:
           type: string
           format: date-time
           readOnly: true
-        accessed_count:
+        accessedCount:
           type: integer
           readOnly: true
-        is_revoked:
+        isRevoked:
           type: boolean
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - accessed_count
-      - created_at
-      - expires_at
+      - accessedCount
+      - createdAt
+      - expiresAt
       - id
-      - is_revoked
-      - threat_model
-      - threat_model_name
+      - isRevoked
+      - threatModel
+      - threatModelName
       - token
-      - updated_at
+      - updatedAt
       - url
     MethodEnum:
       enum:
@@ -13226,32 +13226,32 @@ components:
           maxLength: 255
         plan:
           $ref: '#/components/schemas/PlanEnum'
-        business_unit_label:
+        businessUnitLabel:
           type: string
           description: Custom label for the grouping layer (e.g., 'Department', 'Product
             Area')
           maxLength: 50
-        member_count:
+        memberCount:
           type: string
           readOnly: true
-        my_role:
+        myRole:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
+      - createdAt
       - id
-      - member_count
-      - my_role
+      - memberCount
+      - myRole
       - name
-      - updated_at
+      - updatedAt
     OrganizationList:
       type: object
       description: Lightweight serializer for organization listing.
@@ -13264,17 +13264,17 @@ components:
           maxLength: 255
         plan:
           $ref: '#/components/schemas/PlanEnum'
-        business_unit_label:
+        businessUnitLabel:
           type: string
           description: Custom label for the grouping layer (e.g., 'Department', 'Product
             Area')
           maxLength: 50
-        my_role:
+        myRole:
           type: string
           readOnly: true
       required:
       - id
-      - my_role
+      - myRole
       - name
     OrganizationMember:
       type: object
@@ -13285,38 +13285,38 @@ components:
           readOnly: true
         organization:
           type: integer
-        organization_name:
+        organizationName:
           type: string
           readOnly: true
         user:
           type: integer
-        user_email:
+        userEmail:
           type: string
           format: email
           readOnly: true
         role:
           $ref: '#/components/schemas/OrganizationMemberRoleEnum'
-        joined_at:
+        joinedAt:
           type: string
           format: date-time
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
+      - createdAt
       - id
-      - joined_at
+      - joinedAt
       - organization
-      - organization_name
-      - updated_at
+      - organizationName
+      - updatedAt
       - user
-      - user_email
+      - userEmail
     OrganizationMemberRoleEnum:
       enum:
       - security_team
@@ -13348,42 +13348,42 @@ components:
           readOnly: true
         criticality:
           $ref: '#/components/schemas/CriticalityE88Enum'
-        lifecycle_state:
+        lifecycleState:
           $ref: '#/components/schemas/LifecycleStateEnum'
-        format_metadata:
+        formatMetadata:
           readOnly: true
         organization:
           type: integer
           readOnly: true
-        primary_model_count:
+        primaryModelCount:
           type: string
           readOnly: true
-        linked_component_count:
+        linkedComponentCount:
           type: string
           readOnly: true
-        primary_models:
+        primaryModels:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
+      - createdAt
       - environment
-      - format_metadata
+      - formatMetadata
       - id
-      - linked_component_count
+      - linkedComponentCount
       - name
       - organization
-      - primary_model_count
-      - primary_models
+      - primaryModelCount
+      - primaryModels
       - type
-      - updated_at
+      - updatedAt
     OrgsystemComponent:
       type: object
       description: Serializer for OrgsystemComponent model.
@@ -13434,64 +13434,64 @@ components:
           oneOf:
           - $ref: '#/components/schemas/KindEnum'
           - $ref: '#/components/schemas/BlankEnum'
-        effective_kind:
+        effectiveKind:
           type: string
           readOnly: true
-        actor_type:
+        actorType:
           type: string
           maxLength: 20
-        data_store_type:
+        dataStoreType:
           type: string
           maxLength: 20
-        data_sensitivity_level:
+        dataSensitivityLevel:
           type: string
           maxLength: 20
         orgsystem:
           type: integer
           nullable: true
           description: The inventory system a system or subsystem asset stands for
-        component_library:
+        componentLibrary:
           type: integer
           nullable: true
           description: Null means orphaned/custom component (library item was removed)
-        component_library_name:
+        componentLibraryName:
           type: string
           readOnly: true
         zone:
           type: integer
           nullable: true
-        source_integration:
+        sourceIntegration:
           type: integer
           nullable: true
         blueprint:
           type: integer
           description: The structural model this component belongs to
-        threat_model:
+        threatModel:
           type: integer
           readOnly: true
-        parent_component:
+        parentComponent:
           type: integer
           nullable: true
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
       - blueprint
-      - component_library_name
-      - created_at
-      - effective_kind
-      - format_metadata
+      - componentLibraryName
+      - createdAt
+      - effectiveKind
+      - formatMetadata
       - id
       - name
-      - threat_model
-      - updated_at
+      - threatModel
+      - updatedAt
     OrgsystemList:
       type: object
       description: Lightweight serializer for Orgsystem listing.
@@ -13514,20 +13514,20 @@ components:
           type: string
         criticality:
           $ref: '#/components/schemas/CriticalityE88Enum'
-        lifecycle_state:
+        lifecycleState:
           $ref: '#/components/schemas/LifecycleStateEnum'
-        primary_model_count:
+        primaryModelCount:
           type: string
           readOnly: true
-        linked_component_count:
+        linkedComponentCount:
           type: string
           readOnly: true
       required:
       - environment
       - id
-      - linked_component_count
+      - linkedComponentCount
       - name
-      - primary_model_count
+      - primaryModelCount
       - type
     OutOfScopeItem:
       type: object
@@ -13540,7 +13540,7 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
           readOnly: true
         blueprint:
@@ -13550,20 +13550,20 @@ components:
           maxLength: 255
         reason:
           type: string
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
+      - createdAt
       - id
       - name
-      - threat_model
-      - updated_at
+      - threatModel
+      - updatedAt
     PackTypeEnum:
       enum:
       - technology
@@ -14396,9 +14396,9 @@ components:
           type: string
           description: Operator-facing label, e.g. 'Local LM Studio' or 'Team OpenAI'.
           maxLength: 255
-        provider_type:
+        providerType:
           $ref: '#/components/schemas/ProviderTypeEnum'
-        base_url:
+        baseUrl:
           type: string
           format: uri
           description: OpenAI-style root exposing /chat/completions, e.g. http://localhost:1234/v1.
@@ -14407,29 +14407,29 @@ components:
           type: string
           description: Model name/identifier the endpoint expects.
           maxLength: 255
-        request_timeout:
+        requestTimeout:
           type: integer
           maximum: 2147483647
           minimum: 0
           description: Seconds to wait for the model before failing with an error.
-        is_default:
+        isDefault:
           type: boolean
           default: false
         enabled:
           type: boolean
-        api_key:
+        apiKey:
           type: string
           writeOnly: true
           description: Leave blank to keep the existing key; send a value to replace
             it.
-        has_api_key:
+        hasApiKey:
           type: boolean
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -14449,41 +14449,41 @@ components:
           maxLength: 255
         description:
           type: string
-        flow_data:
+        flowData:
           description: preconditions, main_flow, detection_opportunities
-        display_order:
+        displayOrder:
           type: integer
           maximum: 2147483647
           minimum: 0
-        use_case_ids:
+        useCaseIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        component_ids:
+        componentIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        flow_ids:
+        flowIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        threat_ids:
+        threatIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        abuser_id:
+        abuserId:
           type: integer
           writeOnly: true
           nullable: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -14510,35 +14510,35 @@ components:
         owner:
           type: integer
           nullable: true
-        owner_email:
+        ownerEmail:
           type: string
           format: email
           readOnly: true
-        owner_name:
+        ownerName:
           type: string
           description: An owner who is not a user
           maxLength: 255
-        validation_method:
+        validationMethod:
           type: string
-        validation_date:
+        validationDate:
           type: string
           format: date-time
           nullable: true
-        component_ids:
+        componentIds:
           type: array
           items:
             type: integer
-        display_order:
+        displayOrder:
           type: integer
           maximum: 2147483647
           minimum: 0
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -14549,7 +14549,7 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
           readOnly: true
         name:
@@ -14557,21 +14557,21 @@ components:
           maxLength: 255
         description:
           type: string
-        model_types:
+        modelTypes:
           description: CycloneDX model types this blueprint represents; at least one
-        scope_description:
+        scopeDescription:
           type: string
-        display_order:
+        displayOrder:
           type: integer
           maximum: 2147483647
           minimum: 0
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -14584,14 +14584,14 @@ components:
           readOnly: true
         blueprint:
           type: integer
-        zone_a:
+        zoneA:
           type: integer
-        zone_a_name:
+        zoneAName:
           type: string
           readOnly: true
-        zone_b:
+        zoneB:
           type: integer
-        zone_b_name:
+        zoneBName:
           type: string
           readOnly: true
         label:
@@ -14599,11 +14599,11 @@ components:
           maxLength: 255
         description:
           type: string
-        edge_id:
+        edgeId:
           type: string
           description: DFD edge ID this boundary was created from
           maxLength: 100
-        boundary_type:
+        boundaryType:
           allOf:
           - $ref: '#/components/schemas/BoundaryTypeEnum'
           description: |-
@@ -14618,34 +14618,34 @@ components:
             * `trust` - trust
         authentication: {}
         authorization: {}
-        requires_authentication:
+        requiresAuthentication:
           type: boolean
           readOnly: true
-        requires_authorization:
+        requiresAuthorization:
           type: boolean
           readOnly: true
-        data_validation:
+        dataValidation:
           type: boolean
-        data_transformation:
+        dataTransformation:
           type: boolean
         logging:
           type: boolean
         monitoring:
           type: boolean
-        rate_limit:
+        rateLimit:
           type: string
           description: Policy text; blank means none
           maxLength: 255
         protocols: {}
-        session_management:
+        sessionManagement:
           description: The spec's nine sessionManagement keys
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -14655,7 +14655,7 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
           readOnly: true
         name:
@@ -14670,30 +14670,30 @@ components:
         owner:
           type: integer
           nullable: true
-        owner_email:
+        ownerEmail:
           type: string
           format: email
           readOnly: true
-        owner_name:
+        ownerName:
           type: string
           maxLength: 255
-        display_order:
+        displayOrder:
           type: integer
           maximum: 2147483647
           minimum: 0
-        threat_count:
+        threatCount:
           type: string
           readOnly: true
-        risk_count:
+        riskCount:
           type: string
           readOnly: true
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -14718,14 +14718,14 @@ components:
         parent:
           type: integer
           nullable: true
-        team_count:
+        teamCount:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -14738,26 +14738,26 @@ components:
           readOnly: true
         component:
           type: integer
-        component_name:
+        componentName:
           type: string
           readOnly: true
-        data_asset:
+        dataAsset:
           type: integer
-        data_asset_name:
+        dataAssetName:
           type: string
           readOnly: true
-        data_state:
+        dataState:
           $ref: '#/components/schemas/DataStateEnum'
         volume:
           type: string
           maxLength: 100
         encrypted:
           type: boolean
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -14768,17 +14768,17 @@ components:
         id:
           type: integer
           readOnly: true
-        component_library:
+        componentLibrary:
           type: integer
-        component_name:
+        componentName:
           type: string
           readOnly: true
-        threat_library:
+        threatLibrary:
           type: integer
-        threat_name:
+        threatName:
           type: string
           readOnly: true
-        default_level:
+        defaultLevel:
           allOf:
           - $ref: '#/components/schemas/DefaultLevelEnum'
           description: |-
@@ -14789,13 +14789,13 @@ components:
             * `medium` - Medium
             * `high` - High
             * `critical` - Critical
-        applies_to:
+        appliesTo:
           $ref: '#/components/schemas/AppliesToEnum'
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -14810,7 +14810,7 @@ components:
           type: integer
           readOnly: true
           nullable: true
-        author_email:
+        authorEmail:
           type: string
           format: email
           readOnly: true
@@ -14818,14 +14818,14 @@ components:
           type: integer
         body:
           type: string
-        change_summary:
+        changeSummary:
           type: string
           maxLength: 255
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -14841,31 +14841,31 @@ components:
           maxLength: 255
         description:
           type: string
-        control_functions:
+        controlFunctions:
           description: List of control functions, e.g. ['preventive', 'detective']
-        control_nature:
+        controlNature:
           type: string
           description: 'Control nature: technical, administrative, or physical'
           maxLength: 20
         cost:
           $ref: '#/components/schemas/Cost3cdEnum'
-        default_status:
+        defaultStatus:
           $ref: '#/components/schemas/DefaultStatusEnum'
-        source_pack:
+        sourcePack:
           type: integer
           nullable: true
           description: Pack this item came from (null = custom or legacy)
-        source_pack_name:
+        sourcePackName:
           type: string
           readOnly: true
-        source_pack_slug:
+        sourcePackSlug:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -14876,15 +14876,15 @@ components:
         id:
           type: integer
           readOnly: true
-        countermeasure_library:
+        countermeasureLibrary:
           type: integer
         requirement:
           type: integer
           nullable: true
-        requirement_code:
+        requirementCode:
           type: string
           readOnly: true
-        framework_name:
+        frameworkName:
           type: string
           readOnly: true
         sufficiency:
@@ -14904,34 +14904,34 @@ components:
         name:
           type: string
           maxLength: 255
-        diagram_type:
+        diagramType:
           $ref: '#/components/schemas/DiagramTypeEnum'
         blueprint:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
           readOnly: true
-        is_primary:
+        isPrimary:
           type: boolean
           default: false
           description: Only the primary DFD of a blueprint syncs nodes to components/threats.
-        canvas_data: {}
-        template_library:
+        canvasData: {}
+        templateLibrary:
           type: integer
           nullable: true
-        updated_by:
+        updatedBy:
           type: integer
           nullable: true
-        updated_by_email:
+        updatedByEmail:
           type: string
           format: email
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -14956,20 +14956,20 @@ components:
           $ref: '#/components/schemas/IntegrityEnum'
         availability:
           $ref: '#/components/schemas/AvailabilityEnum'
-        compliance_tags: {}
-        data_sensitivity: {}
+        complianceTags: {}
+        dataSensitivity: {}
         blueprint:
           type: integer
-        threat_model:
+        threatModel:
           type: integer
           readOnly: true
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -14986,14 +14986,14 @@ components:
           readOnly: true
         blueprint:
           type: integer
-        source_component:
+        sourceComponent:
           type: integer
-        source_component_name:
+        sourceComponentName:
           type: string
           readOnly: true
-        dest_component:
+        destComponent:
           type: integer
-        dest_component_name:
+        destComponentName:
           type: string
           readOnly: true
         label:
@@ -15002,11 +15002,11 @@ components:
           maxLength: 255
         description:
           type: string
-        edge_id:
+        edgeId:
           type: string
           description: DFD edge ID this flow was created from
           maxLength: 100
-        flow_type:
+        flowType:
           allOf:
           - $ref: '#/components/schemas/FlowTypeEnum'
           description: |-
@@ -15034,22 +15034,22 @@ components:
           nullable: true
         authentication: {}
         authorization: {}
-        requires_authentication:
+        requiresAuthentication:
           type: boolean
           readOnly: true
-        crosses_boundary:
+        crossesBoundary:
           type: boolean
           readOnly: true
-        has_sensitive_data:
+        hasSensitiveData:
           type: boolean
-        data_classification: {}
-        format_metadata:
+        dataClassification: {}
+        formatMetadata:
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15062,30 +15062,30 @@ components:
           readOnly: true
         flow:
           type: integer
-        flow_name:
+        flowName:
           type: string
           readOnly: true
-        data_asset:
+        dataAsset:
           type: integer
-        data_asset_name:
+        dataAssetName:
           type: string
           readOnly: true
-        protection_method:
+        protectionMethod:
           $ref: '#/components/schemas/ProtectionMethodEnum'
-        encryption_type:
+        encryptionType:
           type: string
           maxLength: 50
         format:
           type: string
           maxLength: 50
-        sensitivity_override:
+        sensitivityOverride:
           type: string
           maxLength: 20
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15101,34 +15101,34 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
-        countermeasure_library:
+        countermeasureLibrary:
           type: integer
           nullable: true
           description: Null means orphaned/custom countermeasure (library item was
             removed)
-        countermeasure_name:
+        countermeasureName:
           type: string
           writeOnly: true
-        countermeasure_name_display:
+        countermeasureNameDisplay:
           type: string
           readOnly: true
-        countermeasure_description:
+        countermeasureDescription:
           type: string
           writeOnly: true
-        control_functions:
+        controlFunctions:
           type: array
           items:
             type: string
           writeOnly: true
-        control_functions_display:
+        controlFunctionsDisplay:
           type: string
           readOnly: true
-        control_nature:
+        controlNature:
           type: string
           writeOnly: true
-        control_nature_display:
+        controlNatureDisplay:
           type: string
           readOnly: true
         effectiveness:
@@ -15144,12 +15144,12 @@ components:
         priority:
           type: string
           maxLength: 10
-        due_date:
+        dueDate:
           type: string
           format: date
           nullable: true
           description: Target completion date
-        external_ticket_url:
+        externalTicketUrl:
           description: Link to Jira/GitHub/etc. ticket
           oneOf:
           - type: string
@@ -15157,42 +15157,42 @@ components:
             maxLength: 200
           - type: string
             maxLength: 0
-        verified_by:
+        verifiedBy:
           type: integer
           nullable: true
-        verified_by_email:
+        verifiedByEmail:
           type: string
           format: email
           readOnly: true
-        evidence_url:
+        evidenceUrl:
           oneOf:
           - type: string
             format: uri
             maxLength: 200
           - type: string
             maxLength: 0
-        waiver_reason:
+        waiverReason:
           type: string
-        required_for_release:
+        requiredForRelease:
           type: boolean
-        assigned_owner:
+        assignedOwner:
           type: integer
           nullable: true
-        assigned_owner_email:
+        assignedOwnerEmail:
           type: string
           format: email
           readOnly: true
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        threat_links:
+        threatLinks:
           type: array
           items:
             $ref: '#/components/schemas/CountermeasureThreatLink'
           readOnly: true
-        threat_id:
+        threatId:
           type: integer
           writeOnly: true
-        auto_generated:
+        autoGenerated:
           type: boolean
           readOnly: true
           description: Set by library generation, cleared on the first user edit
@@ -15201,10 +15201,10 @@ components:
           readOnly: true
           description: Unique within the threat model, assigned once, never reused
             (C3 is 3)
-        display_number:
+        displayNumber:
           type: string
           readOnly: true
-        days_overdue:
+        daysOverdue:
           type: integer
           nullable: true
           description: |-
@@ -15215,11 +15215,11 @@ components:
           readOnly: true
         targets:
           type: string
-        implemented_by:
+        implementedBy:
           type: array
           items:
             type: integer
-        implemented_by_party:
+        implementedByParty:
           type: string
           description: The provider that implements the control, as text (until a
             party model exists)
@@ -15229,11 +15229,11 @@ components:
           description: 'Where the control came from: a compliance tool, a pentest,
             a vendor list'
           maxLength: 255
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15250,25 +15250,25 @@ components:
         requirement:
           type: integer
           nullable: true
-        framework_name:
+        frameworkName:
           type: string
           readOnly: true
-        framework_slug:
+        frameworkSlug:
           type: string
           readOnly: true
-        section_code:
+        sectionCode:
           type: string
           readOnly: true
-        requirement_description:
+        requirementDescription:
           type: string
           readOnly: true
         sufficiency:
           $ref: '#/components/schemas/SufficiencyEnum'
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15284,89 +15284,89 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
         number:
           type: integer
           readOnly: true
           description: Unique within the threat model, assigned once, never reused
             (T7 is 7)
-        display_number:
+        displayNumber:
           type: string
           readOnly: true
-        whole_system:
+        wholeSystem:
           type: boolean
           description: 'True: applies to the whole system and has no targets'
         targets:
           type: string
-        auto_generated:
+        autoGenerated:
           type: boolean
           readOnly: true
           description: Set by library generation, cleared on the first user edit
-        threat_library:
+        threatLibrary:
           type: integer
           nullable: true
           description: Null means orphaned/custom threat (library item was removed)
-        threat_name:
+        threatName:
           type: string
           writeOnly: true
-        threat_description:
+        threatDescription:
           type: string
           writeOnly: true
-        threat_name_display:
+        threatNameDisplay:
           type: string
           readOnly: true
-        taxonomy_entries:
+        taxonomyEntries:
           type: string
           readOnly: true
         rating:
           type: string
           readOnly: true
-        rating_inputs:
+        ratingInputs:
           writeOnly: true
-        business_objective_ids:
+        businessObjectiveIds:
           type: array
           items:
             type: integer
-        threat_source_ids:
-          type: array
-          items:
-            type: integer
-          writeOnly: true
-        abuse_case_ids:
+        threatSourceIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        abuse_cases:
+        abuseCaseIds:
+          type: array
+          items:
+            type: integer
+          writeOnly: true
+        abuseCases:
           type: string
           readOnly: true
-        business_objectives:
+        businessObjectives:
           type: string
           readOnly: true
         status:
           $ref: '#/components/schemas/InstanceThreatStatusEnum'
-        triage_status:
+        triageStatus:
           $ref: '#/components/schemas/TriageStatusEnum'
-        decision_rationale:
+        decisionRationale:
           type: string
           description: Rationale for triage decision (recommended for accept/delegate/eliminate)
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        display_order:
+        displayOrder:
           type: integer
           maximum: 2147483647
           minimum: 0
-        impact_description:
+        impactDescription:
           type: string
           description: Narrative description of what the attacker achieves
-        actor_persona:
+        actorPersona:
           type: integer
           nullable: true
-        actor_persona_name:
+        actorPersonaName:
           type: string
           readOnly: true
-        threat_actor_text:
+        threatActorText:
           type: string
           description: Free-text threat actor (e.g. 'state actor', 'hacktivist')
           maxLength: 100
@@ -15381,7 +15381,7 @@ components:
           oneOf:
           - $ref: '#/components/schemas/IntentEnum'
           - $ref: '#/components/schemas/BlankEnum'
-        access_level:
+        accessLevel:
           description: |-
             Access level required: none, external, internal, privileged, or physical
 
@@ -15393,14 +15393,14 @@ components:
           oneOf:
           - $ref: '#/components/schemas/AccessLevelEnum'
           - $ref: '#/components/schemas/BlankEnum'
-        threat_sources:
+        threatSources:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15411,31 +15411,31 @@ components:
         id:
           type: integer
           readOnly: true
-        taxonomy_entry:
+        taxonomyEntry:
           type: integer
         threat:
           type: integer
-        taxonomy_slug:
+        taxonomySlug:
           type: string
           readOnly: true
-        taxonomy_name:
+        taxonomyName:
           type: string
           readOnly: true
-        external_id:
+        externalId:
           type: string
           readOnly: true
         title:
           type: string
           readOnly: true
-        reference_url:
+        referenceUrl:
           type: string
           format: uri
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15449,22 +15449,22 @@ components:
         name:
           type: string
           maxLength: 255
-        source_type:
+        sourceType:
           $ref: '#/components/schemas/SourceTypeEnum'
-        connection_details: {}
+        connectionDetails: {}
         status:
           $ref: '#/components/schemas/IntegrationSourceStatusEnum'
-        last_sync_at:
+        lastSyncAt:
           type: string
           format: date-time
           nullable: true
         orgsystem:
           type: integer
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15476,9 +15476,9 @@ components:
           type: string
           format: uuid
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
-        threat_model_name:
+        threatModelName:
           type: string
           readOnly: true
         token:
@@ -15487,21 +15487,21 @@ components:
         url:
           type: string
           readOnly: true
-        expires_at:
+        expiresAt:
           type: string
           format: date-time
           readOnly: true
-        accessed_count:
+        accessedCount:
           type: integer
           readOnly: true
-        is_revoked:
+        isRevoked:
           type: boolean
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15520,22 +15520,22 @@ components:
           maxLength: 255
         plan:
           $ref: '#/components/schemas/PlanEnum'
-        business_unit_label:
+        businessUnitLabel:
           type: string
           description: Custom label for the grouping layer (e.g., 'Department', 'Product
             Area')
           maxLength: 50
-        member_count:
+        memberCount:
           type: string
           readOnly: true
-        my_role:
+        myRole:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15548,26 +15548,26 @@ components:
           readOnly: true
         organization:
           type: integer
-        organization_name:
+        organizationName:
           type: string
           readOnly: true
         user:
           type: integer
-        user_email:
+        userEmail:
           type: string
           format: email
           readOnly: true
         role:
           $ref: '#/components/schemas/OrganizationMemberRoleEnum'
-        joined_at:
+        joinedAt:
           type: string
           format: date-time
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15594,27 +15594,27 @@ components:
           readOnly: true
         criticality:
           $ref: '#/components/schemas/CriticalityE88Enum'
-        lifecycle_state:
+        lifecycleState:
           $ref: '#/components/schemas/LifecycleStateEnum'
-        format_metadata:
+        formatMetadata:
           readOnly: true
         organization:
           type: integer
           readOnly: true
-        primary_model_count:
+        primaryModelCount:
           type: string
           readOnly: true
-        linked_component_count:
+        linkedComponentCount:
           type: string
           readOnly: true
-        primary_models:
+        primaryModels:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15668,51 +15668,51 @@ components:
           oneOf:
           - $ref: '#/components/schemas/KindEnum'
           - $ref: '#/components/schemas/BlankEnum'
-        effective_kind:
+        effectiveKind:
           type: string
           readOnly: true
-        actor_type:
+        actorType:
           type: string
           maxLength: 20
-        data_store_type:
+        dataStoreType:
           type: string
           maxLength: 20
-        data_sensitivity_level:
+        dataSensitivityLevel:
           type: string
           maxLength: 20
         orgsystem:
           type: integer
           nullable: true
           description: The inventory system a system or subsystem asset stands for
-        component_library:
+        componentLibrary:
           type: integer
           nullable: true
           description: Null means orphaned/custom component (library item was removed)
-        component_library_name:
+        componentLibraryName:
           type: string
           readOnly: true
         zone:
           type: integer
           nullable: true
-        source_integration:
+        sourceIntegration:
           type: integer
           nullable: true
         blueprint:
           type: integer
           description: The structural model this component belongs to
-        threat_model:
+        threatModel:
           type: integer
           readOnly: true
-        parent_component:
+        parentComponent:
           type: integer
           nullable: true
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15727,7 +15727,7 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
           readOnly: true
         blueprint:
@@ -15737,11 +15737,11 @@ components:
           maxLength: 255
         reason:
           type: string
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15752,29 +15752,29 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
-        finding_description:
+        findingDescription:
           type: string
         severity:
           type: string
           maxLength: 20
-        matched_threat_library:
+        matchedThreatLibrary:
           type: integer
           nullable: true
-        matched_threat_name:
+        matchedThreatName:
           type: string
           readOnly: true
-        matched_countermeasure:
+        matchedCountermeasure:
           type: integer
           nullable: true
-        reconciliation_status:
+        reconciliationStatus:
           $ref: '#/components/schemas/ReconciliationStatusEnum'
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15794,7 +15794,7 @@ components:
           maxLength: 255
         description:
           type: string
-        scoring_method:
+        scoringMethod:
           type: string
           readOnly: true
         inherent:
@@ -15806,7 +15806,7 @@ components:
         target:
           type: string
           readOnly: true
-        rating_inputs:
+        ratingInputs:
           writeOnly: true
         status:
           $ref: '#/components/schemas/StatusB35Enum'
@@ -15818,11 +15818,11 @@ components:
           readOnly: true
         domains:
           description: Risk domains, e.g. ['security', 'compliance']
-        business_objective_ids:
+        businessObjectiveIds:
           type: array
           items:
             type: integer
-        business_objectives:
+        businessObjectives:
           type: string
           readOnly: true
         responses:
@@ -15834,30 +15834,30 @@ components:
         owner:
           type: integer
           nullable: true
-        owner_email:
+        ownerEmail:
           type: string
           format: email
           readOnly: true
-        assigned_to:
+        assignedTo:
           type: integer
           nullable: true
-        assigned_to_email:
+        assignedToEmail:
           type: string
           format: email
           readOnly: true
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        threat_ids:
+        threatIds:
           type: array
           items:
             type: integer
           writeOnly: true
           default: []
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15896,28 +15896,28 @@ components:
         owner:
           type: integer
           nullable: true
-        owner_email:
+        ownerEmail:
           type: string
           format: email
           readOnly: true
-        target_date:
+        targetDate:
           type: string
           format: date-time
           nullable: true
-        countermeasure_ids:
+        countermeasureIds:
           type: array
           items:
             type: integer
         countermeasures:
           type: string
           readOnly: true
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15939,11 +15939,11 @@ components:
           maxLength: 255
         description:
           type: string
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15956,13 +15956,13 @@ components:
           readOnly: true
         framework:
           type: integer
-        framework_name:
+        frameworkName:
           type: string
           readOnly: true
-        source_pack:
+        sourcePack:
           type: integer
           readOnly: true
-        section_code:
+        sectionCode:
           type: string
           maxLength: 50
         description:
@@ -15970,11 +15970,11 @@ components:
         parent:
           type: integer
           nullable: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -15987,10 +15987,10 @@ components:
           readOnly: true
         organization:
           type: integer
-        business_unit:
+        businessUnit:
           type: integer
           nullable: true
-        business_unit_name:
+        businessUnitName:
           type: string
           readOnly: true
           nullable: true
@@ -16003,16 +16003,16 @@ components:
           maxLength: 50
         description:
           type: string
-        member_count:
+        memberCount:
           type: string
           readOnly: true
-        is_default:
+        isDefault:
           type: boolean
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -16026,10 +16026,10 @@ components:
           readOnly: true
         team:
           type: integer
-        team_name:
+        teamName:
           type: string
           readOnly: true
-        organization_name:
+        organizationName:
           type: string
           readOnly: true
         email:
@@ -16041,14 +16041,14 @@ components:
         token:
           type: string
           readOnly: true
-        invite_url:
+        inviteUrl:
           type: string
           readOnly: true
-        invited_by:
+        invitedBy:
           type: integer
           readOnly: true
           nullable: true
-        invited_by_email:
+        invitedByEmail:
           type: string
           format: email
           readOnly: true
@@ -16057,19 +16057,19 @@ components:
           allOf:
           - $ref: '#/components/schemas/TeamInvitationStatusEnum'
           readOnly: true
-        expires_at:
+        expiresAt:
           type: string
           format: date-time
-        accepted_at:
+        acceptedAt:
           type: string
           format: date-time
           readOnly: true
           nullable: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -16085,24 +16085,24 @@ components:
           maxLength: 255
         description:
           type: string
-        source_pack:
+        sourcePack:
           type: integer
           nullable: true
           description: Pack this item came from (null = custom or legacy)
-        source_pack_name:
+        sourcePackName:
           type: string
           readOnly: true
-        source_pack_slug:
+        sourcePackSlug:
           type: string
           readOnly: true
-        taxonomy_entries:
+        taxonomyEntries:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -16122,49 +16122,49 @@ components:
           $ref: '#/components/schemas/CriticalityE88Enum'
         organization:
           type: integer
-        organization_name:
+        organizationName:
           type: string
           readOnly: true
-        owning_team:
+        owningTeam:
           type: integer
           nullable: true
           description: Team that owns this threat model (nullable during migration)
-        owning_team_name:
+        owningTeamName:
           type: string
           readOnly: true
           nullable: true
-        business_unit_name:
+        businessUnitName:
           type: string
           readOnly: true
-        created_by:
+        createdBy:
           type: integer
           nullable: true
-        created_by_email:
+        createdByEmail:
           type: string
           format: email
           readOnly: true
         owner:
           type: string
           readOnly: true
-        workspace_data: {}
+        workspaceData: {}
         methodologies:
           type: array
           items:
             type: string
             maxLength: 100
-        lifecycle_phase:
+        lifecyclePhase:
           oneOf:
           - $ref: '#/components/schemas/LifecyclePhaseEnum'
           - $ref: '#/components/schemas/BlankEnum'
-        valid_from:
+        validFrom:
           type: string
           format: date-time
           nullable: true
-        valid_until:
+        validUntil:
           type: string
           format: date-time
           nullable: true
-        review_frequency:
+        reviewFrequency:
           description: ISO 8601 duration, e.g. P6M
           oneOf:
           - type: string
@@ -16172,10 +16172,10 @@ components:
             maxLength: 40
           - type: string
             maxLength: 0
-        approved_at:
+        approvedAt:
           type: string
           readOnly: true
-        format_metadata:
+        formatMetadata:
           readOnly: true
         blueprints:
           type: array
@@ -16188,37 +16188,37 @@ components:
         frameworks:
           type: string
           readOnly: true
-        primary_system:
+        primarySystem:
           type: integer
           nullable: true
-        primary_system_name:
+        primarySystemName:
           type: string
           readOnly: true
-        serial_number:
+        serialNumber:
           type: string
           format: uuid
           readOnly: true
         version:
           type: string
           readOnly: true
-        pack_ids:
+        packIds:
           type: string
           readOnly: true
-        connected_packs:
+        connectedPacks:
           type: string
           readOnly: true
-        referenced_model_ids:
+        referencedModelIds:
           type: string
           readOnly: true
-        related_models:
+        relatedModels:
           type: string
           readOnly: true
-        reference_images:
+        referenceImages:
           type: array
           items:
             $ref: '#/components/schemas/ThreatModelReferenceImage'
           readOnly: true
-        risk_scoring_method:
+        riskScoringMethod:
           allOf:
           - $ref: '#/components/schemas/RiskScoringMethodEnum'
           description: |-
@@ -16228,11 +16228,11 @@ components:
             * `owasp-risk-rating` - OWASP Risk Rating
             * `fair` - FAIR
             * `mozilla-rra` - Mozilla Rapid Risk Assessment
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -16243,14 +16243,14 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
           readOnly: true
         image:
           type: string
           format: uri
           description: Reference image file (JPEG, PNG, WebP)
-        image_url:
+        imageUrl:
           type: string
           readOnly: true
         filename:
@@ -16260,19 +16260,19 @@ components:
         description:
           type: string
           description: Optional description of what this image shows
-        display_order:
+        displayOrder:
           type: integer
           maximum: 2147483647
           minimum: 0
           description: Order in gallery (lower = first)
-        uploaded_by:
+        uploadedBy:
           type: integer
           readOnly: true
           nullable: true
-        uploaded_by_email:
+        uploadedByEmail:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
@@ -16285,10 +16285,10 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
           readOnly: true
-        symbolic_name:
+        symbolicName:
           type: string
           description: Machine-readable identifier, e.g., 'malicious-insider'
           maxLength: 100
@@ -16298,11 +16298,11 @@ components:
           maxLength: 255
         description:
           type: string
-        is_person:
+        isPerson:
           type: boolean
-        malicious_intent:
+        maliciousIntent:
           type: boolean
-        skill_level:
+        skillLevel:
           type: string
           maxLength: 100
         motivation:
@@ -16311,17 +16311,17 @@ components:
           type: string
         objectives:
           type: string
-        format_metadata:
+        formatMetadata:
           readOnly: true
           description: Extra fields from JSON for round-trip fidelity
-        threat_count:
+        threatCount:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -16341,37 +16341,37 @@ components:
           maxLength: 255
         description:
           type: string
-        flow_data:
+        flowData:
           description: 'Structured use case data: preconditions, postconditions, success_criteria,
             main_flow, alternative_flows, exceptions, notes'
-        display_order:
+        displayOrder:
           type: integer
           maximum: 2147483647
           minimum: 0
-        component_ids:
+        componentIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        flow_ids:
+        flowIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        business_objective_ids:
+        businessObjectiveIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        abuse_case_count:
+        abuseCaseCount:
           type: integer
           readOnly: true
           default: 0
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -16394,10 +16394,10 @@ components:
           format: email
           readOnly: true
           title: Email address
-        first_name:
+        firstName:
           type: string
           maxLength: 150
-        last_name:
+        lastName:
           type: string
           maxLength: 150
     PatchedVerificationTest:
@@ -16412,7 +16412,7 @@ components:
           maxLength: 255
         method:
           $ref: '#/components/schemas/MethodEnum'
-        last_run_at:
+        lastRunAt:
           type: string
           format: date-time
           nullable: true
@@ -16420,11 +16420,11 @@ components:
           type: boolean
         evidence:
           type: string
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -16440,7 +16440,7 @@ components:
         name:
           type: string
           maxLength: 255
-        zone_type:
+        zoneType:
           allOf:
           - $ref: '#/components/schemas/ZoneTypeEnum'
           description: |-
@@ -16459,7 +16459,7 @@ components:
             * `process` - process
             * `tenant` - tenant
             * `trust` - trust
-        trust_level:
+        trustLevel:
           type: integer
           maximum: 100
           minimum: 0
@@ -16467,16 +16467,16 @@ components:
           description: 0-100 scale, null when not set
         description:
           type: string
-        format_metadata:
+        formatMetadata:
           readOnly: true
         parent:
           type: integer
           nullable: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
@@ -16487,40 +16487,40 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
-        finding_description:
+        findingDescription:
           type: string
         severity:
           type: string
           maxLength: 20
-        matched_threat_library:
+        matchedThreatLibrary:
           type: integer
           nullable: true
-        matched_threat_name:
+        matchedThreatName:
           type: string
           readOnly: true
-        matched_countermeasure:
+        matchedCountermeasure:
           type: integer
           nullable: true
-        reconciliation_status:
+        reconciliationStatus:
           $ref: '#/components/schemas/ReconciliationStatusEnum'
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
-      - finding_description
+      - createdAt
+      - findingDescription
       - id
-      - matched_threat_name
+      - matchedThreatName
       - severity
-      - threat_model
-      - updated_at
+      - threatModel
+      - updatedAt
     PlanEnum:
       enum:
       - free
@@ -16627,7 +16627,7 @@ components:
           maxLength: 255
         description:
           type: string
-        scoring_method:
+        scoringMethod:
           type: string
           readOnly: true
         inherent:
@@ -16639,7 +16639,7 @@ components:
         target:
           type: string
           readOnly: true
-        rating_inputs:
+        ratingInputs:
           writeOnly: true
         status:
           $ref: '#/components/schemas/StatusB35Enum'
@@ -16651,11 +16651,11 @@ components:
           readOnly: true
         domains:
           description: Risk domains, e.g. ['security', 'compliance']
-        business_objective_ids:
+        businessObjectiveIds:
           type: array
           items:
             type: integer
-        business_objectives:
+        businessObjectives:
           type: string
           readOnly: true
         responses:
@@ -16667,49 +16667,49 @@ components:
         owner:
           type: integer
           nullable: true
-        owner_email:
+        ownerEmail:
           type: string
           format: email
           readOnly: true
-        assigned_to:
+        assignedTo:
           type: integer
           nullable: true
-        assigned_to_email:
+        assignedToEmail:
           type: string
           format: email
           readOnly: true
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        threat_ids:
+        threatIds:
           type: array
           items:
             type: integer
           writeOnly: true
           default: []
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - assigned_to_email
-      - business_objectives
-      - created_at
+      - assignedToEmail
+      - businessObjectives
+      - createdAt
       - exposure
-      - format_metadata
+      - formatMetadata
       - id
       - inherent
       - name
-      - owner_email
+      - ownerEmail
       - residual
       - responses
-      - scoring_method
+      - scoringMethod
       - target
       - threats
-      - updated_at
+      - updatedAt
     RiskList:
       type: object
       description: Lightweight serializer for risk listing.
@@ -16722,7 +16722,7 @@ components:
           maxLength: 255
         description:
           type: string
-        scoring_method:
+        scoringMethod:
           type: string
           readOnly: true
         inherent:
@@ -16739,44 +16739,44 @@ components:
         exposure:
           type: string
           readOnly: true
-        threat_count:
+        threatCount:
           type: string
           readOnly: true
         owner:
           type: integer
           nullable: true
-        owner_email:
+        ownerEmail:
           type: string
           format: email
           readOnly: true
-        assigned_to:
+        assignedTo:
           type: integer
           nullable: true
-        assigned_to_email:
+        assignedToEmail:
           type: string
           format: email
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - assigned_to_email
-      - created_at
+      - assignedToEmail
+      - createdAt
       - exposure
       - id
       - inherent
       - name
-      - owner_email
+      - ownerEmail
       - residual
-      - scoring_method
+      - scoringMethod
       - target
-      - threat_count
-      - updated_at
+      - threatCount
+      - updatedAt
     RiskResponse:
       type: object
       description: |-
@@ -16812,40 +16812,40 @@ components:
         owner:
           type: integer
           nullable: true
-        owner_email:
+        ownerEmail:
           type: string
           format: email
           readOnly: true
-        target_date:
+        targetDate:
           type: string
           format: date-time
           nullable: true
-        countermeasure_ids:
+        countermeasureIds:
           type: array
           items:
             type: integer
         countermeasures:
           type: string
           readOnly: true
-        format_metadata:
+        formatMetadata:
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
       - countermeasures
-      - created_at
-      - format_metadata
+      - createdAt
+      - formatMetadata
       - id
-      - owner_email
+      - ownerEmail
       - risk
       - strategy
-      - updated_at
+      - updatedAt
     RiskResponseCostEnum:
       enum:
       - trivial
@@ -16892,46 +16892,46 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model_id:
+        threatModelId:
           type: integer
           readOnly: true
-        threat_model_name:
+        threatModelName:
           type: string
           readOnly: true
-        threat_model_description:
+        threatModelDescription:
           type: string
           readOnly: true
-        organization_name:
+        organizationName:
           type: string
           readOnly: true
-        shared_by:
+        sharedBy:
           type: string
           readOnly: true
-        share_url:
+        shareUrl:
           type: string
           readOnly: true
-        first_accessed_at:
-          type: string
-          format: date-time
-          readOnly: true
-        last_accessed_at:
+        firstAccessedAt:
           type: string
           format: date-time
           readOnly: true
-        access_count:
+        lastAccessedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        accessCount:
           type: integer
           readOnly: true
       required:
-      - access_count
-      - first_accessed_at
+      - accessCount
+      - firstAccessedAt
       - id
-      - last_accessed_at
-      - organization_name
-      - share_url
-      - shared_by
-      - threat_model_description
-      - threat_model_id
-      - threat_model_name
+      - lastAccessedAt
+      - organizationName
+      - shareUrl
+      - sharedBy
+      - threatModelDescription
+      - threatModelId
+      - threatModelName
     SourceTypeEnum:
       enum:
       - github
@@ -16964,20 +16964,20 @@ components:
           maxLength: 255
         description:
           type: string
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
+      - createdAt
       - id
       - issuer
       - name
-      - updated_at
+      - updatedAt
       - version
     StandardFrameworkList:
       type: object
@@ -16998,7 +16998,7 @@ components:
           maxLength: 255
         description:
           type: string
-        source_pack:
+        sourcePack:
           type: integer
           nullable: true
       required:
@@ -17015,13 +17015,13 @@ components:
           readOnly: true
         framework:
           type: integer
-        framework_name:
+        frameworkName:
           type: string
           readOnly: true
-        source_pack:
+        sourcePack:
           type: integer
           readOnly: true
-        section_code:
+        sectionCode:
           type: string
           maxLength: 50
         description:
@@ -17029,23 +17029,23 @@ components:
         parent:
           type: integer
           nullable: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
+      - createdAt
       - description
       - framework
-      - framework_name
+      - frameworkName
       - id
-      - section_code
-      - source_pack
-      - updated_at
+      - sectionCode
+      - sourcePack
+      - updatedAt
     StatusB35Enum:
       enum:
       - identified
@@ -17089,20 +17089,20 @@ components:
         id:
           type: integer
           readOnly: true
-        taxonomy_slug:
+        taxonomySlug:
           type: string
           readOnly: true
-        taxonomy_name:
+        taxonomyName:
           type: string
           readOnly: true
-        external_id:
+        externalId:
           type: string
           description: 'Normalized ID: ''tampering'', ''66'', ''CWE-89'', ''T1059'''
           maxLength: 100
         title:
           type: string
           maxLength: 255
-        reference_url:
+        referenceUrl:
           oneOf:
           - type: string
             format: uri
@@ -17110,10 +17110,10 @@ components:
           - type: string
             maxLength: 0
       required:
-      - external_id
+      - externalId
       - id
-      - taxonomy_name
-      - taxonomy_slug
+      - taxonomyName
+      - taxonomySlug
       - title
     Team:
       type: object
@@ -17124,10 +17124,10 @@ components:
           readOnly: true
         organization:
           type: integer
-        business_unit:
+        businessUnit:
           type: integer
           nullable: true
-        business_unit_name:
+        businessUnitName:
           type: string
           readOnly: true
           nullable: true
@@ -17140,27 +17140,27 @@ components:
           maxLength: 50
         description:
           type: string
-        member_count:
+        memberCount:
           type: string
           readOnly: true
-        is_default:
+        isDefault:
           type: boolean
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - business_unit_name
-      - created_at
+      - businessUnitName
+      - createdAt
       - id
-      - member_count
+      - memberCount
       - name
       - organization
-      - updated_at
+      - updatedAt
     TeamInvitation:
       type: object
       description: Serializer for TeamInvitation model.
@@ -17171,10 +17171,10 @@ components:
           readOnly: true
         team:
           type: integer
-        team_name:
+        teamName:
           type: string
           readOnly: true
-        organization_name:
+        organizationName:
           type: string
           readOnly: true
         email:
@@ -17186,14 +17186,14 @@ components:
         token:
           type: string
           readOnly: true
-        invite_url:
+        inviteUrl:
           type: string
           readOnly: true
-        invited_by:
+        invitedBy:
           type: integer
           readOnly: true
           nullable: true
-        invited_by_email:
+        invitedByEmail:
           type: string
           format: email
           readOnly: true
@@ -17202,37 +17202,37 @@ components:
           allOf:
           - $ref: '#/components/schemas/TeamInvitationStatusEnum'
           readOnly: true
-        expires_at:
+        expiresAt:
           type: string
           format: date-time
-        accepted_at:
+        acceptedAt:
           type: string
           format: date-time
           readOnly: true
           nullable: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - accepted_at
-      - created_at
+      - acceptedAt
+      - createdAt
       - email
-      - expires_at
+      - expiresAt
       - id
-      - invite_url
-      - invited_by
-      - invited_by_email
-      - organization_name
+      - inviteUrl
+      - invitedBy
+      - invitedByEmail
+      - organizationName
       - status
       - team
-      - team_name
+      - teamName
       - token
-      - updated_at
+      - updatedAt
     TeamInvitationRoleEnum:
       enum:
       - lead
@@ -17268,23 +17268,23 @@ components:
         code:
           type: string
           maxLength: 50
-        business_unit_name:
+        businessUnitName:
           type: string
           readOnly: true
           nullable: true
-        member_count:
+        memberCount:
           type: string
           readOnly: true
-        is_default:
+        isDefault:
           type: boolean
-        is_member:
+        isMember:
           type: string
           readOnly: true
       required:
-      - business_unit_name
+      - businessUnitName
       - id
-      - is_member
-      - member_count
+      - isMember
+      - memberCount
       - name
     ThreatLibrary:
       type: object
@@ -17298,36 +17298,36 @@ components:
           maxLength: 255
         description:
           type: string
-        source_pack:
+        sourcePack:
           type: integer
           nullable: true
           description: Pack this item came from (null = custom or legacy)
-        source_pack_name:
+        sourcePackName:
           type: string
           readOnly: true
-        source_pack_slug:
+        sourcePackSlug:
           type: string
           readOnly: true
-        taxonomy_entries:
+        taxonomyEntries:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
+      - createdAt
       - description
       - id
       - name
-      - source_pack_name
-      - source_pack_slug
-      - taxonomy_entries
-      - updated_at
+      - sourcePackName
+      - sourcePackSlug
+      - taxonomyEntries
+      - updatedAt
     ThreatLibraryList:
       type: object
       description: Lightweight serializer for threat library listing.
@@ -17340,26 +17340,26 @@ components:
           maxLength: 255
         description:
           type: string
-        source_pack:
+        sourcePack:
           type: integer
           nullable: true
           description: Pack this item came from (null = custom or legacy)
-        source_pack_name:
+        sourcePackName:
           type: string
           readOnly: true
-        source_pack_slug:
+        sourcePackSlug:
           type: string
           readOnly: true
-        taxonomy_entries:
+        taxonomyEntries:
           type: string
           readOnly: true
       required:
       - description
       - id
       - name
-      - source_pack_name
-      - source_pack_slug
-      - taxonomy_entries
+      - sourcePackName
+      - sourcePackSlug
+      - taxonomyEntries
     ThreatModel:
       type: object
       description: Serializer for ThreatModel model.
@@ -17376,49 +17376,49 @@ components:
           $ref: '#/components/schemas/CriticalityE88Enum'
         organization:
           type: integer
-        organization_name:
+        organizationName:
           type: string
           readOnly: true
-        owning_team:
+        owningTeam:
           type: integer
           nullable: true
           description: Team that owns this threat model (nullable during migration)
-        owning_team_name:
+        owningTeamName:
           type: string
           readOnly: true
           nullable: true
-        business_unit_name:
+        businessUnitName:
           type: string
           readOnly: true
-        created_by:
+        createdBy:
           type: integer
           nullable: true
-        created_by_email:
+        createdByEmail:
           type: string
           format: email
           readOnly: true
         owner:
           type: string
           readOnly: true
-        workspace_data: {}
+        workspaceData: {}
         methodologies:
           type: array
           items:
             type: string
             maxLength: 100
-        lifecycle_phase:
+        lifecyclePhase:
           oneOf:
           - $ref: '#/components/schemas/LifecyclePhaseEnum'
           - $ref: '#/components/schemas/BlankEnum'
-        valid_from:
+        validFrom:
           type: string
           format: date-time
           nullable: true
-        valid_until:
+        validUntil:
           type: string
           format: date-time
           nullable: true
-        review_frequency:
+        reviewFrequency:
           description: ISO 8601 duration, e.g. P6M
           oneOf:
           - type: string
@@ -17426,10 +17426,10 @@ components:
             maxLength: 40
           - type: string
             maxLength: 0
-        approved_at:
+        approvedAt:
           type: string
           readOnly: true
-        format_metadata:
+        formatMetadata:
           readOnly: true
         blueprints:
           type: array
@@ -17442,37 +17442,37 @@ components:
         frameworks:
           type: string
           readOnly: true
-        primary_system:
+        primarySystem:
           type: integer
           nullable: true
-        primary_system_name:
+        primarySystemName:
           type: string
           readOnly: true
-        serial_number:
+        serialNumber:
           type: string
           format: uuid
           readOnly: true
         version:
           type: string
           readOnly: true
-        pack_ids:
+        packIds:
           type: string
           readOnly: true
-        connected_packs:
+        connectedPacks:
           type: string
           readOnly: true
-        referenced_model_ids:
+        referencedModelIds:
           type: string
           readOnly: true
-        related_models:
+        relatedModels:
           type: string
           readOnly: true
-        reference_images:
+        referenceImages:
           type: array
           items:
             $ref: '#/components/schemas/ThreatModelReferenceImage'
           readOnly: true
-        risk_scoring_method:
+        riskScoringMethod:
           allOf:
           - $ref: '#/components/schemas/RiskScoringMethodEnum'
           description: |-
@@ -17482,37 +17482,37 @@ components:
             * `owasp-risk-rating` - OWASP Risk Rating
             * `fair` - FAIR
             * `mozilla-rra` - Mozilla Rapid Risk Assessment
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - approved_at
+      - approvedAt
       - blueprints
-      - business_unit_name
-      - connected_packs
-      - created_at
-      - created_by_email
+      - businessUnitName
+      - connectedPacks
+      - createdAt
+      - createdByEmail
       - dfds
-      - format_metadata
+      - formatMetadata
       - frameworks
       - id
       - name
       - organization
-      - organization_name
+      - organizationName
       - owner
-      - owning_team_name
-      - pack_ids
-      - primary_system_name
-      - reference_images
-      - referenced_model_ids
-      - related_models
-      - serial_number
-      - updated_at
+      - owningTeamName
+      - packIds
+      - primarySystemName
+      - referenceImages
+      - referencedModelIds
+      - relatedModels
+      - serialNumber
+      - updatedAt
       - version
     ThreatModelCreate:
       type: object
@@ -17528,21 +17528,21 @@ components:
           type: string
         organization:
           type: integer
-        owning_team:
+        owningTeam:
           type: integer
           nullable: true
           description: Team that owns this threat model (nullable during migration)
         criticality:
           $ref: '#/components/schemas/CriticalityE88Enum'
-        framework_ids:
+        frameworkIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        primary_system:
+        primarySystem:
           type: integer
           nullable: true
-        referenced_model_ids:
+        referencedModelIds:
           type: array
           items:
             type: integer
@@ -17552,7 +17552,7 @@ components:
           items:
             type: string
             maxLength: 100
-        risk_scoring_method:
+        riskScoringMethod:
           allOf:
           - $ref: '#/components/schemas/RiskScoringMethodEnum'
           description: |-
@@ -17584,15 +17584,15 @@ components:
         owner:
           type: string
           readOnly: true
-        owning_team:
+        owningTeam:
           type: integer
           nullable: true
           description: Team that owns this threat model (nullable during migration)
-        owning_team_name:
+        owningTeamName:
           type: string
           readOnly: true
           nullable: true
-        business_unit_name:
+        businessUnitName:
           type: string
           readOnly: true
         frameworks:
@@ -17603,27 +17603,27 @@ components:
           items:
             type: string
             maxLength: 100
-        lifecycle_phase:
+        lifecyclePhase:
           oneOf:
           - $ref: '#/components/schemas/LifecyclePhaseEnum'
           - $ref: '#/components/schemas/BlankEnum'
-        approved_at:
+        approvedAt:
           type: string
           readOnly: true
-        primary_system_name:
+        primarySystemName:
           type: string
           readOnly: true
-        serial_number:
+        serialNumber:
           type: string
           format: uuid
           readOnly: true
         version:
           type: string
           readOnly: true
-        blueprint_count:
+        blueprintCount:
           type: string
           readOnly: true
-        risk_scoring_method:
+        riskScoringMethod:
           allOf:
           - $ref: '#/components/schemas/RiskScoringMethodEnum'
           description: |-
@@ -17633,28 +17633,28 @@ components:
             * `owasp-risk-rating` - OWASP Risk Rating
             * `fair` - FAIR
             * `mozilla-rra` - Mozilla Rapid Risk Assessment
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - approved_at
-      - blueprint_count
-      - business_unit_name
-      - created_at
+      - approvedAt
+      - blueprintCount
+      - businessUnitName
+      - createdAt
       - frameworks
       - id
       - name
       - organization
       - owner
-      - owning_team_name
-      - primary_system_name
-      - serial_number
-      - updated_at
+      - owningTeamName
+      - primarySystemName
+      - serialNumber
+      - updatedAt
       - version
     ThreatModelReferenceImage:
       type: object
@@ -17663,14 +17663,14 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
           readOnly: true
         image:
           type: string
           format: uri
           description: Reference image file (JPEG, PNG, WebP)
-        image_url:
+        imageUrl:
           type: string
           readOnly: true
         filename:
@@ -17680,31 +17680,31 @@ components:
         description:
           type: string
           description: Optional description of what this image shows
-        display_order:
+        displayOrder:
           type: integer
           maximum: 2147483647
           minimum: 0
           description: Order in gallery (lower = first)
-        uploaded_by:
+        uploadedBy:
           type: integer
           readOnly: true
           nullable: true
-        uploaded_by_email:
+        uploadedByEmail:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
+      - createdAt
       - filename
       - id
       - image
-      - image_url
-      - threat_model
-      - uploaded_by
-      - uploaded_by_email
+      - imageUrl
+      - threatModel
+      - uploadedBy
+      - uploadedByEmail
     ThreatModelReferenceImageUpload:
       type: object
       description: Serializer for uploading reference images.
@@ -17732,10 +17732,10 @@ components:
         id:
           type: integer
           readOnly: true
-        threat_model:
+        threatModel:
           type: integer
           readOnly: true
-        symbolic_name:
+        symbolicName:
           type: string
           description: Machine-readable identifier, e.g., 'malicious-insider'
           maxLength: 100
@@ -17745,11 +17745,11 @@ components:
           maxLength: 255
         description:
           type: string
-        is_person:
+        isPerson:
           type: boolean
-        malicious_intent:
+        maliciousIntent:
           type: boolean
-        skill_level:
+        skillLevel:
           type: string
           maxLength: 100
         motivation:
@@ -17758,29 +17758,29 @@ components:
           type: string
         objectives:
           type: string
-        format_metadata:
+        formatMetadata:
           readOnly: true
           description: Extra fields from JSON for round-trip fidelity
-        threat_count:
+        threatCount:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
-      - format_metadata
+      - createdAt
+      - formatMetadata
       - id
       - name
-      - symbolic_name
-      - threat_count
-      - threat_model
-      - updated_at
+      - symbolicName
+      - threatCount
+      - threatModel
+      - updatedAt
     ThreatSource:
       type: object
       description: Read-only serializer for ThreatSource reference data.
@@ -17798,21 +17798,21 @@ components:
         description:
           type: string
           readOnly: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
+      - createdAt
       - description
       - id
       - name
       - slug
-      - updated_at
+      - updatedAt
     TokenRefresh:
       type: object
       properties:
@@ -17880,46 +17880,46 @@ components:
           maxLength: 255
         description:
           type: string
-        flow_data:
+        flowData:
           description: 'Structured use case data: preconditions, postconditions, success_criteria,
             main_flow, alternative_flows, exceptions, notes'
-        display_order:
+        displayOrder:
           type: integer
           maximum: 2147483647
           minimum: 0
-        component_ids:
+        componentIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        flow_ids:
+        flowIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        business_objective_ids:
+        businessObjectiveIds:
           type: array
           items:
             type: integer
           writeOnly: true
-        abuse_case_count:
+        abuseCaseCount:
           type: integer
           readOnly: true
           default: 0
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - abuse_case_count
-      - created_at
+      - abuseCaseCount
+      - createdAt
       - id
       - name
-      - updated_at
+      - updatedAt
     UserDetails:
       type: object
       description: User model w/o password
@@ -17939,10 +17939,10 @@ components:
           format: email
           readOnly: true
           title: Email address
-        first_name:
+        firstName:
           type: string
           maxLength: 150
-        last_name:
+        lastName:
           type: string
           maxLength: 150
       required:
@@ -17973,7 +17973,7 @@ components:
           maxLength: 255
         method:
           $ref: '#/components/schemas/MethodEnum'
-        last_run_at:
+        lastRunAt:
           type: string
           format: date-time
           nullable: true
@@ -17981,20 +17981,20 @@ components:
           type: boolean
         evidence:
           type: string
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
-      - created_at
+      - createdAt
       - id
       - method
       - name
-      - updated_at
+      - updatedAt
     VerifyEmail:
       type: object
       properties:
@@ -18015,7 +18015,7 @@ components:
         name:
           type: string
           maxLength: 255
-        zone_type:
+        zoneType:
           allOf:
           - $ref: '#/components/schemas/ZoneTypeEnum'
           description: |-
@@ -18034,7 +18034,7 @@ components:
             * `process` - process
             * `tenant` - tenant
             * `trust` - trust
-        trust_level:
+        trustLevel:
           type: integer
           maximum: 100
           minimum: 0
@@ -18042,26 +18042,26 @@ components:
           description: 0-100 scale, null when not set
         description:
           type: string
-        format_metadata:
+        formatMetadata:
           readOnly: true
         parent:
           type: integer
           nullable: true
-        created_at:
+        createdAt:
           type: string
           format: date-time
           readOnly: true
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
           readOnly: true
       required:
       - blueprint
-      - created_at
-      - format_metadata
+      - createdAt
+      - formatMetadata
       - id
       - name
-      - updated_at
+      - updatedAt
     ZoneTypeEnum:
       enum:
       - availability
