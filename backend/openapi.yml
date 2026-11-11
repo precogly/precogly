@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Precogly API
-  version: 0.3.0
+  version: 0.4.0
   description: Threat Modeling Platform API
 paths:
   /api/ai-providers/:
