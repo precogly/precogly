@@ -19,10 +19,11 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
+      # NOTE: no `release-type` input. Setting one makes the action skip
+      # release-please-config.json, and with it `extra-files`, so no version
+      # outside the manifest was ever bumped (0.3.0 and 0.4.0 both).
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
         id: release
-        with:
-          release-type: simple
 
   build-and-publish:
     needs: release-please
