@@ -180,6 +180,8 @@ uv run python -m pytest
 
 To add or remove a dependency, use `uv add` / `uv remove` rather than editing `pyproject.toml` by hand.
 
+`backend/openapi.yml` is the generated API schema, committed so API changes show in review. Don't edit it by hand. The pre-commit hook regenerates it and fails the commit if it changed; stage it and commit again. To regenerate it yourself, run `uv run python manage.py spectacular --file openapi.yml` from `backend/`.
+
 ## Documentation Workflow
 
 Preview documentation changes locally:
