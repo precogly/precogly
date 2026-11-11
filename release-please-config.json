@@ -21,6 +21,11 @@
           "jsonpath": "$.project.version"
         },
         {
+          "type": "toml",
+          "path": "uv.lock",
+          "jsonpath": "$.package[?(@.name.value=='precogly-backend')].version"
+        },
+        {
           "type": "generic",
           "path": "backend/config/settings/base.py",
           "glob": false
