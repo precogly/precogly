@@ -253,13 +253,17 @@ def _satisfies(countermeasure, standards: StandardsIndex):
     by_requirement: dict = {}
     library = countermeasure.countermeasure_library
     if library is not None:
-        for mapping in library.standard_mappings.all():
+        for mapping in sorted(library.standard_mappings.all(), key=lambda m: m.pk):
             if mapping.requirement_id and mapping.requirement.framework_id:
                 by_requirement[mapping.requirement_id] = (
                     standards.requirement_ref(mapping.requirement),
                     mapping.sufficiency,
                 )
-    for mapping in countermeasure.instance_standard_mappings.all():
+    # Neither relation is ordered, so without this the order of ``satisfies``
+    # follows Postgres's row placement and the export is not repeatable.
+    for mapping in sorted(
+        countermeasure.instance_standard_mappings.all(), key=lambda m: m.pk
+    ):
         if mapping.requirement_id and mapping.requirement.framework_id:
             by_requirement[mapping.requirement_id] = (
                 standards.requirement_ref(mapping.requirement),
