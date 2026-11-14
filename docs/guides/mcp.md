@@ -14,18 +14,35 @@ The assistant's code runs in a sandbox with no network or file access. Its only 
 
 ### Reading and changing data
 
-A connection can read by default. Changing data, such as creating or editing a threat model, needs the `write` scope, which the client has to ask for and you have to approve when you sign in. Without it, any call that changes data is refused. Your MCP client may ask before running `execute`, because the tool can change data.
+A new connection can only read. Changing data, such as creating or editing a threat model, needs write access, which you grant the first time the assistant tries a change ([step-up authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization#step-up-authorization-flow)):
+
+1. Precogly refuses the call and tells the client it needs write access.
+2. The client opens Precogly's consent page in your browser, now listing both read and write access.
+3. You confirm your password and choose **Allow**.
+4. The client retries the call, and the change goes through.
+
+![The consent page asking for read and write access](../assets/images/mcp-consent-write-access.png)
+
+The refused call changed nothing, so the retry does not repeat any change. Claude Code supports step-up authorization. A client that does not, such as opencode, reports an authorization error instead. opencode needs `oauth.scope` set to `read write`, as shown under [Other clients](#other-clients).
+
+Your MCP client may ask before running `execute`, because the tool can change data.
 
 ## Connect an MCP client
 
 The endpoint is `<your Precogly URL>/mcp`. On a local install it is `http://localhost:8000/mcp`.
 
-You do not paste a token anywhere. The first time a client connects, it is sent to Precogly's own login and consent pages in your browser. You sign in and approve access. The client then gets a token that acts as you.
+You do not paste a token anywhere. The first time a client connects, it opens Precogly in your browser. Sign in if you are not already signed in, then confirm your password and choose **Allow**. The client then gets a token that acts as you.
 
 !!! note
     The token sees only the data in the organizations you belong to. It has the same access you have, no more.
 
 The access token lasts 10 hours. The client refreshes it without asking you again, for up to 7 days. After that, you sign in again.
+
+### See and revoke connected clients
+
+**Settings > Authorized applications** lists every client that can act as you, with the access it has and the date it was added. **Revoke access** ends that client's access at once, including any session it has open. To use it again, you approve it again.
+
+![Settings > Authorized applications, with one client that can read and write and one that can only read](../assets/images/mcp-authorized-applications.png)
 
 ### Claude.ai
 
@@ -84,6 +101,23 @@ opencode mcp auth precogly     # discovery, registration, browser consent
 opencode mcp list              # shows "connected"
 ```
 
+opencode does not support step-up authorization, so a change fails with "requires user authorization". To give it write access, add an `oauth` entry asking for both scopes, then run `opencode mcp auth precogly` again:
+
+```json
+{
+  "mcp": {
+    "precogly": {
+      "type": "remote",
+      "url": "http://localhost:8000/mcp",
+      "enabled": true,
+      "oauth": { "scope": "read write" }
+    }
+  }
+}
+```
+
+With this entry, every new opencode connection can write as soon as you approve it.
+
 ## Self-hosting notes
 
 The MCP endpoint runs inside the Precogly backend. You do not deploy a separate service.
@@ -100,7 +134,7 @@ For a public endpoint, set these in the backend environment:
 Your reverse proxy must send these paths to the backend:
 
 - `/mcp`
-- `/o/*` (sign-in and token endpoints)
+- `/o/*` (authorization, token and client registration endpoints)
 - `/.well-known/*` (discovery documents)
 
 Do not run gunicorn with `--preload`. The MCP endpoint starts its own background thread in each worker.
