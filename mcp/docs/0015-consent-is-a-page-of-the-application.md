@@ -1,6 +1,6 @@
 # 0015: Consent is a page of the application
 
-Status: proposed
+Status: accepted
 Date: 2026-11-08
 Relates to: [0003](0003-oauth-authorization-server.md),
 [0007](0007-re-authenticating-at-consent.md), [0012](0012-code-mode-over-the-api-schema.md)
@@ -88,8 +88,9 @@ field on the consent card instead of a second login page. Every Precogly account
 password today; no social or SSO provider is configured. An account without one would
 need another way to confirm, and none is designed here.
 
-Step-up authorization for `write` (SESSION.md, not yet built) reuses this page: the
-client's re-authorization opens it with `write` among the scopes.
+Step-up authorization for `write` reuses this page: a write refused for lacking the
+scope gets a 403 scope challenge (`precogly_mcp.scope_challenge`), and the client's
+re-authorization opens the page with `write` among the scopes.
 
 ## Verified
 
