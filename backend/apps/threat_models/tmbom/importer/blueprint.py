@@ -634,7 +634,11 @@ def _import_flows(data: dict, blueprint, context) -> None:
             flow_type=flow_type,
             protocol=protocols[0][:50] if protocols else "",
             port=port if isinstance(port, int) and not isinstance(port, bool) else None,
-            encrypted=bool(flow_data.get("encrypted", False)),
+            encrypted=(
+                flow_data["encrypted"]
+                if isinstance(flow_data.get("encrypted"), bool)
+                else None
+            ),
             authentication=lists["authentication"],
             authorization=lists["authorization"],
             has_sensitive_data=bool(

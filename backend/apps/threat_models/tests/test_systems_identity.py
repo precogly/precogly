@@ -562,3 +562,5 @@ class ListQueryCountTests(Fixture):
         self.assertIsNotNone(rich["approved_at"])
         self.assertEqual(rich["version"], 1)
         self.assertEqual(rich["primary_system_name"], "Payments")
+        # A caller filtering by ?organization= checks the scoping from the rows (#259).
+        self.assertEqual(rich["organization"], self.organization.id)

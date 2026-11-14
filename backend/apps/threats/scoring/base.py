@@ -32,6 +32,15 @@ class BaseScoringEngine(ABC):
         """Return an unsaved ``Rating`` with methodology, level, score and the
         likelihood and impact fields set."""
 
+    def can_reduce(self, inherent) -> bool:
+        """Whether ``rate_residual`` can compute anything from ``inherent``.
+
+        False by default: an engine with no likelihood axis has nothing to
+        scale, so a recalculation would only copy the inherent rating. Engines
+        with one say True when the inherent scores are on their scale.
+        """
+        return False
+
     def rate_residual(self, inherent, effectiveness: float):
         """The residual rating after controls of ``effectiveness`` (0 to 1).
 

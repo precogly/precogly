@@ -27,6 +27,18 @@ repos:
     hooks:
       - id: gitleaks
 
+  # Keeps the committed schema current, so API changes show in review. Fails if it
+  # regenerated the file: stage it and commit again. `uv.lock` is included because a
+  # drf-spectacular bump alone can change the schema. Needs no database.
+  - repo: local
+    hooks:
+      - id: openapi-schema
+        name: openapi schema
+        language: system
+        entry: uv run --directory backend python manage.py spectacular --file openapi.yml
+        files: ^(backend/|uv\.lock$)
+        pass_filenames: false
+
 # Django regenerates migrations in its own style, so formatting them would
 # rewrite every new one on the commit that creates it. `backend/pyproject.toml`
 # excludes them too, but that only takes effect for runs whose working

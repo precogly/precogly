@@ -73,6 +73,120 @@ class EffectivenessFallbackCoverageTests(StatusEffectivenessTestCase):
             STATUS_EFFECTIVENESS_FALLBACK["in_progress"],
         )
 
+    def test_fallbacks_do_not_decrease_along_the_lifecycle(self):
+        """Moving a control forward must never make a residual worse."""
+        lifecycle = ["gap", "planned", "in_progress", "implemented", "verified"]
+        values = [STATUS_EFFECTIVENESS_FALLBACK[status] for status in lifecycle]
+        self.assertEqual(
+            values,
+            sorted(values),
+            f"not monotonic: {dict(zip(lifecycle, values, strict=True))}",
+        )
+        self.assertLess(
+            STATUS_EFFECTIVENESS_FALLBACK["planned"],
+            STATUS_EFFECTIVENESS_FALLBACK["in_progress"],
+        )
+
+
+class ResidualRecalculationTests(StatusEffectivenessTestCase):
+    """What a recalculation may and may not overwrite."""
+
+    def _level_only_risk_with_imported_residual(self):
+        from apps.threats.models import Rating
+        from apps.threats.services import apply_rating, create_risk, level_rating
+
+        risk = create_risk(
+            self.tm, name="Account takeover", level="high", threat_ids=[self.threat.id]
+        )
+        apply_rating(risk, "residual", level_rating("medium"))
+        risk.refresh_from_db()
+        self.assertEqual(risk.residual.methodology, "manual")
+        self.assertEqual(risk.residual.level, Rating.Level.MEDIUM)
+        return risk
+
+    def test_level_only_risk_keeps_its_residual(self):
+        from apps.threats.services import recalculate_residual
+
+        risk = self._level_only_risk_with_imported_residual()
+        residual_id_before = risk.residual_id
+        self._add_countermeasure("verified")
+
+        recalculate_residual(risk)
+
+        risk.refresh_from_db()
+        self.assertEqual(risk.residual_id, residual_id_before)
+        self.assertEqual(risk.residual.level, "medium")
+
+    def test_countermeasure_status_change_keeps_a_level_only_residual(self):
+        from apps.threats.services import recalculate_all_threats_for_countermeasure
+
+        risk = self._level_only_risk_with_imported_residual()
+        control = self._add_countermeasure("planned")
+        control.status = "in_progress"
+        control.save()
+
+        recalculate_all_threats_for_countermeasure(control)
+
+        risk.refresh_from_db()
+        self.assertEqual(risk.residual.level, "medium")
+
+    def test_level_only_risk_without_a_residual_gets_a_copy_of_the_inherent(self):
+        from apps.threats.models import Risk
+        from apps.threats.services import level_rating, recalculate_residual
+
+        inherent = level_rating("high")
+        inherent.organization_id = self.org.id
+        inherent.save()
+        risk = Risk.objects.create(
+            threat_model=self.tm, name="Fresh", inherent=inherent
+        )
+        self.assertIsNone(risk.residual_id)
+
+        recalculate_residual(risk)
+
+        risk.refresh_from_db()
+        self.assertIsNotNone(risk.residual_id)
+        self.assertEqual(risk.residual.level, "high")
+
+    def test_matrix_risk_is_still_reduced(self):
+        from apps.threats.services import create_risk, recalculate_residual
+
+        risk = create_risk(
+            self.tm,
+            name="Exposure",
+            rating_inputs={"likelihood": "certain", "impact": "severe"},
+            threat_ids=[self.threat.id],
+        )
+        self.assertEqual(risk.residual.level, "critical")
+        self._add_countermeasure("verified")
+
+        recalculate_residual(risk)
+
+        risk.refresh_from_db()
+        self.assertEqual(risk.residual.likelihood_score, 1)
+        self.assertEqual(risk.residual.level, "low")
+
+    def test_in_progress_never_rates_worse_than_planned(self):
+        from apps.threats.services import create_risk, recalculate_residual
+
+        risk = create_risk(
+            self.tm,
+            name="Exposure",
+            rating_inputs={"likelihood": "likely", "impact": "major"},
+            threat_ids=[self.threat.id],
+        )
+        control = self._add_countermeasure("planned")
+        recalculate_residual(risk)
+        risk.refresh_from_db()
+        planned_likelihood = risk.residual.likelihood_score
+
+        control.status = "in_progress"
+        control.save()
+        recalculate_residual(risk)
+        risk.refresh_from_db()
+
+        self.assertLessEqual(risk.residual.likelihood_score, planned_likelihood)
+
 
 class ThreatStatusDerivationTests(StatusEffectivenessTestCase):
     """recalculate_threat_status must align with effectiveness values."""

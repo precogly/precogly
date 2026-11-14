@@ -519,7 +519,7 @@ class FlowSerializer(serializers.ModelSerializer):
         # describe data-like flows only, so other types carry none (R23).
         flow_type = attrs.get("flow_type", getattr(self.instance, "flow_type", "data"))
         if not is_data_like(flow_type):
-            attrs.update(protocol="", port=None, encrypted=False)
+            attrs.update(protocol="", port=None, encrypted=None)
         return attrs
 
 

@@ -490,7 +490,7 @@ class ApiTests(Fixture):
         )
         self.assertEqual(changed.status_code, 200, changed.content)
         flow.refresh_from_db()
-        self.assertEqual((flow.protocol, flow.encrypted), ("", False))
+        self.assertEqual((flow.protocol, flow.encrypted), ("", None))
         self.assertEqual(threat_names(), {"Signal spoofing"})
 
         plant = Zone.objects.create(blueprint=self.blueprint, name="Plant")

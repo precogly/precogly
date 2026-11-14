@@ -635,7 +635,9 @@ class Flow(TimestampedModel):
     # Shown for data-like types only (data, message, event).
     protocol = models.CharField(max_length=50, blank=True)
     port = models.IntegerField(null=True, blank=True)
-    encrypted = models.BooleanField(default=False)
+    # None means not recorded: an imported flow that says nothing about
+    # encryption must not be shown as unencrypted.
+    encrypted = models.BooleanField(null=True, blank=True, default=None)
     # Lists of spec values or custom names, with the boundary's rule (I5):
     # authenticated means not empty and not `none`.
     authentication = models.JSONField(default=list, blank=True)

@@ -7,6 +7,8 @@ import { useQuery } from '@tanstack/react-query'
 import { api, getAccessToken } from '@/lib/api'
 import type { Technology, TechnologyCategory } from '../lib/technology-registry'
 import type { DiagramNodeType } from '@/types/domain'
+import { useTechnologyCatalog } from '../context/TechnologyCatalogContext'
+import { findTechnology } from '../lib/technology-catalog'
 
 // Backend response type (camelCase from djangorestframework-camel-case middleware)
 export interface ComponentLibraryItem {
@@ -119,13 +121,19 @@ export function useTechnologies(threatModelId?: string, options?: { enabled?: bo
 /**
  * Resolve a technology value (slug or legacy display name) to its display name.
  * Returns the original value as fallback if no match is found (custom entries).
- * Skips the API fetch when no auth token is present (e.g., guest editor).
+ * Reads a technology catalog embedded in the page's payload first (the share
+ * page); otherwise fetches the component library, which needs a login, so the
+ * fetch is skipped without a token (e.g., guest editor).
  */
 export function useTechnologyDisplayName(value: string | undefined): string {
+  const catalog = useTechnologyCatalog()
   const hasAuth = !!getAccessToken()
-  const { technologies } = useTechnologies(undefined, { enabled: hasAuth })
+  const { technologies } = useTechnologies(undefined, { enabled: hasAuth && catalog === null })
 
   if (!value) return ''
+
+  const fromCatalog = findTechnology(catalog, value)
+  if (fromCatalog) return fromCatalog.name
 
   const match = technologies.find(
     (t) => t.id === value || t.name.toLowerCase() === value.toLowerCase()
@@ -134,10 +142,14 @@ export function useTechnologyDisplayName(value: string | undefined): string {
 }
 
 export function useTechnologyInfo(slug: string | undefined): { displayName: string; iconSvg: string | null } {
+  const catalog = useTechnologyCatalog()
   const hasAuth = !!getAccessToken()
-  const { technologies } = useTechnologies(undefined, { enabled: hasAuth })
+  const { technologies } = useTechnologies(undefined, { enabled: hasAuth && catalog === null })
 
   if (!slug) return { displayName: '', iconSvg: null }
+
+  const fromCatalog = findTechnology(catalog, slug)
+  if (fromCatalog) return { displayName: fromCatalog.name, iconSvg: fromCatalog.iconSvg }
 
   const match = technologies.find(
     (t) => t.id === slug || t.name.toLowerCase() === slug.toLowerCase()

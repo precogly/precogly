@@ -29,14 +29,19 @@ import {
   useDeleteInstanceMapping,
 } from '@/features/compliance/api/compliance'
 import type { ComplianceStandardMapping } from '../../types/threat-analysis'
+import { mergeComplianceMappings } from './compliance-mapping-utils'
 
 interface EditComplianceMappingsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   countermeasureId: number
   countermeasureName: string
-  // Library-level mappings (from the countermeasure library)
-  libraryMappings: ComplianceStandardMapping[]
+  /**
+   * The countermeasure's mappings as the threat analysis payload knows them:
+   * library and instance merged, instance winning per requirement. A snapshot
+   * taken when the dialog opens; the live instance list is fetched here.
+   */
+  knownMappings: ComplianceStandardMapping[]
   onSuccess?: () => void
 }
 
@@ -45,7 +50,7 @@ export function EditComplianceMappingsDialog({
   onOpenChange,
   countermeasureId,
   countermeasureName,
-  libraryMappings,
+  knownMappings,
   onSuccess,
 }: EditComplianceMappingsDialogProps) {
   const [selectedFrameworkId, setSelectedFrameworkId] = useState<number | null>(null)
@@ -69,59 +74,12 @@ export function EditComplianceMappingsDialog({
   const updateMapping = useUpdateInstanceMapping()
   const deleteMapping = useDeleteInstanceMapping()
 
-  // Merge library and instance mappings
-  const mergedMappings = useMemo(() => {
-    const mappingMap = new Map<number | string, {
-      id?: number
-      requirementId: number | null
-      frameworkName: string
-      sectionCode: string
-      requirementDescription: string
-      sufficiency: 'full' | 'partial'
-      source: 'library' | 'instance' | 'snapshot'
-    }>()
-
-    // Add library mappings first
-    libraryMappings.forEach((m) => {
-      mappingMap.set(m.id, {
-        requirementId: m.id,
-        frameworkName: m.frameworkName,
-        sectionCode: m.sectionCode,
-        requirementDescription: m.requirementDescription,
-        sufficiency: m.sufficiency,
-        source: 'library',
-      })
-    })
-
-    // Override with instance mappings
-    instanceMappings?.forEach((m) => {
-      if (m.requirement != null) {
-        // Live instance mapping — overrides library mapping
-        mappingMap.set(m.requirement, {
-          id: m.id,
-          requirementId: m.requirement,
-          frameworkName: m.frameworkName,
-          sectionCode: m.sectionCode,
-          requirementDescription: m.requirementDescription,
-          sufficiency: m.sufficiency,
-          source: 'instance',
-        })
-      } else {
-        // Orphaned mapping (requirement deleted after pack unimport) — show as read-only snapshot
-        mappingMap.set(`snapshot-${m.id}`, {
-          id: m.id,
-          requirementId: null,
-          frameworkName: m.frameworkName,
-          sectionCode: m.sectionCode,
-          requirementDescription: m.requirementDescription,
-          sufficiency: m.sufficiency,
-          source: 'snapshot',
-        })
-      }
-    })
-
-    return Array.from(mappingMap.values())
-  }, [libraryMappings, instanceMappings])
+  // Known (payload) and live instance mappings, keyed by requirement so a
+  // mapping present in both lists shows once as the editable instance row.
+  const mergedMappings = useMemo(
+    () => mergeComplianceMappings(knownMappings, instanceMappings),
+    [knownMappings, instanceMappings]
+  )
 
   // Filter requirements to exclude already mapped ones
   const availableRequirements = useMemo(() => {
@@ -204,7 +162,11 @@ export function EditComplianceMappingsDialog({
                               {mapping.sectionCode}
                             </span>
                             {mapping.source === 'library' && (
-                              <Badge variant="secondary" className="text-xs">
+                              <Badge
+                                variant="secondary"
+                                className="text-xs"
+                                title="In the library pack but not on this countermeasure. Refresh compliance on the Compliance report to add it."
+                              >
                                 Library
                               </Badge>
                             )}

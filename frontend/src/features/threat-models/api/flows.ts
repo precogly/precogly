@@ -21,7 +21,8 @@ export interface Flow {
   flowType: FlowType
   protocol: string
   port: number | null
-  encrypted: boolean
+  /** null when the flow says nothing about encryption. */
+  encrypted: boolean | null
   authentication: AuthenticationType[]
   authorization: AuthorizationType[]
   /** Derived: the authentication list is not empty and has no `none` (I5). */

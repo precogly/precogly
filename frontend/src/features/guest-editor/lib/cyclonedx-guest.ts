@@ -585,7 +585,7 @@ function buildFlow(edge: DiagramEdge, nodesById: Map<string, DiagramNode>, refs:
   }
   const description = asString(data.description)
   if (description) flow.description = description
-  if (dataLike && data.encrypted === true) flow.encrypted = true
+  if (dataLike && typeof data.encrypted === 'boolean') flow.encrypted = data.encrypted
   const protocol = asString(data.protocol)
   if (dataLike && protocol) flow.protocols = [protocol]
   const authentication = getAuthentication(data)
@@ -1234,6 +1234,80 @@ interface ElementIndex {
   edges: Map<string, string>
 }
 
+/**
+ * Grid used when a file carries no canvas. Mirrors the signed-in importer's
+ * ``dfd_layout.py`` so both editors draw the same file the same way.
+ */
+const LAYOUT = { nodeWidth: 180, nodeHeight: 80, gap: 40, padding: 60, columns: 3 } as const
+
+function gridPosition(index: number, originX: number, originY: number): { x: number; y: number } {
+  return {
+    x: originX + (index % LAYOUT.columns) * (LAYOUT.nodeWidth + LAYOUT.gap),
+    y: originY + Math.floor(index / LAYOUT.columns) * (LAYOUT.nodeHeight + LAYOUT.gap),
+  }
+}
+
+function gridBox(count: number): { width: number; height: number } {
+  const columns = Math.min(LAYOUT.columns, Math.max(count, 1))
+  const rows = count === 0 ? 0 : Math.ceil(count / columns)
+  return {
+    width: columns * LAYOUT.nodeWidth + Math.max(columns - 1, 0) * LAYOUT.gap,
+    height: rows * LAYOUT.nodeHeight + Math.max(rows - 1, 0) * LAYOUT.gap,
+  }
+}
+
+/**
+ * Order zones so that each one sits next to the zone it is most connected to,
+ * by boundaries and flows. ``weight`` maps "a|b" (ids in either order) to a
+ * connection count. Starts from the first zone in file order and walks the
+ * strongest link each step, so Mobile sits beside Cloud, not beside Bike Fleet.
+ */
+function orderByConnections<T extends { id: string }>(zones: T[], weight: Map<string, number>): T[] {
+  const linkWeight = (a: string, b: string) => (weight.get(`${a}|${b}`) ?? 0) + (weight.get(`${b}|${a}`) ?? 0)
+  const remaining = [...zones]
+  const ordered: T[] = []
+  while (remaining.length > 0) {
+    let next = remaining[0]
+    if (ordered.length > 0) {
+      const last = ordered[ordered.length - 1]
+      let best = 0
+      for (const candidate of remaining) {
+        const score = linkWeight(last.id, candidate.id)
+        if (score > best) {
+          best = score
+          next = candidate
+        }
+      }
+    }
+    ordered.push(next)
+    remaining.splice(remaining.indexOf(next), 1)
+  }
+  return ordered
+}
+
+/**
+ * Pick the handles a flow should leave and enter by, from where the two
+ * nodes sit. Same rule as ``getSmartHandles`` in the editor: the main axis
+ * between the nodes, or the other axis when a flow already joins the pair.
+ */
+function handlesFor(
+  source: { x: number; y: number },
+  target: { x: number; y: number },
+  pairAlreadyJoined: boolean,
+): { sourceHandle: string; targetHandle: string } {
+  const dx = target.x - source.x
+  const dy = target.y - source.y
+  const horizontal = pairAlreadyJoined ? Math.abs(dx) <= Math.abs(dy) : Math.abs(dx) > Math.abs(dy)
+  if (horizontal) {
+    return dx >= 0
+      ? { sourceHandle: 'right-source', targetHandle: 'left-target' }
+      : { sourceHandle: 'left-source', targetHandle: 'right-target' }
+  }
+  return dy >= 0
+    ? { sourceHandle: 'bottom-source', targetHandle: 'top-target' }
+    : { sourceHandle: 'top-source', targetHandle: 'bottom-target' }
+}
+
 class Importer {
   readonly document: JsonObject
   readonly warnings: string[] = []
@@ -1246,6 +1320,8 @@ class Importer {
   hiddenElementCount = 0
   private readonly extraBlueprintRefs = new Set<string>()
   private generatedLayout = false
+  /** Nodes placed so far per zone id ('' for none) while a layout is generated. */
+  private readonly generatedChildCount = new Map<string, number>()
 
   constructor(document: JsonObject) {
     this.document = document
@@ -1446,12 +1522,13 @@ class Importer {
       const label = entryLabel(entry, `zone ${position}`)
       let node = this.matchNode(entry, ['trustZone'])
       if (!node && this.generatedLayout) {
+        // Position and size are set by finishGeneratedLayout once the contents are known.
         node = {
           id: this.newNodeId('zone'),
           type: 'trustZone',
-          position: { x: 50 + position * 450, y: 50 },
+          position: { x: 0, y: 0 },
           data: { label, zoneColor: '#22c55e' },
-          style: { width: 400, height: 300 },
+          style: { width: LAYOUT.nodeWidth + 2 * LAYOUT.padding, height: LAYOUT.nodeHeight + 2 * LAYOUT.padding },
         } as DiagramNode
         this.nodes.push(node)
         if (ref) this.index.nodes.set(ref, node.id)
@@ -1483,14 +1560,14 @@ class Importer {
       }
       if (this.generatedLayout) {
         node.parentId = parentId
-        node.position = { x: 30, y: 60 }
       }
     }
   }
 
   readAssets(blueprint: CycloneDxBlueprint, section: 'assets' | 'dataStores'): void {
     const entries = this.entries(blueprint, section)
-    const zoneChildCount = new Map<string, number>()
+    // Shared across assets and data stores so the two sections never land on the same grid cell.
+    const zoneChildCount = this.generatedChildCount
     entries.forEach((entry, position) => {
       const ref = asString(entry['bom-ref'])
       const label = entryLabel(entry, `${section === 'assets' ? 'asset' : 'data store'} ${position}`)
@@ -1502,12 +1579,11 @@ class Importer {
         const zoneId = asString(entry.zone) ? this.index.nodes.get(asString(entry.zone)) : undefined
         const childIndex = zoneChildCount.get(zoneId ?? '') ?? 0
         zoneChildCount.set(zoneId ?? '', childIndex + 1)
+        // Loose nodes (no zone) are moved below the zones by finishGeneratedLayout.
         node = {
           id: this.newNodeId(nodeType),
           type: nodeType,
-          position: zoneId
-            ? { x: 30 + (childIndex % 2) * 180, y: 60 + Math.floor(childIndex / 2) * 120 }
-            : { x: 50 + (childIndex % 4) * 220, y: 450 + Math.floor(childIndex / 4) * 140 },
+          position: gridPosition(childIndex, LAYOUT.padding, LAYOUT.padding),
           ...(zoneId ? { parentId: zoneId } : {}),
           data: { label },
         } as DiagramNode
@@ -1595,7 +1671,14 @@ class Importer {
       applyCanvasValue(data, 'flowType', value, 'data')
       const protocols = stringList(entry.protocols)
       applyCanvasValue(data, 'protocol', protocols[0], undefined)
-      applyCanvasValue(data, 'encrypted', entry.encrypted === true, false)
+      // Three states: true, false, or not recorded. An explicit false must
+      // survive, so this does not go through applyCanvasValue's default rule.
+      // The file only carries encryption for data-like flows; other types keep
+      // whatever the canvas holds, as the editors write it.
+      if (isDataLikeFlowType(getFlowType(data))) {
+        if (typeof entry.encrypted === 'boolean') data.encrypted = entry.encrypted
+        else delete data.encrypted
+      }
       const authentication = Array.isArray(entry.authentication) ? entry.authentication.map(typeName).filter((item) => item !== '') : []
       if (authentication.includes('none') && authentication.length > 1) {
         this.warn(`Flow '${label}': authentication mixes 'none' with other values; shown as not recorded.`)
@@ -1675,6 +1758,111 @@ class Importer {
         })
       }
     })
+  }
+
+  /**
+   * Arrange a generated layout once every node and edge exists: size zones to
+   * their contents, stack nested zones below their parent's nodes, put the
+   * most connected zones side by side, drop loose nodes below the zones and
+   * give each flow handles that suit where its nodes ended up.
+   */
+  finishGeneratedLayout(): void {
+    if (!this.generatedLayout) return
+    const zones = this.nodes.filter((node) => node.type === 'trustZone')
+    const zoneIds = new Set(zones.map((zone) => zone.id))
+    const childZones = (zoneId: string) => zones.filter((zone) => zone.parentId === zoneId)
+    const nodesIn = (zoneId: string) => this.nodes.filter((node) => node.parentId === zoneId && node.type !== 'trustZone')
+
+    const depthOf = (zone: DiagramNode): number => {
+      let depth = 0
+      let current = zone
+      while (current.parentId && zoneIds.has(current.parentId)) {
+        depth += 1
+        current = this.nodes.find((node) => node.id === current.parentId)!
+      }
+      return depth
+    }
+
+    // Size zones from the deepest up, so a parent knows how big its children are.
+    const sizes = new Map<string, { width: number; height: number }>()
+    for (const zone of [...zones].sort((a, b) => depthOf(b) - depthOf(a))) {
+      const inner = nodesIn(zone.id)
+      const box = gridBox(inner.length)
+      let width = box.width
+      let cursorY = LAYOUT.padding + box.height + (inner.length > 0 ? LAYOUT.gap : 0)
+      const children = childZones(zone.id)
+      for (const child of children) {
+        const childSize = sizes.get(child.id)!
+        child.position = { x: LAYOUT.padding, y: cursorY }
+        width = Math.max(width, childSize.width)
+        cursorY += childSize.height + LAYOUT.gap
+      }
+      const contentHeight = Math.max(cursorY - (children.length > 0 ? LAYOUT.gap : 0), LAYOUT.padding + LAYOUT.nodeHeight)
+      const size = { width: width + 2 * LAYOUT.padding, height: contentHeight + LAYOUT.padding }
+      sizes.set(zone.id, size)
+      zone.style = { ...(zone.style ?? {}), width: size.width, height: size.height }
+    }
+
+    // Which top-level zone each node belongs to, for flow-based adjacency.
+    const topZoneOf = (nodeId: string): string | undefined => {
+      let current = this.nodes.find((node) => node.id === nodeId)
+      let top: string | undefined
+      while (current?.parentId && zoneIds.has(current.parentId)) {
+        top = current.parentId
+        current = this.nodes.find((node) => node.id === current!.parentId)
+      }
+      return top
+    }
+    const weight = new Map<string, number>()
+    const link = (a: string | undefined, b: string | undefined, amount: number) => {
+      if (!a || !b || a === b) return
+      const key = `${a}|${b}`
+      weight.set(key, (weight.get(key) ?? 0) + amount)
+    }
+    for (const edge of this.edges) {
+      if (edge.type === 'trustBoundary') link(edge.source, edge.target, 100)
+      else link(topZoneOf(edge.source), topZoneOf(edge.target), 1)
+    }
+
+    // Top-level zones side by side in connection order, loose nodes below.
+    const topLevel = zones.filter((zone) => !(zone.parentId && zoneIds.has(zone.parentId)))
+    let cursorX = 0
+    let tallest = 0
+    for (const zone of orderByConnections(topLevel, weight)) {
+      const size = sizes.get(zone.id)!
+      zone.position = { x: cursorX, y: 0 }
+      cursorX += size.width + LAYOUT.gap
+      tallest = Math.max(tallest, size.height)
+    }
+    const loose = this.nodes.filter((node) => !node.parentId && node.type !== 'trustZone')
+    loose.forEach((node, index) => {
+      node.position = gridPosition(index, 0, zones.length > 0 ? tallest + LAYOUT.gap : 0)
+    })
+
+    // Handles from absolute node centres, so flows leave on the side that faces the other node.
+    const centreOf = (nodeId: string): { x: number; y: number } | undefined => {
+      let current = this.nodes.find((node) => node.id === nodeId)
+      if (!current) return undefined
+      let x = current.position.x + LAYOUT.nodeWidth / 2
+      let y = current.position.y + LAYOUT.nodeHeight / 2
+      while (current?.parentId) {
+        current = this.nodes.find((node) => node.id === current!.parentId)
+        if (!current) break
+        x += current.position.x
+        y += current.position.y
+      }
+      return { x, y }
+    }
+    const joined = new Set<string>()
+    for (const edge of this.edges) {
+      if (edge.type !== 'dataFlow') continue
+      const source = centreOf(edge.source)
+      const target = centreOf(edge.target)
+      if (!source || !target) continue
+      const pairKey = [edge.source, edge.target].sort().join('|')
+      Object.assign(edge, handlesFor(source, target, joined.has(pairKey)))
+      joined.add(pairKey)
+    }
   }
 
   readDataSets(blueprint: CycloneDxBlueprint): GuestDataAsset[] {
@@ -2071,6 +2259,7 @@ export function deserializeCycloneDxToGuest(json: string): DeserializedFile {
     importer.readAssets(blueprint, 'dataStores')
     importer.readFlows(blueprint)
     importer.readBoundaries(blueprint)
+    importer.finishGeneratedLayout()
     systemContext.dataAssets = importer.readDataSets(blueprint)
     systemContext.assumptions = importer.readAssumptions(blueprint)
     systemContext.outOfScopeItems = importer.readScope(blueprint)

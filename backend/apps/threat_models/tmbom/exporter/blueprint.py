@@ -364,8 +364,8 @@ def _flow(flow, refs: RefRegistry, links: list = ()) -> dict:
     }
     if flow.description:
         entry["description"] = flow.description
-    if flow.encrypted:
-        entry["encrypted"] = True
+    if flow.encrypted is not None:
+        entry["encrypted"] = flow.encrypted
     if flow.protocol:
         entry["protocols"] = [flow.protocol]
     if flow.authentication:

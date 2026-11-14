@@ -483,7 +483,7 @@ function buildComponentsSection(data: ReportData, numbers: SectionNumberer): Blo
           flow.source ?? '',
           flow.destination ?? '',
           flow.protocol || '',
-          yesNo(flow.encrypted),
+          flow.encrypted === null ? 'Not recorded' : yesNo(flow.encrypted),
           isAuthenticated(flow.authentication) ? `Yes (${flow.authentication.join(', ')})` : 'No',
           yesNo(flow.crossesBoundary),
         ])

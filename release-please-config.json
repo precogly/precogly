@@ -6,6 +6,26 @@
       "extra-files": [
         "frontend/package.json",
         {
+          "type": "json",
+          "path": "frontend/package-lock.json",
+          "jsonpath": "$.version"
+        },
+        {
+          "type": "json",
+          "path": "frontend/package-lock.json",
+          "jsonpath": "$.packages[''].version"
+        },
+        {
+          "type": "toml",
+          "path": "backend/pyproject.toml",
+          "jsonpath": "$.project.version"
+        },
+        {
+          "type": "toml",
+          "path": "uv.lock",
+          "jsonpath": "$.package[?(@.name.value=='precogly-backend')].version"
+        },
+        {
           "type": "generic",
           "path": "backend/config/settings/base.py",
           "glob": false

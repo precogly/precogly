@@ -664,7 +664,11 @@ def _flow_fields_from_edge(edge_data) -> dict:
         # Protocol, port and encryption mean nothing on a signal or energy flow.
         "protocol": edge_data.get("protocol", "") if data_like else "",
         "port": port if data_like else None,
-        "encrypted": bool(edge_data.get("encrypted", False)) if data_like else False,
+        "encrypted": (
+            edge_data["encrypted"]
+            if data_like and isinstance(edge_data.get("encrypted"), bool)
+            else None
+        ),
         "authentication": _authentication_from_edge(edge_data),
         "description": edge_data.get("description", ""),
         "has_sensitive_data": edge_data.get("has_sensitive_data", False),

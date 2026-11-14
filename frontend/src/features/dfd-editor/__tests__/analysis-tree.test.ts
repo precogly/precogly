@@ -107,14 +107,30 @@ describe('buildAnalysisTree', () => {
     expect(two.byKey.get('blueprint-1')!.children.map((node) => node.key)).toContain('zone-10')
   })
 
-  it('places whole-system threats on the System root and counts only those there', () => {
+  it('places whole-system threats on the System root and counts the whole model there', () => {
     const { root, byKey } = buildAnalysisTree({
       ...baseInput,
       threats: [threat(1, []), threat(2, [target('component', 100)])],
     })
     expect(root.directThreatIds).toEqual(new Set(['threat-1']))
-    expect(root.counts.total).toBe(1)
+    expect(root.counts.total).toBe(2)
+    expect(root.subtreeThreatIds).toEqual(new Set(['threat-1', 'threat-2']))
     expect(byKey.get('component-100')!.counts.total).toBe(1)
+  })
+
+  it('keeps a parent\'s own count apart from its subtree total, the pair its row prints', () => {
+    const { byKey } = buildAnalysisTree({
+      ...baseInput,
+      threats: [
+        threat(1, [target('component', 102)]),
+        threat(2, [target('component', 103)]),
+        threat(3, [target('component', 103)]),
+      ],
+    })
+    const historian = byKey.get('component-102')!
+    expect(historian.directThreatIds.size).toBe(1)
+    expect(historian.counts.total).toBe(3)
+    expect(byKey.get('component-103')!.directThreatIds.size).toBe(2)
   })
 
   it('counts a shared threat once at every level above its targets', () => {

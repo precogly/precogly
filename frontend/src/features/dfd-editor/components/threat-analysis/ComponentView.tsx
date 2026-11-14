@@ -4,9 +4,11 @@
  *
  * A scenario has targets or is whole-system; it shows under each target
  * with a "shared" mark and "Also on" links, and every edit applies to the
- * one scenario. Zones and boundaries are selectable and list the controls
- * scoped to them (a plain list, L4). Rows come from the backend, so targets
- * on no canvas show too.
+ * one scenario. A row lists everything its tree count counts: its own threats
+ * first (draggable), then the ones on rows beneath it, tagged with their
+ * target. Zones and boundaries are selectable and list the controls scoped
+ * to them (a plain list, L4). Rows come from the backend, so targets on no
+ * canvas show too.
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -43,7 +45,10 @@ import { buildAnalysisTree, initialAnalysisSelection, type AnalysisTreeNode } fr
 import {
   TARGET_TYPE_LABELS,
   targetSelection,
+  targetTreeKey,
+  threatInSelectionSubtree,
   threatMatchesSelection,
+  treeKeyForSelection,
   type AnalysisSelection,
 } from './analysis-selection'
 
@@ -88,8 +93,15 @@ export interface ComponentViewProps {
 function selectionLabel(selection: AnalysisSelection | null, byKey: Map<string, AnalysisTreeNode>): string {
   if (!selection) return 'Select the system, a component, a flow, a zone or a boundary'
   if (selection.kind === 'system') return 'System'
-  const node = byKey.get(`${selection.type}-${selection.id}`)
+  const node = byKey.get(treeKeyForSelection(selection)!)
   return node ? `${node.label} (${TARGET_TYPE_LABELS[selection.type]})` : `${TARGET_TYPE_LABELS[selection.type]} ${selection.id}`
+}
+
+/** "on API Gateway", or "on API Gateway +2" for a threat with several targets, from the tree's labels. */
+function inheritedTargetLabel(threat: AnalysisThreat, byKey: Map<string, AnalysisTreeNode>): string | null {
+  const names = threat.targets.map((target) => byKey.get(targetTreeKey(target.type, target.id))?.label ?? target.name)
+  if (names.length === 0) return null
+  return names.length === 1 ? `on ${names[0]}` : `on ${names[0]} +${names.length - 1}`
 }
 
 export function ComponentView({
@@ -195,9 +207,17 @@ export function ComponentView({
     })
   }, [])
 
+  // The row's own threats (active or triaged) plus the active ones beneath it, as the tree counts them.
   const threatsForSelection = useMemo(
-    () => threats.filter((threat) => threatMatchesSelection(threat, selection)),
-    [threats, selection]
+    () =>
+      threats.filter(
+        (threat) => threatMatchesSelection(threat, selection) || threatInSelectionSubtree(threat, selection, tree.byKey)
+      ),
+    [threats, selection, tree.byKey]
+  )
+  const inheritedThreatIds = useMemo(
+    () => new Set(threatsForSelection.filter((threat) => !threatMatchesSelection(threat, selection)).map((threat) => threat.id)),
+    [threatsForSelection, selection]
   )
   const activeSelectionThreatCount = threatsForSelection.filter((threat) => isActiveThreat(threat.triageStatus)).length
 
@@ -352,6 +372,8 @@ export function ComponentView({
             <ThreatList
               threatModelId={threatModelId}
               threats={threatsForSelection}
+              inheritedThreatIds={inheritedThreatIds}
+              inheritedTargetLabel={(threat) => inheritedTargetLabel(threat, tree.byKey)}
               hasSelection={selection !== null}
               selection={selection}
               selectedThreatId={selectedThreatId}
