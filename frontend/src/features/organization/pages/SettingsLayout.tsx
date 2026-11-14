@@ -49,8 +49,8 @@ function useSettingsNavItems() {
       icon: OwlMark,
     },
     {
-      to: '/settings/connected-apps',
-      label: 'Connected applications',
+      to: '/settings/authorized-apps',
+      label: 'Authorized applications',
       icon: Plug,
     },
   ]

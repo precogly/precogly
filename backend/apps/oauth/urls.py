@@ -1,22 +1,22 @@
 from django.urls import path
 
 from apps.oauth.views import (
-    ConnectedApplicationsView,
-    ConnectedApplicationView,
+    AuthorizedApplicationsView,
+    AuthorizedApplicationView,
     DecisionView,
     PendingAuthorizationView,
 )
 
 urlpatterns = [
     path(
-        "connected-apps/",
-        ConnectedApplicationsView.as_view(),
-        name="connected-applications",
+        "authorized-apps/",
+        AuthorizedApplicationsView.as_view(),
+        name="authorized-applications",
     ),
     path(
-        "connected-apps/<int:application_id>/",
-        ConnectedApplicationView.as_view(),
-        name="connected-application",
+        "authorized-apps/<int:application_id>/",
+        AuthorizedApplicationView.as_view(),
+        name="authorized-application",
     ),
     path(
         "pending-authorizations/<str:handle>/",

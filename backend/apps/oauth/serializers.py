@@ -21,7 +21,7 @@ class PendingAuthorizationSerializer(serializers.Serializer):
     loopback_redirect = serializers.BooleanField()
 
 
-class ConnectedApplicationSerializer(serializers.Serializer):
+class AuthorizedApplicationSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     # Chosen by the registering client, like `PendingAuthorizationSerializer.client_name`.
     name = serializers.CharField()

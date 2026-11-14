@@ -28,7 +28,7 @@ from rest_framework.views import APIView
 from apps.oauth.models import MAX_PASSWORD_ATTEMPTS, PendingAuthorization
 from apps.oauth.permissions import SignedInInBrowser
 from apps.oauth.serializers import (
-    ConnectedApplicationSerializer,
+    AuthorizedApplicationSerializer,
     DecisionResultSerializer,
     DecisionSerializer,
     PendingAuthorizationSerializer,
@@ -210,7 +210,7 @@ class DecisionView(OAuthLibMixin, APIView):
 def live_access_tokens(user):
     """The user's access tokens that still grant access, now or after a refresh.
 
-    A client is connected while it holds one of these: an unexpired access token, or
+    A client is authorized while it holds one of these: an unexpired access token, or
     an expired one whose refresh token has not been revoked.
     """
     return (
@@ -225,12 +225,12 @@ def live_access_tokens(user):
     )
 
 
-class ConnectedApplicationsView(APIView):
+class AuthorizedApplicationsView(APIView):
     """Lists the MCP clients that can currently act on the user's account."""
 
     permission_classes = [IsAuthenticated, SignedInInBrowser]
 
-    @extend_schema(responses=ConnectedApplicationSerializer(many=True))
+    @extend_schema(responses=AuthorizedApplicationSerializer(many=True))
     def get(self, request):
         descriptions = get_scopes_backend().get_all_scopes()
         by_application = {}
@@ -259,11 +259,11 @@ class ConnectedApplicationsView(APIView):
                 {"name": scope, "description": descriptions.get(scope, scope)}
                 for scope in sorted(entry["scopes"])
             ]
-        return Response(ConnectedApplicationSerializer(applications, many=True).data)
+        return Response(AuthorizedApplicationSerializer(applications, many=True).data)
 
 
-class ConnectedApplicationView(APIView):
-    """Disconnects one MCP client from the user's account."""
+class AuthorizedApplicationView(APIView):
+    """Revokes one MCP client's access to the user's account."""
 
     permission_classes = [IsAuthenticated, SignedInInBrowser]
 

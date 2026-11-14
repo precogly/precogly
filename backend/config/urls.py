@@ -49,10 +49,10 @@ urlpatterns = [
     # metadata endpoint reverses.
     path("o/authorize/", AuthorizeView.as_view()),
     # The toolkit's own pages for listing and revoking tokens need a Django session.
-    # Connected applications are managed in the SPA's settings instead.
+    # Authorized applications are managed in the SPA's settings instead.
     re_path(
         r"^o/authorized_tokens/",
-        RedirectView.as_view(url=f"{settings.FRONTEND_URL}/settings/connected-apps"),
+        RedirectView.as_view(url=f"{settings.FRONTEND_URL}/settings/authorized-apps"),
     ),
     path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
     path("api/oauth/", include("apps.oauth.urls")),

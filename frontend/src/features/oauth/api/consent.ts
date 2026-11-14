@@ -26,27 +26,27 @@ export function usePendingAuthorization(handle: string, enabled: boolean) {
   })
 }
 
-export interface ConnectedApplication {
+export interface AuthorizedApplication {
   id: number
   name: string
   scopes: { name: string; description: string }[]
   lastTokenIssuedAt: string
 }
 
-const connectedKey = ['oauth', 'connected-apps']
+const authorizedKey = ['oauth', 'authorized-apps']
 
-export function useConnectedApplications() {
+export function useAuthorizedApplications() {
   return useQuery({
-    queryKey: connectedKey,
-    queryFn: () => api.get<ConnectedApplication[]>('/oauth/connected-apps/'),
+    queryKey: authorizedKey,
+    queryFn: () => api.get<AuthorizedApplication[]>('/oauth/authorized-apps/'),
   })
 }
 
-export function useDisconnectApplication() {
+export function useRevokeApplication() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: number) => api.delete(`/oauth/connected-apps/${id}/`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: connectedKey }),
+    mutationFn: (id: number) => api.delete(`/oauth/authorized-apps/${id}/`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: authorizedKey }),
   })
 }
 

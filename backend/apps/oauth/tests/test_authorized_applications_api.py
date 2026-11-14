@@ -23,7 +23,7 @@ def jwt_header(user):
     }
 
 
-class TestConnectedApplications(TestCase):
+class TestAuthorizedApplications(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create_user(
@@ -65,9 +65,9 @@ class TestConnectedApplications(TestCase):
             )
         return access
 
-    def connected(self, user=None):
+    def authorized(self, user=None):
         response = self.client.get(
-            reverse("connected-applications"), **jwt_header(user or self.user)
+            reverse("authorized-applications"), **jwt_header(user or self.user)
         )
         assert response.status_code == 200
         return response.json()
@@ -75,7 +75,7 @@ class TestConnectedApplications(TestCase):
     def test_a_client_holding_a_token_is_listed_with_its_scopes(self):
         self.issue(self.claude)
 
-        [entry] = self.connected()
+        [entry] = self.authorized()
 
         assert entry["id"] == self.claude.pk
         assert entry["name"] == "Claude Code"
@@ -85,24 +85,24 @@ class TestConnectedApplications(TestCase):
         # MCP clients refresh: an expired access token is normal between uses.
         self.issue(self.claude, expires_in=timedelta(hours=-1))
 
-        assert [entry["name"] for entry in self.connected()] == ["Claude Code"]
+        assert [entry["name"] for entry in self.authorized()] == ["Claude Code"]
 
     def test_an_expired_token_with_nothing_to_refresh_does_not(self):
         self.issue(self.claude, expires_in=timedelta(hours=-1), refresh=False)
 
-        assert self.connected() == []
+        assert self.authorized() == []
 
     def test_another_users_clients_are_not_listed(self):
         self.issue(self.opencode, user=self.other_user)
 
-        assert self.connected() == []
+        assert self.authorized() == []
 
-    def test_disconnecting_revokes_everything_the_client_holds(self):
+    def test_revoking_removes_everything_the_client_holds(self):
         access = self.issue(self.claude)
         self.issue(self.opencode)
 
         response = self.client.delete(
-            reverse("connected-application", args=[self.claude.pk]),
+            reverse("authorized-application", args=[self.claude.pk]),
             **jwt_header(self.user),
         )
 
@@ -110,7 +110,7 @@ class TestConnectedApplications(TestCase):
         assert not AccessToken.objects.filter(application=self.claude).exists()
         refresh = RefreshToken.objects.get(token=f"refresh-{access.token}")
         assert refresh.revoked is not None
-        assert [entry["name"] for entry in self.connected()] == ["opencode"]
+        assert [entry["name"] for entry in self.authorized()] == ["opencode"]
 
         # The client can no longer trade its refresh token for a new access token.
         exchange = self.client.post(
@@ -123,28 +123,28 @@ class TestConnectedApplications(TestCase):
         )
         assert exchange.status_code == 400
 
-    def test_disconnecting_a_client_the_user_has_not_connected_is_a_404(self):
+    def test_revoking_a_client_the_user_has_not_authorized_is_a_404(self):
         self.issue(self.claude, user=self.other_user)
 
         response = self.client.delete(
-            reverse("connected-application", args=[self.claude.pk]),
+            reverse("authorized-application", args=[self.claude.pk]),
             **jwt_header(self.user),
         )
 
         assert response.status_code == 404
         assert AccessToken.objects.filter(user=self.other_user).exists()
 
-    def test_an_mcp_access_token_cannot_list_or_disconnect(self):
+    def test_an_mcp_access_token_cannot_list_or_revoke(self):
         access = self.issue(self.claude)
         bearer = {"HTTP_AUTHORIZATION": f"Bearer {access.token}"}
 
         assert (
-            self.client.get(reverse("connected-applications"), **bearer).status_code
+            self.client.get(reverse("authorized-applications"), **bearer).status_code
             == 403
         )
         assert (
             self.client.delete(
-                reverse("connected-application", args=[self.claude.pk]), **bearer
+                reverse("authorized-application", args=[self.claude.pk]), **bearer
             ).status_code
             == 403
         )
