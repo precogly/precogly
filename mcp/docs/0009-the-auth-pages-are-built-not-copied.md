@@ -1,6 +1,8 @@
 # 0009: The authorization pages are built, not copied
 
-Status: accepted; the "Moving consent into the SPA" rejection amended 2026-08-28
+Status: superseded by [0015](0015-consent-is-a-page-of-the-application.md), which
+moves consent into the SPA; the "Moving consent into the SPA" rejection was amended
+2026-08-28
 Date: 2026-08-11
 Relates to: [0004](0004-where-the-user-authorizes.md)
 Supersedes: the drift trade-off in [0004](0004-where-the-user-authorizes.md)

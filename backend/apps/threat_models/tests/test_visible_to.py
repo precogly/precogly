@@ -2,9 +2,7 @@
 
 `ThreatModelQuerySet.visible_to` is the entire read boundary. `CanWrite` and
 `IsSecurityTeam` both return True for safe methods (`apps/core/permissions.py`), so
-nothing else narrows a read, and the MCP endpoint reaches the queryset with no
-permission classes running at all — `apps/core/mcp.py` resolves a user from a bearer
-token and calls this directly.
+nothing else narrows a read.
 
 `account()` below deletes what the account was given on creation, and that is
 load-bearing rather than tidiness. `create_personal_workspace`

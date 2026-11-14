@@ -5,13 +5,16 @@ URL configuration for Precogly backend.
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
+from django.views.generic import RedirectView
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
 from oauth2_provider.urls import metadata_urlpatterns
+
+from apps.oauth.views import AuthorizeView
 
 # django-oauth-toolkit publishes two kinds of metadata: RFC 8414 for the authorization
 # server, and RFC 9728 for a protected resource. Only the first describes this server.
@@ -40,29 +43,19 @@ urlpatterns = [
     # Authentication
     path("api/auth/", include("dj_rest_auth.urls")),
     path("api/auth/registration/", include("dj_rest_auth.registration.urls")),
-    # A second, server-rendered login, because the React one yields a JWT and no
-    # Django session and the authorize view needs a session. LOGIN_URL points here.
-    #
-    # The second sign-in is deliberate, not a gap to close: `mcp/docs/0007` keeps it
-    # because consent granted by a session that has not just authenticated says nothing
-    # about who granted it. `POST /api/auth/login/` already sets a `sessionid` —
-    # dj_rest_auth's SESSION_LOGIN defaults to True — and the SPA discards it by sending
-    # no `credentials: "include"`. Unifying would add a line, not remove one.
-    #
-    # TODO: the open question is the templates, not the logins. Five Django templates and
-    #       a second CSS build target exist only to render this flow, and they go away
-    #       only if consent moves into the SPA. `mcp/docs/0009` rejects that for now and
-    #       its 2026-08-28 amendment says what the gate actually is: not the authorization
-    #       code, which stays in django-oauth-toolkit behind one `OAuthLibMixin` call, but
-    #       what would authenticate the consent POST. A DRF view authenticates with a JWT,
-    #       and a JWT proves someone signed in up to an hour ago — which is the thing 0007
-    #       refuses. Reopen when there is an answer to that: a short-lived re-auth token,
-    #       or 0007's deferred bridge endpoint minting a fresh session.
-    #
-    #       Unowned, no issue filed.
-    path("accounts/", include("allauth.urls")),
-    # OAuth 2.1 authorization server, for MCP clients.
+    # OAuth 2.1 authorization server, for MCP clients. Precogly's own authorize view
+    # comes first so it handles /o/authorize/ instead of django-oauth-toolkit's view.
+    # The toolkit's route stays registered as `oauth2_provider:authorize`, which its
+    # metadata endpoint reverses.
+    path("o/authorize/", AuthorizeView.as_view()),
+    # The toolkit's own pages for listing and revoking tokens need a Django session.
+    # Authorized applications are managed in the SPA's settings instead.
+    re_path(
+        r"^o/authorized_tokens/",
+        RedirectView.as_view(url=f"{settings.FRONTEND_URL}/settings/authorized-apps"),
+    ),
     path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
+    path("api/oauth/", include("apps.oauth.urls")),
     # RFC 8414 puts this document at the origin root rather than under the prefix
     # above, and strict clients look nowhere else.
     #

@@ -27,7 +27,6 @@ import hashlib
 import json
 import secrets
 from datetime import timedelta
-from urllib.parse import parse_qs, urlparse
 
 from asgiref.sync import async_to_sync
 from django.contrib.auth import get_user_model
@@ -39,7 +38,8 @@ from oauth2_provider.models import (
     set_token_value,
 )
 
-from apps.core.mcp import DjangoAccessTokenVerifier
+from apps.core.mcp.token_verifier import DjangoAccessTokenVerifier
+from apps.core.tests.oauth_flow import consent_for_code
 
 User = get_user_model()
 AccessToken = get_access_token_model()
@@ -63,7 +63,6 @@ class AnIssuedTokensAudience(TestCase):
         )
 
     def setUp(self):
-        self.client.force_login(self.user)
         self.client_id = self.client.post(
             reverse("oauth2_provider:dcr-register"),
             data=json.dumps(
@@ -85,7 +84,7 @@ class AnIssuedTokensAudience(TestCase):
         )
 
     def token_for(self, resource=None):
-        """Walk login → consent → code → token, and return the raw access token.
+        """Walk authorize → consent → code → token, and return the raw access token.
 
         `resource` is sent at the authorization endpoint only. RFC 8707 lets the
         token request narrow the audience but never widen it, so omitting it there
@@ -104,11 +103,7 @@ class AnIssuedTokensAudience(TestCase):
         if resource is not None:
             params["resource"] = resource
 
-        self.client.get(reverse("oauth2_provider:authorize"), params)
-        consent = self.client.post(
-            reverse("oauth2_provider:authorize"), {**params, "allow": "Authorize"}
-        )
-        code = parse_qs(urlparse(consent.headers["Location"]).query)["code"][0]
+        code = consent_for_code(self.client, self.user, "testpass123", params)
 
         return self.client.post(
             reverse("oauth2_provider:token"),
@@ -125,13 +120,13 @@ class AnIssuedTokensAudience(TestCase):
         resolved = verify(self.token_for(RESOURCE))
 
         assert resolved is not None
-        # `subject` is the authorization boundary rather than a log field: it is the
-        # only thing `reader_for` uses to scope every row a tool sees.
+        # `subject` is the authorization boundary rather than a log field: tools act
+        # as this user.
         assert resolved.subject == str(self.user.pk)
         assert resolved.scopes == ["read"]
 
     def test_a_token_issued_without_a_resource_is_refused(self):
-        # The case the check exists for, and the reason `apps.core.mcp` compares
+        # The case the check exists for, and the reason the verifier compares
         # audiences itself: `AccessToken.allows_audience()` returns True for an empty
         # `resource` list, treating an unbound token as valid for everything. RFC 8707
         # is a MUST in the MCP specification, so an audience nobody asked for is not

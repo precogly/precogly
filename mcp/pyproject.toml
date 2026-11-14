@@ -12,13 +12,10 @@ authors = [
     { name = "Alvin Kuruvilla", email = "alvineasokuruvilla@gmail.com" },
 ]
 dependencies = [
-    "httpx2>=2.9.1",
-    "mcp[cli]==2.2.*",
+    "mcp[cli]==2.3.*",
     "pydantic>=2.13.4",
+    "pydantic-monty==1.5.0",
 ]
-
-[project.scripts]
-precogly-mcp = "precogly_mcp.server:main"
 
 [dependency-groups]
 # The workspace resolves one version of each of these for both members, so the
