@@ -68,6 +68,7 @@ LOCAL_APPS = [
     "apps.diagrams",
     "apps.compliance",
     "apps.packs",
+    "apps.oauth",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -275,6 +276,11 @@ AUTHENTICATION_BACKENDS = [
 # 404 rather than a login page.
 LOGIN_URL = "/accounts/login/"
 
+
+# django-oauth-toolkit's default, declared here because Django's migration autodetector
+# reads it from Django settings to order migrations for any model with a foreign key to
+# `Application`, and fails with an AttributeError when it is absent.
+OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
 
 # OAuth 2.1 authorization server. Precogly issues the tokens; the MCP server is
 # a resource server that validates them and holds no credential of its own.
