@@ -74,8 +74,10 @@ first user who reads it.
   the URL to send the browser to; the SPA navigates there.
 - **The page** is `/oauth/consent`. A signed-out user goes through the application's own
   login and comes back. The SPA sends `frame-ancestors 'none'` and
-  `X-Frame-Options: DENY` on it, in `frontend/nginx.conf`, the AWS guide's Caddyfile and
-  `vercel.json`.
+  `X-Frame-Options: DENY` on every page, not only this one, since no Precogly page is
+  meant to be framed and any of them could be overlaid to trick a click. They are set
+  in `frontend/nginx.conf` and `frontend/vercel.json`; the AWS guide's Caddy proxies the
+  same nginx image and passes them through.
 - **Removed:** the allauth login route and `LOGIN_URL`, `authorize.html`,
   `precogly_auth_base.html`, `auth.css` and its build script. The connected-applications
   and revoke pages become a settings page in the SPA. The token, registration, discovery
