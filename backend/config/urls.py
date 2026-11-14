@@ -63,6 +63,7 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
     # OAuth 2.1 authorization server, for MCP clients.
     path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
+    path("api/oauth/", include("apps.oauth.urls")),
     # RFC 8414 puts this document at the origin root rather than under the prefix
     # above, and strict clients look nowhere else.
     #

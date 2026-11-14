@@ -1,15 +1,28 @@
+from urllib.parse import urlsplit
+
 from django.conf import settings
 from django.http import HttpResponseRedirect
+from django.utils import timezone
 from django.views.generic import TemplateView
+from drf_spectacular.utils import extend_schema
 from oauth2_provider.exceptions import OAuthToolkitError
 from oauth2_provider.http import OAuth2ResponseRedirect
 from oauth2_provider.models import get_application_model
 from oauth2_provider.oauth2_validators import is_valid_resource_uri
+from oauth2_provider.scopes import get_scopes_backend
 from oauth2_provider.settings import oauth2_settings
 from oauth2_provider.views.mixins import OAuthLibMixin
 from oauthlib.oauth2.rfc6749.errors import CustomOAuth2Error
+from rest_framework.exceptions import NotFound
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from apps.oauth.models import PendingAuthorization
+from apps.oauth.permissions import SignedInInBrowser
+from apps.oauth.serializers import PendingAuthorizationSerializer
+
+LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost"}
 
 
 class AuthorizeView(OAuthLibMixin, TemplateView):
@@ -67,3 +80,41 @@ class AuthorizeView(OAuthLibMixin, TemplateView):
                 allowed_schemes or oauth2_settings.ALLOWED_REDIRECT_URI_SCHEMES,
             )
         return self.render_to_response(response, status=response["error"].status_code)
+
+
+class PendingAuthorizationView(APIView):
+    """Returns a pending authorization request to the consent page, binding it to the
+    first user who reads it.
+
+    Every refusal is a 404, so the response never says whether a handle exists.
+    """
+
+    permission_classes = [IsAuthenticated, SignedInInBrowser]
+
+    @extend_schema(responses=PendingAuthorizationSerializer)
+    def get(self, request, handle):
+        live = PendingAuthorization.objects.filter(
+            id=handle, used=False, expires_at__gt=timezone.now()
+        )
+        # One conditional UPDATE, so two users reading the same handle at once cannot
+        # both bind it.
+        live.filter(user__isnull=True).update(user=request.user)
+        pending = live.filter(user=request.user).select_related("application").first()
+        if pending is None:
+            raise NotFound
+
+        descriptions = get_scopes_backend().get_all_scopes()
+        return Response(
+            PendingAuthorizationSerializer(
+                {
+                    "client_name": pending.application.name,
+                    "scopes": [
+                        {"name": scope, "description": descriptions[scope]}
+                        for scope in pending.scopes.split()
+                    ],
+                    "redirect_uri": pending.redirect_uri,
+                    "loopback_redirect": urlsplit(pending.redirect_uri).hostname
+                    in LOOPBACK_HOSTS,
+                }
+            ).data
+        )
