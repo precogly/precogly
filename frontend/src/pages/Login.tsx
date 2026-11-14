@@ -23,6 +23,10 @@ export function Login() {
   const redirectParam = searchParams.get('redirect')
   const from = redirectParam || (location.state as { from?: string })?.from || '/'
 
+  // Signing in on the way to the consent page is the first step of granting an MCP
+  // client access; without saying so, a signed-out user cannot tell why they are here.
+  const connectingClient = redirectParam?.startsWith('/oauth/consent') ?? false
+
   // Build signup URL preserving redirect
   const signupUrl = redirectParam ? `/signup?redirect=${encodeURIComponent(redirectParam)}` : '/signup'
 
@@ -52,7 +56,11 @@ export function Login() {
             </div>
           </div>
           <CardTitle>Welcome back</CardTitle>
-          <CardDescription>Sign in to your account to continue</CardDescription>
+          <CardDescription>
+            {connectingClient
+              ? 'Sign in to connect an MCP client to your account'
+              : 'Sign in to your account to continue'}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

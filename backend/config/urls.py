@@ -13,6 +13,8 @@ from drf_spectacular.views import (
 )
 from oauth2_provider.urls import metadata_urlpatterns
 
+from apps.oauth.views import AuthorizeView
+
 # django-oauth-toolkit publishes two kinds of metadata: RFC 8414 for the authorization
 # server, and RFC 9728 for a protected resource. Only the first describes this server.
 # The second describes /mcp, and the MCP endpoint publishes its own at
@@ -61,7 +63,11 @@ urlpatterns = [
     #
     #       Unowned, no issue filed.
     path("accounts/", include("allauth.urls")),
-    # OAuth 2.1 authorization server, for MCP clients.
+    # OAuth 2.1 authorization server, for MCP clients. Precogly's own authorize view
+    # comes first so it handles /o/authorize/ instead of django-oauth-toolkit's view.
+    # The toolkit's route stays registered as `oauth2_provider:authorize`, which its
+    # metadata endpoint reverses.
+    path("o/authorize/", AuthorizeView.as_view()),
     path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
     path("api/oauth/", include("apps.oauth.urls")),
     # RFC 8414 puts this document at the origin root rather than under the prefix

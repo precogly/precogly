@@ -27,7 +27,6 @@ import hashlib
 import json
 import secrets
 from datetime import timedelta
-from urllib.parse import parse_qs, urlparse
 
 from asgiref.sync import async_to_sync
 from django.contrib.auth import get_user_model
@@ -40,6 +39,7 @@ from oauth2_provider.models import (
 )
 
 from apps.core.mcp.token_verifier import DjangoAccessTokenVerifier
+from apps.core.tests.oauth_flow import consent_for_code
 
 User = get_user_model()
 AccessToken = get_access_token_model()
@@ -63,7 +63,6 @@ class AnIssuedTokensAudience(TestCase):
         )
 
     def setUp(self):
-        self.client.force_login(self.user)
         self.client_id = self.client.post(
             reverse("oauth2_provider:dcr-register"),
             data=json.dumps(
@@ -85,7 +84,7 @@ class AnIssuedTokensAudience(TestCase):
         )
 
     def token_for(self, resource=None):
-        """Walk login → consent → code → token, and return the raw access token.
+        """Walk authorize → consent → code → token, and return the raw access token.
 
         `resource` is sent at the authorization endpoint only. RFC 8707 lets the
         token request narrow the audience but never widen it, so omitting it there
@@ -104,11 +103,7 @@ class AnIssuedTokensAudience(TestCase):
         if resource is not None:
             params["resource"] = resource
 
-        self.client.get(reverse("oauth2_provider:authorize"), params)
-        consent = self.client.post(
-            reverse("oauth2_provider:authorize"), {**params, "allow": "Authorize"}
-        )
-        code = parse_qs(urlparse(consent.headers["Location"]).query)["code"][0]
+        code = consent_for_code(self.client, self.user, "testpass123", params)
 
         return self.client.post(
             reverse("oauth2_provider:token"),

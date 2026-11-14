@@ -24,6 +24,7 @@ import {
   SystemsSettings,
   AIProviderSettings,
   GuestThreatAnalysis,
+  OAuthConsent,
 } from '@/pages'
 import { Suspense } from 'react'
 
@@ -56,6 +57,11 @@ export const router = createBrowserRouter([
   {
     path: '/invite/:token',
     element: isGuestOnly ? <Navigate to="/" replace /> : <AcceptInvitation />,
+  },
+  // Consent for MCP clients; signs the user in first if needed
+  {
+    path: '/oauth/consent',
+    element: isGuestOnly ? <Navigate to="/" replace /> : <OAuthConsent />,
   },
   // Guest mode DFD editor (no auth required)
   {
