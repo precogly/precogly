@@ -235,23 +235,29 @@ class AuthorizedApplicationsView(APIView):
         descriptions = get_scopes_backend().get_all_scopes()
         by_application = {}
         for token in live_access_tokens(request.user).select_related("application"):
-            entry = by_application.setdefault(
-                token.application_id,
-                {
-                    "id": token.application_id,
-                    "name": token.application.name,
+            application = token.application
+            if application.pk not in by_application:
+                # `redirect_uris` is space-separated. As of 2026-11-14, Claude Code and
+                # opencode each register a single URI, so the host of the first entry
+                # is where the client runs.
+                redirect_host = (
+                    urlsplit(application.redirect_uris.split()[0]).hostname
+                    if application.redirect_uris
+                    else ""
+                ) or ""
+                by_application[application.pk] = {
+                    "id": application.pk,
+                    "name": application.name,
                     "scopes": set(),
-                    "last_token_issued_at": token.created,
-                },
-            )
-            entry["scopes"].update(token.scope.split())
-            entry["last_token_issued_at"] = max(
-                entry["last_token_issued_at"], token.created
-            )
+                    "registered_at": application.created,
+                    "runs_locally": redirect_host in LOOPBACK_HOSTS,
+                    "redirect_host": redirect_host,
+                }
+            by_application[application.pk]["scopes"].update(token.scope.split())
 
         applications = sorted(
             by_application.values(),
-            key=lambda entry: entry["last_token_issued_at"],
+            key=lambda entry: entry["registered_at"],
             reverse=True,
         )
         for entry in applications:

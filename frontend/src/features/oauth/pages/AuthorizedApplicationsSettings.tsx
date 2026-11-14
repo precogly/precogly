@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { Loader2, Plug } from 'lucide-react'
+import { Check, Loader2, Plug } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -13,14 +13,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
 import {
   type AuthorizedApplication,
   useAuthorizedApplications,
@@ -64,40 +56,45 @@ export function AuthorizedApplicationsSettings() {
             <p className="text-sm">No MCP clients have access to your account.</p>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Application</TableHead>
-                <TableHead>Access</TableHead>
-                <TableHead>Last authorized</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
+          <>
+            <p className="text-sm text-muted-foreground mb-2">
+              You have granted {data.length} {data.length === 1 ? 'application' : 'applications'}{' '}
+              access to your account.
+            </p>
+            <ul className="divide-y">
               {data.map((application) => (
-                <TableRow key={application.id}>
-                  {/* Chosen by the registering client; React renders it as text. */}
-                  <TableCell className="font-medium">{application.name}</TableCell>
-                  <TableCell className="text-sm">
-                    {application.scopes.map((scope) => scope.description).join('; ')}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {new Date(application.lastTokenIssuedAt).toLocaleString()}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={revoke.isPending}
-                      onClick={() => setConfirming(application)}
-                    >
-                      Revoke access
-                    </Button>
-                  </TableCell>
-                </TableRow>
+                <li key={application.id} className="flex items-start justify-between gap-4 py-4">
+                  <div className="space-y-1">
+                    {/* Chosen by the registering client; React renders it as text. */}
+                    <p className="font-medium">{application.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {application.runsLocally
+                        ? 'Runs on this computer'
+                        : `Returns to ${application.redirectHost}`}
+                      {' · '}
+                      Added {new Date(application.registeredAt).toLocaleDateString()}
+                    </p>
+                    <ul className="pt-1 space-y-0.5">
+                      {application.scopes.map((scope) => (
+                        <li key={scope.name} className="flex items-center gap-1.5 text-sm">
+                          <Check className="h-3.5 w-3.5 text-muted-foreground" />
+                          {scope.description}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={revoke.isPending}
+                    onClick={() => setConfirming(application)}
+                  >
+                    Revoke access
+                  </Button>
+                </li>
               ))}
-            </TableBody>
-          </Table>
+            </ul>
+          </>
         )}
       </CardContent>
 

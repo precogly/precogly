@@ -30,7 +30,9 @@ export interface AuthorizedApplication {
   id: number
   name: string
   scopes: { name: string; description: string }[]
-  lastTokenIssuedAt: string
+  registeredAt: string
+  runsLocally: boolean
+  redirectHost: string
 }
 
 const authorizedKey = ['oauth', 'authorized-apps']

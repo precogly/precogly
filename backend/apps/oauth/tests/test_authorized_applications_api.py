@@ -80,6 +80,23 @@ class TestAuthorizedApplications(TestCase):
         assert entry["id"] == self.claude.pk
         assert entry["name"] == "Claude Code"
         assert [scope["name"] for scope in entry["scopes"]] == ["read"]
+        assert entry["registeredAt"]
+        assert entry["runsLocally"] is True
+        assert entry["redirectHost"] == "127.0.0.1"
+
+    def test_a_client_redirecting_elsewhere_shows_its_host(self):
+        remote = Application.objects.create(
+            name="Hosted agent",
+            client_type=Application.CLIENT_PUBLIC,
+            authorization_grant_type=Application.GRANT_AUTHORIZATION_CODE,
+            redirect_uris="https://agent.example.com/oauth/callback",
+        )
+        self.issue(remote)
+
+        [entry] = self.authorized()
+
+        assert entry["runsLocally"] is False
+        assert entry["redirectHost"] == "agent.example.com"
 
     def test_an_expired_token_with_a_live_refresh_token_still_counts(self):
         # MCP clients refresh: an expired access token is normal between uses.

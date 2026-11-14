@@ -26,9 +26,12 @@ class AuthorizedApplicationSerializer(serializers.Serializer):
     # Chosen by the registering client, like `PendingAuthorizationSerializer.client_name`.
     name = serializers.CharField()
     scopes = ScopeSerializer(many=True)
-    # When the client last received an access token: at consent, or at its latest
-    # refresh. A client that refreshes is in use.
-    last_token_issued_at = serializers.DateTimeField()
+    # Tells apart two clients that registered under the same name.
+    registered_at = serializers.DateTimeField()
+    # The registering client chooses its name, so the redirect URI is the only
+    # verified evidence of where it runs: on this machine, or at `redirect_host`.
+    runs_locally = serializers.BooleanField()
+    redirect_host = serializers.CharField()
 
 
 class DecisionSerializer(serializers.Serializer):
