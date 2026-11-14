@@ -25,6 +25,7 @@ import {
   AIProviderSettings,
   GuestThreatAnalysis,
   OAuthConsent,
+  OAuthError,
   ConnectedApplicationsSettings,
 } from '@/pages'
 import { Suspense } from 'react'
@@ -63,6 +64,11 @@ export const router = createBrowserRouter([
   {
     path: '/oauth/consent',
     element: isGuestOnly ? <Navigate to="/" replace /> : <OAuthConsent />,
+  },
+  // An authorization error with no trusted redirect URI to send it back to
+  {
+    path: '/oauth/error',
+    element: isGuestOnly ? <Navigate to="/" replace /> : <OAuthError />,
   },
   // Guest mode DFD editor (no auth required)
   {

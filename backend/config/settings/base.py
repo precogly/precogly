@@ -153,11 +153,6 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-# The two server-rendered OAuth pages are the only thing here that needs static
-# files; everything else a user sees is served by Vite. `css/auth.css` is built
-# from the frontend's own tokens by `npm run build:auth-css` and committed,
-# because this image has no Node in it.
-STATICFILES_DIRS = [BASE_DIR / "static"]
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -269,12 +264,6 @@ AUTHENTICATION_BACKENDS = [
     # allauth specific authentication methods, such as login by email
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
-
-# Where django-oauth-toolkit's authorize view sends an unauthenticated user.
-# Django's default is "/accounts/login/", which resolved to nothing here until
-# allauth's URLs were routed in config.urls — the authorize endpoint answered a
-# 404 rather than a login page.
-LOGIN_URL = "/accounts/login/"
 
 
 # django-oauth-toolkit's default, declared here because Django's migration autodetector

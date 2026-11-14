@@ -55,12 +55,18 @@ class TestAuthorizeView(TestCase):
         assert stored.user is None
         assert stored.resource == [settings.MCP_RESOURCE_URL]
 
-    def test_an_unknown_client_gets_an_error_page_and_no_redirect(self):
-        # With no valid client there is no trusted redirect_uri, so redirecting would
-        # send the browser wherever the request said.
+    def test_an_unknown_client_is_shown_the_error_by_precogly_not_redirected(self):
+        # With no valid client there is no trusted redirect_uri, so redirecting to the
+        # one in the request would send the browser wherever the request said.
         response = self.authorize(client_id="not-a-client")
 
-        assert response.status_code == 400
+        assert response.status_code == 302
+        location = urlparse(response["Location"])
+        assert f"{location.scheme}://{location.netloc}" == settings.FRONTEND_URL
+        assert location.path == "/oauth/error"
+        query = parse_qs(location.query)
+        assert query["error"] == ["invalid_request"]
+        assert "client_id" in query["error_description"][0]
         assert not PendingAuthorization.objects.exists()
 
     def test_a_malformed_resource_goes_back_to_the_client(self):

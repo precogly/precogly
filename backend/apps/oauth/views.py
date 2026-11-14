@@ -1,11 +1,11 @@
-from urllib.parse import urlsplit
+from urllib.parse import urlencode, urlsplit
 
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.utils import timezone
-from django.views.generic import TemplateView
+from django.views.generic import View
 from drf_spectacular.utils import extend_schema
 from oauth2_provider.exceptions import OAuthToolkitError
 from oauth2_provider.http import OAuth2ResponseRedirect
@@ -37,7 +37,7 @@ from apps.oauth.serializers import (
 LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost"}
 
 
-class AuthorizeView(OAuthLibMixin, TemplateView):
+class AuthorizeView(OAuthLibMixin, View):
     """Stores a validated authorization request and sends the browser to the consent page.
 
     django-oauth-toolkit's `AuthorizationView` requires a Django session at this point;
@@ -46,10 +46,6 @@ class AuthorizeView(OAuthLibMixin, TemplateView):
     `prompt=login`, which all need a signed-in user here. Dynamic registration never
     sets `skip_authorization`, and `REQUEST_APPROVAL_PROMPT` is left at `force`.
     """
-
-    # Renders errors raised before a valid `redirect_uri` is known. Errors after that
-    # go back to the client.
-    template_name = "oauth2_provider/authorize.html"
 
     def get(self, request, *args, **kwargs):
         try:
@@ -91,7 +87,18 @@ class AuthorizeView(OAuthLibMixin, TemplateView):
                 response["url"],
                 allowed_schemes or oauth2_settings.ALLOWED_REDIRECT_URI_SCHEMES,
             )
-        return self.render_to_response(response, status=response["error"].status_code)
+        # With no trusted redirect URI (an unknown client, or a redirect URI it never
+        # registered) the error cannot go back to the client, so the SPA shows it.
+        # `error_description` comes from the query string, which a crafted link
+        # controls, so the SPA must render it as plain text, never as HTML.
+        oauthlib_error = response["error"]
+        query = urlencode(
+            {
+                "error": oauthlib_error.error,
+                "error_description": oauthlib_error.description or "",
+            }
+        )
+        return HttpResponseRedirect(f"{settings.FRONTEND_URL}/oauth/error?{query}")
 
 
 class PendingAuthorizationView(APIView):
