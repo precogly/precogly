@@ -1,6 +1,17 @@
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { Loader2, Plug } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Table,
@@ -10,12 +21,28 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { useAuthorizedApplications, useRevokeApplication } from '../api/consent'
+import {
+  type AuthorizedApplication,
+  useAuthorizedApplications,
+  useRevokeApplication,
+} from '../api/consent'
 
 /** Lists the MCP clients that can act on the user's account, and revokes their access. */
 export function AuthorizedApplicationsSettings() {
   const { data, isLoading, isError } = useAuthorizedApplications()
   const revoke = useRevokeApplication()
+  // The application whose revocation is waiting for confirmation.
+  const [confirming, setConfirming] = useState<AuthorizedApplication | null>(null)
+
+  function revokeConfirmed() {
+    if (!confirming) return
+    const { id, name } = confirming
+    revoke.mutate(id, {
+      onSuccess: () => toast.success(`Revoked access for ${name}`),
+      onError: () => toast.error(`Could not revoke access for ${name}`),
+    })
+    setConfirming(null)
+  }
 
   return (
     <Card>
@@ -62,14 +89,7 @@ export function AuthorizedApplicationsSettings() {
                       variant="outline"
                       size="sm"
                       disabled={revoke.isPending}
-                      onClick={() =>
-                        revoke.mutate(application.id, {
-                          onSuccess: () =>
-                            toast.success(`Revoked access for ${application.name}`),
-                          onError: () =>
-                            toast.error(`Could not revoke access for ${application.name}`),
-                        })
-                      }
+                      onClick={() => setConfirming(application)}
                     >
                       Revoke access
                     </Button>
@@ -80,6 +100,27 @@ export function AuthorizedApplicationsSettings() {
           </Table>
         )}
       </CardContent>
+
+      <AlertDialog open={confirming !== null} onOpenChange={(open) => !open && setConfirming(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revoke access for {confirming?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              It will lose access to your account immediately, including any session it
+              has open now. To use it again, you will have to approve it again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={revokeConfirmed}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Revoke access
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   )
 }
