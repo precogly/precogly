@@ -159,10 +159,28 @@ def asgi_app(
         # trailing slash to a path-less issuer, and RFC 8414 compares issuers as
         # exact strings, so the client would reject its own issuer. `AuthSettings`
         # sets `url_preserve_empty_path` to avoid that.
+        #
+        # `validate_token_resource`:
+        # 1. What it does: True makes the SDK's bearer middleware refuse a token whose
+        #    `AccessToken.resource` is not `resource_url`. That is the RFC 8707
+        #    audience check the MCP specification requires: a token issued for another
+        #    server must not work here.
+        # 2. Why False: the token verifier already makes that check and reports
+        #    `resource_url` for every token it accepts, so with True the SDK would
+        #    compare that URL with itself and never refuse anything.
+        # 3. Why that is still secure: the verifier refuses any token whose stored
+        #    resources do not include `resource_url` exactly. Its tests cover the two
+        #    cases a looser check lets through:
+        #    - a token with no resource, which django-oauth-toolkit's
+        #      `AccessToken.allows_audience()` accepts
+        #    - a token issued for the origin, which a prefix match accepts
+        # 4. Why set it at all: left unset, mcp 2.3 warns at startup and behaves as
+        #    False; 3.0 switches the unset default to True.
         auth=AuthSettings(
             issuer_url=issuer_url,  # type: ignore[arg-type]
             resource_server_url=resource_url,  # type: ignore[arg-type]
             required_scopes=required_scopes or ["read"],
+            validate_token_resource=False,
         ),
         token_verifier=token_verifier,
     )
