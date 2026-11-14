@@ -97,7 +97,10 @@ view. It validated a GET, kept the request as JSON, then called
 was issued, and the grant held the user, the PKCE challenge and the resource. Two things
 the implementation has to carry:
 
-- `create_authorization_response` takes the scopes as one space-separated string.
+- The view mixin's `create_authorization_response` takes the scopes as one
+  space-separated string; `OAuthLibCore`'s takes a list. Passing the string to
+  `OAuthLibCore` fails with `invalid_scope`, because it checks `set(scopes)`, the
+  string's characters.
 - `resource` is not in the validated credentials. It comes from the GET's query and must
   be stored as a list, as `form_valid` does; otherwise saving the grant fails with
   "Resource must be a list of URI strings".
