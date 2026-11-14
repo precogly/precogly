@@ -21,6 +21,16 @@ class PendingAuthorizationSerializer(serializers.Serializer):
     loopback_redirect = serializers.BooleanField()
 
 
+class ConnectedApplicationSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    # Chosen by the registering client, like `PendingAuthorizationSerializer.client_name`.
+    name = serializers.CharField()
+    scopes = ScopeSerializer(many=True)
+    # When the client last received an access token: at consent, or at its latest
+    # refresh. A client that refreshes is in use.
+    last_token_issued_at = serializers.DateTimeField()
+
+
 class DecisionSerializer(serializers.Serializer):
     allow = serializers.BooleanField()
     # Required to allow, not to deny: approving grants access to the account, refusing

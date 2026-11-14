@@ -2,13 +2,19 @@ from urllib.parse import urlsplit
 
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from django.http import HttpResponseRedirect
 from django.utils import timezone
 from django.views.generic import TemplateView
 from drf_spectacular.utils import extend_schema
 from oauth2_provider.exceptions import OAuthToolkitError
 from oauth2_provider.http import OAuth2ResponseRedirect
-from oauth2_provider.models import get_application_model
+from oauth2_provider.models import (
+    get_access_token_model,
+    get_application_model,
+    get_grant_model,
+    get_refresh_token_model,
+)
 from oauth2_provider.oauth2_validators import is_valid_resource_uri
 from oauth2_provider.scopes import get_scopes_backend
 from oauth2_provider.settings import oauth2_settings
@@ -22,6 +28,7 @@ from rest_framework.views import APIView
 from apps.oauth.models import MAX_PASSWORD_ATTEMPTS, PendingAuthorization
 from apps.oauth.permissions import SignedInInBrowser
 from apps.oauth.serializers import (
+    ConnectedApplicationSerializer,
     DecisionResultSerializer,
     DecisionSerializer,
     PendingAuthorizationSerializer,
@@ -191,3 +198,88 @@ class DecisionView(OAuthLibMixin, APIView):
             _, response = self.error_response(error)
             uri = response["url"]
         return Response(DecisionResultSerializer({"redirect_url": uri}).data)
+
+
+def live_access_tokens(user):
+    """The user's access tokens that still grant access, now or after a refresh.
+
+    A client is connected while it holds one of these: an unexpired access token, or
+    an expired one whose refresh token has not been revoked.
+    """
+    return (
+        get_access_token_model()
+        .objects.filter(user=user)
+        .filter(
+            Q(expires__gt=timezone.now())
+            # `refresh_token__isnull=False` keeps out tokens issued without a refresh
+            # token, whose missing join would otherwise read as "not revoked".
+            | Q(refresh_token__isnull=False, refresh_token__revoked__isnull=True)
+        )
+    )
+
+
+class ConnectedApplicationsView(APIView):
+    """Lists the MCP clients that can currently act on the user's account."""
+
+    permission_classes = [IsAuthenticated, SignedInInBrowser]
+
+    @extend_schema(responses=ConnectedApplicationSerializer(many=True))
+    def get(self, request):
+        descriptions = get_scopes_backend().get_all_scopes()
+        by_application = {}
+        for token in live_access_tokens(request.user).select_related("application"):
+            entry = by_application.setdefault(
+                token.application_id,
+                {
+                    "id": token.application_id,
+                    "name": token.application.name,
+                    "scopes": set(),
+                    "last_token_issued_at": token.created,
+                },
+            )
+            entry["scopes"].update(token.scope.split())
+            entry["last_token_issued_at"] = max(
+                entry["last_token_issued_at"], token.created
+            )
+
+        applications = sorted(
+            by_application.values(),
+            key=lambda entry: entry["last_token_issued_at"],
+            reverse=True,
+        )
+        for entry in applications:
+            entry["scopes"] = [
+                {"name": scope, "description": descriptions.get(scope, scope)}
+                for scope in sorted(entry["scopes"])
+            ]
+        return Response(ConnectedApplicationSerializer(applications, many=True).data)
+
+
+class ConnectedApplicationView(APIView):
+    """Disconnects one MCP client from the user's account."""
+
+    permission_classes = [IsAuthenticated, SignedInInBrowser]
+
+    def delete(self, request, application_id):
+        if (
+            not live_access_tokens(request.user)
+            .filter(application_id=application_id)
+            .exists()
+        ):
+            raise NotFound
+
+        # Refresh tokens first: `revoke` marks each one revoked and deletes the access
+        # token it last issued. Deleting the remaining access tokens and grants then
+        # leaves the client nothing to use or exchange.
+        with transaction.atomic():
+            for refresh_token in get_refresh_token_model().objects.filter(
+                user=request.user, application_id=application_id, revoked__isnull=True
+            ):
+                refresh_token.revoke()
+            get_access_token_model().objects.filter(
+                user=request.user, application_id=application_id
+            ).delete()
+            get_grant_model().objects.filter(
+                user=request.user, application_id=application_id
+            ).delete()
+        return Response(status=204)

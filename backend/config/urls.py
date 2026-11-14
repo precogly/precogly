@@ -5,7 +5,8 @@ URL configuration for Precogly backend.
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
+from django.views.generic import RedirectView
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
@@ -68,6 +69,12 @@ urlpatterns = [
     # The toolkit's route stays registered as `oauth2_provider:authorize`, which its
     # metadata endpoint reverses.
     path("o/authorize/", AuthorizeView.as_view()),
+    # The toolkit's own pages for listing and revoking tokens need a Django session.
+    # Connected applications are managed in the SPA's settings instead.
+    re_path(
+        r"^o/authorized_tokens/",
+        RedirectView.as_view(url=f"{settings.FRONTEND_URL}/settings/connected-apps"),
+    ),
     path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
     path("api/oauth/", include("apps.oauth.urls")),
     # RFC 8414 puts this document at the origin root rather than under the prefix

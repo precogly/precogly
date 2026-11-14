@@ -25,6 +25,7 @@ import {
   AIProviderSettings,
   GuestThreatAnalysis,
   OAuthConsent,
+  ConnectedApplicationsSettings,
 } from '@/pages'
 import { Suspense } from 'react'
 
@@ -106,6 +107,7 @@ export const router = createBrowserRouter([
           { path: 'business-units', element: <BusinessUnitsSettings /> },
           { path: 'systems', element: <SystemsSettings /> },
           { path: 'ai-providers', element: <AIProviderSettings /> },
+          { path: 'connected-apps', element: <ConnectedApplicationsSettings /> },
         ],
       },
     ],

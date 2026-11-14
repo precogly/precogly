@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 
 export interface PendingAuthorization {
@@ -23,6 +23,30 @@ export function usePendingAuthorization(handle: string, enabled: boolean) {
     queryFn: () => api.get<PendingAuthorization>(path(handle)),
     enabled: enabled && !!handle,
     retry: false,
+  })
+}
+
+export interface ConnectedApplication {
+  id: number
+  name: string
+  scopes: { name: string; description: string }[]
+  lastTokenIssuedAt: string
+}
+
+const connectedKey = ['oauth', 'connected-apps']
+
+export function useConnectedApplications() {
+  return useQuery({
+    queryKey: connectedKey,
+    queryFn: () => api.get<ConnectedApplication[]>('/oauth/connected-apps/'),
+  })
+}
+
+export function useDisconnectApplication() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => api.delete(`/oauth/connected-apps/${id}/`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: connectedKey }),
   })
 }
 

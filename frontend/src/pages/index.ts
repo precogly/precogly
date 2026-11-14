@@ -20,7 +20,7 @@ export {
   SystemsSettings,
 } from '@/features/organization'
 export { AIProviderSettings } from '@/features/ai'
-export { OAuthConsent } from '@/features/oauth'
+export { OAuthConsent, ConnectedApplicationsSettings } from '@/features/oauth'
 
 export const GuestThreatAnalysis = lazy(() =>
   import('@/features/guest-editor/components/GuestThreatAnalysis').then((m) => ({
