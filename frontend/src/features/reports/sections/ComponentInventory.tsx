@@ -87,7 +87,7 @@ export function ComponentInventory({ components, dataFlows }: ComponentInventory
                     <TableCell>{flow.source || ''}</TableCell>
                     <TableCell>{flow.destination || ''}</TableCell>
                     <TableCell>{flow.protocol || ''}</TableCell>
-                    <TableCell>{flow.encrypted ? 'Yes' : 'No'}</TableCell>
+                    <TableCell>{flow.encrypted === null ? 'Not recorded' : flow.encrypted ? 'Yes' : 'No'}</TableCell>
                     <TableCell title={requirementListText(flow.authentication)}>
                       {isAuthenticated(flow.authentication) ? `Yes (${flow.authentication.join(', ')})` : 'No'}
                     </TableCell>

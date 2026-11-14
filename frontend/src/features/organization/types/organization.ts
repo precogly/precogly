@@ -293,6 +293,8 @@ export interface MagicLinkAccessResponse {
   }
   stats: ThreatModelStats
   threatAnalysis: ThreatAnalysisData
+  /** The component library rows the diagrams reference, for the nodes' icons and names; older payloads omit it. */
+  technologies?: Array<{ id: string; name: string; iconSvg: string | null }>
   readOnly: boolean
   expiresAt: string
   isAuthenticated: boolean

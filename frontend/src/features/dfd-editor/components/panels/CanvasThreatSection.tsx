@@ -3,7 +3,9 @@
  * editor. Active threats are cards; each opens the threat modal (the same one
  * as the threat analysis screen). Triaged threats sit collapsed under them,
  * so they can be reopened. A card's countermeasure controls follow the
- * workspace rules: Planned asks for an owner first, Waived for a reason.
+ * workspace rules: Planned asks for an owner first, Waived for a reason. A
+ * countermeasure's name opens the full countermeasure modal, as on the threat
+ * analysis screen; the pencil beside it renames and retypes the control.
  */
 
 import { useState, type SyntheticEvent } from 'react'
@@ -35,6 +37,7 @@ import { writeErrorMessage } from '@/features/threat-models/lib/write-error-mess
 import { AddThreatDialog } from '../threat-analysis/AddThreatDialog'
 import { AddCountermeasureDialog } from '../threat-analysis/AddCountermeasureDialog'
 import { ThreatEditor } from '../threat-analysis/ThreatEditor'
+import { CountermeasureEditor } from '../threat-analysis/CountermeasureEditor'
 import { UserSearchCombobox } from '../threat-analysis/UserSearchCombobox'
 import { WaiverReasonInput } from '../threat-analysis/WaiverReasonInput'
 import { countermeasureStatusAction, countermeasureStatusOptions } from '../threat-analysis/countermeasure-utils'
@@ -81,6 +84,8 @@ export function CanvasThreatSection({
   /** The threat whose modal is open, by id: each render shows the fresh row from the query. */
   const [openThreatId, setOpenThreatId] = useState<string | null>(null)
   const [countermeasureThreat, setCountermeasureThreat] = useState<AnalysisThreat | null>(null)
+  /** The countermeasure whose modal is open, by ids: each render shows the fresh row from the query. */
+  const [openCountermeasureRef, setOpenCountermeasureRef] = useState<{ threatId: string; countermeasureId: string } | null>(null)
   const [statusPrompt, setStatusPrompt] = useState<StatusPrompt | null>(null)
   const [editingCountermeasure, setEditingCountermeasure] = useState<{
     id: number
@@ -145,6 +150,16 @@ export function CanvasThreatSection({
 
   const threats = canvasThreats(threatData?.analysisThreats, canvasId)
   const openThreat = openCanvasThreat(threats, openThreatId)
+  const openCountermeasureThreat = openCanvasThreat(threats, openCountermeasureRef?.threatId ?? null)
+  const openCountermeasure =
+    openCountermeasureThreat?.countermeasures.find((entry) => entry.id === openCountermeasureRef?.countermeasureId) ?? null
+
+  /** A "Mitigates" link in the countermeasure modal: close it and open that threat's modal. */
+  const openThreatByBackendId = (backendThreatId: number) => {
+    setOpenCountermeasureRef(null)
+    const target = [...threats.active, ...threats.triaged].find((threat) => threat.backendThreatId === backendThreatId)
+    if (target) setOpenThreatId(target.id)
+  }
   const threatCount = threats.active.length
 
   const handleUpdateTriageStatus = (threatUiId: string, triageStatus: TriageStatus, decisionRationale?: string) => {
@@ -260,9 +275,15 @@ export function CanvasThreatSection({
                             const countermeasureName = countermeasure.countermeasureName || countermeasure.countermeasureId
                             return (
                               <div key={countermeasure.id} className="flex items-center gap-1.5">
-                                <span className="min-w-0 flex-1 truncate text-xs" title={countermeasureName}>
+                                <button
+                                  type="button"
+                                  className="min-w-0 flex-1 truncate text-left text-xs hover:underline"
+                                  title={countermeasureName}
+                                  aria-label={`Open ${countermeasureName}`}
+                                  onClick={() => setOpenCountermeasureRef({ threatId: threat.id, countermeasureId: countermeasure.id })}
+                                >
                                   {countermeasureName}
-                                </span>
+                                </button>
                                 {parsed.type === 'backend' && parsed.id !== null ? (
                                   <Select
                                     value={countermeasure.status}
@@ -291,7 +312,7 @@ export function CanvasThreatSection({
                                   variant="ghost"
                                   size="icon"
                                   className="h-6 w-6"
-                                  aria-label={`Edit ${countermeasure.countermeasureName || 'countermeasure'}`}
+                                  aria-label={`Rename ${countermeasure.countermeasureName || 'countermeasure'}`}
                                   onClick={() => openCountermeasureEditor(parsed.id!, countermeasureName, countermeasure.controlFunctions, countermeasure.controlNature)}
                                   disabled={parsed.type !== 'backend' || parsed.id === null}
                                 >
@@ -376,6 +397,16 @@ export function CanvasThreatSection({
                   onDeleted={() => setOpenThreatId(null)}
                 />
               )}
+              {threatModelId !== undefined && openCountermeasureThreat && (
+                <CountermeasureEditor
+                  threatModelId={threatModelId}
+                  threat={openCountermeasureThreat}
+                  countermeasure={openCountermeasure}
+                  onClose={() => setOpenCountermeasureRef(null)}
+                  onOpenThreat={openThreatByBackendId}
+                  isSecurityTeam={isSecurityTeam}
+                />
+              )}
               {countermeasureThreat?.backendThreatId !== undefined && (
                 <AddCountermeasureDialog
                   open={countermeasureThreat !== null}
@@ -425,7 +456,8 @@ export function CanvasThreatSection({
               <Dialog open={editingCountermeasure !== null} onOpenChange={(open) => { if (!open) setEditingCountermeasure(null) }}>
                 <DialogContent className="sm:max-w-[425px]">
                   <DialogHeader>
-                    <DialogTitle>Edit Countermeasure</DialogTitle>
+                    <DialogTitle>Rename countermeasure</DialogTitle>
+                    <DialogDescription>Name, control functions and nature. Everything else is in the countermeasure dialog, opened from its name.</DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div className="space-y-2">

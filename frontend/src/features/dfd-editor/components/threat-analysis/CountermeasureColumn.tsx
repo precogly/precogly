@@ -304,7 +304,7 @@ export function CountermeasureColumn({
           }}
           countermeasureId={editingComplianceFor.backendId}
           countermeasureName={editingComplianceFor.name}
-          libraryMappings={editingComplianceFor.mappings}
+          knownMappings={editingComplianceFor.mappings}
         />
       )}
 

@@ -220,6 +220,7 @@
           "type": "data",
           "source": "asset-process-web",
           "destination": "datastore-datastore-db",
+          "encrypted": false,
           "protocols": [
             "SQL"
           ],

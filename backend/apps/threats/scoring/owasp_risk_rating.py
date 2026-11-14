@@ -277,8 +277,13 @@ class OwaspRiskRatingEngine(BaseScoringEngine):
             inputs,
         )
 
+    def can_reduce(self, inherent) -> bool:
+        return (
+            inherent.likelihood_score is not None and inherent.impact_score is not None
+        )
+
     def rate_residual(self, inherent, effectiveness: float):
-        if inherent.likelihood_score is None or inherent.impact_score is None:
+        if not self.can_reduce(inherent):
             return copy_rating(inherent)
         residual = copy_rating(inherent)
         likelihood_score = round(inherent.likelihood_score * (1 - effectiveness), 1)

@@ -6,7 +6,8 @@ import { expect, test, type Page } from '@playwright/test'
  * threat analysis screen. Renaming shows on the card; triaging moves the
  * threat to the collapsed "triaged" line, from where it can be reopened. A
  * card's countermeasure status follows the workspace rules: Planned asks
- * for an owner, Waived for a reason.
+ * for an owner, Waived for a reason. A countermeasure's name on a card opens
+ * the full countermeasure modal, as on the threat analysis screen.
  *
  * Runs against the seeded compose stack (e2e/global-setup.ts) on the sample
  * model "Sample LNG Process Control". The threats it adds stay on the model.
@@ -164,4 +165,47 @@ test('the countermeasure controls on a card do not open the threat modal', async
   await expect(page.getByRole('dialog')).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog')).toHaveCount(0)
+})
+
+test('a countermeasure name on a card opens the full countermeasure modal, not the threat modal', async ({ page }) => {
+  await openSampleDiagram(page)
+  await page.locator('.react-flow__node-process', { hasText: NODE_LABEL }).getByText(NODE_LABEL).click()
+
+  const threatName = `Replayed setpoint ${Date.now()}`
+  await page.getByRole('button', { name: 'Add Threat' }).click()
+  await page.getByRole('tab', { name: 'Custom threat' }).click()
+  await page.getByLabel('Threat name *').fill(threatName)
+  await page.getByRole('button', { name: 'Add custom threat' }).click()
+  const card = page.getByTestId('canvas-threat-card').filter({ hasText: threatName })
+  await expect(card).toBeVisible()
+
+  const countermeasureName = `Sequence numbers ${Date.now()}`
+  await card.getByRole('button', { name: 'Add' }).click()
+  await page.getByRole('tab', { name: 'Custom' }).click()
+  await page.getByLabel('Countermeasure Name *').fill(countermeasureName)
+  await page.getByRole('button', { name: 'Add Custom Countermeasure' }).click()
+  await expect(card.getByLabel(`Status of ${countermeasureName}`)).toContainText('Gap')
+
+  // The name opens the countermeasure modal; the threat modal stays closed.
+  await card.getByRole('button', { name: `Open ${countermeasureName}` }).click()
+  const countermeasureDialog = page.getByTestId('countermeasure-detail-dialog')
+  await expect(countermeasureDialog).toBeVisible()
+  await expect(countermeasureDialog).toContainText(countermeasureName)
+  await expect(page.getByTestId('threat-detail-dialog')).toHaveCount(0)
+
+  // A tracking field saves from here and survives a reopen.
+  await countermeasureDialog.getByLabel('Priority').click()
+  await page.getByRole('option', { name: 'High' }).click()
+  await expect(countermeasureDialog.getByLabel('Priority')).toContainText('High')
+  await page.keyboard.press('Escape')
+  await expect(countermeasureDialog).toBeHidden()
+  await card.getByRole('button', { name: `Open ${countermeasureName}` }).click()
+  await expect(countermeasureDialog.getByLabel('Priority')).toContainText('High')
+  await page.keyboard.press('Escape')
+
+  // The pencil still renames; its dialog is no longer a second "Edit".
+  await card.getByRole('button', { name: `Rename ${countermeasureName}` }).click()
+  await expect(page.getByRole('dialog', { name: 'Rename countermeasure' })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByTestId('threat-detail-dialog')).toHaveCount(0)
 })

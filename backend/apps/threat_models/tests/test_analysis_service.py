@@ -206,3 +206,104 @@ class SharedPayloadTests(AnalysisPayloadTestCase):
     def test_unknown_audience_is_refused(self):
         with self.assertRaises(ValueError):
             build_threat_analysis(self.threat_model, audience="public")
+
+
+class StandardMappingPayloadTests(AnalysisPayloadTestCase):
+    """Every compliance mapping entry names its requirement, so the frontend can
+    collapse a mapping present in both the library and the instance to one row."""
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        from apps.compliance.models import (
+            CountermeasureLibraryStandard,
+            StandardFramework,
+            StandardRequirement,
+        )
+        from apps.threats.models import (
+            CountermeasureLibrary,
+            InstanceCountermeasureStandard,
+        )
+
+        cls.framework = StandardFramework.objects.create(
+            slug="pci-dss", name="PCI-DSS", version="4.0", issuer="PCI SSC"
+        )
+        cls.shared_requirement = StandardRequirement.objects.create(
+            framework=cls.framework,
+            section_code="3.4",
+            description="Render PAN unreadable",
+        )
+        cls.library_only_requirement = StandardRequirement.objects.create(
+            framework=cls.framework,
+            section_code="8.3",
+            description="Strong authentication",
+        )
+        cls.library_countermeasure = CountermeasureLibrary.objects.create(
+            slug="tokenize", name="Tokenize cardholder data"
+        )
+        cls.library_mapping = CountermeasureLibraryStandard.objects.create(
+            countermeasure_library=cls.library_countermeasure,
+            requirement=cls.shared_requirement,
+            sufficiency="partial",
+        )
+        CountermeasureLibraryStandard.objects.create(
+            countermeasure_library=cls.library_countermeasure,
+            requirement=cls.library_only_requirement,
+            sufficiency="full",
+        )
+        cls.mapped_countermeasure = InstanceCountermeasure.objects.create(
+            threat_model=cls.threat_model,
+            countermeasure_library=cls.library_countermeasure,
+            status="planned",
+        )
+        CountermeasureThreatLink.objects.create(
+            countermeasure=cls.mapped_countermeasure, threat=cls.component_threat
+        )
+        cls.instance_mapping = InstanceCountermeasureStandard.objects.create(
+            countermeasure=cls.mapped_countermeasure,
+            requirement=cls.shared_requirement,
+            sufficiency="full",
+        )
+
+    def _mapped_countermeasure_payload(self):
+        payload = build_threat_analysis(self.threat_model)
+        component_threat = next(
+            t for t in payload["threats"] if t["targets"][0]["type"] == "component"
+        )
+        return next(
+            c
+            for c in component_threat["countermeasures"]
+            if c["countermeasure_name"] == "Tokenize cardholder data"
+        )
+
+    def test_entries_carry_their_requirement_id_and_instance_wins(self):
+        mappings = self._mapped_countermeasure_payload()["standard_mappings"]
+        by_requirement = {m["requirement"]: m for m in mappings}
+
+        self.assertEqual(
+            set(by_requirement),
+            {self.shared_requirement.id, self.library_only_requirement.id},
+        )
+        shared = by_requirement[self.shared_requirement.id]
+        self.assertEqual(shared["id"], self.instance_mapping.id)
+        self.assertEqual(shared["sufficiency"], "full")
+        library_only = by_requirement[self.library_only_requirement.id]
+        self.assertEqual(library_only["section_code"], "8.3")
+
+    def test_snapshot_entry_has_no_requirement(self):
+        from apps.threats.models import InstanceCountermeasureStandard
+
+        InstanceCountermeasureStandard.objects.create(
+            countermeasure=self.mapped_countermeasure,
+            requirement=None,
+            sufficiency="partial",
+            section_code="A.1",
+            framework_name="Retired framework",
+            requirement_description="Historical",
+        )
+        mappings = self._mapped_countermeasure_payload()["standard_mappings"]
+        snapshot = next(
+            m for m in mappings if m["framework_name"] == "Retired framework"
+        )
+        self.assertIsNone(snapshot["requirement"])
+        self.assertEqual(snapshot["section_code"], "A.1")

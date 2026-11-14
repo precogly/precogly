@@ -26,6 +26,7 @@ import { useBusinessObjectives } from '@/features/threat-models/api/threat-model
 import type { AnalysisThreat } from '@/features/dfd-editor/types/threat-analysis'
 import { RISK_DOMAINS, type RiskDomain } from '@/types/domain'
 import { RISK_STATUSES, type Risk, type RiskStatus, type ScoringMethod, type UpdateRiskInput } from '@/types/risk'
+import { methodologyLabel } from '@/features/threat-models/components/rating'
 import { RiskRatingSection } from './RiskRatingSection'
 import { RiskResponsesTable, type OwnerOption } from './RiskResponsesTable'
 import { ThreatPicker } from './ThreatPicker'
@@ -314,7 +315,8 @@ export function RiskDetailPanel({
         />
 
         <div className="text-xs text-muted-foreground pt-2 border-t">
-          <p>Method: {scoringMethod?.label ?? displayRisk.scoringMethod}</p>
+          {/* The rating's own method: a level-only rating in a Likelihood x Impact model says "Level only". */}
+          <p>Method: {methodologyLabel(displayRisk.inherent?.methodology) || scoringMethod?.label || displayRisk.scoringMethod}</p>
           <p>Created: {new Date(displayRisk.createdAt).toLocaleDateString()}</p>
         </div>
       </CardContent>

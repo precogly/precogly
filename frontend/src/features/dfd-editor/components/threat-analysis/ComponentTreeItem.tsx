@@ -1,7 +1,9 @@
 /**
  * One row of the analysis tree (plan 11.3): System, blueprint, zone,
  * component, flow, boundary, or a Flows or Boundaries group. Counts come
- * from the tree builder, where each scenario counts once per level.
+ * from the tree builder, where each scenario counts once per level. A parent
+ * whose subtree holds threats that are not its own prints the count as
+ * "own + beneath", so "(0 + 22)" does not read as 22 threats on the row.
  */
 
 import { createElement } from 'react'
@@ -82,6 +84,14 @@ export function AnalysisTreeItem({
   const isCollapsed = collapsedKeys.has(node.key)
   const { counts } = node
   const typeLabel = zoneTypeLabel(node)
+  const ownCount = node.directThreatIds.size
+  const beneathCount = counts.total - ownCount
+  // A group row (Flows, Boundaries) can hold nothing of its own, so it keeps the plain total.
+  const splitsCount = hasChildren && !isGroup && beneathCount > 0
+  const totalTitle = splitsCount
+    ? `${ownCount} on this row, ${beneathCount} beneath it, each threat counted once`
+    : 'Threats, each counted once'
+  const badgeTitle = splitsCount ? `${counts.total} threats, ${ownCount} on this row` : `${counts.total} threats`
 
   const select = () => {
     if (node.selection) onSelect(node.selection)
@@ -182,17 +192,17 @@ export function AnalysisTreeItem({
               </Tooltip>
             )}
             {counts.exposed > 0 ? (
-              <Badge variant="outline" className="shrink-0 bg-red-100 text-xs text-red-700" title={`${counts.total} threats`}>
+              <Badge variant="outline" className="shrink-0 bg-red-100 text-xs text-red-700" title={badgeTitle}>
                 {counts.exposed} exposed
               </Badge>
             ) : counts.addressable > 0 ? (
-              <Badge variant="outline" className="shrink-0 bg-yellow-100 text-xs text-yellow-700" title={`${counts.total} threats`}>
+              <Badge variant="outline" className="shrink-0 bg-yellow-100 text-xs text-yellow-700" title={badgeTitle}>
                 {counts.addressable} in progress
               </Badge>
             ) : null}
             {counts.total > 0 && (
-              <span className="text-xs tabular-nums text-muted-foreground" title="Threats, each counted once">
-                ({counts.total})
+              <span className="text-xs tabular-nums text-muted-foreground" title={totalTitle} data-testid="tree-count">
+                {splitsCount ? `(${ownCount} + ${beneathCount})` : `(${counts.total})`}
               </span>
             )}
           </div>

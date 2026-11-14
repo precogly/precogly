@@ -88,6 +88,55 @@ SHARED_THREAT_MODEL_KEYS = frozenset(
 )
 
 
+def technology_frontend_id(item) -> str:
+    """The id the frontend gives a component library row (component-library.ts)."""
+    return item.slug or item.qualified_slug or str(item.id)
+
+
+def shared_technologies(threat_model):
+    """The component library rows the model's diagrams reference, for viewers
+    without a login: the frontend's id, the name and the icon.
+
+    The share page renders the same nodes as the editor, and those look the
+    technology up in the component library, which anonymous viewers cannot
+    fetch. Only referenced rows are sent (the AWS pack alone has hundreds),
+    matched the three ways the frontend matches: slug, qualified slug, or the
+    name ignoring case (legacy diagrams stored the display name).
+    """
+    from django.db.models import Q
+
+    from apps.systems.models import ComponentLibrary
+
+    references = set()
+    for dfd in threat_model.dfds.all():
+        nodes = (dfd.canvas_data or {}).get("nodes") or []
+        for node in nodes:
+            data = node.get("data") if isinstance(node, dict) else None
+            if not isinstance(data, dict):
+                continue
+            technology = data.get("technology") or data.get("componentRef")
+            if isinstance(technology, str) and technology.strip():
+                references.add(technology.strip())
+    if not references:
+        return []
+
+    lookup = Q(slug__in=references) | Q(qualified_slug__in=references)
+    for reference in references:
+        lookup |= Q(name__iexact=reference)
+    numeric_ids = [int(r) for r in references if r.isdigit()]
+    if numeric_ids:
+        lookup |= Q(id__in=numeric_ids)
+
+    by_id = {}
+    for item in ComponentLibrary.objects.filter(lookup).order_by("id"):
+        frontend_id = technology_frontend_id(item)
+        by_id.setdefault(
+            frontend_id,
+            {"id": frontend_id, "name": item.name, "icon_svg": item.icon_svg or None},
+        )
+    return list(by_id.values())
+
+
 def serialize_taxonomy_entries(threat):
     """Library and instance taxonomy entries, deduplicated, else the snapshot."""
     seen = {}
@@ -124,7 +173,11 @@ def serialize_taxonomy_entries(threat):
 
 
 def serialize_standard_mappings(countermeasure):
-    """Library and instance compliance mappings; instance wins per requirement."""
+    """Library and instance compliance mappings; instance wins per requirement.
+
+    Each entry carries the requirement id so the frontend can tell a mapping
+    present in both lists from one that exists only in the library.
+    """
     seen = {}
 
     if countermeasure.countermeasure_library:
@@ -132,6 +185,7 @@ def serialize_standard_mappings(countermeasure):
             if mapping.requirement and mapping.requirement.framework:
                 seen[mapping.requirement_id] = {
                     "id": mapping.id,
+                    "requirement": mapping.requirement_id,
                     "framework_name": mapping.requirement.framework.name,
                     "framework_slug": mapping.requirement.framework.slug,
                     "section_code": mapping.requirement.section_code,
@@ -143,6 +197,7 @@ def serialize_standard_mappings(countermeasure):
         if mapping.requirement and mapping.requirement.framework:
             seen[mapping.requirement_id] = {
                 "id": mapping.id,
+                "requirement": mapping.requirement_id,
                 "framework_name": mapping.requirement.framework.name,
                 "framework_slug": mapping.requirement.framework.slug,
                 "section_code": mapping.requirement.section_code,
@@ -152,6 +207,7 @@ def serialize_standard_mappings(countermeasure):
         else:
             seen[f"snapshot_{mapping.id}"] = {
                 "id": mapping.id,
+                "requirement": None,
                 "framework_name": mapping.framework_name,
                 "framework_slug": "",
                 "section_code": mapping.section_code,

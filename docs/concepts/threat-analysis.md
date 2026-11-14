@@ -8,10 +8,12 @@ The threat analysis view is the three-panel workspace where you review targets, 
 
 The left panel is a tree of everything a threat can target:
 
-- **System**, at the top, holds the threats that apply to the whole system and have no targets.
+- **System**, at the top, holds the threats that apply to the whole system and have no targets, and lists every threat in the model beneath it.
 - **Zones**, nested as on the canvas, each with its components (processes nested inside their parent) and the threats on the zone itself.
 - Components that sit in no zone.
 - **Flows** and **Boundaries**, one group of each per blueprint.
+
+A row's count and its list include everything beneath it, each threat once; a parent lists its own threats first and the inherited ones after, tagged with their target. A parent whose count includes threats from rows beneath it prints the count as two numbers, its own and the inherited, for example "(0 + 22)".
 
 When the model has more than one blueprint the tree gains one level, named after the blueprint. Select any entry to see its threats; zones and boundaries can be selected like components. **Table** switches to a flat, sortable list with a **Targets** column, and the search box understands numbers, so `T7` finds threat 7.
 
@@ -62,6 +64,14 @@ A threat's detail panel shows **From abuse cases** when abuse cases lead to it. 
 Each countermeasure moves through a lifecycle: **Gap** (not yet addressed), **Planned** (assigned to an owner), **In Progress** (implementation underway), **Implemented** (deployed, not yet verified), **Verified** (confirmed by security team), **Platform** (provided by infrastructure), **Waived** (accepted risk), or **Decommissioned** (no longer active).
 
 ![Countermeasure status lifecycle](../assets/images/threat-analysis-countermeasures-states.png)
+
+### How countermeasure status feeds the threat and the risk
+
+A threat's **status** comes from the countermeasures linked to it. With no countermeasure, or any one at Gap, the threat is **Exposed**. Otherwise, with any one at Planned, In Progress, Waived or Decommissioned, it is **Addressable**. When every one is Implemented, Verified or Platform, it is **Mitigated**.
+
+A risk's **exposure** badge comes from its linked threats whose triage is Open or Mitigate. With none of those it is Exposed. When every one is Mitigated the risk is Mitigated; when every one is Mitigated or Addressable it is Addressable; otherwise it is Exposed.
+
+A risk's **residual** rating is the inherent rating after the linked threats' countermeasures. Each countermeasure counts its effectiveness, or when not assessed a default by status: Verified and Platform 100%, Implemented 70%, In Progress 50%, Planned 30%, Gap, Waived and Decommissioned 0%. A countermeasure shared by several threats counts once. The average lowers the likelihood; impact does not change. With no contributing countermeasure the residual equals the inherent rating. Level-only ratings have no likelihood to lower, so they are not recalculated: the residual keeps the level it was given, for example from an import, and the refresh button beside it is disabled. The residual is recalculated when a linked countermeasure's status or effectiveness changes, when threats are linked or unlinked, and on the refresh button. Risk responses take no part in the calculation.
 
 A countermeasure card shows its number, its status, the threats it is linked to by number, and an **Also mitigates** line with one entry per other threat and that threat's targets. **Applies to** is the control's scope: the components, flows, zones, and boundaries it covers, or the whole system when empty. Under Advanced sit the effectiveness (a percentage, or "not assessed"), **Implemented by** (components and another party as text), and **Source**. Scope and provider are recorded and exported; they do not change any threat's status. A countermeasure counts for a threat only when it is linked to that threat. See [Platform Controls](platform-controls.md).
 

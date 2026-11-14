@@ -25,6 +25,17 @@ export function targetKey(target: TargetRef): string {
   return `${target.type}:${target.id}`
 }
 
+/** The analysis tree's row key for a target: `component-5`, `zone-3`, `flow-7`, `boundary-2`. */
+export function targetTreeKey(type: TargetType, id: number): string {
+  return `${type}-${id}`
+}
+
+/** The analysis tree's row key for a selection: `system` or a target's tree key. One helper, so the two formats never drift. */
+export function treeKeyForSelection(selection: AnalysisSelection | null | undefined): string | null {
+  if (!selection) return null
+  return selection.kind === 'system' ? 'system' : targetTreeKey(selection.type, selection.id)
+}
+
 export function isSameSelection(
   left: AnalysisSelection | null | undefined,
   right: AnalysisSelection | null | undefined
@@ -49,6 +60,21 @@ export function threatMatchesSelection(
   if (!selection) return false
   if (selection.kind === 'system') return threat.wholeSystem
   return threat.targets.some((target) => target.type === selection.type && target.id === selection.id)
+}
+
+/**
+ * Whether a scenario shows under a selection's subtree: the row's own threats
+ * plus every row beneath it, as the tree counts them. `byKey` is the tree's
+ * row map; only active threats are in a subtree.
+ */
+export function threatInSelectionSubtree(
+  threat: Pick<AnalysisThreat, 'id'>,
+  selection: AnalysisSelection | null | undefined,
+  byKey: ReadonlyMap<string, { subtreeThreatIds: ReadonlySet<string> }>
+): boolean {
+  const key = treeKeyForSelection(selection)
+  if (key === null) return false
+  return byKey.get(key)?.subtreeThreatIds.has(threat.id) ?? false
 }
 
 export const TARGET_TYPE_LABELS: Record<TargetType, string> = {
