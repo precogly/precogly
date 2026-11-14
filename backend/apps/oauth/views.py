@@ -273,6 +273,7 @@ class AuthorizedApplicationView(APIView):
 
     permission_classes = [IsAuthenticated, SignedInInBrowser]
 
+    @extend_schema(responses={204: None})
     def delete(self, request, application_id):
         if (
             not live_access_tokens(request.user)
