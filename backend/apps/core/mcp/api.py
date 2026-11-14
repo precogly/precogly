@@ -20,7 +20,7 @@ from django.test import RequestFactory
 from mcp.server.auth.provider import AccessToken
 from rest_framework.permissions import SAFE_METHODS
 
-from apps.core.mcp.errors import APIError
+from apps.core.mcp.errors import APIError, InsufficientScopeError
 
 
 @functools.cache
@@ -96,10 +96,11 @@ async def request(
 
     if method not in SAFE_METHODS and "write" not in access_token.scopes:
         granted = " ".join(access_token.scopes) or "no scopes"
-        raise APIError(
+        raise InsufficientScopeError(
             f"{method} changes data and needs the `write` scope; this connection was "
             f"granted {granted}. Ask the user to reconnect with write access, or use "
-            "a read-only method."
+            "a read-only method.",
+            scopes={"write"},
         )
 
     # Unreachable through `/mcp`: the verifier refuses a token that names no user.

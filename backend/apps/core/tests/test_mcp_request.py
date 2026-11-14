@@ -11,6 +11,7 @@ from asgiref.sync import async_to_sync
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from mcp.server.auth.provider import AccessToken
+from precogly_mcp.scope_challenge import InsufficientScope
 
 from apps.core.mcp import api
 from apps.core.mcp.errors import APIError
@@ -43,6 +44,14 @@ class WriteScopeTests(TestCase):
             with self.subTest(method=method), pytest.raises(APIError, match="write"):
                 self.call(self.token("read"), method)
         self.dispatched.assert_not_called()
+
+    def test_the_refusal_names_the_scope_for_the_challenge(self):
+        # `execute` catches `InsufficientScope`, not `APIError`, so it can ask the
+        # client for the exception's `scopes`. A plain `APIError` would reach the
+        # client as a tool error, so no re-consent would start.
+        with pytest.raises(InsufficientScope) as refused:
+            self.call(self.token("read"), "PATCH")
+        assert refused.value.scopes == {"write"}
 
     def test_a_write_token_is_dispatched_as_its_user(self):
         self.call(self.token("read", "write"), "post")

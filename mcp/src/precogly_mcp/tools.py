@@ -21,6 +21,7 @@ from pydantic_monty import (
     ResourceLimits,
 )
 
+from precogly_mcp.scope_challenge import InsufficientScope, challenge
 from precogly_mcp.truncate import dumps, fit
 
 # Arbitrary, with wide margins: a search over the whole spec measured ~41 ms. Lower
@@ -244,7 +245,14 @@ async def execute(
         params: Mapping[str, Any] | None = None,
         body: Any = None,
     ) -> Any:
-        return await tool.request(access_token, method, path, params, body)
+        try:
+            return await tool.request(access_token, method, path, params, body)
+        except InsufficientScope as err:
+            # Recorded here, outside the sandbox, so the response is a scope challenge
+            # even when the sandboxed code catches the error. The granted scopes go
+            # into the challenge too, so the client's re-authorization keeps them.
+            challenge(ctx.request_context.request, {*access_token.scopes, *err.scopes})
+            raise
 
     try:
         async with asyncio.timeout(EXECUTE_WALL_CLOCK_SECS):

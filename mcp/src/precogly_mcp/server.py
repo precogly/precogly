@@ -16,8 +16,9 @@ from mcp.server.auth.provider import TokenVerifier
 from mcp.server.auth.settings import AuthSettings
 from mcp.types import ToolAnnotations
 from pydantic_monty import AsyncMonty
-from starlette.applications import Starlette
+from starlette.types import ASGIApp
 
+from precogly_mcp.scope_challenge import ScopeChallenge
 from precogly_mcp.spec import process_spec
 from precogly_mcp.tools import (
     EXECUTE_DESCRIPTION,
@@ -134,7 +135,7 @@ def asgi_app(
     issuer_url: str,
     resource_url: str,
     required_scopes: list[str] | None = None,
-) -> Starlette:
+) -> ASGIApp:
     """Build the MCP endpoint for Precogly to mount.
 
     `resource_url` is the token audience (RFC 8707). It also fixes where the
@@ -147,6 +148,9 @@ def asgi_app(
     an SSE stream. Nothing can stream, so a tool cannot report progress.
 
     `stateless_http`: the targeted transport revision has no protocol-level sessions.
+
+    `ScopeChallenge` wraps the app. A write rejected for lacking the `write` scope gets
+    a 403 scope challenge; see `precogly_mcp.scope_challenge`.
     """
     server = build_server(
         request=request,
@@ -162,8 +166,9 @@ def asgi_app(
         ),
         token_verifier=token_verifier,
     )
-    return server.streamable_http_app(
+    app = server.streamable_http_app(
         streamable_http_path="/mcp",
         json_response=True,
         stateless_http=True,
     )
+    return ScopeChallenge(app, resource_url)
