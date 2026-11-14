@@ -13,6 +13,19 @@ from oauth2_provider.settings import oauth2_settings
 # it to the attacker and leaves the user a 404. Ten minutes is arbitrary.
 LIFETIME = timedelta(minutes=10)
 
+# Wrong passwords a request survives before it is marked used. Five is arbitrary: lower
+# fails a user who mistypes twice and then misremembers, higher gives a stolen JWT more
+# guesses per handle.
+#
+# TODO(AlvinKuruvilla): this bounds guesses per handle, not per user. `/o/authorize/`
+#     is open, so whoever holds a stolen JWT can create handles without limit and get
+#     five guesses on each. The final design is one limit on failed password checks per
+#     user, shared by the decision endpoint and the JWT login (`/api/auth/login/`, which
+#     has no limit at all), counted where every worker sees it: a database table or
+#     Django's database cache, since there is no Redis. That is the split-out password
+#     rate-limiting PR; #670 should not reach production before it lands.
+MAX_PASSWORD_ATTEMPTS = 5
+
 # The keys oauthlib's `validate_authorization_request` returns for the authorization
 # code grant with OpenID Connect off (oauthlib 3.3.1,
 # `oauth2/rfc6749/grant_types/authorization_code.py`). `from_validated` raises on any
@@ -71,6 +84,7 @@ class PendingAuthorization(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(default=_expiry)
     used = models.BooleanField(default=False)
+    failed_password_attempts = models.PositiveSmallIntegerField(default=0)
 
     def __str__(self):
         return f"Pending authorization for {self.application}"

@@ -1,6 +1,7 @@
 from urllib.parse import urlsplit
 
 from django.conf import settings
+from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.utils import timezone
 from django.views.generic import TemplateView
@@ -13,14 +14,18 @@ from oauth2_provider.scopes import get_scopes_backend
 from oauth2_provider.settings import oauth2_settings
 from oauth2_provider.views.mixins import OAuthLibMixin
 from oauthlib.oauth2.rfc6749.errors import CustomOAuth2Error
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.oauth.models import PendingAuthorization
+from apps.oauth.models import MAX_PASSWORD_ATTEMPTS, PendingAuthorization
 from apps.oauth.permissions import SignedInInBrowser
-from apps.oauth.serializers import PendingAuthorizationSerializer
+from apps.oauth.serializers import (
+    DecisionResultSerializer,
+    DecisionSerializer,
+    PendingAuthorizationSerializer,
+)
 
 LOOPBACK_HOSTS = {"127.0.0.1", "::1", "localhost"}
 
@@ -118,3 +123,71 @@ class PendingAuthorizationView(APIView):
                 }
             ).data
         )
+
+
+class DecisionView(OAuthLibMixin, APIView):
+    """Records whether the user allows or denies the client, and returns where the
+    browser goes next.
+
+    Only the user bound by reading the handle can allow or deny the client:
+
+        decision  password  row afterwards                         response
+        --------  --------  -------------------------------------  ----------------
+        deny      ignored   used                                   200, access_denied
+        allow     correct   used                                   200, code
+        allow     wrong     one more failure; used at the fifth    400
+        any       any       (unbound, another user's, expired,     404
+                            or already used)
+    """
+
+    permission_classes = [IsAuthenticated, SignedInInBrowser]
+
+    @extend_schema(request=DecisionSerializer, responses=DecisionResultSerializer)
+    def post(self, request, handle):
+        decision = DecisionSerializer(data=request.data)
+        decision.is_valid(raise_exception=True)
+        allow = decision.validated_data["allow"]
+
+        # The row is locked while the password is checked and the outcome recorded, so
+        # two concurrent decisions cannot both use it. The 400 is raised after the
+        # transaction commits, or raising it would roll back the failure count.
+        with transaction.atomic():
+            pending = (
+                PendingAuthorization.objects.select_for_update()
+                .filter(
+                    id=handle,
+                    user=request.user,
+                    used=False,
+                    expires_at__gt=timezone.now(),
+                )
+                .first()
+            )
+            if pending is None:
+                raise NotFound
+            password_ok = not allow or request.user.check_password(
+                decision.validated_data["password"]
+            )
+            if password_ok:
+                pending.used = True
+            else:
+                pending.failed_password_attempts += 1
+                pending.used = pending.failed_password_attempts >= MAX_PASSWORD_ATTEMPTS
+            pending.save(update_fields=["used", "failed_password_attempts"])
+
+        if not password_ok:
+            raise ValidationError({"password": "That password is incorrect."})
+
+        try:
+            # The view mixin's method, which takes the scopes as the stored string.
+            uri, _, _, _ = self.create_authorization_response(
+                request._request,
+                scopes=pending.scopes,
+                credentials=pending.credentials(),
+                allow=allow,
+            )
+        except OAuthToolkitError as error:
+            # Denying lands here too: django-oauth-toolkit raises `access_denied`
+            # carrying the client's redirect URI and state.
+            _, response = self.error_response(error)
+            uri = response["url"]
+        return Response(DecisionResultSerializer({"redirect_url": uri}).data)
