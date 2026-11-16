@@ -9,12 +9,9 @@ to the viewset. The catalogs are unpaginated, which is what makes that affordabl
 `search_fields` does not — a threat's taxonomy mappings are on every row and no
 server-side search matches them.
 
-Two transports, and the difference between them is how a tool reaches Precogly. No
-tool fetches for itself; each reads through a `PrecoglyData` its caller supplied
-(docs/0008). Mounted inside Precogly (`asgi_app`), that reader goes to the ORM as the
-user whose token the verifier resolved. Over stdio (`main`), there is no request and
-no browser, so it goes to the REST API with a token from the environment — which is
-what the MCP specification directs a stdio server to do.
+The server is only ever mounted inside Precogly (`asgi_app`; docs/0013). No tool
+fetches for itself; each reads through a `PrecoglyReader` the mounting application
+supplied (docs/0008), as the user whose token the verifier resolved.
 
 Nothing here validates a token or reads a database. Both the verifier and the reader
 arrive from the caller, so this package never imports Django and Precogly stays the
@@ -23,28 +20,24 @@ only thing that knows how its own tokens are stored or where its rows live.
 
 from __future__ import annotations
 
-import functools
-import os
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from importlib.metadata import version
 from typing import Any, Literal
 
-import httpx2
 from mcp.server import MCPServer
 from mcp.server.auth.middleware.auth_context import get_access_token
-from mcp.server.auth.provider import AccessToken, TokenVerifier
+from mcp.server.auth.provider import TokenVerifier
 from mcp.server.auth.settings import AuthSettings
 from mcp.server.mcpserver.context import Context
-from mcp.types import CallToolResult, TextContent, ToolAnnotations
+from mcp.types import ToolAnnotations
 from starlette.applications import Starlette
 
 # Absolute rather than relative, so this module loads both as `python -m
 # precogly_mcp.server` and by file path. `mcp dev` reads the file with
 # `spec_from_file_location`, which gives it no parent package, and a relative import
 # there fails with "attempted relative import with no known parent package".
-from precogly_mcp.access import HTTPReader, PrecoglyReader, ReaderFor
-from precogly_mcp.client import PrecoglyAPIError
+from precogly_mcp.access import PrecoglyReader, ReaderFor
 from precogly_mcp.models import (
     LibraryComponent,
     LibraryComponentMatches,
@@ -55,42 +48,6 @@ from precogly_mcp.models import (
     ThreatModelListing,
     ThreatModelSummary,
 )
-
-# Empty is treated as unset. An MCP client interpolating a variable into the server's
-# environment — opencode's `{env:PRECOGLY_URL}` — can hand over an empty string when the
-# variable is not set, and that reaches the caller as "Could not reach Precogly at :",
-# which names the wrong problem.
-_BASE_URL = os.environ.get("PRECOGLY_URL") or "http://localhost:8000"
-
-
-def http_client() -> httpx2.AsyncClient:
-    """Build the HTTP client a tool call uses.
-
-    A module-level function rather than a parameter because a tool's parameters are its
-    public schema — adding one for a transport would advertise it to every caller. Tests
-    replace this to supply a `MockTransport`.
-    """
-    return httpx2.AsyncClient(timeout=10)
-
-
-def _surface_api_errors(fn: Callable[..., Any]) -> Callable[..., Any]:
-    """Return PrecoglyAPIError as a tool-level error instead of letting it propagate.
-
-    mcp >=2.1 wraps unhandled tool exceptions in a generic message. These errors
-    are written for the calling agent and must survive the boundary.
-    """
-
-    @functools.wraps(fn)
-    async def wrapper(*args: Any, **kwargs: Any) -> Any:
-        try:
-            return await fn(*args, **kwargs)
-        except PrecoglyAPIError as exc:
-            return CallToolResult(
-                content=[TextContent(type="text", text=str(exc))],
-                is_error=True,
-            )
-
-    return wrapper
 
 
 def _read(ctx: Context[ReaderFor, Any]) -> PrecoglyReader:
@@ -105,9 +62,8 @@ def _read(ctx: Context[ReaderFor, Any]) -> PrecoglyReader:
 
 
 # Tools are plain functions, registered in `build_server` rather than by decorator.
-# The server object cannot exist at import time any more: `AuthSettings` and the
-# token verifier are constructor arguments, and both differ between the mounted and
-# stdio transports.
+# The server object cannot exist at import time: `AuthSettings` and the token verifier
+# are constructor arguments, and both come from the mounting application.
 
 # Annotations are how a client decides whether a call needs a human. Absent them, a
 # cautious client has to assume the worst about what is only ever a read.
@@ -122,7 +78,6 @@ _LIST_ANNOTATIONS = ToolAnnotations(
 )
 
 
-@_surface_api_errors
 async def list_threat_models(
     ctx: Context[ReaderFor, Any],
     organization_id: int | None = None,
@@ -172,7 +127,6 @@ _CATALOG_ANNOTATIONS = ToolAnnotations(
 )
 
 
-@_surface_api_errors
 async def search_threat_library(
     ctx: Context[ReaderFor, Any], query: str | None = None
 ) -> LibraryThreatMatches:
@@ -222,7 +176,6 @@ async def search_threat_library(
     )
 
 
-@_surface_api_errors
 async def search_countermeasure_library(
     ctx: Context[ReaderFor, Any],
     query: str | None = None,
@@ -281,7 +234,6 @@ async def search_countermeasure_library(
     )
 
 
-@_surface_api_errors
 async def search_component_library(
     ctx: Context[ReaderFor, Any],
     query: str | None = None,
@@ -335,18 +287,9 @@ async def search_component_library(
     )
 
 
-def environment_reader(access_token: AccessToken | None) -> PrecoglyReader:
-    """The stdio reader: Precogly's REST API, with a token from the environment.
-
-    `access_token` is always `None` here, because stdio has no request to carry one.
-    It is in the signature because `ReaderFor` is what the lifespan holds either way.
-    """
-    return HTTPReader(_BASE_URL, http_client, os.environ.get("PRECOGLY_TOKEN", ""))
-
-
 def build_server(
     *,
-    reader_for: ReaderFor = environment_reader,
+    reader_for: ReaderFor,
     auth: AuthSettings | None = None,
     token_verifier: TokenVerifier | None = None,
 ) -> MCPServer:
@@ -405,12 +348,6 @@ def asgi_app(
 ) -> Starlette:
     """Build the MCP endpoint for Precogly to mount.
 
-    `reader_for` has no default, unlike on `build_server`. The stdio reader would type
-    check here and fail on every call: it presents the caller's token to the REST API,
-    and a token this endpoint accepts is audience-bound to this endpoint, so
-    django-oauth-toolkit refuses it there. The mounting application has to supply a
-    reader that does not go back out over HTTP.
-
     `resource_url` is the audience: the canonical URI a client names in its RFC 8707
     `resource` parameter, and the one the verifier must find on a token before
     accepting it. It is also what fixes where the protected-resource document is
@@ -445,16 +382,3 @@ def asgi_app(
         json_response=True,
         stateless_http=True,
     )
-
-
-def main() -> None:
-    """Entry point for the `precogly-mcp` console script.
-
-    Stdio, and so unauthorized: the token comes from `PRECOGLY_TOKEN`. Takes no
-    arguments — the mounted transport is configured by Precogly, not from here.
-    """
-    build_server().run(transport="stdio")
-
-
-if __name__ == "__main__":
-    main()

@@ -6,12 +6,45 @@ and importing from it fights that. Anything a test needs to import by name lives
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Any
 
-import httpx2
+from precogly_mcp.access import Listing
 
-# A MockTransport handler: given the outbound request, return the response to fake.
-Handler = Callable[[httpx2.Request], httpx2.Response]
+
+@dataclass
+class FakeReader:
+    """A `PrecoglyReader` returning what a test put in it, recording what it was asked.
+
+    These tests cover what the tools do with rows: projecting, matching, counting.
+    Whether a real reader returns the right rows for a user is Precogly's to test,
+    against a database, in `backend/apps/core/tests/test_mcp_reader.py`.
+    """
+
+    threat_model_rows: list[dict[str, Any]] = field(default_factory=list)
+    # `None` means "as many as there are rows". Set it higher to fake a reader that
+    # could not return everything.
+    threat_model_total: int | None = None
+    threats: list[dict[str, Any]] = field(default_factory=list)
+    countermeasures: list[dict[str, Any]] = field(default_factory=list)
+    components: list[dict[str, Any]] = field(default_factory=list)
+
+    organization_ids: list[int | None] = field(default_factory=list)
+
+    async def threat_models(self, organization_id: int | None = None) -> Listing:
+        self.organization_ids.append(organization_id)
+        total = self.threat_model_total
+        rows = list(self.threat_model_rows)
+        return Listing(rows=rows, total=len(rows) if total is None else total)
+
+    async def threat_library(self) -> list[dict[str, Any]]:
+        return list(self.threats)
+
+    async def countermeasure_library(self) -> list[dict[str, Any]]:
+        return list(self.countermeasures)
+
+    async def component_library(self) -> list[dict[str, Any]]:
+        return list(self.components)
 
 
 # One row exactly as the API sends it: camelCase, string timestamps with a Z suffix,
@@ -164,23 +197,3 @@ COMPONENT_LIBRARY_ROWS: list[dict[str, object]] = [
         "updatedAt": "2026-08-01T13:21:14.660895Z",
     },
 ]
-
-
-def page(*rows: dict[str, object], total: int | None = None) -> dict[str, object]:
-    """Wrap rows in the `PageNumberPagination` envelope the API returns.
-
-    `total` sets `count` independently of how many rows are on the page, which is
-    what a truncated read looks like: DRF counts the whole filtered queryset, and
-    that difference is the only signal that there is more than what came back.
-    """
-    return {
-        "count": len(rows) if total is None else total,
-        "next": None,
-        "previous": None,
-        "results": list(rows),
-    }
-
-
-def json_response(status: int, body: object) -> Handler:
-    """A handler that answers every request with one JSON response."""
-    return lambda _request: httpx2.Response(status, json=body)
