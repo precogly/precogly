@@ -28,7 +28,7 @@ precogly-mcp = "precogly_mcp.server:main"
 #
 # Keep the ruff range in step with `rev` in ../.pre-commit-config.yaml.
 dev = [
-    "pytest>=9.1.1,<10.0",
+    "pytest>=9.2.0,<10.0",
     "pytest-cov>=5.0,<6.0",
     "hypothesis>=6",
     "syrupy>=4",
