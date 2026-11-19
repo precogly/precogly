@@ -81,12 +81,10 @@ export const TrustBoundaryEdge = memo(function TrustBoundaryEdge({
       <BaseEdge
         id={id}
         path={edgePath}
-        className={cn(
-          'transition-all',
-          selected && '!stroke-blue-500'
-        )}
+        className="transition-all"
         style={{
-          stroke: selected ? undefined : color,
+          // Inline so html-to-image keeps the stroke in PNG/SVG exports.
+          stroke: selected ? '#2b7fff' : color,
           strokeWidth: selected ? 3 : 2.5,
           strokeDasharray: '10 6',
           strokeLinecap: 'round',
