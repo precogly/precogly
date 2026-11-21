@@ -408,7 +408,7 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "Precogly API",
     "DESCRIPTION": "Threat Modeling Platform API",
     # release-please's generic updater rewrites only lines carrying this marker.
-    "VERSION": "0.4.0",  # x-release-please-version
+    "VERSION": "0.5.0",  # x-release-please-version
     "SERVE_INCLUDE_SCHEMA": False,
     # The API renders and parses camelCase (djangorestframework-camel-case, with the
     # `ignore_keys` in JSON_CAMEL_CASE), so the schema has to name fields the same way.
