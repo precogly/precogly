@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -2008,7 +2008,6 @@ name = "precogly-mcp"
 version = "0.1.0"
 source = { editable = "mcp" }
 dependencies = [
-    { name = "httpx2" },
     { name = "mcp", extra = ["cli"] },
     { name = "pydantic" },
 ]
@@ -2027,7 +2026,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "httpx2", specifier = ">=2.9.1" },
     { name = "mcp", extras = ["cli"], specifier = "==2.2.*" },
     { name = "pydantic", specifier = ">=2.13.4" },
 ]
