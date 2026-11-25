@@ -3,6 +3,8 @@
 [![Latest Release](https://img.shields.io/github/v/release/precogly/precogly)](https://github.com/precogly/precogly/releases/latest)
 [![License](https://img.shields.io/github/license/precogly/precogly)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/precogly/precogly)](https://github.com/precogly/precogly/stargazers)
+[![Clones](https://img.shields.io/badge/dynamic/json?label=Clones&query=%24.count&url=https%3A%2F%2Fraw.githubusercontent.com%2Fprecogly%2Fstats%2Fmain%2Fdata%2Fprecogly%2Fprecogly%2Fclones.json&logo=github&color=success)](https://github.com/precogly/stats)
+[![Unique Cloners](https://img.shields.io/badge/dynamic/json?label=Unique%20Cloners&query=%24.uniques&url=https%3A%2F%2Fraw.githubusercontent.com%2Fprecogly%2Fstats%2Fmain%2Fdata%2Fprecogly%2Fprecogly%2Fclones.json&logo=github&color=success)](https://github.com/precogly/stats)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-5865F2?logo=discord&logoColor=white)](https://discord.gg/uBFZGJzpYa)
 [![OWASP Slack](https://img.shields.io/badge/OWASP%20Slack-%23project--precogly-4A154B)](https://owasp.slack.com/archives/C0C1HV90L5P)
 ![OWASP Project](https://img.shields.io/badge/OWASP-Project-blue?logo=owasp)
@@ -80,16 +82,18 @@ Precogly is designed for enterprise workflows, but smaller organizations can als
 
 - **0.3: DFD Editor Features** (released July 2026)
 - **0.4: MCP and AI Agents Support** (released September 2026)
-- **0.5: Threat Modeling Program Management and TM-BOM Alignment**
+- **0.5: TM-BOM Alignment and Library Packs Repository**
+  - Align Precogly's data model with the CycloneDX 2.0 TM-BOM (done on `main`, not yet released; see the [changelog](docs/changelog.md))
+  - Move library packs to a separate repository
+- **0.6: Threat Modeling Program Management**
   - See threat modeling coverage and risk management progress across the organization
   - Report on risk ownership, treatment status and overdue actions by business unit, team and product
   - Align program management with the [Threat Modeling Capabilities](https://www.threatmodelingmanifesto.org/capabilities/), especially the Measurement and Program Management areas
-  - Align Precogly's data model with the CycloneDX 2.0 TM-BOM (done on `main`, not yet released; see the [changelog](docs/changelog.md))
-- **0.6: Risk Management**
+- **0.7: Risk Management**
   - Extend the risk register to record risks from vulnerabilities and assessments, alongside those from threat modeling
   - Assign risk owners, record treatment decisions and track residual risk
   - Run risk assessments and produce reports that support compliance, including the EU CRA
-- **0.7: Security Controls Management**
+- **0.8: Security Controls Management**
   - Show auditors that security controls are in place and working
   - Define verification steps and record evidence
   - Maintain control libraries at product and organization levels
