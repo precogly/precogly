@@ -121,7 +121,7 @@ class AssumptionTests(Fixture):
             format="json",
         )
         by_blueprint = client.get(base, {"blueprint": self.other_blueprint.id})
-        self.assertEqual(len(by_blueprint.data["results"]), 1)
+        self.assertEqual(len(by_blueprint.data), 1)
         completion = ThreatModelSerializer()._compute_completion_status(
             self.threat_model
         )
@@ -133,7 +133,7 @@ class AssumptionTests(Fixture):
         self.assertEqual(scope["assumptions"][0]["owner"], "Ops lead")
         other = ThreatModel.objects.create(name="Other", organization=self.organization)
         self.assertEqual(
-            client.get(f"/api/threat-models/{other.id}/assumptions/").data["results"],
+            client.get(f"/api/threat-models/{other.id}/assumptions/").data,
             [],
         )
         self.assertEqual(Assumption.objects.count(), 2)

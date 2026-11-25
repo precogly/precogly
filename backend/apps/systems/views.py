@@ -355,6 +355,7 @@ class DataAssetViewSet(BlueprintScopedMixin, viewsets.ModelViewSet):
     queryset = DataAsset.objects.none()
     serializer_class = DataAssetSerializer
     permission_classes = [IsAuthenticated, CanWrite]
+    pagination_class = None
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ["classification", "confidentiality"]
     search_fields = ["name"]
