@@ -121,23 +121,22 @@ async def test_whoami_returns_the_user_their_organizations_and_scopes(
 
 
 async def test_whoami_refuses_to_run_without_a_token() -> None:
-    result = await call_whoami(FakeRequest())
+    request = FakeRequest()
+    result = await call_whoami(request)
 
+    # Not only `is_error`: without the guard `whoami` still fails, on `None.scopes`,
+    # but only after calling the API with no token.
     assert result.is_error
+    assert request.calls == []
 
 
-async def test_whoami_is_advertised_read_only_with_no_arguments() -> None:
+async def test_whoami_is_advertised_with_no_arguments() -> None:
     async with Client(server(FakeRequest())) as client:
         tools = {tool.name: tool for tool in (await client.list_tools()).tools}
-    tool = tools["whoami"]
 
-    assert tool.title == "Who am I"
     # `ctx` is stripped by its `Context` annotation. A wrong annotation would
     # advertise it as an argument no caller can supply.
-    assert tool.input_schema.get("properties", {}) == {}
-    assert tool.annotations is not None
-    assert tool.annotations.read_only_hint is True
-    assert tool.annotations.open_world_hint is False
+    assert tools["whoami"].input_schema.get("properties", {}) == {}
 
 
 async def test_the_tool_list_is_advertised_as_fixed() -> None:

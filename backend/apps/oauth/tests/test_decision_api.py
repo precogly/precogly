@@ -1,6 +1,7 @@
 from datetime import timedelta
 from urllib.parse import parse_qs, urlparse
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -55,6 +56,7 @@ class TestDecidingAPendingAuthorization(TestCase):
             code_challenge=CHALLENGE,
             code_challenge_method="S256",
             scopes="read",
+            resource=[settings.MCP_RESOURCE_URL],
         )
         self.url = reverse("pending-authorization-decision", args=[self.pending.id])
 
@@ -80,6 +82,8 @@ class TestDecidingAPendingAuthorization(TestCase):
         grant = Grant.objects.get(code=query["code"][0])
         assert grant.user == self.user
         assert grant.code_challenge == CHALLENGE
+        # Carried only by the stored row, since the decision is a separate request.
+        assert grant.resource == [settings.MCP_RESOURCE_URL]
         self.pending.refresh_from_db()
         assert self.pending.used
 

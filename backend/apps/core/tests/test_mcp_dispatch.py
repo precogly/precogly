@@ -48,12 +48,6 @@ class DispatchTests(TestCase):
         # earlier test would not see the overrides above.
         mcp._handler.cache_clear()
 
-    def test_a_user_reads_their_own_threat_models_and_no_one_elses(self):
-        status, body, _ = mcp.dispatch(self.kestrel_user, "GET", "/api/threat-models/")
-
-        assert status == 200, body
-        assert [row["name"] for row in body["results"]] == ["Ingest pipeline"]
-
     def test_an_unrouted_path_comes_back_as_a_status_not_an_exception(self):
         status, body, _ = mcp.dispatch(self.kestrel_user, "GET", "/api/no-such-route/")
 

@@ -20,8 +20,7 @@ same literal, because `/o/authorize/` checks the audience against it.
 
 `verify_token` is async and does its ORM work under
 `sync_to_async(thread_sensitive=True)`, so `async_to_sync` keeps it on the calling
-thread and inside this TestCase's transaction — the same arrangement
-`test_mcp_reader` documents.
+thread and inside this TestCase's transaction, as in `test_mcp_dispatch`.
 """
 
 import base64

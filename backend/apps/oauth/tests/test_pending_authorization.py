@@ -1,17 +1,16 @@
-from urllib.parse import parse_qs, urlencode, urlparse
+from urllib.parse import urlencode
 
 import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase
-from oauth2_provider.models import get_application_model, get_grant_model
+from oauth2_provider.models import get_application_model
 from oauth2_provider.oauth2_backends import get_oauthlib_core
 
 from apps.oauth.models import PendingAuthorization
 
 User = get_user_model()
 Application = get_application_model()
-Grant = get_grant_model()
 
 REDIRECT = "http://localhost:33418/callback"
 # A fixed S256 challenge. The tests never redeem the code, so its verifier is not needed.
@@ -62,29 +61,6 @@ class TestPendingAuthorization(TestCase):
             key: value for key, value in credentials.items() if key != "request"
         }
         assert stored.credentials() == {**expected, "resource": resource}
-
-    def test_the_stored_request_issues_a_grant_with_its_resource(self):
-        # The decision arrives in a separate request, so this drives the toolkit's two
-        # calls apart, with nothing carried between them except the stored row.
-        scopes, credentials, resource = self.validate()
-        handle = PendingAuthorization.from_validated(scopes, credentials, resource)
-        handle.save()
-
-        stored = PendingAuthorization.objects.get(id=handle.id)
-        decision = RequestFactory().post("/o/authorize/")
-        decision.user = self.user
-        uri, _, _, _ = get_oauthlib_core().create_authorization_response(
-            decision,
-            scopes=stored.scopes.split(),
-            credentials=stored.credentials(),
-            allow=True,
-        )
-
-        code = parse_qs(urlparse(uri).query)["code"][0]
-        grant = Grant.objects.get(code=code)
-        assert grant.user == self.user
-        assert grant.code_challenge == CHALLENGE
-        assert grant.resource == [settings.MCP_RESOURCE_URL]
 
     def test_an_unknown_key_is_refused(self):
         scopes, credentials, resource = self.validate()

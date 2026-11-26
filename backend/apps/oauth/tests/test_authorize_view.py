@@ -15,8 +15,6 @@ CHALLENGE = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSW_bLlY"
 
 
 class TestAuthorizeView(TestCase):
-    # The view is not routed until the consent page exists, so these call it directly.
-
     @classmethod
     def setUpTestData(cls):
         cls.application = Application.objects.create(
@@ -72,28 +70,24 @@ class TestAuthorizeView(TestCase):
         assert "client_id" in query["error_description"][0]
         assert not PendingAuthorization.objects.exists()
 
-    def test_a_malformed_resource_goes_back_to_the_client(self):
-        response = self.authorize(resource="not-a-uri")
-
-        assert response.status_code == 302
-        query = parse_qs(urlparse(response["Location"]).query)
-        assert response["Location"].startswith(REDIRECT)
-        assert query["error"] == ["invalid_target"]
-        assert query["state"] == ["opaque-state"]
-        assert not PendingAuthorization.objects.exists()
-
     def test_a_token_not_bound_to_the_mcp_endpoint_alone_is_refused(self):
-        # Each of these would yield a token the REST API accepts on every endpoint:
+        # The first three would yield a token the REST API accepts on every endpoint:
         # django-oauth-toolkit skips the audience check for a token with no resource,
         # and matches the others by prefix.
         mcp = urlparse(settings.MCP_RESOURCE_URL)
         origin = f"{mcp.scheme}://{mcp.netloc}/"
-        for resource in [[], [origin], [settings.MCP_RESOURCE_URL, origin]]:
+        for resource in [
+            [],
+            [origin],
+            [settings.MCP_RESOURCE_URL, origin],
+            ["not-a-uri"],
+        ]:
             with self.subTest(resource=resource):
                 response = self.authorize(resource=resource)
 
                 assert response["Location"].startswith(REDIRECT)
                 query = parse_qs(urlparse(response["Location"]).query)
                 assert query["error"] == ["invalid_target"]
+                assert query["state"] == ["opaque-state"]
                 assert settings.MCP_RESOURCE_URL in query["error_description"][0]
         assert not PendingAuthorization.objects.exists()
