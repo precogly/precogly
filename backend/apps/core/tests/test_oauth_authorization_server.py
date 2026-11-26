@@ -208,6 +208,7 @@ class TestTheGrant(TestCase):
             "state": "opaque-state",
             "code_challenge": self.challenge,
             "code_challenge_method": "S256",
+            "resource": settings.MCP_RESOURCE_URL,
             **overrides,
         }
 
@@ -304,6 +305,7 @@ class TestRefreshTokenRotation(TestCase):
             "state": "opaque-state",
             "code_challenge": self.challenge,
             "code_challenge_method": "S256",
+            "resource": settings.MCP_RESOURCE_URL,
         }
         code = consent_for_code(self.client, self.user, "testpass123", params)
         return self.client.post(

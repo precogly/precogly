@@ -15,7 +15,6 @@ from oauth2_provider.models import (
     get_grant_model,
     get_refresh_token_model,
 )
-from oauth2_provider.oauth2_validators import is_valid_resource_uri
 from oauth2_provider.scopes import get_scopes_backend
 from oauth2_provider.settings import oauth2_settings
 from oauth2_provider.views.mixins import OAuthLibMixin
@@ -56,23 +55,27 @@ class AuthorizeView(OAuthLibMixin, View):
         application = get_application_model().objects.get(
             client_id=credentials["client_id"]
         )
+        # Every token must name the MCP endpoint, and nothing else, as its resource.
+        # django-oauth-toolkit checks a token's audience only when it has one, and by
+        # URL prefix, so a token with no resource, or with the origin among its
+        # resources, works on every `/api/` endpoint, where `read` and `write` are not
+        # checked. Compared exactly, as the MCP token verifier compares it.
         resource = request.GET.getlist("resource")
-        for resource_uri in resource:
-            if not is_valid_resource_uri(resource_uri):
-                error = OAuthToolkitError(
-                    error=CustomOAuth2Error(
-                        error="invalid_target",
-                        description=(
-                            f"The resource '{resource_uri}' is not a valid resource "
-                            "indicator: it must be an absolute URI with a scheme and host."
-                        ),
-                        state=credentials.get("state"),
+        if set(resource) != {settings.MCP_RESOURCE_URL}:
+            error = OAuthToolkitError(
+                error=CustomOAuth2Error(
+                    error="invalid_target",
+                    description=(
+                        f"Tokens here are issued only for the MCP endpoint: send "
+                        f"resource={settings.MCP_RESOURCE_URL} and no other resource."
                     ),
-                    redirect_uri=credentials["redirect_uri"],
-                )
-                return self.error_response(
-                    error, allowed_schemes=application.get_allowed_schemes()
-                )
+                    state=credentials.get("state"),
+                ),
+                redirect_uri=credentials["redirect_uri"],
+            )
+            return self.error_response(
+                error, allowed_schemes=application.get_allowed_schemes()
+            )
 
         pending = PendingAuthorization.from_validated(scopes, credentials, resource)
         pending.save()

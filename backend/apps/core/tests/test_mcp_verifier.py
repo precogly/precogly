@@ -5,16 +5,18 @@ bearer string into a user id, and every row a tool later reads is scoped to that
 Returning `None` is how the SDK is told to answer 401, so each refusal below is an
 assertion that `verify_token` returned nothing.
 
-The audience cases walk the real authorization flow rather than building an
-`AccessToken` row directly. The check they exist for is that a `resource` parameter
+The accepted token walks the real authorization flow rather than building an
+`AccessToken` row directly. The check it exists for is that a `resource` parameter
 sent at `/o/authorize/` survives into the column this verifier reads — a constructed
 row would still satisfy the test if django-oauth-toolkit stopped persisting it. The
-remaining refusals use built rows, since no flow produces a token naming no user.
+refusals use built rows, since `/o/authorize/` refuses to start a flow for any other
+audience, and no flow produces a token naming no user.
 
 The audience is a literal here rather than `settings.MCP_RESOURCE_URL`. What is
 pinned is the verifier's behaviour for whatever audience it was constructed with;
 that the advertised and enforced values agree is structural, since `config.mcp_mount`
-passes one variable to both consumers.
+passes one variable to both consumers. The flow test overrides the setting to the
+same literal, because `/o/authorize/` checks the audience against it.
 
 `verify_token` is async and does its ORM work under
 `sync_to_async(thread_sensitive=True)`, so `async_to_sync` keeps it on the calling
@@ -30,7 +32,7 @@ from datetime import timedelta
 
 from asgiref.sync import async_to_sync
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from oauth2_provider.models import (
@@ -53,8 +55,9 @@ def verify(token, resource=RESOURCE):
     return async_to_sync(DjangoAccessTokenVerifier(resource).verify_token)(token)
 
 
+@override_settings(MCP_RESOURCE_URL=RESOURCE)
 class AnIssuedTokensAudience(TestCase):
-    """`resource` at authorize, `resource` on the row, accepted here — or not."""
+    """`resource` at authorize, `resource` on the row, accepted here."""
 
     @classmethod
     def setUpTestData(cls):
@@ -83,10 +86,11 @@ class AnIssuedTokensAudience(TestCase):
             .rstrip("=")
         )
 
-    def token_for(self, resource=None):
+    def issued_token(self):
         """Walk authorize → consent → code → token, and return the raw access token.
 
-        `resource` is sent at the authorization endpoint only. RFC 8707 lets the
+        `RESOURCE` is sent at the authorization endpoint and left out of the token
+        request. RFC 8707 lets the
         token request narrow the audience but never widen it, so omitting it there
         makes the grant's value carry through unchanged — which is what a client
         that asks for one resource actually does.
@@ -99,10 +103,8 @@ class AnIssuedTokensAudience(TestCase):
             "state": "opaque-state",
             "code_challenge": self.challenge,
             "code_challenge_method": "S256",
+            "resource": RESOURCE,
         }
-        if resource is not None:
-            params["resource"] = resource
-
         code = consent_for_code(self.client, self.user, "testpass123", params)
 
         return self.client.post(
@@ -117,7 +119,7 @@ class AnIssuedTokensAudience(TestCase):
         ).json()["access_token"]
 
     def test_a_token_issued_for_this_resource_resolves_to_its_user(self):
-        resolved = verify(self.token_for(RESOURCE))
+        resolved = verify(self.issued_token())
 
         assert resolved is not None
         # `subject` is the authorization boundary rather than a log field: tools act
@@ -125,23 +127,8 @@ class AnIssuedTokensAudience(TestCase):
         assert resolved.subject == str(self.user.pk)
         assert resolved.scopes == ["read"]
 
-    def test_a_token_issued_without_a_resource_is_refused(self):
-        # The case the check exists for, and the reason the verifier compares
-        # audiences itself: `AccessToken.allows_audience()` returns True for an empty
-        # `resource` list, treating an unbound token as valid for everything. RFC 8707
-        # is a MUST in the MCP specification, so an audience nobody asked for is not
-        # one this endpoint grants.
-        assert verify(self.token_for()) is None
 
-    def test_a_token_for_the_origin_does_not_reach_a_path_below_it(self):
-        # The second reason for the hand-written comparison. django-oauth-toolkit's
-        # default resource validator matches by URL prefix, so an audience of
-        # `https://precogly.example` would admit a request to any path under it.
-        # Exact membership is what the audience of this endpoint means.
-        assert verify(self.token_for(ORIGIN)) is None
-
-
-class TheOtherRefusals(TestCase):
+class Refusals(TestCase):
     """Rejections no authorization flow produces, so the rows are built directly."""
 
     @classmethod
@@ -166,6 +153,22 @@ class TheOtherRefusals(TestCase):
         set_token_value(token, raw)
         token.save()
         return raw
+
+    def test_a_token_issued_without_a_resource_is_refused(self):
+        # `/o/authorize/` refuses such a request now, but a token issued before it
+        # did still exists. The verifier compares audiences itself because
+        # `AccessToken.allows_audience()` returns True for an empty `resource` list,
+        # treating an unbound token as valid for everything.
+        raw = self.issue(secrets.token_urlsafe(30), user=self.user, resource=())
+
+        assert verify(raw) is None
+
+    def test_a_token_for_the_origin_does_not_reach_a_path_below_it(self):
+        # django-oauth-toolkit's default resource validator matches by URL prefix, so
+        # an audience of `https://precogly.example` would admit any path under it.
+        raw = self.issue(secrets.token_urlsafe(30), user=self.user, resource=(ORIGIN,))
+
+        assert verify(raw) is None
 
     def test_a_token_that_was_never_issued_is_refused(self):
         assert verify(secrets.token_urlsafe(30)) is None
