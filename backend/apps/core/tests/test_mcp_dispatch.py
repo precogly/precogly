@@ -160,3 +160,32 @@ class DispatchTests(TestCase):
         assert f"/api/threat-models/{model.pk}/" in str(raised.value)
         model.refresh_from_db()
         assert model.name == "Ingest pipeline"
+
+    def test_request_names_the_invalid_field_as_the_model_wrote_it(self):
+        # The execute description promises the error says which field was invalid.
+        # The key is camelCase, as in every body the model reads.
+        organization = ThreatModel.objects.get(name="Ingest pipeline").organization
+        editor = member_of(organization, "lee@kestrel.test", role="security_team")
+        access_token = AccessToken(
+            token="t",
+            client_id="c",
+            scopes=["read", "write"],
+            subject=str(editor.pk),
+        )
+
+        with pytest.raises(APIError) as raised:
+            async_to_sync(mcp.request)(
+                access_token,
+                "POST",
+                "/api/threat-models/",
+                body={
+                    "organization": organization.pk,
+                    "name": "Card vault",
+                    "owningTeam": 999999,
+                },
+            )
+
+        assert str(raised.value) == (
+            "POST /api/threat-models/ returned 400: "
+            'owningTeam: Invalid pk "999999" - object does not exist.'
+        )
