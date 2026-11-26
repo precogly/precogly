@@ -7,6 +7,7 @@ from django.utils import timezone
 from oauth2_provider.models import (
     get_access_token_model,
     get_application_model,
+    get_grant_model,
     get_refresh_token_model,
 )
 from rest_framework_simplejwt.tokens import RefreshToken as JWTRefreshToken
@@ -15,6 +16,7 @@ User = get_user_model()
 Application = get_application_model()
 AccessToken = get_access_token_model()
 RefreshToken = get_refresh_token_model()
+Grant = get_grant_model()
 
 
 def jwt_header(user):
@@ -139,6 +141,35 @@ class TestAuthorizedApplications(TestCase):
             },
         )
         assert exchange.status_code == 400
+
+    def test_revoking_leaves_another_users_access_to_the_same_client(self):
+        # Both people use Claude Code, so one application row carries both users'
+        # tokens and grants. Without `user=` on the revoke's filters, one person
+        # revoking would sign the other out too.
+        mine = self.issue(self.claude)
+        theirs = self.issue(self.claude, user=self.other_user)
+        for user, code in [(self.user, "code-mine"), (self.other_user, "code-theirs")]:
+            Grant.objects.create(
+                user=user,
+                application=self.claude,
+                code=code,
+                expires=timezone.now() + timedelta(minutes=1),
+                redirect_uri="http://127.0.0.1:33418/callback",
+                scope="read",
+            )
+
+        response = self.client.delete(
+            reverse("authorized-application", args=[self.claude.pk]),
+            **jwt_header(self.user),
+        )
+
+        assert response.status_code == 204
+        assert not AccessToken.objects.filter(pk=mine.pk).exists()
+        assert not Grant.objects.filter(code="code-mine").exists()
+        assert AccessToken.objects.filter(pk=theirs.pk).exists()
+        assert RefreshToken.objects.get(access_token=theirs).revoked is None
+        assert Grant.objects.filter(code="code-theirs").exists()
+        assert [e["name"] for e in self.authorized(self.other_user)] == ["Claude Code"]
 
     def test_revoking_a_client_the_user_has_not_authorized_is_a_404(self):
         self.issue(self.claude, user=self.other_user)
