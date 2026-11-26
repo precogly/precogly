@@ -77,7 +77,7 @@ export function OAuthConsent() {
           </div>
           {/* The registering client chose this name; React renders it as text. */}
           <CardTitle>Allow {clientName} to access your account?</CardTitle>
-          <CardDescription>It will be able to:</CardDescription>
+          <CardDescription>It can do only what your role allows:</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <ul className="space-y-1 text-sm">

@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -15,6 +16,7 @@ Application = get_application_model()
 AccessToken = get_access_token_model()
 
 REDIRECT = "http://127.0.0.1:33418/callback"
+SCOPES = settings.OAUTH2_PROVIDER["SCOPES"]
 
 
 def jwt_header(user):
@@ -54,15 +56,8 @@ class TestReadingAPendingAuthorization(TestCase):
         assert response.json() == {
             "clientName": "Claude Code",
             "scopes": [
-                {
-                    "name": "read",
-                    "description": "Read your threat models, diagrams and installed "
-                    "libraries",
-                },
-                {
-                    "name": "write",
-                    "description": "Create and change threat models on your behalf",
-                },
+                {"name": "read", "description": SCOPES["read"]},
+                {"name": "write", "description": SCOPES["write"]},
             ],
             "redirectUri": REDIRECT,
             "loopbackRedirect": True,

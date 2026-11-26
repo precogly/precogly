@@ -278,8 +278,15 @@ OAUTH2_PROVIDER = {
     # an agent reads them and nothing else, so they name what is at stake rather
     # than restating the verb.
     "SCOPES": {
-        "read": "Read your threat models, diagrams and installed libraries",
-        "write": "Create and change threat models on your behalf",
+        "read": (
+            "See your threat models, diagrams, risks and libraries, and your "
+            "organizations' members and settings"
+        ),
+        "write": (
+            "Create, edit and delete your threat models, diagrams, risks and "
+            "libraries, invite people to your teams, share by link, and change your "
+            "organizations' settings, on your behalf"
+        ),
     },
     # The default is ["__all__"], which would hand every new client write access
     # without anyone choosing it. A client that wants to write has to ask.
