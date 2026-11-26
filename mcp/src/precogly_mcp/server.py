@@ -26,6 +26,7 @@ from precogly_mcp.tools import (
     Request,
     Schema,
     ToolContext,
+    check_sandbox,
     execute,
     search,
     whoami,
@@ -56,10 +57,9 @@ def build_server(
     async def lifespan(_: MCPServer) -> AsyncGenerator[ToolContext]:
         spec = process_spec(await schema())
         async with AsyncMonty() as sandbox:
-            # Warm-up: the first run in a pool is slow (~0.4 s), and this also proves
-            # the sandbox binary runs here before any tool depends on it.
-            async with sandbox.checkout() as session:
-                await session.feed_run("None")
+            # Also the warm-up: the first run in a pool is slow (~0.4 s), and a sandbox
+            # binary that does not run here fails startup instead of the first tool.
+            await check_sandbox(sandbox)
             yield ToolContext(request=request, sandbox=sandbox, spec=spec)
 
     # `subscriptions=False`: the tool list never changes, so there is nothing to

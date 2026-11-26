@@ -23,6 +23,7 @@ from mcp.server.auth.middleware.auth_context import auth_context_var
 from mcp.server.auth.middleware.bearer_auth import AuthenticatedUser
 from mcp.server.auth.provider import AccessToken
 from mcp.types import TextContent
+from pydantic_monty import AsyncMonty
 
 from precogly_mcp import tools
 from precogly_mcp.server import build_server
@@ -353,3 +354,20 @@ async def test_a_missing_module_says_what_is_provided() -> None:
 
     assert "ModuleNotFoundError" in error
     assert "The only name provided here is `spec`" in error
+
+
+async def test_the_sandbox_passes_its_self_check() -> None:
+    async with AsyncMonty() as sandbox:
+        await tools.check_sandbox(sandbox)
+
+
+async def test_a_sandbox_that_lets_code_out_refuses_to_start(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Stands in for a Monty upgrade that adds `socket`: the probe reports what it
+    # reached, and the check must name it.
+    monkeypatch.setattr(tools, "SANDBOX_SELF_CHECK", "['socket', 'env']")
+
+    async with AsyncMonty() as sandbox:
+        with pytest.raises(RuntimeError, match="reach: socket, env"):
+            await tools.check_sandbox(sandbox)

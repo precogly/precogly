@@ -117,8 +117,8 @@ def mount(django_application: WSGIApplication) -> WSGIApplication:
     # thread would start before the fork and not exist in the workers.
     loop = asyncio.new_event_loop()
     threading.Thread(target=loop.run_forever, daemon=True, name="mcp-asgi").start()
-    # A failed lifespan startup (the schema did not generate, or the sandbox pool did
-    # not start) takes down only the MCP paths: the rest of Precogly keeps serving,
+    # A failed lifespan startup (the schema did not generate, or the sandbox did not
+    # start or failed `check_sandbox`) takes down only the MCP paths: the rest of Precogly keeps serving,
     # and the log says why. Raising here would stop the worker booting at all.
     failure = _start_lifespan(app, loop)
     if failure is not None:

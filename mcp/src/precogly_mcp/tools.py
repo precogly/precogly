@@ -52,6 +52,49 @@ EXECUTE_MAX_REQUESTS = 100
 # clock. Past this the run is cancelled.
 EXECUTE_WALL_CLOCK_SECS = 30.0
 
+# Run by `check_sandbox` at startup. Each block tries one way out of the sandbox and
+# records it if it worked. What each expects, measured on pydantic-monty 1.5.0 with
+# no mount and no `os` handler:
+# - files: every filesystem call raises PermissionError, and the working directory is
+#   the virtual `/`, not the server's.
+# - environment: `os.getenv` raises RuntimeError.
+# - network, processes, native code: `socket`, `subprocess` and `ctypes` do not exist.
+SANDBOX_SELF_CHECK = """
+import os
+from pathlib import Path
+
+escapes = []
+if os.getcwd() != '/':
+    escapes.append('cwd')
+for label, path in [('list /', '/'), ('read', '/etc/passwd'), ('relative', 'x')]:
+    try:
+        Path(path).exists()
+        escapes.append(label)
+    except PermissionError:
+        pass
+try:
+    os.getenv('HOME')
+    escapes.append('env')
+except RuntimeError:
+    pass
+try:
+    import socket
+    escapes.append('socket')
+except ModuleNotFoundError:
+    pass
+try:
+    import subprocess
+    escapes.append('subprocess')
+except ModuleNotFoundError:
+    pass
+try:
+    import ctypes
+    escapes.append('ctypes')
+except ModuleNotFoundError:
+    pass
+escapes
+"""
+
 
 class Request(Protocol):
     """Call Precogly's REST API as the token's user; returns the parsed body or raises.
@@ -345,6 +388,34 @@ async def _run(
     if output:
         data = {"result": data, "printed": fit(output, PRINTED_MAX_CHARS)}
     return dumps(fit(data, RESULT_MAX_CHARS))
+
+
+async def check_sandbox(sandbox: AsyncMonty) -> None:
+    """Refuse to serve if code in the sandbox can reach the server's files,
+    environment, network, processes or native code.
+
+    `search` and `execute` run model-written code, and those five limits are all that
+    contain it. Nothing else enforces them, so a Monty upgrade that adds `os` or
+    `socket` support, or a `mount=` or `os=` handler added to `_run`, would lift one
+    silently. A mount, even read-only, moves the working directory off `/` and lets
+    relative paths resolve, so any mount fails this check.
+
+    The probe runs through `_run`, so it gets exactly what the tools get. A mount
+    passed by only one tool, through a new `_run` parameter, would not reach it.
+    """
+    escapes = json.loads(
+        await _run(
+            sandbox,
+            SANDBOX_SELF_CHECK,
+            ResourceLimits(max_feed_duration_secs=SEARCH_TIME_LIMIT_SECS),
+            provided="nothing",
+        )
+    )
+    if escapes:
+        raise RuntimeError(
+            f"The code sandbox let a probe reach: {', '.join(escapes)}. The MCP tools "
+            f"run model-written code there, so the endpoint will not start."
+        )
 
 
 async def whoami(ctx: Context[ToolContext, Any]) -> dict[str, Any]:
