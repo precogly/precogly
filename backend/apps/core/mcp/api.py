@@ -41,13 +41,14 @@ def dispatch(
     path: str,
     params: Mapping[str, Any] | None = None,
     body: Any = None,
-) -> tuple[int, Any]:
+) -> tuple[int, Any, str | None]:
     """Run one API request in-process as `user`, through the full middleware chain.
 
     `params` becomes the query string and `body`, if given, is sent as JSON.
 
-    Returns the status and the parsed JSON body; `None` for an empty body, and the
-    text for anything else, such as Django's HTML 404 for an unrouted path.
+    Returns the status, the parsed JSON body and the `Location` header. The body is
+    `None` when empty, and the text for anything else, such as Django's HTML 404 for
+    an unrouted path.
     """
     # Addressed to the endpoint's public origin. `RequestFactory` defaults to
     # `testserver` over http, which production refuses twice: the host is not in
@@ -68,12 +69,13 @@ def dispatch(
     request._force_auth_user = user
 
     response = _handler().get_response(request)
+    status, location = response.status_code, response.get("Location")
 
     if not response.content:
-        return response.status_code, None
+        return status, None, location
     if response.get("Content-Type", "").startswith("application/json"):
-        return response.status_code, json.loads(response.content)
-    return response.status_code, response.content.decode("utf-8", errors="replace")
+        return status, json.loads(response.content), location
+    return status, response.content.decode("utf-8", errors="replace"), location
 
 
 async def request(
@@ -114,10 +116,17 @@ async def request(
     # `dispatch` is sync and runs views that query the ORM, which raises
     # `SynchronousOnlyOperation` inside the event loop. `thread_sensitive` keeps it on
     # the thread that owns the connection, as the verifier does.
-    status, result = await sync_to_async(dispatch, thread_sensitive=True)(
+    status, result, location = await sync_to_async(dispatch, thread_sensitive=True)(
         user, method, path, params, body
     )
-    if status >= 400:
+    # Nothing follows redirects, so a 301 would read as success: a PATCH missing its
+    # trailing slash changes nothing and returns an empty body.
+    if 300 <= status < 400:
+        raise APIError(
+            f"{method} {path} returned {status}, redirecting to {location}. "
+            f"Redirects are not followed: send the request to that path."
+        )
+    if not 200 <= status < 300:
         raise APIError(f"{method} {path} returned {status}: {_describe(result)}")
     return result
 

@@ -27,7 +27,7 @@ class WriteScopeTests(TestCase):
         )
 
     def setUp(self):
-        patcher = mock.patch.object(api, "dispatch", return_value=(200, None))
+        patcher = mock.patch.object(api, "dispatch", return_value=(200, None, None))
         self.dispatched = patcher.start()
         self.addCleanup(patcher.stop)
 

@@ -49,13 +49,13 @@ class DispatchTests(TestCase):
         mcp._handler.cache_clear()
 
     def test_a_user_reads_their_own_threat_models_and_no_one_elses(self):
-        status, body = mcp.dispatch(self.kestrel_user, "GET", "/api/threat-models/")
+        status, body, _ = mcp.dispatch(self.kestrel_user, "GET", "/api/threat-models/")
 
         assert status == 200, body
         assert [row["name"] for row in body["results"]] == ["Ingest pipeline"]
 
     def test_an_unrouted_path_comes_back_as_a_status_not_an_exception(self):
-        status, body = mcp.dispatch(self.kestrel_user, "GET", "/api/no-such-route/")
+        status, body, _ = mcp.dispatch(self.kestrel_user, "GET", "/api/no-such-route/")
 
         assert status == 404
         assert isinstance(body, str)
@@ -66,7 +66,7 @@ class DispatchTests(TestCase):
             name="Card vault",
         )
 
-        status, body = mcp.dispatch(
+        status, body, _ = mcp.dispatch(
             self.kestrel_user,
             "GET",
             "/api/threat-models/",
@@ -81,7 +81,7 @@ class DispatchTests(TestCase):
         # A plain member gets 403 here: editing a threat model is security team work.
         editor = member_of(model.organization, "lee@kestrel.test", role="security_team")
 
-        status, body = mcp.dispatch(
+        status, body, _ = mcp.dispatch(
             editor,
             "PATCH",
             f"/api/threat-models/{model.pk}/",
@@ -141,3 +141,28 @@ class DispatchTests(TestCase):
             f"GET /api/threat-models/{contoso_model.pk}/ returned 404: "
             "No ThreatModel matches the given query."
         )
+
+    def test_request_raises_on_a_redirect_with_where_it_points(self):
+        # Without the trailing slash, Django answers 301 before the view runs, so
+        # `request` used to return None as though the PATCH had saved.
+        model = ThreatModel.objects.get(name="Ingest pipeline")
+        editor = member_of(model.organization, "lee@kestrel.test", role="security_team")
+        access_token = AccessToken(
+            token="t",
+            client_id="c",
+            scopes=["read", "write"],
+            subject=str(editor.pk),
+        )
+
+        with pytest.raises(APIError) as raised:
+            async_to_sync(mcp.request)(
+                access_token,
+                "PATCH",
+                f"/api/threat-models/{model.pk}",
+                body={"name": "Ingest pipeline v2"},
+            )
+
+        assert "returned 301" in str(raised.value)
+        assert f"/api/threat-models/{model.pk}/" in str(raised.value)
+        model.refresh_from_db()
+        assert model.name == "Ingest pipeline"
