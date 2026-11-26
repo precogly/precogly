@@ -117,7 +117,7 @@ class TestReadingAPendingAuthorization(TestCase):
     def test_code_mode_is_refused(self):
         # `dispatch` forces authentication past the view's own classes, so this is the
         # path a JWT-only `authentication_classes` would not have stopped.
-        status, _ = dispatch(self.user, "GET", self.url)
+        status, _, _ = dispatch(self.user, "GET", self.url)
 
         assert status == 403
         self.pending.refresh_from_db()
