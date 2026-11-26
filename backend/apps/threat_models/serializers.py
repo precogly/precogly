@@ -1119,9 +1119,13 @@ class ThreatModelSerializer(ThreatModelFieldsMixin, serializers.ModelSerializer)
         signals = []
 
         # --- Check 1: Components not backed by any installed pack ---
-        components = OrgsystemComponent.objects.filter(
-            id__in=component_ids
-        ).select_related("component_library")
+        # A system or subsystem is a boundary the user drew, not a technology a
+        # pack describes, so it can never be backed by a library entry.
+        components = (
+            OrgsystemComponent.objects.filter(id__in=component_ids)
+            .exclude(kind__in=("system", "subsystem"))
+            .select_related("component_library")
+        )
 
         flagged_components = []
         for comp in components:

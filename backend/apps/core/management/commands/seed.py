@@ -189,12 +189,14 @@ class Command(BaseCommand):
         user = self._get_or_create_user(DEMO_EMAIL, superuser=True)
         team = self._setup_membership(org, user)
         self._import_packs(force)
-        self._create_sample_threat_models(org, team, user, SAMPLE_THREAT_MODELS)
+        sample_models = self._create_sample_threat_models(
+            org, team, user, SAMPLE_THREAT_MODELS
+        )
         self._create_analyst(org, team)
         # Before _connect_packs_to_threat_models, so Contoso's threat model gets the
         # imported packs on the same run rather than on the next one.
-        self._create_second_org()
-        self._connect_packs_to_threat_models()
+        second_org_sample_models = self._create_second_org()
+        self._connect_packs_to_threat_models(sample_models + second_org_sample_models)
         self._seed_risks(org)
         self._report_accounts()
 
@@ -333,7 +335,7 @@ class Command(BaseCommand):
         OrganizationMember.objects.filter(user=user).exclude(organization=org).delete()
         TeamMembership.objects.filter(user=user).exclude(team=team).delete()
 
-        self._create_sample_threat_models(org, team, user, SECOND_ORG_THREAT_MODELS)
+        return self._create_sample_threat_models(org, team, user, SECOND_ORG_THREAT_MODELS)
 
     def _import_packs(self, force):
         libraries_path = get_libraries_path()
@@ -381,10 +383,20 @@ class Command(BaseCommand):
                 )
 
     def _create_sample_threat_models(self, org, team, user, samples):
+        """Create (or find) each sample threat model and return every one of them.
+
+        The return value is what `_connect_packs_to_threat_models` uses to limit
+        itself to the threat models this command is actually responsible for,
+        so it must include a model this run found already existing, not only
+        the ones it just created.
+        """
+        threat_models = []
         for sample in samples:
             name = sample["name"]
-            if ThreatModel.objects.filter(name=name, organization=org).exists():
+            existing = ThreatModel.objects.filter(name=name, organization=org).first()
+            if existing:
                 self.stdout.write(f"Threat model already exists: {name}")
+                threat_models.append(existing)
                 continue
 
             # A null template_slug means the sample deliberately has no diagram, which is
@@ -406,7 +418,7 @@ class Command(BaseCommand):
             criticality = getattr(ThreatModel.Criticality, sample["criticality"])
 
             if not template:
-                ThreatModel.objects.create(
+                threat_model = ThreatModel.objects.create(
                     organization=org,
                     owning_team=team,
                     created_by=user,
@@ -414,6 +426,7 @@ class Command(BaseCommand):
                     description=sample["description"],
                     criticality=criticality,
                 )
+                threat_models.append(threat_model)
                 self.stdout.write(self.style.SUCCESS(f"Created: {name}"))
                 continue
 
@@ -457,6 +470,9 @@ class Command(BaseCommand):
                     f"({components_count} components, {threats_count} threats)"
                 )
             )
+            threat_models.append(threat_model)
+
+        return threat_models
 
     def _seed_risks(self, org):
         """Fill the first sample threat model's Risk Register.
@@ -508,16 +524,23 @@ class Command(BaseCommand):
             self.style.SUCCESS(f"Created {len(risks)} risks on {threat_model.name}")
         )
 
-    def _connect_packs_to_threat_models(self):
-        """Ensure all imported packs are connected to all threat models."""
+    def _connect_packs_to_threat_models(self, threat_models):
+        """Ensure all imported packs are connected to the given threat models.
+
+        `threat_models` must be exactly the sample threat models this command itself
+        creates or finds, never `ThreatModel.objects.all()`. `seed` is meant to run on
+        every container start so a fresh deploy's libraries are never empty, but on a
+        database that already holds real, non-sample threat models, an unscoped version
+        of this call attaches every library pack in the database to every one of them,
+        including other customers' own client-specific packs, every single run.
+        """
         all_packs = LibraryPack.objects.all()
-        all_threat_models = ThreatModel.objects.all()
-        if not all_packs.exists() or not all_threat_models.exists():
+        if not all_packs.exists() or not threat_models:
             return
 
         associations = [
             ThreatModelLibraryPack(threat_model=tm, library_pack=pack)
-            for tm in all_threat_models
+            for tm in threat_models
             for pack in all_packs
         ]
         created = ThreatModelLibraryPack.objects.bulk_create(
@@ -527,7 +550,7 @@ class Command(BaseCommand):
         if count:
             self.stdout.write(
                 self.style.SUCCESS(
-                    f"Connected {all_packs.count()} packs to {all_threat_models.count()} threat models"
+                    f"Connected {all_packs.count()} packs to {len(threat_models)} sample threat models"
                 )
             )
 

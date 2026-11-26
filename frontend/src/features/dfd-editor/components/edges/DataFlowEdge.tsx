@@ -115,6 +115,10 @@ export const DataFlowEdge = memo(function DataFlowEdge({
   // pattern so a signal or control flow is told apart without the chip.
   const strokeDasharray = flowTypeStyle.strokeDasharray ?? (animated ? '5' : '0')
 
+  // Inline, not a Tailwind class: html-to-image deep-clones SVG subtrees without
+  // inlining class styles, so a class-stroked path disappears from PNG/SVG exports.
+  const strokeColor = isNewlyInserted ? '#00c950' : selected ? '#2b7fff' : '#99a1af'
+
   return (
     <>
       <BaseEdge
@@ -122,11 +126,10 @@ export const DataFlowEdge = memo(function DataFlowEdge({
         path={edgePath}
         className={cn(
           'transition-all',
-          selected ? '!stroke-blue-500' : '!stroke-gray-400',
-          isNewlyInserted && '!stroke-green-500',
           animated && 'react-flow__edge-animated'
         )}
         style={{
+          stroke: strokeColor,
           strokeWidth: selected ? flowTypeStyle.strokeWidth + 0.5 : flowTypeStyle.strokeWidth,
           strokeDasharray,
           filter: isNewlyInserted ? 'drop-shadow(0 0 3px rgb(34 197 94))' : undefined,
