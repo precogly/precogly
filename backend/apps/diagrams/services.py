@@ -6,6 +6,7 @@ import copy
 
 from django.db import transaction
 
+from apps.packs.demo_packs import is_demo_pack
 from apps.systems.crossing import (
     ASSET_TYPES,
     BOUNDARY_TYPES,
@@ -364,6 +365,9 @@ def sync_dfd_nodes_to_components(dfd, blueprint, old_canvas_data=None):
     analyzable_nodes = [
         node for node in nodes if node.get("type") in ANALYZABLE_NODE_TYPES
     ]
+    template_pack = dfd.template_library.source_pack if dfd.template_library else None
+    template_pack_slug = template_pack.slug if template_pack else None
+    connected_pack_ids = _connected_pack_ids(blueprint.threat_model_id)
 
     synced_count = 0
     created_count = 0
@@ -411,14 +415,16 @@ def sync_dfd_nodes_to_components(dfd, blueprint, old_canvas_data=None):
                     id=component_library_id
                 ).first()
             if not component_library:
-                component_ref = node_data.get("component_ref")
-                if component_ref:
-                    component_library = ComponentLibrary.objects.filter(
-                        slug=component_ref
-                    ).first()
+                component_library = _resolve_component_ref(
+                    node_data.get("component_ref"),
+                    template_pack_slug,
+                    connected_pack_ids,
+                )
             if not component_library:
                 technology = node_data.get("technology", "")
-                component_library = _find_component_library(technology, node_type)
+                component_library = _find_component_library(
+                    technology, node_type, connected_pack_ids
+                )
             new_library_id = component_library.id if component_library else None
 
             component = None
@@ -568,17 +574,88 @@ def sync_dfd_nodes_to_components(dfd, blueprint, old_canvas_data=None):
     }
 
 
-def _find_component_library(technology: str, node_type: str):
+def _connected_pack_ids(threat_model_id) -> set[int]:
+    """The ids of the library packs connected to a threat model."""
+    from apps.threat_models.models import ThreatModelLibraryPack
+
+    if not threat_model_id:
+        return set()
+    return set(
+        ThreatModelLibraryPack.objects.filter(
+            threat_model_id=threat_model_id
+        ).values_list("library_pack_id", flat=True)
+    )
+
+
+def _pick_component_library(candidates, connected_pack_ids: set[int]):
+    """One ComponentLibrary row when several match, the same one every time.
+
+    Two packs can hold a component with the same short name and display name,
+    for example `s3` "Amazon S3" in both demo-aws and the full aws. The pick:
+    a pack connected to the threat model first, then a pack that is not a demo
+    pack, then the lowest id. Without it the row came from the model's ordering
+    by name, which leaves rows with one name in no fixed order.
+    """
+    rows = list(candidates.select_related("source_pack"))
+    if not rows:
+        return None
+    return min(
+        rows,
+        key=lambda row: (
+            row.source_pack_id not in connected_pack_ids,
+            is_demo_pack(row.source_pack.slug if row.source_pack else None),
+            row.id,
+        ),
+    )
+
+
+def _resolve_component_ref(
+    component_ref: str | None,
+    template_pack_slug: str | None,
+    connected_pack_ids: set[int],
+):
+    """The ComponentLibrary row a node's component_ref names, or None.
+
+    1. A diagram made from a template looks in the template's own pack first,
+       the same way the template `resolved` endpoint does.
+    2. A ref that is already qualified (`aws/s3`) is looked up as it is.
+    3. A bare ref (`s3`) matches every pack; _pick_component_library decides.
+    """
+    if not component_ref:
+        return None
+    if template_pack_slug:
+        component_library = ComponentLibrary.objects.filter(
+            qualified_slug=f"{template_pack_slug}/{component_ref}"
+        ).first()
+        if component_library:
+            return component_library
+    if "/" in component_ref:
+        component_library = ComponentLibrary.objects.filter(
+            qualified_slug=component_ref
+        ).first()
+        if component_library:
+            return component_library
+    return _pick_component_library(
+        ComponentLibrary.objects.filter(slug=component_ref), connected_pack_ids
+    )
+
+
+def _find_component_library(
+    technology: str, node_type: str, connected_pack_ids: set[int] | None = None
+):
     """
     Find a ComponentLibrary entry matching the technology.
 
     Args:
         technology: Technology string from node data (e.g., "aws-s3", "PostgreSQL")
         node_type: The node type ("process", "datastore", "humanActor", or "systemActor")
+        connected_pack_ids: Packs connected to the threat model, preferred when
+            several rows match (see _pick_component_library)
 
     Returns:
         ComponentLibrary instance or None
     """
+    connected_pack_ids = connected_pack_ids or set()
     if not technology:
         return None
 
@@ -594,19 +671,19 @@ def _find_component_library(technology: str, node_type: str):
     if category:
         base_qs = base_qs.filter(category=category)
 
-    # Try exact match on slug first
-    component = base_qs.filter(slug=technology).first()
-    if component:
-        return component
-
-    # Try name match (case-insensitive)
-    component = base_qs.filter(name__iexact=technology).first()
-    if component:
-        return component
-
-    # Try partial name match
-    component = base_qs.filter(name__icontains=technology).first()
-    return component
+    # Try exact match on slug first, then the name (case-insensitive), then a
+    # partial name match.
+    for lookup in (
+        {"slug": technology},
+        {"name__iexact": technology},
+        {"name__icontains": technology},
+    ):
+        component = _pick_component_library(
+            base_qs.filter(**lookup), connected_pack_ids
+        )
+        if component:
+            return component
+    return None
 
 
 def _update_canvas_with_component_ids(dfd, node_component_map):

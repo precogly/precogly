@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Download,
   Loader2,
   CheckCircle2,
   AlertCircle,
+  CircleDashed,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,37 +19,45 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { usePackOverlays } from '@/features/libraries/api/packs'
 import type { UnifiedPack } from './unified-pack'
+import { collectPacksToImport, importButtonLabel, packContentsSummary, serverErrorMessage } from './pack-list-helpers'
 
 export function ImportPackDialog({
   pack,
+  allPacks,
   open,
   onOpenChange,
   onConfirm,
 }: {
   pack: UnifiedPack | null
+  /** Every pack on the page, to walk the whole dependency chain. */
+  allPacks: UnifiedPack[]
   open: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: (pack: UnifiedPack, selectedOverlays: string[] | null) => void
 }) {
-  const { data: overlaysData, isLoading: loadingOverlays } = usePackOverlays(
-    pack?.relativePath ?? null
-  )
-  const [selectedOverlays, setSelectedOverlays] = useState<Set<string>>(new Set())
+  const {
+    data: overlaysData,
+    isLoading: loadingOverlays,
+    error: overlaysError,
+  } = usePackOverlays(pack?.relativePath || null)
+  // Every overlay is ticked unless the user unticks it, including those for a
+  // framework that is not imported yet: that mapping is saved and turns on when
+  // the framework is imported. The parent gives this dialog a key per pack, so
+  // the unticked set starts empty for each pack.
+  const [uncheckedOverlays, setUncheckedOverlays] = useState<Set<string>>(new Set())
 
-  // Reset selection when pack changes
-  useEffect(() => {
-    if (overlaysData?.overlays) {
-      // Default: select all overlays that have their framework installed
-      const availableOverlays = overlaysData.overlays
-        .filter((o) => o.frameworkExists)
-        .map((o) => o.frameworkId)
-      setSelectedOverlays(new Set(availableOverlays))
-    }
-  }, [overlaysData])
+  const { packs: packsToImport, unavailableDependencies } = useMemo(
+    () => (pack ? collectPacksToImport(pack, allPacks) : { packs: [], unavailableDependencies: [] }),
+    [pack, allPacks],
+  )
+  const importedDirectDependencies = useMemo(
+    () => (pack?.dependsOn ?? []).filter((dependency) => dependency.isImported),
+    [pack],
+  )
 
   const toggleOverlay = (frameworkId: string) => {
-    setSelectedOverlays((prev) => {
-      const next = new Set(prev)
+    setUncheckedOverlays((previous) => {
+      const next = new Set(previous)
       if (next.has(frameworkId)) {
         next.delete(frameworkId)
       } else {
@@ -64,18 +73,26 @@ export function ImportPackDialog({
     // If there are overlays, pass the selected list
     const overlays =
       (overlaysData?.overlays.length ?? 0) > 0
-        ? Array.from(selectedOverlays)
+        ? overlaysData!.overlays
+            .map((overlay) => overlay.frameworkId)
+            .filter((frameworkId) => !uncheckedOverlays.has(frameworkId))
         : null
     onConfirm(pack, overlays)
   }
 
   const hasOverlays = (overlaysData?.overlays.length ?? 0) > 0
+  const isCatalogPack = pack?.source === 'catalog'
+  const overlaysFailed = overlaysError !== null && overlaysError !== undefined
+  const hasDependencySection =
+    packsToImport.length > 0 || importedDirectDependencies.length > 0 || unavailableDependencies.length > 0
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Import {pack?.name}</DialogTitle>
+          <DialogTitle>
+            {pack?.isInDatabase ? `Install ${pack.name} ${pack.version}` : `Import ${pack?.name}`}
+          </DialogTitle>
           <DialogDescription>
             {hasOverlays
               ? 'Select which compliance framework overlays to include with this pack.'
@@ -83,73 +100,77 @@ export function ImportPackDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {(pack?.dependsOn?.length ?? 0) > 0 && (
-          <div className="space-y-2 py-2">
-            <p className="text-sm font-medium">Required taxonomy packs</p>
+        {pack && (
+          <p className="text-sm text-muted-foreground" data-testid="pack-contents-summary">
+            {packContentsSummary(pack)}
+          </p>
+        )}
+
+        {hasDependencySection && (
+          <div className="space-y-2 py-2" data-testid="import-dependencies">
+            <p className="text-sm font-medium">Dependencies</p>
             <div className="space-y-1.5">
-              {pack!.dependsOn.map((dep) => (
-                <div key={dep.slug} className="flex items-center gap-2 text-sm">
-                  {dep.isImported ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                  )}
-                  <span>{dep.name}</span>
-                  {!dep.isImported && (
-                    <span className="text-xs text-amber-600">(not imported)</span>
-                  )}
+              {importedDirectDependencies.map((dependency) => (
+                <div key={dependency.slug} className="flex items-center gap-2 text-sm">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <span>{dependency.name}</span>
+                </div>
+              ))}
+              {packsToImport.map((dependencyPack) => (
+                <div key={dependencyPack.slug} className="flex items-center gap-2 text-sm">
+                  <CircleDashed className="h-4 w-4 text-blue-600" />
+                  <span>{dependencyPack.name}</span>
+                  <span className="text-xs text-blue-700">will be imported</span>
+                </div>
+              ))}
+              {unavailableDependencies.map((dependencySlug) => (
+                <div key={dependencySlug} className="flex items-center gap-2 text-sm">
+                  <AlertCircle className="h-4 w-4 text-amber-600" />
+                  <span>{dependencySlug}</span>
+                  <span className="text-xs text-amber-600">not available</span>
                 </div>
               ))}
             </div>
-            {pack!.dependsOn.some((d) => !d.isImported) && (
-              <p className="text-xs text-amber-600">
-                Import missing taxonomy packs first for full taxonomy linking.
-              </p>
+            {packsToImport.length > 0 && (
+              <p className="text-xs text-muted-foreground">Missing dependencies are imported first.</p>
             )}
           </div>
         )}
 
         {loadingOverlays ? (
-          <div className="py-4 flex items-center justify-center">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <div className="py-4 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            {isCatalogPack && <span>Downloading pack...</span>}
           </div>
+        ) : overlaysFailed ? (
+          <p className="py-2 text-sm text-red-700" data-testid="overlays-error">
+            {serverErrorMessage(overlaysError) ?? 'The pack could not be loaded.'}
+          </p>
         ) : hasOverlays ? (
           <div className="space-y-2 py-2">
-            <p className="text-sm font-medium">Compliance mappings <span className="font-normal text-muted-foreground">— uncheck to unmap</span></p>
-            {overlaysData?.overlays.some((o) => !o.frameworkExists) && (
+            <p className="text-sm font-medium">
+              Compliance mappings: <span className="font-normal text-muted-foreground">uncheck to unmap</span>
+            </p>
+            {overlaysData?.overlays.some((overlay) => !overlay.frameworkExists) && (
               <p className="text-xs text-amber-600">
-                Some frameworks are not imported yet. Import them first to enable their mappings.
+                Mappings to a framework you have not imported are saved. They turn on when you import that
+                framework.
               </p>
             )}
             <div className="space-y-3">
               {overlaysData?.overlays.map((overlay) => (
-                <div
-                  key={overlay.frameworkId}
-                  className="flex items-start gap-3"
-                >
+                <div key={overlay.frameworkId} className="flex items-start gap-3">
                   <Checkbox
                     id={overlay.frameworkId}
-                    checked={selectedOverlays.has(overlay.frameworkId)}
+                    checked={!uncheckedOverlays.has(overlay.frameworkId)}
                     onCheckedChange={() => toggleOverlay(overlay.frameworkId)}
-                    disabled={!overlay.frameworkExists}
                   />
                   <div className="flex-1">
-                    <Label
-                      htmlFor={overlay.frameworkId}
-                      className={
-                        !overlay.frameworkExists
-                          ? 'text-muted-foreground'
-                          : ''
-                      }
-                    >
-                      {overlay.frameworkName}
-                    </Label>
+                    <Label htmlFor={overlay.frameworkId}>{overlay.frameworkName}</Label>
                     <p className="text-xs text-muted-foreground">
                       {overlay.mappingCount} mappings
                       {!overlay.frameworkExists && (
-                        <span className="ml-2 text-amber-600">
-                          (framework not imported)
-                        </span>
+                        <span className="ml-2 text-amber-600">(turns on when you import this framework)</span>
                       )}
                     </p>
                   </div>
@@ -157,22 +178,22 @@ export function ImportPackDialog({
               ))}
             </div>
           </div>
-        ) : (
-          <div className="py-2">
-            <p className="text-sm text-muted-foreground">
-              This pack includes {pack?.componentCount ?? 0} components and{' '}
-              {pack?.threatCount ?? 0} threats.
-            </p>
-          </div>
+        ) : null}
+
+        <p className="text-xs text-muted-foreground">Imported packs are connected to every threat model.</p>
+        {pack?.isInDatabase && pack.databaseVersion && (
+          <p className="text-xs text-muted-foreground" data-testid="installed-version">
+            Installed version: {pack.databaseVersion}
+          </p>
         )}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleImport}>
+          <Button onClick={handleImport} disabled={loadingOverlays || overlaysFailed}>
             <Download className="mr-2 h-4 w-4" />
-            Import
+            {pack ? importButtonLabel(pack, packsToImport.length + 1) : 'Import'}
           </Button>
         </DialogFooter>
       </DialogContent>

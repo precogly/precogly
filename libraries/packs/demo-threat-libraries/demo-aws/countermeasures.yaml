@@ -1,0 +1,534 @@
+countermeasures:
+  # ============================================================================
+  # S3 Countermeasures
+  # ============================================================================
+  - id: s3-block-public-access
+    name: S3 Block Public Access
+    description: |
+      Enable S3 Block Public Access settings at account and bucket level.
+      Prevents accidental public exposure regardless of bucket policies or ACLs.
+    control_functions: [preventive]
+    cost: low
+
+  - id: s3-bucket-policy
+    name: S3 Bucket Policy Restriction
+    description: |
+      Implement least-privilege bucket policies limiting access to authorized principals.
+      Use conditions to restrict by VPC, IP range, or requiring MFA.
+    control_functions: [preventive]
+    cost: low
+
+  - id: s3-versioning
+    name: S3 Versioning
+    description: |
+      Enable versioning to protect against accidental or malicious deletions/modifications.
+      Combined with MFA Delete for additional protection.
+    control_functions: [detective]
+    cost: low
+
+  - id: s3-encryption
+    name: S3 Server-Side Encryption
+    description: |
+      Enable SSE-S3 or SSE-KMS encryption for data at rest.
+      Use bucket keys to reduce KMS costs for high-volume buckets.
+    control_functions: [preventive]
+    cost: low
+
+  - id: s3-access-logging
+    name: S3 Access Logging
+    description: |
+      Enable server access logging to track all requests to the bucket.
+      Logs can be analyzed for suspicious access patterns.
+    control_functions: [detective]
+    cost: low
+
+  - id: s3-mfa-delete
+    name: S3 MFA Delete
+    description: |
+      Require MFA for object version deletion, providing additional
+      protection against accidental or malicious permanent deletions.
+    control_functions: [preventive]
+    cost: low
+
+  # ============================================================================
+  # Lambda Countermeasures
+  # ============================================================================
+  - id: lambda-input-validation
+    name: Lambda Input Validation
+    description: |
+      Validate and sanitize all input to Lambda functions.
+      Use schema validation libraries and reject unexpected input.
+    control_functions: [preventive]
+    cost: low
+
+  - id: lambda-least-privilege
+    name: Lambda Least Privilege Role
+    description: |
+      Configure Lambda execution role with minimum required permissions.
+      Use separate roles for each function based on actual needs.
+    control_functions: [preventive]
+    cost: low
+
+  - id: lambda-vpc
+    name: Lambda VPC Isolation
+    description: |
+      Deploy Lambda in VPC with security groups for network isolation.
+      Limits blast radius and enables private resource access.
+    control_functions: [preventive]
+    cost: medium
+
+  - id: lambda-secrets-manager
+    name: Use Secrets Manager for Lambda
+    description: |
+      Store sensitive data in AWS Secrets Manager instead of environment variables.
+      Enables rotation, auditing, and fine-grained access control.
+    control_functions: [preventive]
+    cost: medium
+
+  - id: lambda-reserved-concurrency
+    name: Lambda Reserved Concurrency
+    description: |
+      Set reserved concurrency limits to prevent resource exhaustion
+      and control costs during traffic spikes or attacks.
+    control_functions: [preventive]
+    cost: low
+
+  - id: lambda-code-signing
+    name: Lambda Code Signing
+    description: |
+      Enable code signing to ensure only trusted code is deployed.
+      Prevents deployment of tampered or unauthorized code.
+    control_functions: [preventive]
+    cost: medium
+
+  # ============================================================================
+  # API Gateway Countermeasures
+  # ============================================================================
+  - id: apigw-cognito-auth
+    name: API Gateway Cognito Authorization
+    description: |
+      Use Amazon Cognito user pools for API authentication.
+      Provides JWT validation, MFA support, and user management.
+    control_functions: [preventive]
+    cost: medium
+
+  - id: apigw-api-key
+    name: API Gateway API Keys
+    description: |
+      Require API keys for access with usage plans.
+      Enables tracking, throttling per key, and easy revocation.
+    control_functions: [preventive]
+    cost: low
+
+  - id: apigw-waf
+    name: API Gateway WAF Integration
+    description: |
+      Enable AWS WAF to protect against common web exploits.
+      Block SQL injection, XSS, and known bad actors.
+    control_functions: [preventive]
+    cost: medium
+
+  - id: apigw-throttling
+    name: API Gateway Throttling
+    description: |
+      Configure request throttling at stage and method levels.
+      Protects backend from overload and mitigates DoS attacks.
+    control_functions: [preventive]
+    cost: low
+
+  - id: apigw-request-validation
+    name: API Gateway Request Validation
+    description: |
+      Enable request validation to reject malformed requests early.
+      Validate required parameters, headers, and body schema.
+    control_functions: [preventive]
+    cost: low
+
+  - id: apigw-cloudwatch-logging
+    name: API Gateway CloudWatch Logging
+    description: |
+      Enable detailed CloudWatch logging for all API requests.
+      Captures request/response details for security analysis.
+    control_functions: [detective]
+    cost: low
+
+  # ============================================================================
+  # DynamoDB Countermeasures
+  # ============================================================================
+  - id: dynamodb-fine-grained-access
+    name: DynamoDB Fine-Grained Access Control
+    description: |
+      Use IAM conditions for item-level access control.
+      Restrict access based on partition key values or attributes.
+    control_functions: [preventive]
+    cost: medium
+
+  - id: dynamodb-encryption
+    name: DynamoDB Encryption at Rest
+    description: |
+      Enable encryption using AWS-owned, AWS-managed, or customer-managed KMS keys.
+      Protects data at rest from unauthorized access.
+    control_functions: [preventive]
+    cost: low
+
+  - id: dynamodb-pitr
+    name: DynamoDB Point-in-Time Recovery
+    description: |
+      Enable continuous backups with point-in-time recovery.
+      Restore to any second in the last 35 days.
+    control_functions: [corrective]
+    cost: medium
+
+  - id: dynamodb-vpc-endpoint
+    name: DynamoDB VPC Endpoint
+    description: |
+      Use VPC endpoint to keep DynamoDB traffic within AWS network.
+      Reduces exposure and enables endpoint policies.
+    control_functions: [preventive]
+    cost: low
+
+  # ============================================================================
+  # Data Flow Countermeasures (protect data in transit)
+  # ============================================================================
+  - id: tls-encryption
+    name: TLS/SSL Encryption
+    description: |
+      Encrypt all data in transit using TLS 1.2 or higher.
+      Protects against eavesdropping and ensures data integrity.
+    control_functions: [preventive]
+    cost: low
+
+  - id: mutual-tls
+    name: Mutual TLS Authentication
+    description: |
+      Require both client and server to present certificates for authentication.
+      Prevents unauthorized clients from connecting to services.
+    control_functions: [preventive]
+    cost: medium
+
+  - id: request-signing
+    name: Request Signing (HMAC/SigV4)
+    description: |
+      Sign all requests with HMAC or AWS Signature Version 4.
+      Prevents replay attacks and ensures request integrity.
+    control_functions: [preventive]
+    cost: low
+
+  - id: vpc-private-link
+    name: VPC PrivateLink
+    description: |
+      Use AWS PrivateLink to keep traffic within AWS network.
+      Eliminates exposure to public internet for service communication.
+    control_functions: [preventive]
+    cost: medium
+
+  - id: api-gateway-private
+    name: Private API Gateway Endpoint
+    description: |
+      Configure API Gateway with private endpoints accessible only from VPC.
+      Reduces attack surface by eliminating public access.
+    control_functions: [preventive]
+    cost: low
+
+  # ============================================================================
+  # Cognito Countermeasures
+  # ============================================================================
+  - id: cognito-mfa
+    name: Cognito MFA Enforcement
+    description: |
+      Require multi-factor authentication for all Cognito user pool sign-ins.
+      Supports TOTP, SMS, and email-based MFA. Prevents account compromise
+      from stolen credentials alone.
+    control_functions: [preventive]
+    cost: low
+
+  - id: cognito-advanced-security
+    name: Cognito Advanced Security
+    description: |
+      Enable Cognito advanced security features including adaptive authentication,
+      compromised credential detection, and risk-based access decisions. Blocks
+      sign-ins from suspicious locations or devices.
+    control_functions: [detective]
+    cost: medium
+
+  # ============================================================================
+  # WAF Countermeasures
+  # ============================================================================
+  - id: waf-managed-rules
+    name: WAF Managed Rule Groups
+    description: |
+      Deploy AWS WAF managed rule groups (Core Rule Set, Known Bad Inputs, SQL
+      Injection, Bot Control) for comprehensive protection against common web
+      exploits. Regularly update rule versions.
+    control_functions: [preventive]
+    cost: medium
+
+  # ============================================================================
+  # CloudWatch Countermeasures
+  # ============================================================================
+  - id: cloudwatch-alarm
+    name: CloudWatch Security Alarms
+    description: |
+      Configure CloudWatch alarms for security-relevant metrics and anomalies.
+      Monitor failed authentication attempts, unusual API call patterns, model
+      invocation spikes, and error rates with automated notifications.
+    control_functions: [detective]
+    cost: low
+
+  # ============================================================================
+  # IAM Countermeasures
+  # ============================================================================
+  - id: iam-least-privilege
+    name: IAM Least Privilege Policies
+    description: |
+      Enforce least-privilege IAM policies by removing wildcard actions and
+      resources. Scope permissions to specific services, actions, and resource
+      ARNs. Use IAM policy conditions to restrict by source IP, VPC, or MFA.
+    control_functions: [preventive]
+    cost: medium
+
+  - id: iam-access-key-rotation
+    name: IAM Access Key Rotation
+    description: |
+      Rotate IAM user access keys at least every 90 days. Prefer IAM roles
+      and temporary credentials from STS over long-lived access keys.
+      Remove unused or inactive access keys promptly.
+    control_functions: [preventive]
+    cost: low
+
+  - id: iam-mfa-enforcement
+    name: IAM MFA Enforcement
+    description: |
+      Require multi-factor authentication for all IAM users with console
+      access and for the root account. Use hardware MFA for root and
+      privileged accounts. Enforce MFA via IAM policy conditions for
+      sensitive API operations.
+    control_functions: [preventive]
+    cost: low
+
+  - id: iam-password-policy
+    name: IAM Strong Password Policy
+    description: |
+      Configure the account password policy to require minimum 14-character
+      passwords with complexity requirements, prevent password reuse, and
+      enforce periodic rotation. Blocks brute-force and credential stuffing.
+    control_functions: [preventive]
+    cost: low
+
+  - id: iam-root-protection
+    name: IAM Root Account Protection
+    description: |
+      Remove root user access keys, enable hardware MFA on the root account,
+      and avoid using root for routine operations. Restrict root usage to
+      account-level operations that only root can perform.
+    control_functions: [preventive]
+    cost: low
+
+  - id: iam-access-analyzer
+    name: IAM Access Analyzer
+    description: |
+      Enable IAM Access Analyzer to continuously monitor resource policies
+      for external access grants. Detects unintended public or cross-account
+      access to S3 buckets, IAM roles, KMS keys, Lambda functions, and
+      SQS queues.
+    control_functions: [detective]
+    cost: low
+
+  - id: iam-credential-report
+    name: IAM Credential Report Monitoring
+    description: |
+      Generate and review IAM credential reports to identify unused
+      credentials, users without MFA, stale access keys, and accounts
+      with console passwords that should be removed.
+    control_functions: [detective]
+    cost: low
+
+  - id: iam-permission-boundaries
+    name: IAM Permission Boundaries
+    description: |
+      Apply permission boundaries to IAM roles and users to set the maximum
+      permissions that can be granted regardless of attached policies.
+      Prevents privilege escalation through policy modification.
+    control_functions: [preventive]
+    cost: medium
+
+  # ============================================================================
+  # KMS Countermeasures
+  # ============================================================================
+  - id: kms-restrictive-key-policy
+    name: KMS Restrictive Key Policy
+    description: |
+      Configure KMS key policies to allow only specific IAM principals to
+      perform decrypt and encrypt operations. Avoid wildcard principals
+      and scope access to specific accounts and roles.
+    control_functions: [preventive]
+    cost: low
+
+  - id: kms-key-rotation
+    name: KMS Automatic Key Rotation
+    description: |
+      Enable automatic annual key rotation for customer-managed KMS keys.
+      Rotation creates new backing key material while retaining previous
+      versions for decryption, reducing exposure from compromised keys.
+    control_functions: [preventive]
+    cost: low
+
+  - id: kms-deletion-protection
+    name: KMS Key Deletion Protection
+    description: |
+      Monitor and alert on KMS keys scheduled for deletion. Extend the
+      mandatory waiting period and implement approval workflows before
+      key deletion can proceed. Cancel unintended deletion within the
+      waiting period.
+    control_functions: [detective]
+    cost: low
+
+  - id: kms-key-usage-logging
+    name: KMS Key Usage Logging via CloudTrail
+    description: |
+      Enable CloudTrail logging for all KMS API calls to track key usage,
+      policy changes, and key management operations. Monitor for anomalous
+      decryption patterns or unauthorized key access attempts.
+    control_functions: [detective]
+    cost: low
+
+  # ============================================================================
+  # RDS / Aurora Countermeasures
+  # ============================================================================
+  - id: rds-no-public-access
+    name: RDS Disable Public Accessibility
+    description: |
+      Configure RDS instances with PubliclyAccessible set to false. Deploy databases in
+      private subnets without routes to internet gateways. Use VPC security groups to
+      restrict access to authorized application-tier resources only.
+    control_functions: [preventive]
+    cost: low
+
+  - id: rds-snapshot-private
+    name: RDS Private Snapshots
+    description: |
+      Ensure all RDS snapshots are private and not shared publicly. Encrypt snapshots with
+      KMS to prevent unauthorized access even if snapshot sharing is misconfigured. Review
+      snapshot sharing permissions regularly.
+    control_functions: [preventive]
+    cost: low
+
+  - id: rds-encryption-at-rest
+    name: RDS Encryption at Rest
+    description: |
+      Enable encryption at rest for RDS instances and clusters using AWS KMS keys. Ensures
+      data, automated backups, read replicas, and snapshots are encrypted. Use customer-managed
+      KMS keys for additional control over key policies.
+    control_functions: [preventive]
+    cost: low
+
+  - id: rds-encryption-in-transit
+    name: RDS Enforce TLS Connections
+    description: |
+      Enforce TLS encryption for all database connections. Configure rds.force_ssl parameter
+      for PostgreSQL, require_secure_transport for MySQL/MariaDB, or use RDS Proxy with TLS
+      requirement. Reject unencrypted connections at the database level.
+    control_functions: [preventive]
+    cost: low
+
+  - id: rds-iam-authentication
+    name: RDS IAM Database Authentication
+    description: |
+      Enable IAM database authentication to eliminate static database passwords. Applications
+      use temporary IAM credentials instead of long-lived passwords. Provides centralized
+      access management, credential rotation, and CloudTrail audit logging of database access.
+    control_functions: [preventive]
+    cost: medium
+
+  - id: rds-automated-backups
+    name: RDS Automated Backups and PITR
+    description: |
+      Enable automated backups with sufficient retention period (minimum 7 days recommended).
+      Provides point-in-time recovery capability for data loss scenarios. Enable backtracking
+      for Aurora MySQL clusters for rapid recovery without restore.
+    control_functions: [corrective]
+    cost: low
+
+  - id: rds-deletion-protection
+    name: RDS Deletion Protection
+    description: |
+      Enable deletion protection on RDS instances and clusters to prevent accidental or
+      malicious deletion. Requires an explicit modification to disable protection before
+      the resource can be deleted.
+    control_functions: [preventive]
+    cost: low
+
+  - id: rds-audit-logging
+    name: RDS Database Audit Logging
+    description: |
+      Enable database-level audit logging and publish logs to CloudWatch Logs. Configure
+      audit logs for PostgreSQL, MySQL audit plugin, or Oracle audit trails. Enables
+      detection of unauthorized queries and compliance auditing.
+    control_functions: [detective]
+    cost: low
+
+  - id: rds-multi-az
+    name: RDS Multi-AZ Deployment
+    description: |
+      Deploy RDS instances and Aurora clusters in Multi-AZ configuration for high availability.
+      Provides automatic failover during infrastructure failures, reducing risk of service
+      disruption from single availability zone outages.
+    control_functions: [preventive]
+    cost: medium
+
+  # ============================================================================
+  # CloudFront Countermeasures
+  # ============================================================================
+  - id: cloudfront-https-only
+    name: CloudFront HTTPS-Only Origin Protocol
+    description: |
+      Configure CloudFront distributions to communicate with origins using HTTPS only
+      (origin protocol policy: https-only). Ensure origin SSL certificates are valid
+      and match the expected domain. Use TLS 1.2 or higher for origin connections.
+    control_functions: [preventive]
+    cost: low
+
+  - id: cloudfront-waf-integration
+    name: CloudFront WAF Integration
+    description: |
+      Associate AWS WAF web ACLs with CloudFront distributions. Deploy managed rule
+      groups (Core Rule Set, Known Bad Inputs, Bot Control) and custom rules for
+      application-specific protection. Rate-limit requests to prevent abuse.
+    control_functions: [preventive]
+    cost: medium
+
+  - id: cloudfront-custom-ssl
+    name: CloudFront Custom SSL Certificate
+    description: |
+      Use a custom SSL/TLS certificate from AWS Certificate Manager (ACM) instead
+      of the default CloudFront certificate. Enables HTTPS on custom domain names
+      and allows viewers to verify domain identity.
+    control_functions: [preventive]
+    cost: low
+
+  - id: cloudfront-access-logging
+    name: CloudFront Standard Access Logging
+    description: |
+      Enable standard access logging to capture detailed information about viewer
+      requests including client IP, request URI, edge location, HTTP status, and
+      cache behavior. Store logs in S3 for security analysis and incident investigation.
+    control_functions: [detective]
+    cost: low
+
+  - id: cloudfront-modern-tls
+    name: CloudFront Modern TLS Policy
+    description: |
+      Configure CloudFront distributions with a security policy that requires TLS 1.2
+      or higher (TLSv1.2_2021 or newer). Disables deprecated protocol versions and weak
+      cipher suites, preventing protocol downgrade attacks.
+    control_functions: [preventive]
+    cost: low
+
+  - id: cloudfront-origin-access-control
+    name: CloudFront Origin Access Control
+    description: |
+      Configure Origin Access Control (OAC) for S3 origins to ensure the S3 bucket
+      is only accessible through CloudFront. OAC supports S3 SSE-KMS encryption,
+      S3 Object Lambda, and all S3 regions, replacing the legacy Origin Access Identity.
+    control_functions: [preventive]
+    cost: low

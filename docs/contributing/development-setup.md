@@ -2,7 +2,7 @@
 
 Use this guide when you want to contribute code or documentation to Precogly. The **recommended local workflow is Docker Compose** because it starts the three core services most contributors need—the React frontend, the Django API, and PostgreSQL—plus a development-only AI model forwarder. You can still run frontend commands such as `npm run dev` directly from `frontend/`, but Docker Compose is the fastest way to get a complete working application with seeded demo data.
 
-The development stack mounts the backend source, the frontend `src/` directory, and the shared `libraries/` directory into the containers. That means most frontend and backend code edits are picked up without rebuilding the whole stack. Rebuild when you change dependencies, Dockerfiles, or other files copied into the images during build.
+The development stack mounts the backend source, the frontend `src/` directory, and the shared `libraries/` directory (the three bundled demo packs) into the containers. That means most frontend and backend code edits are picked up without rebuilding the whole stack. Rebuild when you change dependencies, Dockerfiles, or other files copied into the images during build.
 
 ## Local Architecture
 
@@ -124,6 +124,51 @@ docker compose up --build
 ```
 
 The `-v` flag deletes the PostgreSQL volume. Use it only for local development data you are comfortable losing.
+
+### Reset after pulling the library-packs change
+
+Reset your dev database after pulling the change that moved the full packs to the library-packs repository. Otherwise the old sample models and the old full packs stay in your database.
+
+What seed does now:
+
+- It imports only the three demo packs and creates two sample models: "Sample AWS Serverless Web App" and "Sample AWS SaaS Tenant Isolation". The RAG / Generative AI sample and the LNG (OT) sample are gone.
+- It never touches the network.
+- It stops with an error if a demo pack folder is missing.
+- On an existing database it adds the demo packs and the SaaS sample next to the data that is already there.
+- New threat models are connected to every imported pack, demo packs included.
+
+For installs with real data: packs imported earlier keep working. With the catalog reachable, they show as normal "Library repo" rows. With the catalog off or unreachable, they show "Source not available".
+
+## Pack Catalog Settings
+
+The Libraries page lists the three bundled demo packs plus every pack in the [library-packs](https://github.com/precogly/library-packs) catalog. These backend environment variables control the catalog (see `backend/config/settings/base.py` and `backend/.env.example`):
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `PACK_CATALOG_URL` | `https://github.com/precogly/library-packs/releases/latest/download/catalog.json` | Where the catalog is read from. The default follows the latest library-packs release, so a pack merged there reaches installs within about 10 minutes with no app release. library-packs publishes a release on every merge that changes a pack, named by date, for example `v2026.11.26.1`. To freeze the packs, set it to one release: `https://github.com/precogly/library-packs/releases/download/<tag>/catalog.json`. Empty turns the catalog off, with no notice shown. Only `http://` and `https://` are accepted. |
+| `PACK_DOWNLOAD_MAX_BYTES` | 20 MB | Largest pack download accepted. |
+| `PACK_CATALOG_TTL_SECONDS` | 600 | How long the catalog is kept before it is read again. |
+
+### Testing against a local catalog
+
+To try a pack from a library-packs clone, build a local release and serve it:
+
+```bash
+uv run tools/build_release.py --tag v0.0.0-local --packs-dir packs --output-dir dist
+python3 -m http.server 8080 --directory dist
+```
+
+Start the app with the catalog pointed at it. With the backend in Docker:
+
+```bash
+PACK_CATALOG_URL=http://host.docker.internal:8080/catalog.json docker compose up
+```
+
+Then open the Libraries page. Your packs show as "Library repo".
+
+### Offline sites
+
+For a site with no internet access, use one route. On another machine, download a release's `catalog.json` and every `.tar.gz` archive from [github.com/precogly/library-packs/releases](https://github.com/precogly/library-packs/releases). Put them in one folder on an internal web server, then set `PACK_CATALOG_URL` to that `catalog.json`.
 
 ## Frontend Workflow
 

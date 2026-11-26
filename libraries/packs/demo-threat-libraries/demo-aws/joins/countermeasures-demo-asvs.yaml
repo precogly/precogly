@@ -1,0 +1,246 @@
+framework: demo-asvs-4
+
+mappings:
+  # ---- S3 ----
+  - countermeasure: s3-block-public-access
+    requirements: ["V4.1.1", "V8.3.4"]
+    sufficiency: full
+
+  - countermeasure: s3-bucket-policy
+    requirements: ["V4.1.3", "V8.3.4"]
+    sufficiency: full
+
+  - countermeasure: s3-versioning
+    requirements: ["V8.1.5"]
+    sufficiency: partial
+
+  - countermeasure: s3-encryption
+    requirements: ["V6.1.1"]
+    sufficiency: partial
+
+  - countermeasure: s3-access-logging
+    requirements: ["V7.1.3"]
+    sufficiency: partial
+
+  - countermeasure: s3-mfa-delete
+    requirements: ["V14.1.1"]
+    sufficiency: partial
+
+  # ---- Lambda ----
+  - countermeasure: lambda-input-validation
+    requirements: ["V5.1.3", "V5.1.4", "V5.5.3", "V13.2.2"]
+    sufficiency: partial
+
+  - countermeasure: lambda-least-privilege
+    requirements: ["V1.4.1", "V4.1.3"]
+    sufficiency: full
+
+  - countermeasure: lambda-vpc
+    requirements: ["V1.14.1"]
+    sufficiency: full
+
+  - countermeasure: lambda-secrets-manager
+    requirements: ["V1.6.2", "V2.10.4", "V6.4.1"]
+    sufficiency: full
+
+  - countermeasure: lambda-reserved-concurrency
+    requirements: ["V11.1.4"]
+    sufficiency: partial
+
+  - countermeasure: lambda-code-signing
+    requirements: ["V14.1.1"]
+    sufficiency: partial
+
+  # ---- API Gateway ----
+  - countermeasure: apigw-cognito-auth
+    requirements: ["V1.4.1", "V4.1.1"]
+    sufficiency: full
+
+  - countermeasure: apigw-api-key
+    requirements: ["V4.1.1"]
+    sufficiency: partial
+
+  - countermeasure: apigw-waf
+    requirements: ["V1.4.1", "V11.1.4"]
+    sufficiency: partial
+
+  - countermeasure: apigw-throttling
+    requirements: ["V11.1.4"]
+    sufficiency: full
+
+  - countermeasure: apigw-request-validation
+    requirements: ["V5.1.3", "V5.1.4", "V13.2.2"]
+    sufficiency: partial
+
+  - countermeasure: apigw-cloudwatch-logging
+    requirements: ["V7.1.3"]
+    sufficiency: partial
+
+  # ---- DynamoDB ----
+  - countermeasure: dynamodb-fine-grained-access
+    requirements: ["V4.1.1", "V4.1.3"]
+    sufficiency: full
+
+  - countermeasure: dynamodb-encryption
+    requirements: ["V6.1.1"]
+    sufficiency: full
+
+  - countermeasure: dynamodb-pitr
+    requirements: ["V8.1.5"]
+    sufficiency: full
+
+  - countermeasure: dynamodb-vpc-endpoint
+    requirements: ["V1.14.1"]
+    sufficiency: full
+
+  # ---- Data Flow ----
+  - countermeasure: tls-encryption
+    requirements: ["V1.9.1", "V9.1.1", "V9.2.2"]
+    sufficiency: full
+
+  - countermeasure: mutual-tls
+    requirements: ["V9.1.1"]
+    sufficiency: full
+
+  - countermeasure: request-signing
+    requirements: ["V9.2.2"]
+    sufficiency: partial
+
+  - countermeasure: vpc-private-link
+    requirements: ["V1.9.1", "V9.2.2"]
+    sufficiency: full
+
+  - countermeasure: api-gateway-private
+    requirements: ["V1.14.1"]
+    sufficiency: full
+
+  # ---- Cognito ----
+  - countermeasure: cognito-mfa
+    requirements: ["V4.1.1"]
+    sufficiency: partial
+
+  - countermeasure: cognito-advanced-security
+    requirements: ["V4.1.1", "V11.1.4"]
+    sufficiency: partial
+
+  # ---- WAF ----
+  - countermeasure: waf-managed-rules
+    requirements: ["V1.4.1", "V11.1.4"]
+    sufficiency: partial
+
+  # ---- CloudWatch ----
+  - countermeasure: cloudwatch-alarm
+    requirements: ["V7.1.3"]
+    sufficiency: partial
+
+  # ---- IAM ----
+  - countermeasure: iam-least-privilege
+    requirements: ["V1.4.1", "V4.1.3"]
+    sufficiency: full
+
+  - countermeasure: iam-access-key-rotation
+    requirements: ["V2.10.1", "V2.10.4"]
+    sufficiency: partial
+
+  - countermeasure: iam-mfa-enforcement
+    requirements: ["V2.8.1", "V4.3.1"]
+    sufficiency: full
+
+  - countermeasure: iam-password-policy
+    requirements: ["V2.1.1", "V2.1.7", "V2.1.9"]
+    sufficiency: partial
+
+  - countermeasure: iam-root-protection
+    requirements: ["V2.5.4", "V4.3.1"]
+    sufficiency: full
+
+  - countermeasure: iam-access-analyzer
+    requirements: ["V4.1.3", "V7.2.2"]
+    sufficiency: partial
+
+  - countermeasure: iam-credential-report
+    requirements: ["V7.2.1"]
+    sufficiency: partial
+
+  - countermeasure: iam-permission-boundaries
+    requirements: ["V1.4.1", "V4.1.3"]
+    sufficiency: partial
+
+  # ---- KMS ----
+  - countermeasure: kms-restrictive-key-policy
+    requirements: ["V6.4.2", "V4.1.3"]
+    sufficiency: full
+
+  - countermeasure: kms-key-rotation
+    requirements: ["V1.6.3", "V6.2.4"]
+    sufficiency: full
+
+  - countermeasure: kms-deletion-protection
+    requirements: ["V1.6.1"]
+    sufficiency: partial
+
+  - countermeasure: kms-key-usage-logging
+    requirements: ["V7.1.3", "V7.2.2"]
+    sufficiency: partial
+
+  # ---- RDS ----
+  - countermeasure: rds-no-public-access
+    requirements: ["V1.14.1", "V4.1.3"]
+    sufficiency: full
+
+  - countermeasure: rds-snapshot-private
+    requirements: ["V4.1.3", "V8.3.4"]
+    sufficiency: full
+
+  - countermeasure: rds-encryption-at-rest
+    requirements: ["V6.1.1"]
+    sufficiency: full
+
+  - countermeasure: rds-encryption-in-transit
+    requirements: ["V9.1.1", "V9.2.2"]
+    sufficiency: full
+
+  - countermeasure: rds-iam-authentication
+    requirements: ["V2.10.4", "V4.1.1"]
+    sufficiency: full
+
+  - countermeasure: rds-automated-backups
+    requirements: ["V8.1.5"]
+    sufficiency: full
+
+  - countermeasure: rds-deletion-protection
+    requirements: ["V8.1.5"]
+    sufficiency: partial
+
+  - countermeasure: rds-audit-logging
+    requirements: ["V7.1.3"]
+    sufficiency: partial
+
+  - countermeasure: rds-multi-az
+    requirements: ["V11.1.4"]
+    sufficiency: partial
+
+  # ---- CloudFront ----
+  - countermeasure: cloudfront-https-only
+    requirements: ["V1.9.1", "V9.1.1", "V9.2.2"]
+    sufficiency: full
+
+  - countermeasure: cloudfront-waf-integration
+    requirements: ["V5.1.3", "V5.5.3"]
+    sufficiency: partial
+
+  - countermeasure: cloudfront-custom-ssl
+    requirements: ["V1.9.1", "V9.2.2"]
+    sufficiency: partial
+
+  - countermeasure: cloudfront-access-logging
+    requirements: ["V7.1.3"]
+    sufficiency: partial
+
+  - countermeasure: cloudfront-modern-tls
+    requirements: ["V1.9.1", "V9.1.1"]
+    sufficiency: full
+
+  - countermeasure: cloudfront-origin-access-control
+    requirements: ["V4.1.1"]
+    sufficiency: full

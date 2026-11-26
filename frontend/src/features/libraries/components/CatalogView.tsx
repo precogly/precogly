@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Package, Search } from 'lucide-react'
+import { Info, Package, Search, WifiOff, X } from 'lucide-react'
 import { toast } from 'sonner'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -9,9 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { ApiError } from '@/lib/api'
 import { PreviewPackDialog } from './PreviewPackDialog'
 import { ImportPackDialog } from './ImportPackDialog'
-import { ValidationWarningsDialog } from './ValidationWarningsDialog'
+import { ValidationWarningsDialog, type FailedImportSummary } from './ValidationWarningsDialog'
 import { CatalogPackCard } from './CatalogPackCard'
 import {
   useAvailablePacksFromSource,
@@ -22,13 +25,33 @@ import {
 import type { PackFilters, ValidationResult } from '@/features/libraries/types/packs'
 import { useWorkspace } from '@/contexts/WorkspaceContext'
 import type { UnifiedPack } from './unified-pack'
+import {
+  NO_RESPONSE_MESSAGE,
+  PACK_STATUS_LABELS,
+  buildUnifiedPacks,
+  dependenciesImportedLine,
+  fullVersionOf,
+  importFailureLines,
+  isImportFailureBody,
+  isNoUsableResponse,
+  matchesStatus,
+  packCategoryFromPath,
+  showCatalogUnreachableNotice,
+  showDemoContentNotice,
+  sortPacksForList,
+  type PackStatusFilter,
+} from './pack-list-helpers'
 
 export function CatalogView() {
   const { isSecurityTeam } = useWorkspace()
   const [filters, setFilters] = useState<PackFilters>({})
   const [searchInput, setSearchInput] = useState('')
+  // Kept out of `filters`, which usePacks sends to the server.
+  const [statusFilter, setStatusFilter] = useState<PackStatusFilter>('all')
+  const [catalogNoticeDismissed, setCatalogNoticeDismissed] = useState(false)
   const [previewPackId, setPreviewPackId] = useState<number | null>(null)
   const [previewPackPath, setPreviewPackPath] = useState<string | null>(null)
+  const [previewIsCatalogPack, setPreviewIsCatalogPack] = useState(false)
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false)
   const [importingSlug, setImportingSlug] = useState<string | null>(null)
   const [installDialogPack, setInstallDialogPack] = useState<UnifiedPack | null>(null)
@@ -36,6 +59,8 @@ export function CatalogView() {
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null)
   const [validationDialogOpen, setValidationDialogOpen] = useState(false)
   const [validationPackSlug, setValidationPackSlug] = useState<string | null>(null)
+  const [failedImport, setFailedImport] = useState<FailedImportSummary | null>(null)
+  const [validationProgressLine, setValidationProgressLine] = useState<string | null>(null)
 
   const { data: dbPacks, isLoading: isLoadingDb } = usePacks(filters)
   const { data: sourcePacks, isLoading: isLoadingSource } = useAvailablePacksFromSource()
@@ -52,65 +77,23 @@ export function CatalogView() {
     return () => clearTimeout(timer)
   }, [searchInput])
 
-  // Category labels derived from the first segment of relativePath
+  // Category labels derived from the first segment of relativePath; the bundled
+  // demo packs' `demo-` prefix is dropped (packCategoryFromPath).
   const categoryLabels: Record<string, string> = {
     taxonomies: 'Taxonomies',
     standards: 'Standards',
     'threat-libraries': 'Threat Libraries',
   }
 
-  const unifiedPacks = useMemo(() => {
-    const packs: UnifiedPack[] = []
-    const seenSlugs = new Set<string>()
+  // Every pack, unfiltered: the import dialog walks dependencies over it, and
+  // the notices and "Full version" links look across it.
+  const allPacks = useMemo(() => buildUnifiedPacks(sourcePacks?.packs, dbPacks), [sourcePacks, dbPacks])
 
-    if (sourcePacks?.packs) {
-      for (const sp of sourcePacks.packs) {
-        const dbPack = dbPacks?.find((p) => p.slug === sp.slug)
-        packs.push({
-          slug: sp.slug,
-          name: sp.name,
-          description: sp.description,
-          version: sp.version,
-          packType: sp.packType,
-          tags: sp.tags,
-          relativePath: sp.relativePath,
-          componentCount: sp.componentCount,
-          threatCount: sp.threatCount,
-          isInDatabase: sp.isInDatabase,
-          isImported: sp.isInDatabase || (dbPack?.isImported ?? false),
-          databaseId: dbPack?.id ?? null,
-          dependsOn: sp.dependsOn ?? [],
-        })
-        seenSlugs.add(sp.slug)
-      }
-    }
-
-    if (dbPacks) {
-      for (const dbPack of dbPacks) {
-        if (!seenSlugs.has(dbPack.slug)) {
-          packs.push({
-            slug: dbPack.slug,
-            name: dbPack.name,
-            description: dbPack.description,
-            version: dbPack.version,
-            packType: dbPack.packType,
-            tags: dbPack.tags,
-            relativePath: '',
-            componentCount: 0,
-            threatCount: 0,
-            isInDatabase: true,
-            isImported: dbPack.isImported,
-            databaseId: dbPack.id,
-            dependsOn: [],
-          })
-        }
-      }
-    }
-
-    let filtered = packs
+  const visiblePacks = useMemo(() => {
+    let filtered = allPacks
     if (filters.search) {
       const search = filters.search.toLowerCase()
-      filtered = packs.filter(
+      filtered = filtered.filter(
         (p) =>
           p.name.toLowerCase().includes(search) ||
           p.description.toLowerCase().includes(search) ||
@@ -118,13 +101,16 @@ export function CatalogView() {
       )
     }
     if (filters.category) {
-      filtered = filtered.filter((p) => {
-        const firstSegment = p.relativePath.split('/')[0]
-        return firstSegment === filters.category
-      })
+      // A pack with no path (imported earlier, files no longer offered) has no
+      // category, so a category filter hides it; the "Imported" status finds it.
+      filtered = filtered.filter((p) => packCategoryFromPath(p.relativePath).category === filters.category)
     }
-    return filtered
-  }, [sourcePacks, dbPacks, filters])
+    filtered = filtered.filter((p) => matchesStatus(p, statusFilter))
+    return sortPacksForList(filtered)
+  }, [allPacks, filters, statusFilter])
+
+  const catalogUnreachable = showCatalogUnreachableNotice(sourcePacks) && !catalogNoticeDismissed
+  const showDemoNotice = showDemoContentNotice(sourcePacks, isSecurityTeam, allPacks)
 
   const handleFilterChange = (key: keyof PackFilters, value: string) => {
     setFilters((prev) => ({
@@ -133,10 +119,18 @@ export function CatalogView() {
     }))
   }
 
+  const handleShowFullVersion = (fullPack: UnifiedPack) => {
+    setSearchInput(fullPack.name)
+    setFilters((prev) => ({ ...prev, category: undefined }))
+    setStatusFilter('all')
+  }
+
   const handleImportClick = (pack: UnifiedPack) => {
     // Open the import dialog to show overlay options
     setInstallDialogPack(pack)
   }
+
+  const packName = (slug: string) => allPacks.find((p) => p.slug === slug)?.name ?? slug
 
   const handleImportConfirm = async (
     pack: UnifiedPack,
@@ -150,9 +144,14 @@ export function CatalogView() {
         force: pack.isInDatabase,
         selectedOverlays,
       })
+      const dependencyCount = result.dependenciesImported?.length ?? 0
+      const importedWhat =
+        dependencyCount > 0
+          ? `${pack.name} and ${dependencyCount} ${dependencyCount === 1 ? 'dependency' : 'dependencies'}`
+          : pack.name
       if (result.warnings && result.warnings.length > 0) {
         toast.warning(
-          `Imported ${pack.name} with ${result.warnings.length} warning(s)`,
+          `Imported ${importedWhat} with ${result.warnings.length} warning(s)`,
           {
             description:
               result.warnings[0] +
@@ -162,20 +161,48 @@ export function CatalogView() {
           }
         )
       } else {
-        toast.success(`Successfully imported ${pack.name}`)
+        toast.success(dependencyCount > 0 ? `Imported ${importedWhat}` : `Successfully imported ${pack.name}`)
       }
     } catch (error: unknown) {
-      const errorObj = error as { status?: number; data?: unknown }
-      const errorData = errorObj?.data as Record<string, unknown> | undefined
-      // Show validation dialog for both 422 (warnings) and 400 (errors from validation)
-      if ((errorObj?.status === 422 || errorObj?.status === 400) && errorData && 'warningCount' in errorData) {
-        setValidationResult(errorData as unknown as ValidationResult)
-        setValidationPackSlug(pack.slug)
+      if (isNoUsableResponse(error)) {
+        toast.error(NO_RESPONSE_MESSAGE)
+        return
+      }
+      const apiError = error as ApiError
 
+      // A dependency failed, or a download failed after some packs were imported.
+      // Checked before the validation branch: its body nests the validation.
+      if (isImportFailureBody(apiError.data)) {
+        const failureBody = apiError.data
+        const lines = importFailureLines(failureBody, allPacks)
+        const summaryLines = [lines.imported, lines.failed, lines.notImported].filter(
+          (line): line is string => line !== null
+        )
+        if (apiError.status === 502 || !failureBody.validation) {
+          toast.error(failureBody.error ?? 'Import failed', { description: summaryLines.join(' ') })
+          return
+        }
+        setValidationResult(failureBody.validation)
+        setValidationPackSlug(null)
+        setFailedImport({
+          dependencyName: packName(failureBody.failedDependency ?? ''),
+          lines: summaryLines,
+        })
         setValidationDialogOpen(true)
         return
       }
-      const message = errorData?.message as string | undefined
+      const errorData = apiError.data as Record<string, unknown>
+
+      // Show validation dialog for both 422 (warnings) and 400 (errors from validation)
+      if ((apiError.status === 422 || apiError.status === 400) && 'warningCount' in errorData) {
+        setValidationResult(errorData as unknown as ValidationResult)
+        setValidationPackSlug(pack.slug)
+        setFailedImport(null)
+        setValidationProgressLine(dependenciesImportedLine(errorData, allPacks))
+        setValidationDialogOpen(true)
+        return
+      }
+      const message = (errorData.error ?? errorData.message) as string | undefined
       toast.error(message || 'Import failed')
     } finally {
       setImportingSlug(null)
@@ -190,6 +217,7 @@ export function CatalogView() {
       setPreviewPackId(null)
       setPreviewPackPath(pack.relativePath)
     }
+    setPreviewIsCatalogPack(pack.source === 'catalog')
     setPreviewDialogOpen(true)
   }
 
@@ -200,12 +228,14 @@ export function CatalogView() {
       if (result.errorCount > 0 || result.warningCount > 0) {
         setValidationResult(result)
         setValidationPackSlug(pack.slug)
+        setFailedImport(null)
         setValidationDialogOpen(true)
       } else {
-        toast.success('Validation passed — no issues found')
+        toast.success('Validation passed: no issues found')
       }
-    } catch {
-      toast.error('Validation request failed')
+    } catch (error: unknown) {
+      const message = error instanceof ApiError ? (error.data as { error?: string } | undefined)?.error : undefined
+      toast.error(message ?? 'Validation request failed')
     } finally {
       setValidatingSlug(null)
     }
@@ -215,6 +245,31 @@ export function CatalogView() {
 
   return (
     <div className="space-y-6">
+      {catalogUnreachable && (
+        <Alert data-testid="catalog-unreachable-notice">
+          <WifiOff />
+          <AlertDescription className="flex items-start justify-between gap-2">
+            <span>The pack library could not be reached. Bundled and imported packs are shown.</span>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 w-6 p-0"
+              onClick={() => setCatalogNoticeDismissed(true)}
+              aria-label="Dismiss"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {showDemoNotice && (
+        <Alert data-testid="demo-content-notice">
+          <Info />
+          <AlertDescription>You are using demo content. Import the full packs for real work.</AlertDescription>
+        </Alert>
+      )}
+
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
@@ -242,12 +297,24 @@ export function CatalogView() {
             ))}
           </SelectContent>
         </Select>
+        <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as PackStatusFilter)}>
+          <SelectTrigger className="w-[170px]" data-testid="pack-status-filter">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(PACK_STATUS_LABELS).map(([key, label]) => (
+              <SelectItem key={key} value={key}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Result count */}
       {!isLoading && (
         <p className="text-sm text-muted-foreground">
-          Showing {unifiedPacks.length} pack{unifiedPacks.length !== 1 ? 's' : ''}
+          Showing {visiblePacks.length} pack{visiblePacks.length !== 1 ? 's' : ''}
         </p>
       )}
 
@@ -258,9 +325,9 @@ export function CatalogView() {
             <div key={i} className="h-48 bg-muted animate-pulse rounded-lg" />
           ))}
         </div>
-      ) : unifiedPacks.length > 0 ? (
+      ) : visiblePacks.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {unifiedPacks.map((pack) => (
+          {visiblePacks.map((pack) => (
             <CatalogPackCard
               key={pack.slug}
               pack={pack}
@@ -270,6 +337,8 @@ export function CatalogView() {
               isImporting={importingSlug === pack.slug}
               isValidating={validatingSlug === pack.slug}
               isSecurityTeam={isSecurityTeam}
+              fullVersionPack={fullVersionOf(pack, allPacks)}
+              onShowFullVersion={handleShowFullVersion}
             />
           ))}
         </div>
@@ -278,7 +347,7 @@ export function CatalogView() {
           <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-medium mb-2">No packs found</h3>
           <p className="text-muted-foreground">
-            {filters.search || filters.category
+            {filters.search || filters.category || statusFilter !== 'all'
               ? 'Try adjusting your search or filters.'
               : 'No library packs are available yet.'}
           </p>
@@ -288,12 +357,15 @@ export function CatalogView() {
       <PreviewPackDialog
         packId={previewPackId}
         packPath={previewPackPath}
+        isCatalogPack={previewIsCatalogPack}
         open={previewDialogOpen}
         onOpenChange={setPreviewDialogOpen}
       />
 
       <ImportPackDialog
+        key={installDialogPack?.slug ?? 'none'}
         pack={installDialogPack}
+        allPacks={allPacks}
         open={installDialogPack !== null}
         onOpenChange={(open) => !open && setInstallDialogPack(null)}
         onConfirm={handleImportConfirm}
@@ -301,12 +373,16 @@ export function CatalogView() {
 
       <ValidationWarningsDialog
         validationResult={validationResult}
+        failedImport={failedImport}
+        progressLine={validationProgressLine}
         open={validationDialogOpen}
         onOpenChange={(open) => {
           setValidationDialogOpen(open)
           if (!open) {
             setValidationResult(null)
             setValidationPackSlug(null)
+            setFailedImport(null)
+            setValidationProgressLine(null)
           }
         }}
         onImportAnyway={

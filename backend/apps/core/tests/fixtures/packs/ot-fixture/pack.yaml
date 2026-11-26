@@ -1,0 +1,15 @@
+pack:
+  schema_version: 1
+  slug: ot-fixture
+  name: OT test fixture
+  version: 1.0.0
+  pack_type: technology
+  description: |
+    Test fixture for apps/core/tests/test_ot_model_export.py, not a real pack.
+    The 12 components the LNG process control template uses, copied from the
+    ot-ics pack in precogly/library-packs, and that template unchanged. It keeps
+    network zones, signal and control flows, devices and a boundary under test
+    now that the seed no longer builds an OT sample.
+  author: Precogly
+  tags:
+  - test-fixture

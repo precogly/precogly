@@ -55,6 +55,8 @@ You use components, threats, and countermeasures from imported library packs. Th
 - Countermeasures with compliance mappings (PCI-DSS, ASVS, etc.) already attached
 - Suggested countermeasures for each threat, based on library relationships
 
+A fresh install has only three small demo packs (STRIDE, a subset of OWASP ASVS and a subset of AWS). Taxonomies such as CAPEC, CWE and MITRE ATT&CK, and standards such as PCI-DSS, SOC 2 and NIST, come from the full packs in the [library-packs](https://github.com/precogly/library-packs) catalog. Import them from the Libraries page. See [Library Packs](../concepts/library-packs.md).
+
 Best suited for:
 
 - Teams adopting threat modeling for the first time

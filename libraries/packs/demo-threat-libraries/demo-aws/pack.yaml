@@ -1,0 +1,18 @@
+pack:
+  schema_version: 1
+  slug: demo-aws
+  name: "Demo: AWS"
+  version: 1.0.0
+  pack_type: full
+  description: |
+    A small sample cut from the full AWS pack: 10 components, 45 threats and
+    58 countermeasures, enough for the two sample threat models. It is for
+    trying Precogly, not for real threat models.
+    The full AWS pack is in precogly/library-packs and can be imported from the
+    Libraries page.
+  author: Precogly
+  depends_on:
+  - stride-taxonomy
+  tags:
+  - demo
+  - aws

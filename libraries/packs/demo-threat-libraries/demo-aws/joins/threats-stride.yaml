@@ -1,0 +1,99 @@
+taxonomy: stride
+
+mappings:
+  - threat: s3-public-exposure
+    entries: [information-disclosure]
+  - threat: s3-data-tampering
+    entries: [tampering]
+  - threat: s3-deletion
+    entries: [denial-of-service]
+  - threat: lambda-injection
+    entries: [tampering]
+  - threat: lambda-privilege-escalation
+    entries: [elevation-of-privilege]
+  - threat: lambda-secret-exposure
+    entries: [information-disclosure]
+  - threat: lambda-dos
+    entries: [denial-of-service]
+  - threat: apigw-unauthorized-access
+    entries: [spoofing]
+  - threat: apigw-injection
+    entries: [tampering]
+  - threat: apigw-rate-limit-bypass
+    entries: [denial-of-service]
+  - threat: apigw-logging-gap
+    entries: [repudiation]
+  - threat: dynamodb-unauthorized-access
+    entries: [information-disclosure]
+  - threat: dynamodb-injection
+    entries: [tampering]
+  - threat: dynamodb-capacity-exhaustion
+    entries: [denial-of-service]
+  - threat: dataflow-mitm
+    entries: [tampering]
+  - threat: dataflow-eavesdropping
+    entries: [information-disclosure]
+  - threat: dataflow-replay-attack
+    entries: [spoofing]
+  - threat: dataflow-injection
+    entries: [tampering]
+  # Cognito
+  - threat: cognito-token-theft
+    entries: [spoofing]
+  - threat: cognito-account-takeover
+    entries: [spoofing, elevation-of-privilege]
+  # WAF
+  - threat: waf-bypass
+    entries: [tampering]
+  # IAM
+  - threat: iam-overprivileged-policy
+    entries: [elevation-of-privilege]
+  - threat: iam-stale-credentials
+    entries: [spoofing]
+  - threat: iam-root-user-abuse
+    entries: [elevation-of-privilege]
+  - threat: iam-missing-mfa
+    entries: [spoofing]
+  - threat: iam-weak-password-policy
+    entries: [spoofing]
+  - threat: iam-cross-account-escalation
+    entries: [spoofing, elevation-of-privilege]
+  - threat: iam-policy-drift
+    entries: [elevation-of-privilege, repudiation]
+  # KMS
+  - threat: kms-unrestricted-decrypt
+    entries: [information-disclosure]
+  - threat: kms-key-deletion
+    entries: [denial-of-service]
+  - threat: kms-no-key-rotation
+    entries: [information-disclosure]
+  - threat: kms-public-key-policy
+    entries: [information-disclosure, tampering]
+  # RDS
+  - threat: rds-public-exposure
+    entries: [information-disclosure]
+  - threat: rds-snapshot-leak
+    entries: [information-disclosure]
+  - threat: rds-unencrypted-storage
+    entries: [information-disclosure]
+  - threat: rds-unencrypted-transit
+    entries: [information-disclosure]
+  - threat: rds-credential-abuse
+    entries: [spoofing, elevation-of-privilege]
+  - threat: rds-missing-audit-logging
+    entries: [repudiation]
+  - threat: rds-deletion-data-loss
+    entries: [denial-of-service]
+  # CloudFront
+  - threat: cloudfront-http-only-origin
+    entries: [information-disclosure, tampering]
+  - threat: cloudfront-missing-waf
+    entries: [tampering]
+  - threat: cloudfront-default-certificate
+    entries: [spoofing]
+  - threat: cloudfront-missing-access-logs
+    entries: [repudiation]
+  - threat: cloudfront-outdated-tls
+    entries: [information-disclosure]
+  - threat: cloudfront-missing-oac
+    entries: [information-disclosure]

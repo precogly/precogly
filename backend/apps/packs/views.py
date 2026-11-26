@@ -2,8 +2,6 @@
 Views for packs app.
 """
 
-from pathlib import Path
-
 from django.db import transaction
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
@@ -14,6 +12,7 @@ from rest_framework.response import Response
 from apps.core.permissions import IsSecurityTeam
 from apps.diagrams.models import DFDTemplatesLibrary
 
+from .catalog import CatalogPackError
 from .models import LibraryPack
 from .serializers import (
     LibraryPackDetailSerializer,
@@ -21,11 +20,12 @@ from .serializers import (
 )
 from .services import (
     ValidationResult,
-    discover_packs_from_source,
+    discover_available_packs,
     get_available_overlays_for_pack,
     get_pack_preview_from_database,
     get_pack_preview_from_source,
-    import_pack_from_path,
+    import_pack_with_dependencies,
+    open_discovered_pack,
     sync_all_packs_from_source,
     validate_pack,
 )
@@ -116,15 +116,22 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=["get"])
     def available_from_source(self, request):
         """
-        List packs available in the libraries folder.
+        List packs that can be imported: bundled or catalog.
 
-        Returns packs found in libraries/packs that can be synced to the database.
-        Includes information about whether each pack is already in the database
-        and if it needs updating.
+        Bundled packs are the demo packs on this server's disk. Catalog packs
+        come from the pack catalog (settings.PACK_CATALOG_URL); listing them
+        downloads only catalog.json. Each pack has a `source` of "bundled" or
+        "catalog" and says whether it is in the database and if the versions
+        differ. `catalog_enabled` is false when the catalog is turned off,
+        `catalog_available` false when it could not be fetched, and
+        `catalog_release` names the release listed.
         """
-        packs = discover_packs_from_source()
+        packs, catalog_result = discover_available_packs()
         return Response(
             {
+                "catalog_enabled": catalog_result.enabled,
+                "catalog_available": catalog_result.available,
+                "catalog_release": catalog_result.release,
                 "packs": [p.to_dict() for p in packs],
                 "total": len(packs),
                 "in_database": sum(1 for p in packs if p.is_in_database),
@@ -191,7 +198,12 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
     )
     def import_single(self, request):
         """
-        Import a single pack from the libraries folder by slug.
+        Import a bundled or catalog pack by slug, its missing dependencies first.
+
+        Dependencies are imported with all their overlays and never with
+        "Import anyway". When one fails, the response is 400 (or 502 when a
+        download failed) with `failed_dependency`, `dependencies_imported` and
+        `not_imported`, and the requested pack is not imported.
 
         Provide the pack slug in the request body:
         {"slug": "aws-technologies", "force": false, "selectedOverlays": ["owasp-2021", "nist-csf"]}
@@ -215,73 +227,115 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Find the pack in available sources
-        packs = discover_packs_from_source()
-        pack_info = next((p for p in packs if p.slug == slug), None)
-
-        if not pack_info:
-            return Response(
-                {"error": f"Pack '{slug}' not found in libraries folder"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        # Import the pack
-        result = import_pack_from_path(
-            Path(pack_info.path),
+        outcome = import_pack_with_dependencies(
+            slug,
             force=force,
             selected_overlays=selected_overlays,
             accept_warnings=accept_warnings,
         )
+        progress = {
+            "dependencies_imported": outcome.dependencies_imported,
+        }
+        if outcome.status != "imported":
+            progress["not_imported"] = outcome.not_imported
 
-        # Handle ValidationResult (returned when validation finds issues)
+        if outcome.status == "not_found":
+            return Response(
+                {"error": outcome.message}, status=status.HTTP_404_NOT_FOUND
+            )
+        if outcome.status == "cycle":
+            return Response(
+                {"error": outcome.message}, status=status.HTTP_400_BAD_REQUEST
+            )
+        if outcome.status == "download_failed":
+            return Response(
+                {
+                    "error": outcome.message,
+                    "failed_dependency": outcome.failed_dependency,
+                    **progress,
+                },
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+        if outcome.status == "dependency_failed":
+            # Never 422: "Import anyway" must not be offered for a dependency.
+            # `validation` only when the dependency failed validation; when it
+            # validated but its import failed, the import's own message goes in
+            # `error`, since the page reads `validation` as a validation result.
+            failed_validation = isinstance(outcome.result, ValidationResult)
+            error_message = outcome.message
+            if not failed_validation and outcome.result.message:
+                error_message = f"{outcome.message} {outcome.result.message}"
+            return Response(
+                {
+                    "error": error_message,
+                    "failed_dependency": outcome.failed_dependency,
+                    "validation": outcome.result.to_dict()
+                    if failed_validation
+                    else None,
+                    **progress,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        result = outcome.result
         if isinstance(result, ValidationResult):
             if not result.success:
                 # Errors block import entirely
-                return Response(result.to_dict(), status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {**result.to_dict(), **progress},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             # Warnings only: return 422 so frontend can show "Import Anyway" dialog
-            return Response(result.to_dict(), status=422)
+            return Response({**result.to_dict(), **progress}, status=422)
 
         if result.success:
-            # Auto-connect to all existing threat models
-            from apps.threat_models.models import ThreatModel, ThreatModelLibraryPack
-
-            library_pack = LibraryPack.objects.filter(slug=slug).first()
-            if library_pack:
-                threat_models = ThreatModel.objects.all()
-                ThreatModelLibraryPack.objects.bulk_create(
-                    [
-                        ThreatModelLibraryPack(
-                            threat_model=tm, library_pack=library_pack
-                        )
-                        for tm in threat_models
-                    ],
-                    ignore_conflicts=True,
-                )
-            return Response(result.to_dict(), status=status.HTTP_201_CREATED)
-        else:
-            return Response(result.to_dict(), status=status.HTTP_400_BAD_REQUEST)
+            # Connected to every threat model by import_pack_with_dependencies.
+            return Response(
+                {**result.to_dict(), **progress}, status=status.HTTP_201_CREATED
+            )
+        return Response(
+            {**result.to_dict(), **progress}, status=status.HTTP_400_BAD_REQUEST
+        )
 
     @action(detail=True, methods=["get"])
     def preview(self, request, pk=None):
         """
         Get full pack contents for preview (database packs).
 
-        Returns pack metadata along with all components, threats, and countermeasures.
+        The contents come from the pack's files: bundled on this server, or
+        downloaded from the pack catalog. Returns pack metadata along with all
+        components, threats, and countermeasures; 404 when neither has the
+        pack; 502 when a catalog download fails.
         """
         pack = self.get_object()
-        preview_data = get_pack_preview_from_database(pack)
+        try:
+            preview_data = get_pack_preview_from_database(pack)
+        except CatalogPackError as error:
+            return _download_failed(error)
+        if preview_data is None:
+            # Imported earlier, but its files are no longer on this server (for
+            # example a pack that moved to precogly/library-packs).
+            return Response(
+                {
+                    "error": f"Source files for pack '{pack.slug}' are not "
+                    "available on this server"
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
         return Response(preview_data)
 
     @action(detail=False, methods=["get"])
     def preview_from_source(self, request):
         """
-        Get full pack contents for preview (source packs by path).
+        Get full pack contents for preview (bundled or catalog packs by path).
 
         Query parameters:
-            path: The pack's relative path from libraries/packs root
-                  (e.g. "threat-libraries/aws", "standards/nist-csf")
+            path: The pack's path as the pack list gives it
+                  (e.g. "demo-threat-libraries/demo-aws", "threat-libraries/azure")
 
-        Returns pack metadata along with all components, threats, and countermeasures.
+        Returns pack metadata along with all components, threats, and
+        countermeasures. A catalog pack is downloaded for the request; 502 when
+        that fails.
         """
         pack_path = request.query_params.get("path")
 
@@ -291,11 +345,16 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        preview_data = get_pack_preview_from_source(pack_path)
+        try:
+            preview_data = get_pack_preview_from_source(pack_path)
+        except CatalogPackError as error:
+            return _download_failed(error)
 
         if not preview_data:
             return Response(
-                {"error": f"Pack at '{pack_path}' not found in libraries folder"},
+                {
+                    "error": f"Pack at '{pack_path}' not found among bundled or catalog packs"
+                },
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -304,14 +363,16 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=["get"])
     def available_overlays(self, request):
         """
-        Get available framework overlays for a pack before installation.
+        Get available framework overlays for a bundled or catalog pack before
+        installation.
 
         Query parameters:
-            path: The pack's relative path from libraries/packs root
-                  (e.g. "threat-libraries/aws", "standards/nist-csf")
+            path: The pack's path as the pack list gives it
+                  (e.g. "demo-threat-libraries/demo-aws", "threat-libraries/azure")
 
         Returns list of overlays with framework_id, framework_name, mapping_count,
-        and whether the framework is installed.
+        and whether the framework is installed. A catalog pack is downloaded for
+        the request; 502 when that fails.
         """
         pack_path = request.query_params.get("path")
 
@@ -321,7 +382,10 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        overlays = get_available_overlays_for_pack(pack_path)
+        try:
+            overlays = get_available_overlays_for_pack(pack_path)
+        except CatalogPackError as error:
+            return _download_failed(error)
 
         return Response(
             {
@@ -346,12 +410,14 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
     )
     def validate(self, request):
         """
-        Validate a pack's references without importing (dry-run).
+        Validate a bundled or catalog pack's references without importing (dry-run).
 
         Provide the pack slug in the request body:
         {"slug": "aws-technologies"}
 
-        Returns validation results including any reference errors.
+        Returns validation results including any reference errors, plus
+        `pending_dependencies`: dependencies that are listed but not imported
+        yet, which import brings in first. 502 when a catalog download fails.
         """
         slug = request.data.get("slug")
 
@@ -361,20 +427,33 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Find the pack in available sources
-        packs = discover_packs_from_source()
+        # Find the pack among bundled and catalog packs
+        packs, catalog_result = discover_available_packs()
         pack_info = next((p for p in packs if p.slug == slug), None)
 
         if not pack_info:
             return Response(
-                {"error": f"Pack '{slug}' not found in libraries folder"},
+                {"error": f"Pack '{slug}' not found among bundled or catalog packs"},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        # Run validation
-        result = validate_pack(Path(pack_info.path))
+        try:
+            with open_discovered_pack(pack_info, catalog_result) as pack_dir:
+                result = validate_pack(pack_dir)
+        except CatalogPackError as error:
+            return _download_failed(error)
 
-        return Response(result.to_dict())
+        # A catalog pack's catalog dependencies are on neither disk nor in the
+        # database until imported, so validate_pack reports them as not found.
+        # Import brings them in first; this list lets the page say so.
+        listed_slugs = {listed.slug for listed in packs}
+        response_body = result.to_dict()
+        response_body["pending_dependencies"] = [
+            dependency["slug"]
+            for dependency in pack_info.depends_on
+            if dependency["slug"] in listed_slugs and not dependency["is_imported"]
+        ]
+        return Response(response_body)
 
     @action(
         detail=True,
@@ -477,3 +556,8 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
         summary["deleted"] = True
 
         return Response(summary)
+
+
+def _download_failed(error: CatalogPackError) -> Response:
+    """A catalog pack could not be downloaded or failed its checks."""
+    return Response({"error": str(error)}, status=status.HTTP_502_BAD_GATEWAY)

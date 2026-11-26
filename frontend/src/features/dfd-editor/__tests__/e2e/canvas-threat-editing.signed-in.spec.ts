@@ -10,12 +10,16 @@ import { expect, test, type Page } from '@playwright/test'
  * the full countermeasure modal, as on the threat analysis screen.
  *
  * Runs against the seeded compose stack (e2e/global-setup.ts) on the sample
- * model "Sample LNG Process Control". The threats it adds stay on the model.
+ * model "Sample AWS SaaS Tenant Isolation", on its Lambda node, which gets
+ * library threats from the demo-aws pack. The node's label is matched exactly:
+ * under it the node shows its component's name, "AWS Lambda". The threats it adds stay on that
+ * model, which keeps "Sample AWS Serverless Web App" clean for the specs that
+ * count on it.
  */
 
 const API_URL = process.env.E2E_API_URL ?? 'http://localhost:8000'
-const SAMPLE_MODEL_NAME = 'Sample LNG Process Control'
-const NODE_LABEL = 'Compressor PLC'
+const SAMPLE_MODEL_NAME = 'Sample AWS SaaS Tenant Isolation'
+const NODE_LABEL = 'Lambda'
 
 interface ThreatModelRow {
   id: number | string
@@ -57,7 +61,7 @@ async function openSampleDiagram(page: Page): Promise<void> {
 test('a threat card in the node panel opens the threat modal; a rename shows on the card and triage removes it', async ({ page }) => {
   await openSampleDiagram(page)
 
-  await page.locator('.react-flow__node-process', { hasText: NODE_LABEL }).getByText(NODE_LABEL).click()
+  await page.locator('.react-flow__node-process', { hasText: NODE_LABEL }).getByText(NODE_LABEL, { exact: true }).click()
 
   // Add a custom threat on this node, so the test edits a row of its own.
   const threatName = `Firmware rollback ${Date.now()}`
@@ -112,7 +116,7 @@ test('a threat card in the node panel opens the threat modal; a rename shows on 
 
 test('a countermeasure status change on a card asks for an owner before Planned and a reason before Waived', async ({ page }) => {
   await openSampleDiagram(page)
-  await page.locator('.react-flow__node-process', { hasText: NODE_LABEL }).getByText(NODE_LABEL).click()
+  await page.locator('.react-flow__node-process', { hasText: NODE_LABEL }).getByText(NODE_LABEL, { exact: true }).click()
 
   // A threat and a custom countermeasure of this test's own, so the owner starts empty.
   const threatName = `Unsigned config upload ${Date.now()}`
@@ -155,7 +159,7 @@ test('a countermeasure status change on a card asks for an owner before Planned 
 test('the countermeasure controls on a card do not open the threat modal', async ({ page }) => {
   await openSampleDiagram(page)
 
-  await page.locator('.react-flow__node-process', { hasText: NODE_LABEL }).getByText(NODE_LABEL).click()
+  await page.locator('.react-flow__node-process', { hasText: NODE_LABEL }).getByText(NODE_LABEL, { exact: true }).click()
   const card = page.getByTestId('canvas-threat-card').first()
   await expect(card).toBeVisible()
 
@@ -169,7 +173,7 @@ test('the countermeasure controls on a card do not open the threat modal', async
 
 test('a countermeasure name on a card opens the full countermeasure modal, not the threat modal', async ({ page }) => {
   await openSampleDiagram(page)
-  await page.locator('.react-flow__node-process', { hasText: NODE_LABEL }).getByText(NODE_LABEL).click()
+  await page.locator('.react-flow__node-process', { hasText: NODE_LABEL }).getByText(NODE_LABEL, { exact: true }).click()
 
   const threatName = `Replayed setpoint ${Date.now()}`
   await page.getByRole('button', { name: 'Add Threat' }).click()

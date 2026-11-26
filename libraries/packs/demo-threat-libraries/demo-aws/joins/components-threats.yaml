@@ -1,0 +1,131 @@
+mappings:
+  - component: s3
+    threats:
+      - threat: s3-public-exposure
+        applies_to: component
+      - threat: s3-data-tampering
+        applies_to: component
+      - threat: s3-deletion
+        applies_to: component
+      - threat: dataflow-eavesdropping
+        applies_to: flow
+      - threat: dataflow-mitm
+        applies_to: flow
+  - component: lambda
+    threats:
+      - threat: lambda-injection
+        applies_to: component
+      - threat: lambda-privilege-escalation
+        applies_to: component
+      - threat: lambda-secret-exposure
+        applies_to: component
+      - threat: lambda-dos
+        applies_to: component
+      - threat: dataflow-injection
+        applies_to: flow
+      - threat: dataflow-replay-attack
+        applies_to: flow
+  - component: api-gateway
+    threats:
+      - threat: apigw-unauthorized-access
+        applies_to: component
+      - threat: apigw-injection
+        applies_to: both
+      - threat: apigw-rate-limit-bypass
+        applies_to: component
+      - threat: apigw-logging-gap
+        applies_to: component
+      - threat: dataflow-mitm
+        applies_to: flow
+      - threat: dataflow-eavesdropping
+        applies_to: flow
+      - threat: dataflow-replay-attack
+        applies_to: flow
+  - component: dynamodb
+    threats:
+      - threat: dynamodb-unauthorized-access
+        applies_to: component
+      - threat: dynamodb-injection
+        applies_to: component
+      - threat: dynamodb-capacity-exhaustion
+        applies_to: component
+      - threat: dataflow-eavesdropping
+        applies_to: flow
+  - component: cognito
+    threats:
+      - threat: cognito-token-theft
+        applies_to: both
+      - threat: cognito-account-takeover
+        applies_to: component
+      - threat: dataflow-mitm
+        applies_to: flow
+  - component: waf
+    threats:
+      - threat: waf-bypass
+        applies_to: component
+  - component: iam
+    threats:
+      - threat: iam-overprivileged-policy
+        applies_to: component
+      - threat: iam-stale-credentials
+        applies_to: component
+      - threat: iam-root-user-abuse
+        applies_to: component
+      - threat: iam-missing-mfa
+        applies_to: component
+      - threat: iam-weak-password-policy
+        applies_to: component
+      - threat: iam-cross-account-escalation
+        applies_to: component
+      - threat: iam-policy-drift
+        applies_to: component
+  - component: kms
+    threats:
+      - threat: kms-unrestricted-decrypt
+        applies_to: component
+      - threat: kms-key-deletion
+        applies_to: component
+      - threat: kms-no-key-rotation
+        applies_to: component
+      - threat: kms-public-key-policy
+        applies_to: component
+      - threat: dataflow-eavesdropping
+        applies_to: flow
+  - component: rds
+    threats:
+      - threat: rds-public-exposure
+        applies_to: component
+      - threat: rds-snapshot-leak
+        applies_to: component
+      - threat: rds-unencrypted-storage
+        applies_to: component
+      - threat: rds-unencrypted-transit
+        applies_to: flow
+      - threat: rds-credential-abuse
+        applies_to: component
+      - threat: rds-missing-audit-logging
+        applies_to: component
+      - threat: rds-deletion-data-loss
+        applies_to: component
+      - threat: dataflow-eavesdropping
+        applies_to: flow
+      - threat: dataflow-mitm
+        applies_to: flow
+  - component: cloudfront
+    threats:
+      - threat: cloudfront-http-only-origin
+        applies_to: both
+      - threat: cloudfront-missing-waf
+        applies_to: component
+      - threat: cloudfront-default-certificate
+        applies_to: component
+      - threat: cloudfront-missing-access-logs
+        applies_to: component
+      - threat: cloudfront-outdated-tls
+        applies_to: flow
+      - threat: cloudfront-missing-oac
+        applies_to: component
+      - threat: dataflow-mitm
+        applies_to: flow
+      - threat: dataflow-eavesdropping
+        applies_to: flow

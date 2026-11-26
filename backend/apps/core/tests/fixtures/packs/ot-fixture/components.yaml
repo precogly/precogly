@@ -1,0 +1,116 @@
+components:
+  - id: plc
+    name: Programmable Logic Controller (PLC)
+    category: process
+    type: Industrial Controller
+    provider: generic
+    description: |
+      Programmable Logic Controller that executes control logic to manage industrial
+      processes. Receives sensor inputs, executes ladder logic or function blocks,
+      and drives actuator outputs. Common vendors include Siemens, Allen-Bradley,
+      Schneider Electric, and ABB.
+  - id: dcs-controller
+    name: DCS Controller
+    category: process
+    type: Distributed Control System
+    provider: generic
+    description: |
+      Distributed Control System controller that manages continuous processes such
+      as temperature, pressure, and flow regulation. Provides tight integration
+      between control, monitoring, and engineering within a single vendor ecosystem.
+  - id: scada-server
+    name: SCADA Server
+    category: process
+    type: Supervisory Control
+    provider: generic
+    description: |
+      Supervisory Control and Data Acquisition server that provides centralized
+      monitoring and control of distributed industrial assets. Aggregates data
+      from RTUs and PLCs, generates alarms, and enables operator supervision
+      of the physical process.
+  - id: hmi
+    name: Human-Machine Interface (HMI)
+    category: process
+    type: Operator Interface
+    provider: generic
+    description: |
+      Human-Machine Interface providing graphical visualization of the physical
+      process for operators. Displays live process values, alarms, trends, and
+      allows operators to issue control commands and adjust setpoints.
+  - id: engineering-workstation
+    name: Engineering Workstation
+    category: process
+    type: Configuration Station
+    provider: generic
+    description: |
+      Engineering workstation used for programming PLCs, configuring DCS controllers,
+      developing HMI screens, and maintaining control system software. Contains
+      vendor-specific engineering tools and project files.
+  - id: historian
+    name: Process Data Historian
+    category: datastore
+    type: Time-Series Database
+    provider: generic
+    description: |
+      Industrial data historian that collects, stores, and retrieves time-series
+      process data from PLCs, DCS controllers, and SCADA systems. Used for trend
+      analysis, regulatory reporting, process optimization, and incident investigation.
+      Common platforms include OSIsoft PI, Honeywell PHD, and GE Proficy.
+  - id: sis
+    name: Safety Instrumented System (SIS)
+    category: process
+    type: Safety Controller
+    provider: generic
+    description: |
+      Safety Instrumented System designed to bring the process to a safe state
+      when predetermined conditions are violated. Operates independently from
+      the Basic Process Control System (BPCS) per IEC 61511. Certified to
+      Safety Integrity Levels (SIL 1-4).
+  - id: industrial-firewall
+    name: Industrial Firewall / DMZ
+    category: process
+    type: Network Security
+    provider: generic
+    description: |
+      Industrial firewall or demilitarized zone (DMZ) providing network segmentation
+      between IT and OT networks, and between Purdue Model levels. Performs deep
+      packet inspection of industrial protocols and enforces zone-based access policies.
+  - id: field-sensor
+    name: Field Sensor / Instrument
+    category: external_system_actor
+    kind: device
+    type: Measurement Device
+    provider: generic
+    description: |
+      Field-level instrumentation including pressure transmitters, temperature
+      sensors, flow meters, level gauges, and gas detectors. Provides real-time
+      process measurements to controllers via 4-20mA, HART, Foundation Fieldbus,
+      or PROFIBUS protocols.
+  - id: actuator
+    name: Actuator / Control Valve
+    category: external_system_actor
+    kind: device
+    type: Final Control Element
+    provider: generic
+    description: |
+      Final control element including control valves, motor drives, variable
+      frequency drives (VFDs), and solenoid valves. Receives output signals
+      from controllers to manipulate the physical process.
+  - id: control-operator
+    name: Control Room Operator
+    category: external_human_actor
+    type: Operator
+    provider: generic
+    description: |
+      Control room operator responsible for monitoring process conditions,
+      responding to alarms, adjusting setpoints, and initiating emergency
+      procedures. Interacts with the process via HMI stations.
+  - id: remote-engineer
+    name: Remote Engineer
+    category: external_human_actor
+    type: Engineer
+    provider: generic
+    description: |
+      Remote engineer or vendor support personnel who accesses control systems
+      via secure remote access solutions for maintenance, troubleshooting,
+      and software updates. May connect from corporate IT network or external locations.

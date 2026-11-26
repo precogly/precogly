@@ -89,4 +89,6 @@ export interface ValidationResult {
   warnings: ValidationWarning[]
   errorCount: number
   warningCount: number
+  /** From validate: dependencies listed but not imported yet. Import brings them in first. */
+  pendingDependencies?: string[]
 }

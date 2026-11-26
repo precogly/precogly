@@ -1,0 +1,476 @@
+{
+  "nodes": [
+    {
+      "id": "actor-operator",
+      "type": "humanActor",
+      "position": {
+        "x": 90,
+        "y": 350
+      },
+      "data": {
+        "label": "Control Room Operator",
+        "actorType": "user",
+        "description": "LNG plant control room operator"
+      }
+    },
+    {
+      "id": "actor-remote-eng",
+      "type": "humanActor",
+      "position": {
+        "x": 90,
+        "y": 880
+      },
+      "data": {
+        "label": "Remote Engineer",
+        "actorType": "user",
+        "description": "Remote maintenance and support engineer"
+      }
+    },
+    {
+      "id": "scope-lng-facility",
+      "type": "systemScope",
+      "position": {
+        "x": 300,
+        "y": 30
+      },
+      "style": {
+        "width": 1100,
+        "height": 1050
+      },
+      "data": {
+        "label": "LNG Facility Control System"
+      }
+    },
+    {
+      "id": "zone-ot-network",
+      "type": "trustZone",
+      "parentId": "scope-lng-facility",
+      "position": {
+        "x": 30,
+        "y": 30
+      },
+      "style": {
+        "width": 1040,
+        "height": 540
+      },
+      "data": {
+        "label": "OT Network (Levels 0-3)",
+        "zoneType": "network",
+        "trustLevel": 60,
+        "description": "Operations and control networks behind the industrial DMZ"
+      }
+    },
+    {
+      "id": "zone-operations",
+      "type": "trustZone",
+      "parentId": "zone-ot-network",
+      "position": {
+        "x": 20,
+        "y": 40
+      },
+      "style": {
+        "width": 500,
+        "height": 180
+      },
+      "data": {
+        "label": "Operations Network (Level 2-3)",
+        "zoneType": "network",
+        "trustLevel": 70
+      }
+    },
+    {
+      "id": "zone-control",
+      "type": "trustZone",
+      "parentId": "zone-ot-network",
+      "position": {
+        "x": 540,
+        "y": 40
+      },
+      "style": {
+        "width": 480,
+        "height": 480
+      },
+      "data": {
+        "label": "Control Network (Level 0-1)",
+        "zoneType": "network",
+        "trustLevel": 90
+      }
+    },
+    {
+      "id": "zone-dmz",
+      "type": "trustZone",
+      "parentId": "scope-lng-facility",
+      "position": {
+        "x": 30,
+        "y": 600
+      },
+      "style": {
+        "width": 500,
+        "height": 180
+      },
+      "data": {
+        "label": "Industrial DMZ (Level 3.5)",
+        "zoneType": "network",
+        "trustLevel": 40
+      }
+    },
+    {
+      "id": "zone-enterprise",
+      "type": "trustZone",
+      "parentId": "scope-lng-facility",
+      "position": {
+        "x": 30,
+        "y": 810
+      },
+      "style": {
+        "width": 500,
+        "height": 185
+      },
+      "data": {
+        "label": "Enterprise Network (Level 4-5)",
+        "zoneType": "network",
+        "trustLevel": 20
+      }
+    },
+    {
+      "id": "process-eng-workstation",
+      "type": "process",
+      "parentId": "zone-enterprise",
+      "position": {
+        "x": 60,
+        "y": 45
+      },
+      "data": {
+        "label": "Engineering Workstation",
+        "technology": "Engineering Workstation"
+      }
+    },
+    {
+      "id": "process-firewall",
+      "type": "process",
+      "parentId": "zone-dmz",
+      "position": {
+        "x": 60,
+        "y": 45
+      },
+      "data": {
+        "label": "Industrial Firewall",
+        "technology": "Industrial Firewall / DMZ"
+      }
+    },
+    {
+      "id": "datastore-historian",
+      "type": "datastore",
+      "parentId": "zone-dmz",
+      "position": {
+        "x": 280,
+        "y": 45
+      },
+      "data": {
+        "label": "Process Historian",
+        "technology": "Process Data Historian",
+        "dataSensitivity": "confidential"
+      }
+    },
+    {
+      "id": "process-scada",
+      "type": "process",
+      "parentId": "zone-operations",
+      "position": {
+        "x": 60,
+        "y": 45
+      },
+      "data": {
+        "label": "SCADA Server",
+        "technology": "SCADA Server",
+        "dataSensitivity": "confidential"
+      }
+    },
+    {
+      "id": "process-hmi",
+      "type": "process",
+      "parentId": "zone-operations",
+      "position": {
+        "x": 280,
+        "y": 45
+      },
+      "data": {
+        "label": "Operator HMI",
+        "technology": "Human-Machine Interface (HMI)"
+      }
+    },
+    {
+      "id": "process-dcs",
+      "type": "process",
+      "parentId": "zone-control",
+      "position": {
+        "x": 60,
+        "y": 45
+      },
+      "data": {
+        "label": "DCS Controller",
+        "technology": "DCS Controller",
+        "dataSensitivity": "confidential"
+      }
+    },
+    {
+      "id": "process-sis",
+      "type": "process",
+      "parentId": "zone-control",
+      "position": {
+        "x": 280,
+        "y": 45
+      },
+      "data": {
+        "label": "Safety System (SIS)",
+        "technology": "Safety Instrumented System (SIS)",
+        "dataSensitivity": "confidential"
+      }
+    },
+    {
+      "id": "process-plc",
+      "type": "process",
+      "parentId": "zone-control",
+      "position": {
+        "x": 60,
+        "y": 210
+      },
+      "data": {
+        "label": "Compressor PLC",
+        "technology": "Programmable Logic Controller (PLC)",
+        "dataSensitivity": "confidential"
+      }
+    },
+    {
+      "id": "actor-sensors",
+      "type": "systemActor",
+      "parentId": "zone-control",
+      "position": {
+        "x": 280,
+        "y": 210
+      },
+      "data": {
+        "label": "Field Sensors",
+        "kind": "device",
+        "description": "Temperature, pressure, flow, and level transmitters"
+      }
+    },
+    {
+      "id": "actor-actuators",
+      "type": "systemActor",
+      "parentId": "zone-control",
+      "position": {
+        "x": 280,
+        "y": 370
+      },
+      "data": {
+        "label": "Control Valves",
+        "kind": "device",
+        "description": "LNG process control valves and motor drives"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-operator-hmi",
+      "source": "actor-operator",
+      "target": "process-hmi",
+      "type": "dataFlow",
+      "data": {
+        "label": "Operator commands",
+        "encrypted": false,
+        "authentication": [
+          "unspecified"
+        ]
+      }
+    },
+    {
+      "id": "edge-eng-firewall",
+      "source": "actor-remote-eng",
+      "target": "process-firewall",
+      "type": "dataFlow",
+      "data": {
+        "label": "Remote access",
+        "encrypted": true,
+        "authentication": [
+          "unspecified"
+        ],
+        "protocol": "VPN"
+      }
+    },
+    {
+      "id": "edge-firewall-ews",
+      "source": "process-firewall",
+      "target": "process-eng-workstation",
+      "type": "dataFlow",
+      "data": {
+        "label": "",
+        "encrypted": true,
+        "authentication": [
+          "unspecified"
+        ]
+      }
+    },
+    {
+      "id": "edge-ews-firewall",
+      "source": "process-eng-workstation",
+      "target": "process-firewall",
+      "type": "dataFlow",
+      "data": {
+        "label": "Engineering access",
+        "encrypted": true,
+        "authentication": [
+          "unspecified"
+        ]
+      }
+    },
+    {
+      "id": "edge-scada-hmi",
+      "source": "process-scada",
+      "target": "process-hmi",
+      "type": "dataFlow",
+      "data": {
+        "label": "Process display data",
+        "encrypted": false
+      }
+    },
+    {
+      "id": "edge-hmi-scada",
+      "source": "process-hmi",
+      "target": "process-scada",
+      "type": "dataFlow",
+      "data": {
+        "label": "Operator setpoints",
+        "encrypted": false,
+        "authentication": [
+          "unspecified"
+        ]
+      }
+    },
+    {
+      "id": "edge-scada-historian",
+      "source": "process-scada",
+      "target": "datastore-historian",
+      "type": "dataFlow",
+      "data": {
+        "label": "Process data archival",
+        "encrypted": false
+      }
+    },
+    {
+      "id": "edge-scada-dcs",
+      "source": "process-scada",
+      "target": "process-dcs",
+      "type": "dataFlow",
+      "data": {
+        "label": "Supervisory commands",
+        "encrypted": false,
+        "protocol": "Modbus TCP"
+      }
+    },
+    {
+      "id": "edge-dcs-scada",
+      "source": "process-dcs",
+      "target": "process-scada",
+      "type": "dataFlow",
+      "data": {
+        "label": "Process status",
+        "encrypted": false,
+        "protocol": "Modbus TCP"
+      }
+    },
+    {
+      "id": "edge-dcs-plc",
+      "source": "process-dcs",
+      "target": "process-plc",
+      "type": "dataFlow",
+      "data": {
+        "label": "Control parameters",
+        "encrypted": false
+      }
+    },
+    {
+      "id": "edge-plc-dcs",
+      "source": "process-plc",
+      "target": "process-dcs",
+      "type": "dataFlow",
+      "data": {
+        "label": "Compressor status",
+        "encrypted": false
+      }
+    },
+    {
+      "id": "edge-plc-actuators",
+      "source": "process-plc",
+      "target": "actor-actuators",
+      "type": "dataFlow",
+      "data": {
+        "label": "Control signals (4-20mA)",
+        "flowType": "signal",
+        "encrypted": false
+      }
+    },
+    {
+      "id": "edge-sensors-plc",
+      "source": "actor-sensors",
+      "target": "process-plc",
+      "type": "dataFlow",
+      "data": {
+        "label": "Process measurements",
+        "flowType": "signal",
+        "encrypted": false
+      }
+    },
+    {
+      "id": "edge-sensors-sis",
+      "source": "actor-sensors",
+      "target": "process-sis",
+      "type": "dataFlow",
+      "data": {
+        "label": "Safety-critical measurements",
+        "flowType": "signal",
+        "encrypted": false
+      }
+    },
+    {
+      "id": "edge-sis-actuators",
+      "source": "process-sis",
+      "target": "actor-actuators",
+      "type": "dataFlow",
+      "data": {
+        "label": "Emergency shutdown signals",
+        "flowType": "control",
+        "encrypted": false
+      }
+    },
+    {
+      "id": "edge-firewall-scada",
+      "source": "process-firewall",
+      "target": "process-scada",
+      "type": "dataFlow",
+      "data": {
+        "label": "Filtered traffic",
+        "encrypted": false
+      }
+    },
+    {
+      "id": "boundary-ot-idmz",
+      "source": "zone-ot-network",
+      "target": "zone-dmz",
+      "type": "trustBoundary",
+      "data": {
+        "label": "IDMZ conduit",
+        "boundaryType": "network",
+        "authenticationMethods": [
+          "certificate"
+        ],
+        "accessControlMethods": [
+          "acl"
+        ],
+        "dataValidation": true,
+        "logging": true,
+        "monitoring": true
+      }
+    }
+  ]
+}

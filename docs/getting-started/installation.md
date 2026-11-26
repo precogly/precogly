@@ -45,7 +45,7 @@ This builds and starts four containers:
 On first launch, the backend automatically:
 
 1. Runs database migrations
-2. Seeds demo data — a superuser, two organizations, sample library packs, and sample threat models
+2. Seeds demo data: a superuser, two organizations, three demo library packs, and sample threat models
 
 ### 3. Log in
 

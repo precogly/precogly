@@ -33,7 +33,7 @@ A threat is one scenario that can sit on several things at once: a component, a 
 
 **Edit targets** adds or removes targets. If you remove the last one, Precogly asks whether to make it a whole-system threat or delete it; a threat never becomes a whole-system threat by accident. When a node or edge is deleted from the diagram and it was a threat's only target, the threat goes with it.
 
-Threats carry taxonomy tags from your imported [library packs](library-packs.md): STRIDE categories, CAPEC attack patterns, CWE weaknesses, and MITRE ATT&CK techniques, so you can trace each threat back to established frameworks.
+Threats carry taxonomy tags from your imported [library packs](library-packs.md): STRIDE categories, CAPEC attack patterns, CWE weaknesses, and MITRE ATT&CK techniques, so you can trace each threat back to established frameworks. A fresh install has the STRIDE pack only. CAPEC, CWE and MITRE ATT&CK come from the [library-packs](https://github.com/precogly/library-packs) catalog, imported from the Libraries page.
 
 ![Threats with STRIDE, CAPEC, CWE, and MITRE ATT&CK taxonomy tags](../assets/images/threat-analysis-taxonomy-links.png)
 

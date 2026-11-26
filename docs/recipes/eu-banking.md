@@ -39,16 +39,7 @@ The challenge is not implementing each framework in isolation. It is demonstrati
 
 ## Which packs to import
 
-Import these packs in order (dependencies first):
-
-**Taxonomy packs:**
-
-| Pack | Purpose |
-|------|---------|
-| `stride-taxonomy` | STRIDE threat classification |
-| `cwe` | CWE weakness enumeration |
-| `capec` | CAPEC attack patterns |
-| `mitre-attack` | MITRE ATT&CK Enterprise techniques |
+These packs come from the Libraries page (the library-packs catalog), not from the fresh install. Dependencies are imported for you, so you only pick the packs below.
 
 **Compliance packs:**
 
@@ -60,12 +51,16 @@ Import these packs in order (dependencies first):
 | `pci-dss` | PCI DSS cardholder data requirements |
 | `nist-csf` | NIST CSF baseline cybersecurity requirements |
 
+These are standards that packs only map to. They are not dependencies of the threat packs, so import each one you need as its own pack.
+
 **Technology and threat packs:**
 
 | Pack | Purpose |
 |------|---------|
 | `banking` | Banking-specific components, threats, and countermeasures |
 | `aws` or `azure` | Cloud infrastructure (if applicable) |
+
+Import `aws` and its dependencies come with it: `stride-taxonomy`, `capec`, `cwe`, `mitre-attack`, `mitre-atlas` and the `ai` pack with its own chain. The `banking` pack lists no dependencies, so import the taxonomy packs you want (for example `stride-taxonomy`, `cwe`, `capec`, `mitre-attack`) yourself if you want taxonomy tags on its threats.
 
 !!! tip
     You do not need all compliance packs for every threat model. Import them all into the organization once, then link only the relevant ones to each threat model.

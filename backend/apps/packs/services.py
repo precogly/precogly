@@ -9,6 +9,8 @@ This module provides services for:
 
 import logging
 import re
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -18,6 +20,13 @@ from django.db import transaction
 
 from apps.diagrams.canvas import normalize_canvas
 from apps.diagrams.models import DFDTemplatesLibrary
+from apps.packs.catalog import (
+    CatalogEntry,
+    CatalogPackError,
+    CatalogResult,
+    downloaded_pack,
+    load_catalog,
+)
 from apps.systems.crossing import (
     ANY_FLOW_TYPE,
     ASSET_TYPES,
@@ -64,6 +73,49 @@ def _find_pack_dir(base_path: Path, pack_path: str) -> Path | None:
     return None
 
 
+def _dependency_slug(dependency_entry: str | dict) -> str:
+    """The slug one depends_on entry names. A folder prefix is ignored.
+
+    `taxonomies/stride-taxonomy` and `stride-taxonomy` both name the pack with
+    slug `stride-taxonomy`, wherever it sits on disk: the app bundles its demo
+    packs under `demo-taxonomies/`, while library-packs uses `taxonomies/`.
+
+    A dict names the pack by `pack` (or the older `slug`); a `path` key is
+    ignored. A malformed entry gives "", which every caller treats as not
+    found, so one bad pack cannot break discovery of the others.
+    """
+    if isinstance(dependency_entry, dict):
+        named_pack = dependency_entry.get("pack") or dependency_entry.get("slug")
+    else:
+        named_pack = dependency_entry
+    if not isinstance(named_pack, str):
+        return ""
+    return named_pack.strip().rstrip("/").rsplit("/", 1)[-1]
+
+
+def _find_pack_dir_by_slug(libraries_path: Path, pack_slug: str) -> Path | None:
+    """The folder of the pack on disk with this slug, or None.
+
+    A pack's folder is normally named after its slug, so those folders are
+    checked first; every other pack.yaml is parsed only when that misses. The
+    order is sorted, so the answer does not depend on the file system.
+    """
+    if not pack_slug or not libraries_path.is_dir():
+        return None
+    pack_yaml_files = sorted(libraries_path.rglob("pack.yaml"))
+    pack_yaml_files.sort(key=lambda pack_yaml: pack_yaml.parent.name != pack_slug)
+    for pack_yaml in pack_yaml_files:
+        try:
+            with open(pack_yaml) as pack_file:
+                pack_meta = (yaml.safe_load(pack_file) or {}).get("pack") or {}
+        except Exception:
+            logger.debug("Failed to read %s", pack_yaml)
+            continue
+        if pack_meta.get("slug", pack_yaml.parent.name) == pack_slug:
+            return pack_yaml.parent
+    return None
+
+
 @dataclass
 class PackInfo:
     """Information about a pack discovered from the libraries folder."""
@@ -88,7 +140,14 @@ class PackInfo:
     threat_count: int = 0
     countermeasure_count: int = 0
     taxonomy_count: int = 0
+    taxonomy_entry_count: int = 0
+    framework_count: int = 0
+    requirement_count: int = 0
+    template_count: int = 0
     depends_on: list = field(default_factory=list)
+    # Where the pack's files come from: "bundled" (on disk under
+    # LIBRARIES_PATH) or "catalog" (downloaded from the pack catalog on use).
+    source: str = "bundled"
 
     def to_dict(self):
         return {
@@ -110,7 +169,12 @@ class PackInfo:
             "threat_count": self.threat_count,
             "countermeasure_count": self.countermeasure_count,
             "taxonomy_count": self.taxonomy_count,
+            "taxonomy_entry_count": self.taxonomy_entry_count,
+            "framework_count": self.framework_count,
+            "requirement_count": self.requirement_count,
+            "template_count": self.template_count,
             "depends_on": self.depends_on,
+            "source": self.source,
         }
 
 
@@ -180,6 +244,27 @@ def _count_items_in_file(file_path: Path, key: str) -> int:
         return 0
 
 
+def _read_yaml_or_empty(file_path: Path) -> dict:
+    if not file_path.exists():
+        return {}
+    try:
+        with open(file_path) as f:
+            return yaml.safe_load(f) or {}
+    except Exception:
+        return {}
+
+
+def _count_nested(document: dict, outer_key: str, inner_key: str) -> tuple[int, int]:
+    """(number of outer items, total of their inner lists), e.g. frameworks and requirements."""
+    outer_items = document.get(outer_key) or []
+    if not isinstance(outer_items, list):
+        return 0, 0
+    inner_total = sum(
+        len(item.get(inner_key) or []) for item in outer_items if isinstance(item, dict)
+    )
+    return len(outer_items), inner_total
+
+
 def _discover_pack(
     pack_dir: Path, libraries_path: Path, existing_packs: dict
 ) -> PackInfo | None:
@@ -209,6 +294,14 @@ def _discover_pack(
             pack_dir / "countermeasures.yaml", "countermeasures"
         )
         taxonomy_count = _count_items_in_file(pack_dir / "taxonomy.yaml", "taxonomies")
+        # The same counts library-packs' build_release.py writes to the catalog.
+        framework_count, requirement_count = _count_nested(
+            pack_data or {}, "frameworks", "requirements"
+        )
+        _, taxonomy_entry_count = _count_nested(
+            _read_yaml_or_empty(pack_dir / "taxonomy.yaml"), "taxonomies", "entries"
+        )
+        template_count = len(list((pack_dir / "dfd-templates").glob("*.yaml")))
 
         return PackInfo(
             slug=slug,
@@ -227,6 +320,10 @@ def _discover_pack(
             threat_count=threat_count,
             countermeasure_count=countermeasure_count,
             taxonomy_count=taxonomy_count,
+            taxonomy_entry_count=taxonomy_entry_count,
+            framework_count=framework_count,
+            requirement_count=requirement_count,
+            template_count=template_count,
             depends_on=pack_meta.get("depends_on", []),
         )
     except Exception as e:
@@ -236,21 +333,125 @@ def _discover_pack(
 
 def discover_packs_from_source() -> list[PackInfo]:
     """
-    Discover all packs from the libraries folder.
+    Discover all packs from the libraries folder (the bundled packs).
 
     Scans the libraries/packs directory for packs and returns
     information about each pack found, including whether it exists in
-    the database and if it needs updating.
+    the database and if it needs updating. Never reads the pack catalog:
+    seed, sync and the shipped-packs test rely on that.
     """
+    existing_packs = {p.slug: p.version for p in LibraryPack.objects.all()}
+    packs = _scan_bundled_packs(existing_packs)
+    _resolve_dependencies(packs, existing_packs)
+    return packs
+
+
+def discover_available_packs() -> tuple[list[PackInfo], CatalogResult]:
+    """Every pack a user can preview or import: bundled packs and catalog packs.
+
+    A slug present in both is the bundled pack; its catalog entry is dropped,
+    whatever the versions. Dependencies are resolved over the merged list, so a
+    catalog pack that depends on `taxonomies/stride-taxonomy` finds the bundled
+    STRIDE. Returns the catalog result too, for its availability flags and its
+    entries (catalog_entries_by_slug).
+    """
+    existing_packs = {p.slug: p.version for p in LibraryPack.objects.all()}
+    packs = _scan_bundled_packs(existing_packs)
+    catalog_result = load_catalog()
+    bundled_slugs = {pack_info.slug for pack_info in packs}
+    for entry in catalog_result.entries:
+        if entry.slug in bundled_slugs:
+            continue
+        packs.append(
+            PackInfo(
+                slug=entry.slug,
+                name=entry.name,
+                description=entry.description,
+                version=entry.version,
+                pack_type=entry.pack_type,
+                schema_version=entry.schema_version,
+                author=entry.author,
+                tags=list(entry.tags),
+                path="",
+                relative_path=entry.path,
+                is_in_database=entry.slug in existing_packs,
+                database_version=existing_packs.get(entry.slug),
+                component_count=entry.component_count,
+                threat_count=entry.threat_count,
+                countermeasure_count=entry.countermeasure_count,
+                taxonomy_count=entry.taxonomy_count,
+                taxonomy_entry_count=entry.taxonomy_entry_count,
+                framework_count=entry.framework_count,
+                requirement_count=entry.requirement_count,
+                template_count=entry.template_count,
+                depends_on=list(entry.depends_on),
+                source="catalog",
+            )
+        )
+    _resolve_dependencies(packs, existing_packs)
+    return packs, catalog_result
+
+
+def catalog_entries_by_slug(catalog_result: CatalogResult) -> dict[str, CatalogEntry]:
+    return {entry.slug: entry for entry in catalog_result.entries}
+
+
+@contextmanager
+def open_discovered_pack(
+    pack_info: PackInfo, catalog_result: CatalogResult
+) -> Iterator[Path]:
+    """Yield the folder holding one listed pack's files.
+
+    A bundled pack yields its folder on disk. A catalog pack is downloaded into a
+    temporary folder that is removed on exit, so every caller does its work
+    inside the `with` block and keeps no path afterwards. CatalogPackError
+    passes through.
+    """
+    if pack_info.source != "catalog":
+        yield Path(pack_info.path)
+        return
+    entry = catalog_entries_by_slug(catalog_result)[pack_info.slug]
+    with downloaded_pack(entry) as pack_dir:
+        yield pack_dir
+
+
+@contextmanager
+def open_pack_dir(
+    *, slug: str | None = None, relative_path: str | None = None
+) -> Iterator[Path | None]:
+    """Yield the folder holding the pack's files, or None when the pack is in
+    neither place. A bundled pack yields its folder on disk. A catalog pack is
+    downloaded into a temporary folder that is removed on exit.
+
+    The pack is looked up in the merged list (discover_available_packs), by slug
+    or by relative path. A path must be one the list contains, so a request
+    cannot name a folder outside the packs root.
+    """
+    packs, catalog_result = discover_available_packs()
+    pack_info = next(
+        (
+            candidate
+            for candidate in packs
+            if (slug and candidate.slug == slug)
+            or (relative_path and candidate.relative_path == relative_path)
+        ),
+        None,
+    )
+    if pack_info is None:
+        yield None
+        return
+    with open_discovered_pack(pack_info, catalog_result) as pack_dir:
+        yield pack_dir
+
+
+def _scan_bundled_packs(existing_packs: dict) -> list[PackInfo]:
+    """The packs on disk under the libraries folder, dependencies unresolved."""
     libraries_path = get_libraries_path()
-    packs = []
+    packs: list[PackInfo] = []
 
     if not libraries_path.exists():
         logger.warning(f"Libraries path does not exist: {libraries_path}")
         return packs
-
-    # Get existing packs from database for comparison
-    existing_packs = {p.slug: p.version for p in LibraryPack.objects.all()}
 
     # Scan for pack directories - support both flat and categorized structures
     def scan_directory(base_dir: Path):
@@ -269,78 +470,67 @@ def discover_packs_from_source() -> list[PackInfo]:
                 scan_directory(item)
 
     scan_directory(libraries_path)
+    return packs
 
-    # Resolve depends_on entries to {slug, name, is_imported} dicts.
-    # Dependencies can reference packs in two ways:
-    #   1. By slug only (legacy): `depends_on: [pack-slug]` or
-    #      `depends_on: [{pack: pack-slug, version: "^1.0.0"}]`
-    #   2. By slug + path (disambiguating): `depends_on: [{pack: pack-slug,
-    #      path: frameworks/pack-slug, version: "^1.0.0"}]`
-    # The path-based form is required when multiple packs share a slug on
-    # disk; without it, the resolver picks the first match.
-    pack_by_path = {p.relative_path: p for p in packs if p.relative_path}
+
+def _resolve_dependencies(packs: list[PackInfo], existing_packs: dict) -> None:
+    """Turn each pack's raw depends_on entries into {slug, path, name, is_imported}.
+
+    A dependency is a slug: `taxonomies/stride-taxonomy` and `stride-taxonomy`
+    name the same pack, wherever it sits. `path` in the result is where the
+    dependency was found in `packs`, or empty when it is not there.
+    """
     pack_by_slug: dict[str, PackInfo] = {}
-    for p in packs:
-        # Keep the first occurrence — disambiguation happens via `path`.
-        pack_by_slug.setdefault(p.slug, p)
+    for pack_info in packs:
+        pack_by_slug.setdefault(pack_info.slug, pack_info)
 
     for pack_info in packs:
         resolved_dependencies = []
-        for dep_entry in pack_info.depends_on:
-            if isinstance(dep_entry, str):
-                dep_slug = dep_entry.split("/")[-1] if "/" in dep_entry else dep_entry
-                dep_path = dep_entry if "/" in dep_entry else ""
-            else:
-                dep_slug = dep_entry.get("pack", dep_entry.get("slug", ""))
-                dep_path = dep_entry.get("path", "")
-
-            dep = pack_by_path.get(dep_path) if dep_path else pack_by_slug.get(dep_slug)
+        for dependency_entry in pack_info.depends_on:
+            dependency_slug = _dependency_slug(dependency_entry)
+            dependency_pack = pack_by_slug.get(dependency_slug)
             resolved_dependencies.append(
                 {
-                    "slug": dep_slug,
-                    "path": dep_path or (dep.relative_path if dep else ""),
-                    "name": dep.name if dep else dep_slug,
-                    "is_imported": dep_slug in existing_packs,
+                    "slug": dependency_slug,
+                    "path": dependency_pack.relative_path if dependency_pack else "",
+                    "name": dependency_pack.name
+                    if dependency_pack
+                    else dependency_slug,
+                    "is_imported": dependency_slug in existing_packs,
                 }
             )
         pack_info.depends_on = resolved_dependencies
 
-    return packs
-
 
 def get_pack_preview_from_source(pack_relative_path: str) -> dict | None:
     """
-    Get full pack content for preview from the libraries folder.
+    Get full pack content for preview, for a bundled or a catalog pack.
 
     Reads pack metadata from pack.yaml and components/threats/countermeasures
-    from their respective YAML files. Uses the pack's relative path from the
-    libraries/packs root for O(1) directory lookup.
+    from their respective YAML files. A catalog pack is downloaded for the
+    length of the call.
 
     Args:
-        pack_relative_path: Relative path from libraries/packs root (e.g. "threat-libraries/aws",
-            "standards/nist-csf")
+        pack_relative_path: The pack's path as the pack list gives it (e.g.
+            "demo-threat-libraries/demo-aws", "threat-libraries/azure")
 
     Returns:
         Dictionary with pack metadata, components, threats, and countermeasures
         or None if pack not found
     """
-    libraries_path = get_libraries_path()
+    with open_pack_dir(relative_path=pack_relative_path) as pack_dir:
+        return _read_pack_preview(pack_dir)
 
-    if not libraries_path.exists():
+
+def _read_pack_preview(pack_dir: Path | None) -> dict | None:
+    if pack_dir is None:
         return None
-
-    pack_dir = _find_pack_dir(libraries_path, pack_relative_path)
-    if not pack_dir:
-        return None
-
     try:
-        pack_yaml = pack_dir / "pack.yaml"
-        with open(pack_yaml) as f:
+        with open(pack_dir / "pack.yaml") as f:
             pack_data = yaml.safe_load(f)
-
         return _extract_pack_preview(pack_dir, pack_data)
     except Exception as e:
-        logger.error(f"Error reading pack {pack_dir}: {e}")
+        logger.error(f"Error reading pack {pack_dir.name}: {e}")
         return None
 
 
@@ -348,32 +538,19 @@ def get_pack_preview_from_database(pack: "LibraryPack") -> dict | None:
     """
     Get full pack content for preview from a database pack.
 
-    Reads preview data from the source YAML files rather than the database,
-    ensuring consistent results regardless of how the pack was imported.
-    Scans the libraries tree to find the pack directory by slug.
+    Reads preview data from the pack's files rather than the database,
+    ensuring consistent results regardless of how the pack was imported. The
+    files come from the bundled packs or, for a catalog pack, a download.
 
     Args:
         pack: The LibraryPack model instance
 
     Returns:
         Dictionary with pack metadata, components, threats, and countermeasures
-        or None if pack not found on disk
+        or None if the pack is neither bundled nor in the catalog
     """
-    libraries_path = get_libraries_path()
-    if not libraries_path.exists():
-        return None
-
-    for pack_yaml in libraries_path.rglob("pack.yaml"):
-        try:
-            with open(pack_yaml) as f:
-                pack_data = yaml.safe_load(f)
-            if pack_data.get("pack", {}).get("slug") == pack.slug:
-                return _extract_pack_preview(pack_yaml.parent, pack_data)
-        except Exception:
-            logger.debug("Failed to read pack.yaml at %s", pack_yaml)
-            continue
-
-    return None
+    with open_pack_dir(slug=pack.slug) as pack_dir:
+        return _read_pack_preview(pack_dir)
 
 
 def _extract_pack_preview(pack_dir: Path, pack_data: dict) -> dict:
@@ -895,17 +1072,9 @@ def validate_pack(pack_path: Path) -> ValidationResult:
     if depends_on_entries:
         libraries_path = get_libraries_path()
         for dep_entry in depends_on_entries:
-            if isinstance(dep_entry, str):
-                dep_slug = dep_entry.split("/")[-1] if "/" in dep_entry else dep_entry
-                dep_path = dep_entry
-            else:
-                dep_slug = dep_entry.get("pack", dep_entry.get("slug", ""))
-                dep_path = dep_entry.get("path", dep_slug)
-
+            dep_slug = _dependency_slug(dep_entry)
             # Check on disk
-            dep_dir = _find_pack_dir(libraries_path, dep_path)
-            if not dep_dir and dep_path != dep_slug:
-                dep_dir = _find_pack_dir(libraries_path, dep_slug)
+            dep_dir = _find_pack_dir_by_slug(libraries_path, dep_slug)
             # Check in DB
             dep_in_db = LibraryPack.objects.filter(slug=dep_slug).exists()
 
@@ -1462,29 +1631,9 @@ def validate_pack(pack_path: Path) -> ValidationResult:
         if dep_entries:
             libraries_path = get_libraries_path()
             for dep_entry in dep_entries:
-                if isinstance(dep_entry, str):
-                    dep_slug = dep_entry
-                    dep_path = dep_entry
-                else:
-                    dep_slug = dep_entry.get("pack", dep_entry.get("slug", ""))
-                    dep_path = dep_entry.get("path", dep_slug)
-
-                dep_dir = _find_pack_dir(libraries_path, dep_path)
-                if not dep_dir and dep_path != dep_slug:
-                    dep_dir = _find_pack_dir(libraries_path, dep_slug)
-                if not dep_dir:
-                    # Fallback: search for pack with matching slug
-                    for nested_pack_yaml in libraries_path.glob("**/pack.yaml"):
-                        try:
-                            with open(nested_pack_yaml) as f:
-                                nested_pack_data = yaml.safe_load(f) or {}
-                            if nested_pack_data.get("pack", {}).get("slug") == dep_slug:
-                                dep_dir = nested_pack_yaml.parent
-                                break
-                        except Exception:
-                            logger.debug("Failed to read %s", nested_pack_yaml)
-                            continue
-
+                dep_dir = _find_pack_dir_by_slug(
+                    libraries_path, _dependency_slug(dep_entry)
+                )
                 if dep_dir:
                     dep_tax_file = dep_dir / "taxonomy.yaml"
                     if dep_tax_file.exists():
@@ -1705,6 +1854,176 @@ def _resolve_countermeasure_reference_exists(pack_slug: str, ref: str) -> bool:
         return CountermeasureLibrary.objects.filter(
             qualified_slug=qualified_slug
         ).exists()
+
+
+@dataclass
+class DependencyImportOutcome:
+    """What import_pack_with_dependencies did.
+
+    status is one of:
+      "imported"          the requested pack was imported (result is its ImportResult)
+      "not_found"         no bundled or catalog pack has the slug
+      "cycle"             the dependencies form a cycle (message names the packs)
+      "dependency_failed" a dependency did not validate or import (result says why)
+      "download_failed"   a pack could not be downloaded (message is safe to show)
+      "requested_failed"  the requested pack did not validate or import (result says why)
+    """
+
+    status: str
+    result: "ImportResult | ValidationResult | None" = None
+    message: str = ""
+    dependencies_imported: list[str] = field(default_factory=list)
+    failed_dependency: str = ""
+    not_imported: list[str] = field(default_factory=list)
+
+
+def connect_pack_to_all_threat_models(pack_slug: str) -> None:
+    """Connect an imported pack to every threat model, as import always has.
+
+    Known to reach every organization's models (an open finding, unchanged here).
+    """
+    from apps.threat_models.models import ThreatModel, ThreatModelLibraryPack
+
+    library_pack = LibraryPack.objects.filter(slug=pack_slug).first()
+    if library_pack is None:
+        return
+    ThreatModelLibraryPack.objects.bulk_create(
+        [
+            ThreatModelLibraryPack(threat_model=threat_model, library_pack=library_pack)
+            for threat_model in ThreatModel.objects.all()
+        ],
+        ignore_conflicts=True,
+    )
+
+
+def _missing_dependencies_in_order(
+    requested: PackInfo, pack_by_slug: dict[str, PackInfo]
+) -> list[PackInfo]:
+    """The requested pack's dependencies that are not imported, each after its own.
+
+    Walks depends_on through every level over the merged pack list. A dependency
+    that is already imported ends the walk on that branch. One that is in
+    neither the list nor the database is left to validate_pack, which warns
+    about it. Raises ValueError naming the packs when they form a cycle.
+    """
+    ordered: list[PackInfo] = []
+    finished: set[str] = set()
+    in_progress: list[str] = []
+
+    def visit(pack_info: PackInfo) -> None:
+        if pack_info.slug in finished:
+            return
+        if pack_info.slug in in_progress:
+            cycle = [*in_progress[in_progress.index(pack_info.slug) :], pack_info.slug]
+            raise ValueError(
+                "Packs depend on each other in a cycle: " + " -> ".join(cycle)
+            )
+        in_progress.append(pack_info.slug)
+        for dependency in pack_info.depends_on:
+            dependency_pack = pack_by_slug.get(dependency["slug"])
+            if dependency_pack is None or dependency_pack.is_in_database:
+                continue
+            visit(dependency_pack)
+        in_progress.pop()
+        finished.add(pack_info.slug)
+        if pack_info is not requested:
+            ordered.append(pack_info)
+
+    visit(requested)
+    return ordered
+
+
+def import_pack_with_dependencies(
+    slug: str,
+    *,
+    force: bool = False,
+    selected_overlays: list[str] | None = None,
+    accept_warnings: bool = False,
+) -> DependencyImportOutcome:
+    """Import a bundled or catalog pack, importing its missing dependencies first.
+
+    Dependencies are imported one at a time with all their overlays and never
+    with accept_warnings: "Import anyway" applies only to the pack the user
+    chose. The first dependency that fails stops the import; the ones imported
+    before it stay, since each is a valid pack on its own. Every pack imported
+    here is connected to every threat model, the same as a single import.
+    """
+    packs, catalog_result = discover_available_packs()
+    pack_by_slug = {pack_info.slug: pack_info for pack_info in packs}
+    requested = pack_by_slug.get(slug)
+    if requested is None:
+        return DependencyImportOutcome(
+            status="not_found",
+            message=f"Pack '{slug}' not found among bundled or catalog packs",
+        )
+
+    try:
+        dependencies = _missing_dependencies_in_order(requested, pack_by_slug)
+    except ValueError as cycle_error:
+        return DependencyImportOutcome(status="cycle", message=str(cycle_error))
+
+    dependencies_imported: list[str] = []
+    for position, dependency in enumerate(dependencies):
+        still_waiting = [waiting.slug for waiting in dependencies[position + 1 :]] + [
+            slug
+        ]
+        try:
+            with open_discovered_pack(dependency, catalog_result) as dependency_dir:
+                dependency_result = import_pack_from_path(dependency_dir, force=False)
+        except CatalogPackError as download_error:
+            return DependencyImportOutcome(
+                status="download_failed",
+                message=str(download_error),
+                dependencies_imported=dependencies_imported,
+                failed_dependency=dependency.slug,
+                not_imported=still_waiting,
+            )
+        if (
+            isinstance(dependency_result, ValidationResult)
+            or not dependency_result.success
+        ):
+            return DependencyImportOutcome(
+                status="dependency_failed",
+                result=dependency_result,
+                message=(
+                    f"Dependency '{dependency.name}' could not be imported, so "
+                    f"'{requested.name}' was not imported."
+                ),
+                dependencies_imported=dependencies_imported,
+                failed_dependency=dependency.slug,
+                not_imported=still_waiting,
+            )
+        connect_pack_to_all_threat_models(dependency.slug)
+        dependencies_imported.append(dependency.slug)
+
+    try:
+        with open_discovered_pack(requested, catalog_result) as requested_dir:
+            requested_result = import_pack_from_path(
+                requested_dir,
+                force=force,
+                selected_overlays=selected_overlays,
+                accept_warnings=accept_warnings,
+            )
+    except CatalogPackError as download_error:
+        return DependencyImportOutcome(
+            status="download_failed",
+            message=str(download_error),
+            dependencies_imported=dependencies_imported,
+            not_imported=[slug],
+        )
+    if isinstance(requested_result, ValidationResult) or not requested_result.success:
+        return DependencyImportOutcome(
+            status="requested_failed",
+            result=requested_result,
+            dependencies_imported=dependencies_imported,
+            not_imported=[slug],
+        )
+    connect_pack_to_all_threat_models(slug)
+    return DependencyImportOutcome(
+        status="imported",
+        result=requested_result,
+        dependencies_imported=dependencies_imported,
+    )
 
 
 def import_pack_from_path(
@@ -2137,6 +2456,54 @@ def sync_all_packs_from_source(
     return results
 
 
+def _pack_dirs_to_reconcile(
+    packs: list["PackInfo"] | None,
+) -> Iterator[tuple[str, Path]]:
+    """(slug, folder) for each pack a reconcile pass re-reads.
+
+    With an explicit list (sync_all_packs_from_source), those packs as they are.
+    Without one (after a taxonomy pack is imported): every bundled pack, then
+    every imported catalog pack that has threats and whose imported version is
+    the catalog's version. A catalog pack is downloaded when its turn comes and removed before the next
+    one, so only one download is on disk at a time. A version mismatch or a
+    failed download skips that pack with a log line; it never fails the import
+    that triggered the pass.
+    """
+    if packs is not None:
+        for pack_info in packs:
+            yield pack_info.slug, Path(pack_info.path)
+        return
+
+    bundled_packs = discover_packs_from_source()
+    for pack_info in bundled_packs:
+        yield pack_info.slug, Path(pack_info.path)
+
+    bundled_slugs = {pack_info.slug for pack_info in bundled_packs}
+    installed_versions = dict(LibraryPack.objects.values_list("slug", "version"))
+    for entry in load_catalog().entries:
+        if entry.slug in bundled_slugs or entry.slug not in installed_versions:
+            continue
+        # Every join these passes read maps a threat (component-threat,
+        # threat-countermeasure, threat-taxonomy), so a pack with no threats has
+        # nothing to re-read. Skipping it saves a download: importing the full
+        # aws pack imports seven taxonomy packs, each of which runs this pass.
+        if entry.threat_count == 0:
+            continue
+        if installed_versions[entry.slug] != entry.version:
+            logger.info(
+                "Not re-reading joins of %s: imported version %s, catalog version %s",
+                entry.slug,
+                installed_versions[entry.slug],
+                entry.version,
+            )
+            continue
+        try:
+            with downloaded_pack(entry) as pack_dir:
+                yield entry.slug, pack_dir
+        except CatalogPackError as download_error:
+            logger.warning("Not re-reading joins of %s: %s", entry.slug, download_error)
+
+
 def reconcile_cross_pack_joins_from_source(
     packs: list["PackInfo"] | None = None,
 ) -> int:
@@ -2153,15 +2520,12 @@ def reconcile_cross_pack_joins_from_source(
     Returns:
         Total number of join matches resolved across all packs.
     """
-    if packs is None:
-        packs = discover_packs_from_source()
-
     total = 0
-    for pack_info in packs:
-        pack = LibraryPack.objects.filter(slug=pack_info.slug).first()
+    for pack_slug, pack_dir in _pack_dirs_to_reconcile(packs):
+        pack = LibraryPack.objects.filter(slug=pack_slug).first()
         if not pack:
             continue
-        joins_dir = Path(pack_info.path) / "joins"
+        joins_dir = pack_dir / "joins"
         if not joins_dir.exists():
             continue
 
@@ -2196,22 +2560,20 @@ def reconcile_taxonomy_joins_from_source(
     re-running it for a join that already resolved is a no-op.
 
     Args:
-        packs: Packs to reconcile. Runs its own `discover_packs_from_source()`
-            if omitted.
+        packs: Packs to reconcile. When omitted: every bundled pack, plus every
+            imported catalog pack whose version is the catalog's, downloaded one
+            at a time (_pack_dirs_to_reconcile).
 
     Returns:
         Number of threat-taxonomy join matches resolved across every pack,
         including joins that already existed and were simply re-confirmed.
     """
-    if packs is None:
-        packs = discover_packs_from_source()
-
     total = 0
-    for pack_info in packs:
-        pack = LibraryPack.objects.filter(slug=pack_info.slug).first()
+    for pack_slug, pack_dir in _pack_dirs_to_reconcile(packs):
+        pack = LibraryPack.objects.filter(slug=pack_slug).first()
         if not pack:
             continue
-        joins_dir = Path(pack_info.path) / "joins"
+        joins_dir = pack_dir / "joins"
         if not joins_dir.exists():
             continue
         for join_file in joins_dir.glob("threats-*.yaml"):
@@ -2536,15 +2898,11 @@ def _create_or_update_pack(pack_data: dict) -> LibraryPack:
 
 
 def _process_dependencies(library_pack: LibraryPack, pack_data: dict):
-    """Process pack dependencies with version constraints.
+    """Record the pack's dependencies that are already imported.
 
-    Dependencies may include an optional `path` field for disambiguating
-    between packs that share a slug on disk. The DB enforces slug
-    uniqueness, so once imported a slug refers to exactly one pack —
-    `path` is informational here and only affects which pack on disk we
-    consider the dependency target. We log when path is given but the
-    matching pack isn't yet imported, since the dependency record will
-    be created without it.
+    A dependency is a slug; any folder prefix in the entry is ignored. The
+    database keeps one pack per slug, so the lookup is unambiguous. A
+    dependency that is not imported yet gets no record.
     """
     depends_on = pack_data.get("pack", {}).get("depends_on", [])
 
@@ -2552,14 +2910,8 @@ def _process_dependencies(library_pack: LibraryPack, pack_data: dict):
     LibraryPackDependency.objects.filter(pack=library_pack).delete()
 
     for dep in depends_on:
-        if isinstance(dep, str):
-            dep_slug = dep.split("/")[-1] if "/" in dep else dep
-        else:
-            dep_slug = dep.get("pack", dep.get("slug", ""))
-
-        # Find the dependency pack (may not exist yet). Slug uniqueness
-        # in the DB makes the lookup unambiguous regardless of how many
-        # disk variants share the slug.
+        dep_slug = _dependency_slug(dep)
+        # Find the dependency pack (may not exist yet).
         dep_pack = LibraryPack.objects.filter(slug=dep_slug).first()
         if dep_pack:
             LibraryPackDependency.objects.create(
@@ -3949,25 +4301,23 @@ def get_available_overlays_for_pack(pack_relative_path: str) -> list[OverlayInfo
     Get available framework overlays for a pack.
 
     Scans the pack's joins/ directory for countermeasures-*.yaml files
-    and returns information about each overlay. Uses the pack's relative
-    path from the libraries/packs root for O(1) directory lookup.
+    and returns information about each overlay. Works for a bundled or a
+    catalog pack; a catalog pack is downloaded for the length of the call.
 
     Args:
-        pack_relative_path: Relative path from libraries/packs root (e.g. "threat-libraries/aws")
+        pack_relative_path: The pack's path as the pack list gives it (e.g. "threat-libraries/aws")
 
     Returns:
         List of OverlayInfo with framework_id, framework_name, mapping_count, framework_exists
     """
+    with open_pack_dir(relative_path=pack_relative_path) as pack_dir:
+        if pack_dir is None:
+            return []
+        return _overlays_in_pack_dir(pack_dir)
+
+
+def _overlays_in_pack_dir(pack_dir: Path) -> list[OverlayInfo]:
     from apps.compliance.models import StandardFramework
-
-    libraries_path = get_libraries_path()
-
-    if not libraries_path.exists():
-        return []
-
-    pack_dir = _find_pack_dir(libraries_path, pack_relative_path)
-    if not pack_dir:
-        return []
 
     joins_dir = pack_dir / "joins"
     if not joins_dir.exists():

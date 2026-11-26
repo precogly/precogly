@@ -18,6 +18,11 @@ For detailed setup instructions and architecture docs, head over to our
 - **Don't over-engineer.** Avoid letting your AI build a Rube Goldberg machine. Keep your AI on a tight leash. Simple beats bloated.
 - **Plan before you generate.** Before writing any code, draft a plan for the change you're making. Ask: _"What could this break? What are the unintended side effects?"_ And read every line before submitting. If you can't explain it, you're not ready to submit it.
 
+## Library packs
+
+Contributions of library packs (new packs or changes to existing ones) go to
+[precogly/library-packs](https://github.com/precogly/library-packs), not to this repository.
+
 ## Contributor License Agreement
 
 Before your first PR can be merged, you'll need to accept our
