@@ -10,10 +10,12 @@ from __future__ import annotations
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from importlib.metadata import version
+from urllib.parse import urlsplit
 
 from mcp.server import MCPServer
 from mcp.server.auth.provider import TokenVerifier
 from mcp.server.auth.settings import AuthSettings
+from mcp.server.transport_security import TransportSecuritySettings
 from mcp.types import ToolAnnotations
 from pydantic_monty import AsyncMonty
 from starlette.types import ASGIApp
@@ -184,9 +186,20 @@ def asgi_app(
         ),
         token_verifier=token_verifier,
     )
+    # Requests must be addressed to `resource_url`'s host. Left unset, the SDK assumes
+    # a local server and accepts only `localhost:<port>` and the loopback addresses,
+    # so it rejects every request to a real deployment with 421 Invalid Host. The
+    # mounting application routes `/mcp` past Django, so Django's `ALLOWED_HOSTS`
+    # never sees these requests; this is their only Host check. A browser page on
+    # another origin is refused too. Command-line clients send no `Origin` and pass.
+    public = urlsplit(resource_url)
     app = server.streamable_http_app(
         streamable_http_path="/mcp",
         json_response=True,
         stateless_http=True,
+        transport_security=TransportSecuritySettings(
+            allowed_hosts=[public.netloc],
+            allowed_origins=[f"{public.scheme}://{public.netloc}"],
+        ),
     )
     return ScopeChallenge(app, resource_url)
