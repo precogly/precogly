@@ -10,6 +10,7 @@ from oauth2_provider.models import (
     get_access_token_model,
     get_application_model,
     get_grant_model,
+    get_refresh_token_model,
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -19,6 +20,7 @@ User = get_user_model()
 Application = get_application_model()
 AccessToken = get_access_token_model()
 Grant = get_grant_model()
+OAuthRefreshToken = get_refresh_token_model()
 
 REDIRECT = "http://127.0.0.1:33418/callback"
 CHALLENGE = "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSW_bLlY"
@@ -97,6 +99,54 @@ class TestDecidingAPendingAuthorization(TestCase):
         assert not Grant.objects.exists()
         self.pending.refresh_from_db()
         assert self.pending.used
+
+    def issue_token(self, application):
+        """A live access token with its refresh token, as an earlier consent left."""
+        access = AccessToken.objects.create(
+            user=self.user,
+            application=application,
+            token=f"access-{application.pk}-{AccessToken.objects.count()}",
+            scope="read",
+            expires=timezone.now() + timedelta(hours=1),
+        )
+        refresh = OAuthRefreshToken.objects.create(
+            user=self.user,
+            application=application,
+            token=f"refresh-{access.token}",
+            access_token=access,
+        )
+        return access, refresh
+
+    def test_allowing_replaces_the_clients_earlier_tokens(self):
+        # A step-up to `write` consents again. Without the revoke, the earlier `read`
+        # pair would stay live beside the new one, unused, until it expired.
+        access, refresh = self.issue_token(self.application)
+        opencode = Application.objects.create(
+            name="opencode",
+            client_type=Application.CLIENT_PUBLIC,
+            authorization_grant_type=Application.GRANT_AUTHORIZATION_CODE,
+            redirect_uris="http://127.0.0.1:53001/callback",
+        )
+        other_access, _ = self.issue_token(opencode)
+
+        response = self.decide(allow=True, password=PASSWORD)
+
+        assert response.status_code == 200
+        assert not AccessToken.objects.filter(pk=access.pk).exists()
+        refresh.refresh_from_db()
+        assert refresh.revoked is not None
+        assert Grant.objects.filter(code=self.redirect_query(response)["code"][0])
+        assert AccessToken.objects.filter(pk=other_access.pk).exists()
+
+    def test_denying_leaves_the_clients_earlier_tokens(self):
+        # Denying a step-up refuses `write`; it does not disconnect the client.
+        access, refresh = self.issue_token(self.application)
+
+        self.decide(allow=False)
+
+        assert AccessToken.objects.filter(pk=access.pk).exists()
+        refresh.refresh_from_db()
+        assert refresh.revoked is None
 
     def test_allowing_without_a_password_is_refused_and_not_counted(self):
         response = self.decide(allow=True)

@@ -194,6 +194,12 @@ class DecisionView(OAuthLibMixin, APIView):
         if not password_ok:
             raise ValidationError({"password": "That password is incorrect."})
 
+        # The user approved this client, so revoke its earlier tokens and grants:
+        # the code issued below becomes its only access. Must stay above
+        # `create_authorization_response`, or it deletes the grant issued there.
+        if allow:
+            revoke_access(request.user, pending.application_id)
+
         try:
             # The view mixin's method, which takes the scopes as the stored string.
             uri, _, _, _ = self.create_authorization_response(
@@ -226,6 +232,24 @@ def live_access_tokens(user):
             | Q(refresh_token__isnull=False, refresh_token__revoked__isnull=True)
         )
     )
+
+
+def revoke_access(user, application_id):
+    """Revoke every token and grant `user` holds for an application."""
+    # Refresh tokens first: `revoke` marks each one revoked and deletes the access
+    # token it last issued. Deleting the remaining access tokens and grants then
+    # leaves the client nothing to use or exchange.
+    with transaction.atomic():
+        for refresh_token in get_refresh_token_model().objects.filter(
+            user=user, application_id=application_id, revoked__isnull=True
+        ):
+            refresh_token.revoke()
+        get_access_token_model().objects.filter(
+            user=user, application_id=application_id
+        ).delete()
+        get_grant_model().objects.filter(
+            user=user, application_id=application_id
+        ).delete()
 
 
 class AuthorizedApplicationsView(APIView):
@@ -285,18 +309,5 @@ class AuthorizedApplicationView(APIView):
         ):
             raise NotFound
 
-        # Refresh tokens first: `revoke` marks each one revoked and deletes the access
-        # token it last issued. Deleting the remaining access tokens and grants then
-        # leaves the client nothing to use or exchange.
-        with transaction.atomic():
-            for refresh_token in get_refresh_token_model().objects.filter(
-                user=request.user, application_id=application_id, revoked__isnull=True
-            ):
-                refresh_token.revoke()
-            get_access_token_model().objects.filter(
-                user=request.user, application_id=application_id
-            ).delete()
-            get_grant_model().objects.filter(
-                user=request.user, application_id=application_id
-            ).delete()
+        revoke_access(request.user, application_id)
         return Response(status=204)
