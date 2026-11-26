@@ -100,6 +100,22 @@ class TestDecidingAPendingAuthorization(TestCase):
         self.pending.refresh_from_db()
         assert self.pending.used
 
+    def test_an_error_with_no_trusted_redirect_goes_to_the_error_page(self):
+        # The client re-registered without this redirect URI after the request was
+        # stored, so the error cannot go back to it. Without the error page the URL
+        # was a bare `?error=…`, which sent the browser back to the consent page.
+        self.application.redirect_uris = "http://127.0.0.1:40000/elsewhere"
+        self.application.save()
+
+        response = self.decide(allow=True, password=PASSWORD)
+
+        assert response.status_code == 200
+        url = urlparse(response.json()["redirectUrl"])
+        assert f"{url.scheme}://{url.netloc}" == settings.FRONTEND_URL
+        assert url.path == "/oauth/error"
+        assert parse_qs(url.query)["error"]
+        assert not Grant.objects.exists()
+
     def issue_token(self, application):
         """A live access token with its refresh token, as an earlier consent left."""
         access = AccessToken.objects.create(

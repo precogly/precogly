@@ -90,18 +90,24 @@ class AuthorizeView(OAuthLibMixin, View):
                 response["url"],
                 allowed_schemes or oauth2_settings.ALLOWED_REDIRECT_URI_SCHEMES,
             )
-        # With no trusted redirect URI (an unknown client, or a redirect URI it never
-        # registered) the error cannot go back to the client, so the SPA shows it.
-        # `error_description` comes from the query string, which a crafted link
-        # controls, so the SPA must render it as plain text, never as HTML.
-        oauthlib_error = response["error"]
-        query = urlencode(
-            {
-                "error": oauthlib_error.error,
-                "error_description": oauthlib_error.description or "",
-            }
-        )
-        return HttpResponseRedirect(f"{settings.FRONTEND_URL}/oauth/error?{query}")
+        return HttpResponseRedirect(error_page_url(response["error"]))
+
+
+def error_page_url(oauthlib_error):
+    """Return the URL of the SPA's error page for an error that cannot go back to the
+    client.
+
+    Used when there is no trusted redirect URI: an unknown client, or a redirect URI it
+    never registered. `error_description` comes from the query string, which a crafted
+    link controls, so the SPA must render it as plain text, never as HTML.
+    """
+    query = urlencode(
+        {
+            "error": oauthlib_error.error,
+            "error_description": oauthlib_error.description or "",
+        }
+    )
+    return f"{settings.FRONTEND_URL}/oauth/error?{query}"
 
 
 class PendingAuthorizationView(APIView):
@@ -210,9 +216,11 @@ class DecisionView(OAuthLibMixin, APIView):
             )
         except OAuthToolkitError as error:
             # Denying lands here too: django-oauth-toolkit raises `access_denied`
-            # carrying the client's redirect URI and state.
-            _, response = self.error_response(error)
-            uri = response["url"]
+            # carrying the client's redirect URI and state. With no trusted redirect
+            # URI, `url` is a bare `?error=…` that would send the browser back to the
+            # consent page, so the SPA's error page shows it instead.
+            redirect, response = self.error_response(error)
+            uri = response["url"] if redirect else error_page_url(response["error"])
         return Response(DecisionResultSerializer({"redirect_url": uri}).data)
 
 
