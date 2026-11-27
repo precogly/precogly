@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from apps.core.permissions import IsSecurityTeam
 from apps.diagrams.models import DFDTemplatesLibrary
 
-from .catalog import CatalogPackError
+from .catalog import CatalogPackError, catalog_source
 from .models import LibraryPack
 from .serializers import (
     LibraryPackDetailSerializer,
@@ -127,11 +127,18 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
         `catalog_release` names the release listed.
         """
         packs, catalog_result = discover_available_packs()
+        source = catalog_source(release=catalog_result.release)
         return Response(
             {
                 "catalog_enabled": catalog_result.enabled,
                 "catalog_available": catalog_result.available,
                 "catalog_release": catalog_result.release,
+                # Where the catalog packs come from: "precogly/library-packs"
+                # with links to the release and its packs folder, or the host
+                # of a self-hosted catalog with no links.
+                "catalog_source_name": source.name if source else "",
+                "catalog_release_url": source.release_url if source else "",
+                "catalog_packs_url": source.packs_url if source else "",
                 "packs": [p.to_dict() for p in packs],
                 "total": len(packs),
                 "in_database": sum(1 for p in packs if p.is_in_database),

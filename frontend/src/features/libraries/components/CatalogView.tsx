@@ -29,6 +29,7 @@ import {
   NO_RESPONSE_MESSAGE,
   PACK_STATUS_LABELS,
   buildUnifiedPacks,
+  catalogSourceInfo,
   dependenciesImportedLine,
   fullVersionOf,
   importFailureLines,
@@ -36,6 +37,7 @@ import {
   isNoUsableResponse,
   matchesStatus,
   packCategoryFromPath,
+  packSourceUrl,
   showCatalogUnreachableNotice,
   showDemoContentNotice,
   sortPacksForList,
@@ -52,6 +54,7 @@ export function CatalogView() {
   const [previewPackId, setPreviewPackId] = useState<number | null>(null)
   const [previewPackPath, setPreviewPackPath] = useState<string | null>(null)
   const [previewIsCatalogPack, setPreviewIsCatalogPack] = useState(false)
+  const [previewSourceLink, setPreviewSourceLink] = useState<{ label: string; url: string } | null>(null)
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false)
   const [importingSlug, setImportingSlug] = useState<string | null>(null)
   const [installDialogPack, setInstallDialogPack] = useState<UnifiedPack | null>(null)
@@ -109,6 +112,7 @@ export function CatalogView() {
     return sortPacksForList(filtered)
   }, [allPacks, filters, statusFilter])
 
+  const catalogSource = catalogSourceInfo(sourcePacks)
   const catalogUnreachable = showCatalogUnreachableNotice(sourcePacks) && !catalogNoticeDismissed
   const showDemoNotice = showDemoContentNotice(sourcePacks, isSecurityTeam, allPacks)
 
@@ -218,6 +222,11 @@ export function CatalogView() {
       setPreviewPackPath(pack.relativePath)
     }
     setPreviewIsCatalogPack(pack.source === 'catalog')
+    setPreviewSourceLink(
+      pack.source === 'catalog' && catalogSource
+        ? { label: `${catalogSource.name}, packs/${pack.relativePath}`, url: packSourceUrl(catalogSource, pack.relativePath) }
+        : null,
+    )
     setPreviewDialogOpen(true)
   }
 
@@ -268,6 +277,25 @@ export function CatalogView() {
           <Info />
           <AlertDescription>You are using demo content. Import the full packs for real work.</AlertDescription>
         </Alert>
+      )}
+
+      {catalogSource && (
+        <p className="text-sm text-muted-foreground" data-testid="catalog-source-line">
+          Full packs come from{' '}
+          {catalogSource.releaseUrl ? (
+            <a
+              href={catalogSource.releaseUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium underline underline-offset-2"
+            >
+              {catalogSource.name}
+            </a>
+          ) : (
+            <span className="font-medium">{catalogSource.name}</span>
+          )}
+          {catalogSource.onGitHub ? ' on GitHub' : ''}, release {catalogSource.release}.
+        </p>
       )}
 
       {/* Search and Filters */}
@@ -339,6 +367,7 @@ export function CatalogView() {
               isSecurityTeam={isSecurityTeam}
               fullVersionPack={fullVersionOf(pack, allPacks)}
               onShowFullVersion={handleShowFullVersion}
+              catalogSource={catalogSource}
             />
           ))}
         </div>
@@ -358,6 +387,7 @@ export function CatalogView() {
         packId={previewPackId}
         packPath={previewPackPath}
         isCatalogPack={previewIsCatalogPack}
+        sourceLink={previewSourceLink}
         open={previewDialogOpen}
         onOpenChange={setPreviewDialogOpen}
       />
@@ -366,6 +396,7 @@ export function CatalogView() {
         key={installDialogPack?.slug ?? 'none'}
         pack={installDialogPack}
         allPacks={allPacks}
+        catalogSource={catalogSource}
         open={installDialogPack !== null}
         onOpenChange={(open) => !open && setInstallDialogPack(null)}
         onConfirm={handleImportConfirm}

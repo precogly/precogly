@@ -1,5 +1,5 @@
 import { ApiError } from '@/lib/api'
-import type { ImportFailureBody, SourcePackInfo } from '@/features/libraries/api/packs'
+import type { AvailablePacksResponse, ImportFailureBody, SourcePackInfo } from '@/features/libraries/api/packs'
 import type { LibraryPackListItem } from '@/features/libraries/types/packs'
 import type { UnifiedPack } from './unified-pack'
 
@@ -341,4 +341,31 @@ export function packContentsSummary(pack: UnifiedPack): string {
     return `${contents} Threats from other packs are tagged with them.`
   }
   return contents
+}
+
+/** Where the catalog packs come from, as the list response names it. */
+export interface CatalogSourceInfo {
+  name: string
+  release: string
+  /** Empty for a self-hosted catalog. */
+  releaseUrl: string
+  /** Empty for a self-hosted catalog. */
+  packsUrl: string
+  onGitHub: boolean
+}
+
+export function catalogSourceInfo(response: AvailablePacksResponse | undefined): CatalogSourceInfo | null {
+  if (!response?.catalogAvailable || !response.catalogSourceName) return null
+  return {
+    name: response.catalogSourceName,
+    release: response.catalogRelease ?? '',
+    releaseUrl: response.catalogReleaseUrl ?? '',
+    packsUrl: response.catalogPacksUrl ?? '',
+    onGitHub: Boolean(response.catalogReleaseUrl),
+  }
+}
+
+/** The pack's folder at the listed release on GitHub, or empty when there is none. */
+export function packSourceUrl(source: CatalogSourceInfo | null, relativePath: string): string {
+  return source?.packsUrl && relativePath ? `${source.packsUrl}${relativePath}` : ''
 }

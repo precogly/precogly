@@ -66,6 +66,12 @@ export interface AvailablePacksResponse {
   catalogAvailable?: boolean
   /** The library-packs release listed, for example v2026.11.26.1. */
   catalogRelease?: string
+  /** "precogly/library-packs", or the host of a self-hosted catalog. */
+  catalogSourceName?: string
+  /** The release page on GitHub; empty for a self-hosted catalog. */
+  catalogReleaseUrl?: string
+  /** The packs/ folder at that release on GitHub; empty for a self-hosted catalog. */
+  catalogPacksUrl?: string
 }
 
 export interface ImportResult {

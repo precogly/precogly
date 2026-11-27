@@ -304,6 +304,47 @@ def load_catalog(catalog_url: str | None = None) -> CatalogResult:
     return result
 
 
+_GITHUB_RELEASE_CATALOG_RE = re.compile(
+    r"^/(?P<owner>[A-Za-z0-9_.-]+)/(?P<repo>[A-Za-z0-9_.-]+)/releases/"
+    r"(?:latest/download|download/[^/]+)/catalog\.json$"
+)
+
+
+@dataclass(frozen=True)
+class CatalogSource:
+    """Where the catalog's packs come from, for the Libraries page to name."""
+
+    name: str  # "precogly/library-packs", or the host of a self-hosted catalog
+    release_url: str  # the release page on GitHub, else ""
+    packs_url: str  # the packs/ folder at that release on GitHub, else ""
+
+
+def catalog_source(
+    catalog_url: str | None = None, release: str = ""
+) -> CatalogSource | None:
+    """Name and links for the catalog's source, or None when the catalog is off.
+
+    A GitHub release address gives the repository name and links to the
+    release and to its packs folder at that tag. Any other address, such as an
+    operator's internal copy, gives its host and no links.
+    """
+    url = configured_catalog_url(catalog_url)
+    if not url:
+        return None
+    parts = urlsplit(url)
+    github_match = _GITHUB_RELEASE_CATALOG_RE.match(parts.path)
+    if parts.netloc.lower() == "github.com" and github_match:
+        repository = f"{github_match['owner']}/{github_match['repo']}"
+        if release and _RELEASE_RE.match(release):
+            return CatalogSource(
+                name=repository,
+                release_url=f"https://github.com/{repository}/releases/tag/{release}",
+                packs_url=f"https://github.com/{repository}/tree/{release}/packs/",
+            )
+        return CatalogSource(name=repository, release_url="", packs_url="")
+    return CatalogSource(name=parts.netloc, release_url="", packs_url="")
+
+
 def archive_url(entry: CatalogEntry, catalog_url: str) -> str:
     """Where entry's archive is downloaded from.
 

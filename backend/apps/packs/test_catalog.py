@@ -254,6 +254,32 @@ class LoadCatalogTests(SimpleTestCase):
                 self.assertFalse(result.enabled)
                 self.assertFalse(result.available)
 
+    def test_the_source_name_and_links(self):
+        cases = {
+            LATEST_URL: (
+                "precogly/library-packs",
+                "https://github.com/precogly/library-packs/releases/tag/v2026.11.26.2",
+                "https://github.com/precogly/library-packs/tree/v2026.11.26.2/packs/",
+            ),
+            "https://github.com/precogly/library-packs/releases/download/v1/catalog.json": (
+                "precogly/library-packs",
+                "https://github.com/precogly/library-packs/releases/tag/v2026.11.26.2",
+                "https://github.com/precogly/library-packs/tree/v2026.11.26.2/packs/",
+            ),
+            "http://packs.example.internal/library/catalog.json": (
+                "packs.example.internal",
+                "",
+                "",
+            ),
+        }
+        for address, expected in cases.items():
+            with self.subTest(address):
+                source = catalog.catalog_source(address, "v2026.11.26.2")
+                self.assertEqual(
+                    (source.name, source.release_url, source.packs_url), expected
+                )
+        self.assertIsNone(catalog.catalog_source("", "v1"))
+
     def test_archive_urls(self):
         entry = entry_for(b"x", release="v2026.11.26.1")
         self.assertEqual(

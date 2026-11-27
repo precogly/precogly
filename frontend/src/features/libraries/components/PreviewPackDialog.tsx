@@ -35,6 +35,8 @@ interface PreviewPackDialogProps {
   packPath?: string | null
   /** A catalog pack is downloaded to preview it; the loading text says so. */
   isCatalogPack?: boolean
+  /** For a catalog pack: where its files are, for example on GitHub. */
+  sourceLink?: { label: string; url: string } | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -43,6 +45,7 @@ export function PreviewPackDialog({
   packId,
   packPath,
   isCatalogPack = false,
+  sourceLink = null,
   open,
   onOpenChange,
 }: PreviewPackDialogProps) {
@@ -87,6 +90,19 @@ export function PreviewPackDialog({
             {preview.pack.description && (
               <p className="text-sm text-muted-foreground">
                 {preview.pack.description}
+              </p>
+            )}
+
+            {sourceLink && (
+              <p className="text-xs text-muted-foreground" data-testid="pack-source-link">
+                Source:{' '}
+                {sourceLink.url ? (
+                  <a href={sourceLink.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+                    {sourceLink.label}
+                  </a>
+                ) : (
+                  sourceLink.label
+                )}
               </p>
             )}
 

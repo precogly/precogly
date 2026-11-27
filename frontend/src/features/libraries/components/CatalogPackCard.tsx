@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import type { UnifiedPack } from './unified-pack'
 import { packTypeColors } from '../constants'
-import { packCategoryFromPath } from './pack-list-helpers'
+import { packCategoryFromPath, type CatalogSourceInfo } from './pack-list-helpers'
 import { PackBadge } from './PackBadge'
 
 export function CatalogPackCard({
@@ -23,6 +23,7 @@ export function CatalogPackCard({
   isSecurityTeam,
   fullVersionPack = null,
   onShowFullVersion,
+  catalogSource = null,
 }: {
   pack: UnifiedPack
   onImport: (pack: UnifiedPack) => void
@@ -34,6 +35,8 @@ export function CatalogPackCard({
   /** For a demo pack: its full version, when the list offers it. */
   fullVersionPack?: UnifiedPack | null
   onShowFullVersion?: (fullPack: UnifiedPack) => void
+  /** Names the source in the Library repo badge's tooltip. */
+  catalogSource?: CatalogSourceInfo | null
 }) {
   const { isDemo } = packCategoryFromPath(pack.relativePath)
   // Imported earlier, but no copy of its files is offered any more.
@@ -63,7 +66,16 @@ export function CatalogPackCard({
                 </Badge>
               )}
               {pack.source && (
-                <span data-testid="pack-source-badge">
+                <span
+                  data-testid="pack-source-badge"
+                  title={
+                    pack.source === 'catalog' && catalogSource
+                      ? `From ${catalogSource.name}, release ${catalogSource.release}`
+                      : pack.source === 'bundled'
+                        ? 'Bundled with this Precogly server'
+                        : undefined
+                  }
+                >
                   <PackBadge packName={pack.source === 'catalog' ? 'Library repo' : 'Bundled'} />
                 </span>
               )}

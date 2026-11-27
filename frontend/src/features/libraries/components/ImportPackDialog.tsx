@@ -19,11 +19,19 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { usePackOverlays } from '@/features/libraries/api/packs'
 import type { UnifiedPack } from './unified-pack'
-import { collectPacksToImport, importButtonLabel, packContentsSummary, serverErrorMessage } from './pack-list-helpers'
+import {
+  collectPacksToImport,
+  importButtonLabel,
+  packContentsSummary,
+  packSourceUrl,
+  serverErrorMessage,
+  type CatalogSourceInfo,
+} from './pack-list-helpers'
 
 export function ImportPackDialog({
   pack,
   allPacks,
+  catalogSource = null,
   open,
   onOpenChange,
   onConfirm,
@@ -31,6 +39,8 @@ export function ImportPackDialog({
   pack: UnifiedPack | null
   /** Every pack on the page, to walk the whole dependency chain. */
   allPacks: UnifiedPack[]
+  /** Names where a catalog pack is downloaded from. */
+  catalogSource?: CatalogSourceInfo | null
   open: boolean
   onOpenChange: (open: boolean) => void
   onConfirm: (pack: UnifiedPack, selectedOverlays: string[] | null) => void
@@ -103,6 +113,24 @@ export function ImportPackDialog({
         {pack && (
           <p className="text-sm text-muted-foreground" data-testid="pack-contents-summary">
             {packContentsSummary(pack)}
+          </p>
+        )}
+        {pack?.source === 'catalog' && catalogSource && (
+          <p className="text-xs text-muted-foreground" data-testid="pack-download-source">
+            Downloaded from{' '}
+            {packSourceUrl(catalogSource, pack.relativePath) ? (
+              <a
+                href={packSourceUrl(catalogSource, pack.relativePath)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline underline-offset-2"
+              >
+                {catalogSource.name}
+              </a>
+            ) : (
+              catalogSource.name
+            )}
+            , release {catalogSource.release}.
           </p>
         )}
 
