@@ -736,6 +736,7 @@ class OutOfScopeItemViewSet(viewsets.ModelViewSet):
     queryset = OutOfScopeItem.objects.none()
     serializer_class = OutOfScopeItemSerializer
     permission_classes = [IsAuthenticated, CanWrite]
+    pagination_class = None
 
     def get_queryset(self):
         """Filter by threat model and user's organization."""
@@ -797,6 +798,7 @@ class AssumptionViewSet(_ThreatModelNestedViewSet):
     # drf-spectacular reads the model from here; requests go through get_queryset().
     queryset = Assumption.objects.none()
     serializer_class = AssumptionSerializer
+    pagination_class = None
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ["blueprint", "validity", "topic"]
 

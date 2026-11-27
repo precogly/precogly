@@ -2639,18 +2639,6 @@ paths:
           * `low` - Low
           * `medium` - Medium
           * `high` - High
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-      - name: page_size
-        required: false
-        in: query
-        description: Number of results to return per page.
-        schema:
-          type: integer
       - name: search
         required: false
         in: query
@@ -2666,7 +2654,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedDataAssetList'
+                type: array
+                items:
+                  $ref: '#/components/schemas/DataAsset'
           description: ''
     post:
       operationId: data_assets_create
@@ -7804,18 +7794,6 @@ paths:
         name: blueprint
         schema:
           type: integer
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-      - name: page_size
-        required: false
-        in: query
-        description: Number of results to return per page.
-        schema:
-          type: integer
       - in: path
         name: threat_model_pk
         schema:
@@ -7865,7 +7843,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedAssumptionList'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Assumption'
           description: ''
     post:
       operationId: threat_models_assumptions_create
@@ -8486,18 +8466,6 @@ paths:
         description: Which field to use when ordering the results.
         schema:
           type: string
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-      - name: page_size
-        required: false
-        in: query
-        description: Number of results to return per page.
-        schema:
-          type: integer
       - name: search
         required: false
         in: query
@@ -8519,7 +8487,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PaginatedOutOfScopeItemList'
+                type: array
+                items:
+                  $ref: '#/components/schemas/OutOfScopeItem'
           description: ''
     post:
       operationId: threat_models_out_of_scope_items_create
@@ -13605,29 +13575,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AIProviderConfig'
-    PaginatedAssumptionList:
-      type: object
-      required:
-      - count
-      - results
-      properties:
-        count:
-          type: integer
-          example: 123
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/Assumption'
     PaginatedBoundaryList:
       type: object
       required:
@@ -13812,29 +13759,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DFDTemplatesLibrary'
-    PaginatedDataAssetList:
-      type: object
-      required:
-      - count
-      - results
-      properties:
-        count:
-          type: integer
-          example: 123
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/DataAsset'
     PaginatedFlowAssetList:
       type: object
       required:
@@ -14111,29 +14035,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OrgsystemList'
-    PaginatedOutOfScopeItemList:
-      type: object
-      required:
-      - count
-      - results
-      properties:
-        count:
-          type: integer
-          example: 123
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/OutOfScopeItem'
     PaginatedPentestFindingList:
       type: object
       required:
