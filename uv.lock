@@ -1995,7 +1995,7 @@ requires-dist = [
     { name = "django-cors-headers", specifier = ">=4.4,<5.0" },
     { name = "django-environ", specifier = ">=0.11,<1.0" },
     { name = "django-filter", specifier = ">=24.0,<25.0" },
-    { name = "django-oauth-toolkit", specifier = ">=3.4,<4.0" },
+    { name = "django-oauth-toolkit", specifier = ">=3.4.1,<4.0" },
     { name = "djangorestframework", specifier = ">=3.15,<4.0" },
     { name = "djangorestframework-camel-case", specifier = ">=1.4.2,<2.0" },
     { name = "djangorestframework-simplejwt", specifier = ">=5.3,<6.0" },

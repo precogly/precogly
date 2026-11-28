@@ -14,6 +14,7 @@ from oauth2_provider.models import (
     get_application_model,
     get_grant_model,
     get_refresh_token_model,
+    refresh_token_expire_timedelta,
 )
 from oauth2_provider.scopes import get_scopes_backend
 from oauth2_provider.settings import oauth2_settings
@@ -228,17 +229,22 @@ def live_access_tokens(user):
     """The user's access tokens that still grant access, now or after a refresh.
 
     A client is authorized while it holds one of these: an unexpired access token, or
-    an expired one whose refresh token has not been revoked.
+    an expired one whose refresh token is unrevoked and not yet idle-expired.
     """
+    now = timezone.now()
+    # `refresh_token__isnull=False` keeps out tokens issued without a refresh token,
+    # whose missing join would otherwise read as "not revoked".
+    refreshable = Q(refresh_token__isnull=False, refresh_token__revoked__isnull=True)
+    # The cutoff django-oauth-toolkit applies when the refresh token is presented: it
+    # is dead once the access token's `expires` plus REFRESH_TOKEN_EXPIRE_SECONDS has
+    # passed. Without it, a client unused for a week stays listed but cannot refresh.
+    expire_delta = refresh_token_expire_timedelta()
+    if expire_delta:
+        refreshable &= Q(expires__gt=now - expire_delta)
     return (
         get_access_token_model()
         .objects.filter(user=user)
-        .filter(
-            Q(expires__gt=timezone.now())
-            # `refresh_token__isnull=False` keeps out tokens issued without a refresh
-            # token, whose missing join would otherwise read as "not revoked".
-            | Q(refresh_token__isnull=False, refresh_token__revoked__isnull=True)
-        )
+        .filter(Q(expires__gt=now) | refreshable)
     )
 
 

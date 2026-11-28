@@ -106,6 +106,12 @@ class TestAuthorizedApplications(TestCase):
 
         assert [entry["name"] for entry in self.authorized()] == ["Claude Code"]
 
+    def test_a_refresh_token_past_its_idle_expiry_does_not(self):
+        # REFRESH_TOKEN_EXPIRE_SECONDS is 7 days: past that, the client cannot refresh.
+        self.issue(self.claude, expires_in=-timedelta(days=7, hours=1))
+
+        assert self.authorized() == []
+
     def test_an_expired_token_with_nothing_to_refresh_does_not(self):
         self.issue(self.claude, expires_in=timedelta(hours=-1), refresh=False)
 
