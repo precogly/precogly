@@ -3,9 +3,10 @@
 # only pyproject.toml, uv.lock, backend/, mcp/ and libraries/ — everything else
 # here is transfer cost rather than correctness, and node_modules is most of it.
 #
-# libraries/ is deliberately not listed: it is the pack sources the image seeds
-# from, and ignoring it again would fail the build rather than quietly ship an
-# image whose library catalogs come up empty.
+# libraries/ is deliberately not listed: it holds the three bundled demo packs the
+# image seeds from, and ignoring it again would fail the build rather than quietly
+# ship an image whose library catalogs come up empty. The full packs come from the
+# pack catalog, not from the image.
 .git/
 frontend/
 docs/

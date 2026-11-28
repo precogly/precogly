@@ -402,15 +402,23 @@ Ratings are read as nested objects (`methodology`, `level`, `score`, `likelihood
 |--------|----------|-------------|
 | `GET` | `/api/packs/` | List imported packs |
 | `GET` | `/api/packs/{id}/` | Pack detail |
-| `GET` | `/api/packs/{id}/preview/` | Preview pack contents |
+| `GET` | `/api/packs/{id}/preview/` | Preview pack contents of an imported pack |
 | `GET` | `/api/packs/{id}/check_dependencies/` | Check dependency status |
 | `DELETE` | `/api/packs/{id}/unimport/` | Unimport a pack (Security Team only) |
-| `GET` | `/api/packs/available_from_source/` | Browse packs available for import |
+| `GET` | `/api/packs/available_from_source/` | Browse bundled and catalog packs available for import |
 | `GET` | `/api/packs/preview_from_source/` | Preview a pack before importing |
-| `POST` | `/api/packs/import_single/` | Import a pack (Security Team only) |
-| `POST` | `/api/packs/sync_from_source/` | Sync pack catalog (Security Team only) |
-| `POST` | `/api/packs/validate/` | Validate pack YAML (Security Team only) |
+| `POST` | `/api/packs/import_single/` | Import a pack, its missing dependencies first (Security Team only) |
+| `POST` | `/api/packs/sync_from_source/` | Sync the bundled packs (Security Team only) |
+| `POST` | `/api/packs/validate/` | Validate a pack without importing (Security Team only) |
 | `GET` | `/api/packs/available_overlays/` | List compliance overlays available for a pack |
+
+Pack behaviour to know:
+
+- **Sources.** `available_from_source` lists bundled packs and catalog packs. Each pack has a `source` field, `bundled` or `catalog`. The response also has `catalog_enabled`, `catalog_available` and `catalog_release`. Listing downloads only the catalog's `catalog.json`.
+- **Dependencies.** `import_single` imports missing dependencies first and returns `dependencies_imported`. If a dependency fails, it returns `400` with `failed_dependency`, `dependencies_imported`, `not_imported` and `validation`, and the requested pack is not imported.
+- **Download failures.** `import_single` returns `502` with the same fields when a download fails. `preview`, `preview_from_source`, `available_overlays` and `validate` return `502` with `{"error": ...}`.
+- **Missing files.** `preview` of an imported pack whose files are not available returns `404` with `{"error": "Source files for pack '<slug>' are not available on this server"}`.
+- **Validate.** `validate` adds `pending_dependencies`: dependencies that are not imported yet and that import brings in first.
 
 ### Dashboard
 

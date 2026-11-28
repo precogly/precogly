@@ -23,7 +23,7 @@ All parameters are optional. Leave them out to get everything.
 
 | Tool | Matching rules | Fields in each row |
 | --- | --- | --- |
-| `search_threat_library` | `query` matches name, description, and taxonomy titles. A taxonomy ID such as `CWE-20` must match in full. | Name, description, pack name, taxonomy entries (taxonomy, external ID, title) |
+| `search_threat_library` | `query` matches name, description, and taxonomy titles. A taxonomy ID must match in full, for example `CWE-20` once the CWE pack is imported from the library-packs catalog. | Name, description, pack name, taxonomy entries (taxonomy, external ID, title) |
 | `search_countermeasure_library` | `query` matches name and description. `control_function` is for example `preventive`, `detective`, or `corrective`. `control_nature` is `technical`, `administrative`, or `physical`. `cost` is `low`, `medium`, or `high`. | Name, description, control functions, control nature, cost, default status (`gap` or `platform`), pack name |
 | `search_component_library` | `query` matches name, component type, provider, and qualified slug. `category` is `process`, `datastore`, `external_human_actor`, or `external_system_actor`. `kind` is a CycloneDX asset type such as `device`, `service`, or `data-store`. | Qualified slug, name, category, kind, effective kind, component type, provider, pack name |
 

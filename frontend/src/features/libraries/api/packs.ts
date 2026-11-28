@@ -10,6 +10,7 @@ import type {
   PackDependencyCheck,
   PackFilters,
   ValidationResult,
+  WaitingFramework,
 } from '@/features/libraries/types/packs'
 
 // Query keys
@@ -43,7 +44,16 @@ export interface SourcePackInfo {
   threatCount: number
   countermeasureCount: number
   taxonomyCount: number
+  /** Entries across the pack's taxonomies, e.g. 116 for CWE. Optional: older servers omit it. */
+  taxonomyEntryCount?: number
+  frameworkCount?: number
+  /** Requirements across the pack's frameworks, e.g. 28 for CRA. */
+  requirementCount?: number
+  /** DFD templates and worksheets in the pack. */
+  templateCount?: number
   dependsOn: Array<{ slug: string; name: string; isImported: boolean }>
+  /** "bundled": on this server's disk. "catalog": from the pack library. Optional: older backends omit it. */
+  source?: 'bundled' | 'catalog'
 }
 
 export interface AvailablePacksResponse {
@@ -51,6 +61,18 @@ export interface AvailablePacksResponse {
   total: number
   inDatabase: number
   needsUpdate: number
+  /** False when the server has the pack catalog turned off. */
+  catalogEnabled?: boolean
+  /** False when the catalog could not be fetched. */
+  catalogAvailable?: boolean
+  /** The library-packs release listed, for example v2026.11.26.1. */
+  catalogRelease?: string
+  /** "precogly/library-packs", or the host of a self-hosted catalog. */
+  catalogSourceName?: string
+  /** The release page on GitHub; empty for a self-hosted catalog. */
+  catalogReleaseUrl?: string
+  /** The packs/ folder at that release on GitHub; empty for a self-hosted catalog. */
+  catalogPacksUrl?: string
 }
 
 export interface ImportResult {
@@ -66,6 +88,24 @@ export interface ImportResult {
   taxonomiesCreated: number
   errors: string[]
   warnings: string[]
+  /** Dependencies imported first, in order, by this request. */
+  dependenciesImported?: string[]
+  /** Frameworks the imported pack maps to that are not imported yet. */
+  waitingFrameworks?: WaitingFramework[]
+}
+
+/**
+ * The body of a failed import that brought in dependencies first (HTTP 400
+ * when a dependency did not validate, 502 when a download failed).
+ */
+export interface ImportFailureBody {
+  error?: string
+  /** The dependency that failed; empty when the requested pack itself failed to download. */
+  failedDependency?: string
+  dependenciesImported?: string[]
+  /** Dependencies still waiting, then the requested pack. */
+  notImported?: string[]
+  validation?: ValidationResult
 }
 
 export interface SyncFromSourceResponse {
@@ -240,8 +280,8 @@ export function useSyncPacksFromSource() {
 }
 
 /**
- * Import a single pack from the libraries folder by slug.
- * Optionally specify which framework overlays to load.
+ * Import a bundled or catalog pack by slug. The server imports its missing
+ * dependencies first. Optionally specify which framework overlays to load.
  */
 export function useImportSinglePack() {
   const queryClient = useQueryClient()
@@ -264,7 +304,9 @@ export function useImportSinglePack() {
         selectedOverlays,
         skipValidation,
       }),
-    onSuccess: () => {
+    // onSettled, not onSuccess: a failed import may still have imported some
+    // dependencies, and the list has to show them.
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: packKeys.all })
       queryClient.invalidateQueries({ queryKey: packKeys.availableFromSource })
       // Also invalidate component library to refresh available technologies

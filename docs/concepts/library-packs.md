@@ -19,6 +19,22 @@ When you add a component from a library pack to your threat model, its associate
 
 ![Library packs catalog](../assets/images/library-packs-catalog.png)
 
+## Where packs come from
+
+The Libraries page lists two kinds of pack. The badge on each card tells you which.
+
+- **Bundled.** Three small demo packs ship inside Precogly: the STRIDE taxonomy, "Demo: OWASP ASVS subset" and "Demo: AWS". They are also marked **Demo**. A fresh install has them already imported, so you can try Precogly right away.
+- **Library repo.** Every pack in the [library-packs](https://github.com/precogly/library-packs) repository. The full AWS pack, CWE, CAPEC, MITRE ATT&CK, OWASP ASVS, NIST and the rest live there. Precogly reads the repository's `catalog.json` to list them.
+
+Listing the packs downloads only `catalog.json`. When you preview, validate or import a pack, Precogly downloads that one pack, checks it against the catalog's SHA-256 and size (at most 20 MB), unpacks it in a temporary folder and removes the folder after the request. Nothing is cached on disk.
+
+If a pack is both bundled and in the catalog (STRIDE is), the bundled one is shown.
+
+If the catalog cannot be reached, the page shows "The pack library could not be reached. Bundled and imported packs are shown." Bundled and imported packs keep working.
+
+!!! info "Where the catalog is set"
+    The catalog address is the `PACK_CATALOG_URL` setting. By default it follows the latest library-packs release, so a pack merged there reaches installs within about 10 minutes, with no Precogly release. See [Development setup](../contributing/development-setup.md#pack-catalog-settings) and [Self-hosting on AWS](../guides/self-hosting-aws.md).
+
 ## Pack types
 
 | Type         | Contains                                                   | Example                         |
@@ -31,7 +47,18 @@ When you add a component from a library pack to your threat model, its associate
 
 ## YAML structure
 
-Every pack is a directory under `libraries/packs/`, organized by category (`taxonomies/`, `standards/`, `threat-libraries/`, `worksheets/`). Only `pack.yaml` is required — other files depend on the pack type.
+Every pack is a directory, organized by category (`taxonomies/`, `standards/`, `threat-libraries/`, `worksheets/`). Only `pack.yaml` is required. Other files depend on the pack type.
+
+The full set lives in the [library-packs](https://github.com/precogly/library-packs) repository under `packs/`. This repository keeps only the three bundled demo packs under `libraries/packs/`:
+
+```
+libraries/packs/
+├── demo-taxonomies/stride-taxonomy
+├── demo-standards/demo-asvs
+└── demo-threat-libraries/demo-aws
+```
+
+The example below shows the layout of the full `aws` pack.
 
 ```
 threat-libraries/aws/
@@ -230,7 +257,7 @@ edges:
 - `flowType` is one of `control`, `data`, `energy`, `event`, `financial`, `message`, `physical`, `process` or `signal`.
 - `authentication` is always a list. An empty list or no key means not recorded.
 
-Two older keys are retired and now fail validation: the boolean `authenticated` on edges (use `authentication`), and the old zone values `zoneInternet`, `zoneDmz`, `zoneInternal`, `zoneRestricted` and `zoneExternal` (use `trust` or `network`, and set `trustLevel`). The pack format version stays `1`. See [`libraries/README.md`](https://github.com/precogly/precogly/blob/main/libraries/README.md) for the full field reference.
+Two older keys are retired and now fail validation: the boolean `authenticated` on edges (use `authentication`), and the old zone values `zoneInternet`, `zoneDmz`, `zoneInternal`, `zoneRestricted` and `zoneExternal` (use `trust` or `network`, and set `trustLevel`). The pack format version stays `1`. See the [authoring guide](https://github.com/precogly/library-packs/blob/main/docs/authoring-guide.md) for the full field reference.
 
 ## How to import a library pack
 
@@ -238,16 +265,48 @@ Two older keys are retired and now fail validation: the boolean `authenticated` 
 The **Import** button is only visible to users with the **Security Team** organization role. If you don't see the Import button, ask your organization admin to update your role from **Member** to **Security Team** in the organization settings.
 
 1. Navigate to the **Library Packs** section from the sidebar
-2. Browse available packs — you can filter by type, tag, or search by name
+2. Browse available packs. You can filter by category, tag or status, or search by name
 3. Click on a pack to preview its components, threats, and countermeasures
 4. Click **Import** to add it to your organization
 
-Packs with dependencies (e.g., `aws` depends on `stride-taxonomy`, `capec`, etc.) will show which dependencies need to be imported. Dependencies are **not enforced** — you can import a pack without its taxonomy dependencies if you don't need taxonomy enrichment (STRIDE, CAPEC, CWE tags on threats). Import taxonomy packs first if you want full taxonomy linking.
+Imported packs are connected to every threat model.
+
+### Dependencies are imported for you
+
+When you import a pack, Precogly imports its missing dependencies first, in the same request. For example, importing the full `aws` pack also imports `capec`, `cwe`, `mitre-attack`, `mitre-atlas`, `owasp-llm-top-10`, `owasp-agentic-top-10`, `owasp-mcp-top-10`, `owasp-aisvs`, `owasp-asvs`, `owasp-top-10` and `ai`. On a dev machine that chain took about 5 seconds.
+
+The import dialog lists the whole chain, and the button says how many packs it will import, for example "Import 12 packs".
+
+If a dependency fails, the import stops. The dialog says what was imported, what failed and what was not imported. **Import anyway** applies only to the pack you clicked, never to a dependency.
 
 ![Import dialog with dependency checks and compliance overlay selection](../assets/images/library-packs-import-dialog.png)
 
 !!! info "Compliance overlay selection"
-When importing a pack, you can choose which compliance framework mappings to include. For example, import only NIST CSF mappings without SOC 2 if that's all you need. You will get warnings if packs that are depended upon by the importing pack have not yet been imported.
+    When importing a pack, you can choose which compliance framework mappings to include. For example, import only NIST CSF mappings without SOC 2 if that's all you need.
+
+### Mappings that wait for a framework
+
+Mappings to a compliance framework that is not imported yet are ticked by default in the import dialog. They are saved and turn on when you import that framework. You do not need to re-import the pack.
+
+### Update available
+
+An imported pack whose catalog version differs from the installed one shows **Update available**, with both versions, for example "Installed 2.0.0, library has 2.1.0". The security team sees a button **Install 2.1.0** (the catalog's version). Click it to install that version.
+
+It means the versions differ. It does not mean the library's version is newer. If your operator pins an older library-packs release, you see it too.
+
+### Status filter
+
+The Libraries page has a status filter: **All statuses**, **Imported**, **Not imported** and **Update available**. Imported packs sort first.
+
+### Source not available
+
+A pack you imported earlier can show **Source not available**. That means its files are no longer offered, for example because the catalog is turned off or cannot be reached. The pack keeps working. These rows are hidden when you pick a category filter. Find them with the status filter **Imported**.
+
+### From demo to the full packs
+
+While every imported pack is a bundled one, the security team sees "You are using demo content. Import the full packs for real work." The Demo: AWS card links to "Full version: AWS", and the Demo: OWASP ASVS subset card links to "OWASP ASVS 4.0.3", when the catalog lists them. Clicking a link fills the search box with the full pack's name.
+
+The demo ASVS has its own slugs, so importing the full ASVS adds a second standard. It does not replace the demo one.
 
 ## How to unimport a library pack
 
@@ -266,9 +325,11 @@ You cannot unimport a pack if other imported packs depend on it. Unimport the de
 
 ## How to author a library pack
 
-Creating your own pack involves writing YAML files following the structure above. For the complete authoring guide with field references, validation checklists, DFD template syntax, and cross-pack references, see:
+Creating your own pack involves writing YAML files following the structure above. New packs go to the [library-packs](https://github.com/precogly/library-packs) repository. For the complete authoring guide with field references, validation checklists, DFD template syntax, and cross-pack references, see:
 
-[`libraries/README.md`](https://github.com/precogly/precogly/blob/main/libraries/README.md)
+[Authoring guide](https://github.com/precogly/library-packs/blob/main/docs/authoring-guide.md)
+
+To try a pack locally before you open a pull request, see [Creating library packs](../contributing/creating-library-packs.md).
 
 ## Troubleshooting
 
@@ -276,7 +337,7 @@ Creating your own pack involves writing YAML files following the structure above
 : Taxonomy packs (STRIDE, CWE, CAPEC, etc.) must be imported **before** the content pack that references them. If you imported without taxonomy dependencies, the components, threats, and countermeasures are fine — but taxonomy links (e.g., STRIDE categories on threats) won't be present. To fix this, unimport the pack, import the taxonomy packs, then re-import.
 
 **Taxonomy mappings not showing up**
-: Same as above — taxonomy packs must be imported first. The seed data imports taxonomies first for this reason.
+: Same as above: the taxonomy packs must be imported first. When you import a pack from the Libraries page, its dependencies are imported for you, so this mostly affects packs imported by other means.
 
 **Compliance mappings not appearing**
 : If the compliance framework pack (e.g., `nist-csf`) wasn't imported when the content pack was imported, the mappings are stored as pending. Import the framework pack and the mappings will activate automatically.

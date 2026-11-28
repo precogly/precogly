@@ -1,0 +1,188 @@
+mappings:
+  - threat: s3-public-exposure
+    countermeasures:
+      - s3-block-public-access
+      - s3-bucket-policy
+      - s3-access-logging
+  - threat: s3-data-tampering
+    countermeasures:
+      - s3-versioning
+      - s3-encryption
+      - s3-bucket-policy
+  - threat: s3-deletion
+    countermeasures:
+      - s3-versioning
+      - s3-mfa-delete
+      - s3-bucket-policy
+  - threat: lambda-injection
+    countermeasures:
+      - lambda-input-validation
+      - lambda-vpc
+      - lambda-code-signing
+  - threat: lambda-privilege-escalation
+    countermeasures:
+      - lambda-least-privilege
+  - threat: lambda-secret-exposure
+    countermeasures:
+      - lambda-secrets-manager
+      - lambda-vpc
+  - threat: lambda-dos
+    countermeasures:
+      - lambda-reserved-concurrency
+      - apigw-throttling
+  - threat: apigw-unauthorized-access
+    countermeasures:
+      - apigw-cognito-auth
+      - apigw-api-key
+      - apigw-waf
+  - threat: apigw-injection
+    countermeasures:
+      - apigw-waf
+      - apigw-request-validation
+      - lambda-input-validation
+  - threat: apigw-rate-limit-bypass
+    countermeasures:
+      - apigw-throttling
+      - apigw-waf
+      - apigw-api-key
+  - threat: apigw-logging-gap
+    countermeasures:
+      - apigw-cloudwatch-logging
+  - threat: dynamodb-unauthorized-access
+    countermeasures:
+      - dynamodb-fine-grained-access
+      - dynamodb-encryption
+      - dynamodb-vpc-endpoint
+  - threat: dynamodb-injection
+    countermeasures:
+      - lambda-input-validation
+      - dynamodb-fine-grained-access
+  - threat: dynamodb-capacity-exhaustion
+    countermeasures:
+      - apigw-throttling
+      - dynamodb-pitr
+  - threat: dataflow-mitm
+    countermeasures:
+      - tls-encryption
+      - mutual-tls
+      - vpc-private-link
+  - threat: dataflow-eavesdropping
+    countermeasures:
+      - tls-encryption
+      - vpc-private-link
+      - api-gateway-private
+  - threat: dataflow-replay-attack
+    countermeasures:
+      - request-signing
+      - mutual-tls
+  - threat: dataflow-injection
+    countermeasures:
+      - tls-encryption
+      - request-signing
+      - lambda-input-validation
+  - threat: cognito-token-theft
+    countermeasures:
+      - cognito-mfa
+      - tls-encryption
+      - cognito-advanced-security
+  - threat: cognito-account-takeover
+    countermeasures:
+      - cognito-mfa
+      - cognito-advanced-security
+      - cloudwatch-alarm
+  - threat: waf-bypass
+    countermeasures:
+      - waf-managed-rules
+      - apigw-request-validation
+      - lambda-input-validation
+  - threat: iam-overprivileged-policy
+    countermeasures:
+      - iam-least-privilege
+      - iam-permission-boundaries
+      - iam-access-analyzer
+  - threat: iam-stale-credentials
+    countermeasures:
+      - iam-access-key-rotation
+      - iam-credential-report
+  - threat: iam-root-user-abuse
+    countermeasures:
+      - iam-root-protection
+      - iam-mfa-enforcement
+  - threat: iam-missing-mfa
+    countermeasures:
+      - iam-mfa-enforcement
+      - iam-credential-report
+  - threat: iam-weak-password-policy
+    countermeasures:
+      - iam-password-policy
+  - threat: iam-cross-account-escalation
+    countermeasures:
+      - iam-least-privilege
+      - iam-access-analyzer
+      - iam-permission-boundaries
+  - threat: iam-policy-drift
+    countermeasures:
+      - iam-access-analyzer
+      - iam-credential-report
+  - threat: kms-unrestricted-decrypt
+    countermeasures:
+      - kms-restrictive-key-policy
+      - iam-least-privilege
+  - threat: kms-key-deletion
+    countermeasures:
+      - kms-deletion-protection
+      - kms-key-usage-logging
+  - threat: kms-no-key-rotation
+    countermeasures:
+      - kms-key-rotation
+  - threat: kms-public-key-policy
+    countermeasures:
+      - kms-restrictive-key-policy
+      - iam-access-analyzer
+  - threat: rds-public-exposure
+    countermeasures:
+      - rds-no-public-access
+      - rds-iam-authentication
+  - threat: rds-snapshot-leak
+    countermeasures:
+      - rds-snapshot-private
+      - rds-encryption-at-rest
+  - threat: rds-unencrypted-storage
+    countermeasures:
+      - rds-encryption-at-rest
+  - threat: rds-unencrypted-transit
+    countermeasures:
+      - rds-encryption-in-transit
+      - tls-encryption
+  - threat: rds-credential-abuse
+    countermeasures:
+      - rds-iam-authentication
+      - lambda-secrets-manager
+  - threat: rds-missing-audit-logging
+    countermeasures:
+      - rds-audit-logging
+      - cloudwatch-alarm
+  - threat: rds-deletion-data-loss
+    countermeasures:
+      - rds-deletion-protection
+      - rds-automated-backups
+      - rds-multi-az
+  - threat: cloudfront-http-only-origin
+    countermeasures:
+      - cloudfront-https-only
+  - threat: cloudfront-missing-waf
+    countermeasures:
+      - cloudfront-waf-integration
+      - waf-managed-rules
+  - threat: cloudfront-default-certificate
+    countermeasures:
+      - cloudfront-custom-ssl
+  - threat: cloudfront-missing-access-logs
+    countermeasures:
+      - cloudfront-access-logging
+  - threat: cloudfront-outdated-tls
+    countermeasures:
+      - cloudfront-modern-tls
+  - threat: cloudfront-missing-oac
+    countermeasures:
+      - cloudfront-origin-access-control

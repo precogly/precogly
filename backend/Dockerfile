@@ -47,9 +47,10 @@ ENV DJANGO_SETTINGS_MODULE=config.settings.development
 
 COPY backend/ backend/
 COPY mcp/ mcp/
-# The pack sources settings.LIBRARIES_PATH points at. Copied rather than left to a
-# mount, because production runs this image with no volumes and an image that
-# cannot seed its libraries comes up with every catalog empty.
+# The three bundled demo packs settings.LIBRARIES_PATH points at. Copied rather than
+# left to a mount, because production runs this image with no volumes and an image
+# that cannot seed its demo packs comes up with every catalog empty. The full packs
+# are not in the image: they come from the pack catalog (settings.PACK_CATALOG_URL).
 COPY libraries/ libraries/
 
 # Now that mcp/ exists, install the member itself. uv installs workspace members
@@ -75,9 +76,10 @@ ENV DJANGO_SETTINGS_MODULE=config.settings.production
 
 COPY backend/ backend/
 COPY mcp/ mcp/
-# The pack sources settings.LIBRARIES_PATH points at. Copied rather than left to a
-# mount, because production runs this image with no volumes and an image that
-# cannot seed its libraries comes up with every catalog empty.
+# The three bundled demo packs settings.LIBRARIES_PATH points at. Copied rather than
+# left to a mount, because production runs this image with no volumes and an image
+# that cannot seed its demo packs comes up with every catalog empty. The full packs
+# are not in the image: they come from the pack catalog (settings.PACK_CATALOG_URL).
 COPY libraries/ libraries/
 
 RUN uv sync --frozen --no-default-groups --group prod

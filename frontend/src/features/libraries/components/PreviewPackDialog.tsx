@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { serverErrorMessage } from './pack-list-helpers'
 import {
   usePackPreview,
   useSourcePackPreview,
@@ -32,6 +33,10 @@ interface PreviewPackDialogProps {
   packId?: number | null
   /** Pack relative path for source packs */
   packPath?: string | null
+  /** A catalog pack is downloaded to preview it; the loading text says so. */
+  isCatalogPack?: boolean
+  /** For a catalog pack: where its files are, for example on GitHub. */
+  sourceLink?: { label: string; url: string } | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -39,6 +44,8 @@ interface PreviewPackDialogProps {
 export function PreviewPackDialog({
   packId,
   packPath,
+  isCatalogPack = false,
+  sourceLink = null,
   open,
   onOpenChange,
 }: PreviewPackDialogProps) {
@@ -48,6 +55,7 @@ export function PreviewPackDialog({
 
   const isLoading = packPath ? sourcePreview.isLoading : dbPreview.isLoading
   const preview = packPath ? sourcePreview.data : dbPreview.data
+  const loadError = packPath ? sourcePreview.error : dbPreview.error
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -56,7 +64,9 @@ export function PreviewPackDialog({
           <>
             <DialogHeader>
               <DialogTitle>Loading Pack Preview</DialogTitle>
-              <DialogDescription>Please wait while we load the pack details.</DialogDescription>
+              <DialogDescription>
+                {isCatalogPack ? 'Downloading pack...' : 'Please wait while we load the pack details.'}
+              </DialogDescription>
             </DialogHeader>
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -83,6 +93,19 @@ export function PreviewPackDialog({
               </p>
             )}
 
+            {sourceLink && (
+              <p className="text-xs text-muted-foreground" data-testid="pack-source-link">
+                Source:{' '}
+                {sourceLink.url ? (
+                  <a href={sourceLink.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+                    {sourceLink.label}
+                  </a>
+                ) : (
+                  sourceLink.label
+                )}
+              </p>
+            )}
+
             <PreviewTabs preview={preview} />
           </>
         ) : (
@@ -92,7 +115,7 @@ export function PreviewPackDialog({
               <DialogDescription>Unable to load pack details.</DialogDescription>
             </DialogHeader>
             <div className="text-center py-12 text-muted-foreground">
-              Failed to load pack preview.
+              {serverErrorMessage(loadError) ?? 'Failed to load pack preview.'}
             </div>
           </>
         )}

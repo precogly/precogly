@@ -10,6 +10,7 @@ from contextlib import suppress
 from apps.ai.providers.base import AIProviderError
 from apps.ai.resolver import resolve_provider
 from apps.ai.utils import extract_json_object
+from apps.packs.demo_packs import is_demo_pack
 from apps.systems.crossing import (
     ASSET_TYPES,
     BOUNDARY_TYPES,
@@ -27,6 +28,13 @@ from .prompts import (
     NODE_TYPE_TO_CATEGORY,
     VALID_NODE_TYPES,
 )
+
+
+def _is_demo_entry(component_library) -> bool:
+    """True when a ComponentLibrary row comes from a demo pack."""
+    source_pack = component_library.source_pack
+    return is_demo_pack(source_pack.slug if source_pack else None)
+
 
 logger = logging.getLogger(__name__)
 
@@ -163,13 +171,20 @@ def _validate_and_resolve(
     library_by_slug: dict[str, ComponentLibrary] = {}
 
     if connected_pack_ids:
-        for entry in ComponentLibrary.objects.filter(
-            source_pack_id__in=connected_pack_ids
+        for entry in (
+            ComponentLibrary.objects.filter(source_pack_id__in=connected_pack_ids)
+            .select_related("source_pack")
+            .order_by("id")
         ):
             if entry.qualified_slug:
                 library_by_qualified_slug[entry.qualified_slug] = entry
             if entry.slug:
-                library_by_slug[entry.slug] = entry
+                # With demo-aws and the full aws both connected, a bare `s3`
+                # must mean the full pack's row: a demo entry never replaces
+                # one from a full pack. Otherwise the lowest id wins.
+                kept = library_by_slug.get(entry.slug)
+                if kept is None or (_is_demo_entry(kept) and not _is_demo_entry(entry)):
+                    library_by_slug[entry.slug] = entry
 
     valid_nodes = []
     valid_node_ids: set[str] = set()

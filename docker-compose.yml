@@ -26,7 +26,8 @@ services:
     container_name: precogly-backend
     volumes:
       - ./backend:/app/backend
-      # settings.LIBRARIES_PATH defaults here; the mount keeps pack edits live.
+      # settings.LIBRARIES_PATH defaults here. It holds the three bundled demo packs;
+      # the mount keeps edits to them live. The full packs come from the pack catalog.
       - ./libraries:/app/libraries
       # Read-only: the docs example test validates the TM-BOM sample in the guides.
       - ./docs:/app/docs:ro

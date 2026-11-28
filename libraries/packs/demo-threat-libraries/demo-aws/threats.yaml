@@ -1,0 +1,341 @@
+threats:
+  # ============================================================================
+  # S3 Threats
+  # ============================================================================
+  - id: s3-public-exposure
+    name: S3 Bucket Public Exposure
+    description: |
+      S3 bucket is publicly accessible, exposing sensitive data to unauthorized users.
+      This can occur through misconfigured bucket policies, ACLs, or disabled Block Public Access.
+
+  - id: s3-data-tampering
+    name: S3 Object Tampering
+    description: |
+      Unauthorized modification of S3 objects due to misconfigured permissions.
+      Attackers may alter data, inject malicious content, or corrupt backups.
+
+  - id: s3-deletion
+    name: S3 Data Deletion
+    description: |
+      Malicious or accidental deletion of S3 objects without proper versioning or MFA delete.
+      Can lead to permanent data loss and service disruption.
+
+  # ============================================================================
+  # Lambda Threats
+  # ============================================================================
+  - id: lambda-injection
+    name: Lambda Code Injection
+    description: |
+      Malicious input exploits Lambda function leading to code execution.
+      Includes SQL injection, command injection, or template injection attacks.
+
+  - id: lambda-privilege-escalation
+    name: Lambda Role Over-Privileged
+    description: |
+      Lambda execution role has excessive permissions enabling privilege escalation.
+      Compromised function could access resources beyond its intended scope.
+
+  - id: lambda-secret-exposure
+    name: Lambda Environment Variable Exposure
+    description: |
+      Sensitive data (API keys, credentials) stored in Lambda environment variables
+      may be exposed through logs, error messages, or function enumeration.
+
+  - id: lambda-dos
+    name: Lambda Resource Exhaustion
+    description: |
+      Attacker triggers excessive Lambda invocations causing throttling, high costs,
+      or denial of service to legitimate users.
+
+  # ============================================================================
+  # API Gateway Threats
+  # ============================================================================
+  - id: apigw-unauthorized-access
+    name: API Gateway Unauthorized Access
+    description: |
+      API endpoints accessible without proper authentication, allowing unauthorized
+      access to backend services and data.
+
+  - id: apigw-injection
+    name: API Gateway Input Injection
+    description: |
+      Malicious payloads passed through API Gateway to backend services,
+      exploiting insufficient input validation.
+
+  - id: apigw-rate-limit-bypass
+    name: API Gateway Rate Limit Bypass
+    description: |
+      Attacker bypasses API throttling through distributed requests or
+      exploiting misconfigured rate limiting, causing backend overload.
+
+  - id: apigw-logging-gap
+    name: API Gateway Insufficient Logging
+    description: |
+      Lack of comprehensive API logging prevents detection of attacks,
+      unauthorized access attempts, and security incident investigation.
+
+  # ============================================================================
+  # DynamoDB Threats
+  # ============================================================================
+  - id: dynamodb-unauthorized-access
+    name: DynamoDB Unauthorized Table Access
+    description: |
+      IAM policies allow broader access to DynamoDB tables than required,
+      enabling unauthorized data reads or modifications.
+
+  - id: dynamodb-injection
+    name: DynamoDB Query Injection
+    description: |
+      Malicious input manipulates DynamoDB queries through improperly
+      constructed filter expressions or condition expressions.
+
+  - id: dynamodb-capacity-exhaustion
+    name: DynamoDB Capacity Exhaustion
+    description: |
+      Attacker consumes provisioned throughput capacity through excessive
+      requests, causing throttling for legitimate users.
+
+  # ============================================================================
+  # Data Flow Threats (apply to connections between components)
+  # ============================================================================
+  - id: dataflow-mitm
+    name: Man-in-the-Middle Attack
+    description: |
+      Attacker intercepts and potentially modifies data in transit between
+      components. Can lead to data theft, tampering, or credential capture.
+
+  - id: dataflow-eavesdropping
+    name: Data Eavesdropping
+    description: |
+      Unauthorized interception and reading of data transmitted between
+      components, exposing sensitive information to attackers.
+
+  - id: dataflow-replay-attack
+    name: Replay Attack
+    description: |
+      Attacker captures legitimate requests and re-transmits them to perform
+      unauthorized actions or duplicate transactions.
+
+  - id: dataflow-injection
+    name: Data Injection in Transit
+    description: |
+      Malicious data injected into the communication channel between components,
+      potentially exploiting downstream systems or corrupting data.
+
+  # ============================================================================
+  # Cognito Threats
+  # ============================================================================
+  - id: cognito-token-theft
+    name: Cognito Token Theft
+    description: |
+      Stolen or forged Cognito JWT tokens used for unauthorized access to
+      protected resources. Tokens intercepted via XSS, insecure storage, or
+      man-in-the-middle attacks on token endpoints.
+
+  - id: cognito-account-takeover
+    name: Cognito Account Takeover
+    description: |
+      Attacker gains control of user accounts through credential stuffing, weak
+      password policies, or social engineering. Compromised accounts provide
+      legitimate access to AI-powered services and sensitive data.
+
+  # ============================================================================
+  # WAF Threats
+  # ============================================================================
+  - id: waf-bypass
+    name: WAF Rule Bypass
+    description: |
+      Attacker circumvents WAF rules through encoding tricks, payload fragmentation,
+      or exploiting gaps in rule coverage. Bypassed WAF allows malicious requests
+      to reach backend services including AI endpoints.
+
+  # ============================================================================
+  # IAM Threats
+  # ============================================================================
+  - id: iam-overprivileged-policy
+    name: IAM Overly Permissive Policy
+    description: |
+      IAM policies grant wildcard administrative privileges or overly broad
+      permissions, enabling users or roles to access resources beyond their
+      intended scope. Compromised credentials with excessive permissions
+      amplify the blast radius of any breach.
+
+  - id: iam-stale-credentials
+    name: IAM Stale or Unused Credentials
+    description: |
+      IAM user access keys or console credentials remain active long after
+      they are no longer needed or after the user has left the organization.
+      Stale credentials are prime targets for credential theft and provide
+      persistent unauthorized access.
+
+  - id: iam-root-user-abuse
+    name: IAM Root User Abuse
+    description: |
+      The AWS root user account is used for routine operations or retains
+      active access keys. Root credentials cannot be scoped with IAM policies
+      and provide unrestricted access to all resources and billing, making
+      compromise catastrophic.
+
+  - id: iam-missing-mfa
+    name: IAM Missing Multi-Factor Authentication
+    description: |
+      IAM users or the root account lack multi-factor authentication,
+      allowing account compromise through credential theft alone. Without
+      MFA, stolen passwords or leaked access keys provide full access
+      to the associated permissions.
+
+  - id: iam-weak-password-policy
+    name: IAM Weak Password Policy
+    description: |
+      The IAM account password policy does not enforce sufficient complexity,
+      length, rotation, or reuse restrictions. Weak password policies enable
+      brute-force and credential stuffing attacks against console access.
+
+  - id: iam-cross-account-escalation
+    name: IAM Cross-Account Role Assumption Abuse
+    description: |
+      Overly permissive trust policies on IAM roles allow unintended
+      cross-account access. An attacker who compromises one account can
+      assume roles in other accounts, enabling lateral movement across
+      the organization's AWS environment.
+
+  - id: iam-policy-drift
+    name: IAM Undetected Permission Drift
+    description: |
+      Without IAM Access Analyzer, external access grants and permission
+      changes go undetected. Resource policies may inadvertently allow
+      access from external accounts or public principals, creating
+      hidden exposure that persists until manually discovered.
+
+  # ============================================================================
+  # KMS Threats
+  # ============================================================================
+  - id: kms-unrestricted-decrypt
+    name: KMS Unrestricted Decryption Access
+    description: |
+      IAM policies allow kms:Decrypt or kms:ReEncryptFrom actions on all
+      KMS keys rather than specific keys. An attacker with these broad
+      permissions can decrypt data protected by any customer-managed key
+      in the account.
+
+  - id: kms-key-deletion
+    name: KMS Key Scheduled for Deletion
+    description: |
+      A KMS key is scheduled for deletion, which if completed makes all
+      data encrypted under that key permanently unrecoverable. Malicious
+      or accidental key deletion can cause catastrophic, irreversible
+      data loss.
+
+  - id: kms-no-key-rotation
+    name: KMS Key Rotation Not Enabled
+    description: |
+      Customer-managed KMS keys do not have automatic key rotation enabled.
+      Without rotation, a compromised key material remains in use
+      indefinitely, expanding the window of exposure for encrypted data.
+
+  - id: kms-public-key-policy
+    name: KMS Key Policy Allows Public Access
+    description: |
+      A KMS key policy grants access to external or anonymous principals.
+      A publicly accessible key allows unauthorized parties to encrypt or
+      decrypt data, undermining the confidentiality of all data protected
+      by that key.
+
+  # ============================================================================
+  # RDS / Aurora Threats
+  # ============================================================================
+  - id: rds-public-exposure
+    name: RDS Instance Public Exposure
+    description: |
+      RDS database instance is publicly accessible with a public IP address, exposing the
+      database to direct internet access. Combined with weak credentials or unpatched
+      vulnerabilities, this enables unauthorized data access or database compromise.
+
+  - id: rds-snapshot-leak
+    name: RDS Snapshot Data Leak
+    description: |
+      RDS snapshots shared publicly or across untrusted accounts expose the full database
+      contents. Public snapshots are accessible to all AWS accounts, enabling bulk data
+      exfiltration without needing database credentials.
+
+  - id: rds-unencrypted-storage
+    name: RDS Unencrypted Data at Rest
+    description: |
+      RDS instance or cluster storage is not encrypted, leaving database contents, automated
+      backups, and snapshots readable if underlying storage is compromised or snapshots are
+      shared across accounts.
+
+  - id: rds-unencrypted-transit
+    name: RDS Unencrypted Data in Transit
+    description: |
+      Database connections do not enforce TLS encryption, allowing eavesdropping on queries,
+      results, and credentials between application tier and database. Especially critical
+      when traffic crosses VPC boundaries or availability zones.
+
+  - id: rds-credential-abuse
+    name: RDS Credential Compromise
+    description: |
+      Static database credentials (username/password) stored in application code, configuration
+      files, or environment variables are compromised, granting direct database access. Default
+      or commonly guessed administrator usernames increase attack surface.
+
+  - id: rds-missing-audit-logging
+    name: RDS Insufficient Audit Logging
+    description: |
+      Database audit logging is not enabled or logs are not published to CloudWatch Logs,
+      preventing detection of unauthorized queries, privilege escalation attempts, or data
+      exfiltration through the database layer.
+
+  - id: rds-deletion-data-loss
+    name: RDS Accidental or Malicious Deletion
+    description: |
+      RDS instance or cluster is deleted without deletion protection, or automated backups
+      are insufficient for recovery. Compromised credentials with delete permissions or
+      accidental operations can cause permanent data loss.
+
+  # ============================================================================
+  # CloudFront Threats
+  # ============================================================================
+  - id: cloudfront-http-only-origin
+    name: CloudFront HTTP-Only Origin Communication
+    description: |
+      CloudFront distribution is configured to communicate with the origin over
+      HTTP only, without requiring HTTPS. Data transmitted between CloudFront edge
+      locations and the origin server is exposed to eavesdropping and tampering on
+      the backend connection.
+
+  - id: cloudfront-missing-waf
+    name: CloudFront Missing WAF Integration
+    description: |
+      CloudFront distribution is not associated with an AWS WAF web ACL. Without
+      WAF protection, malicious requests (SQL injection, XSS, bot traffic, credential
+      stuffing) pass through to the origin unfiltered.
+
+  - id: cloudfront-default-certificate
+    name: CloudFront Default SSL Certificate
+    description: |
+      CloudFront distribution uses the default CloudFront SSL certificate (*.cloudfront.net)
+      instead of a custom SSL certificate. Users cannot verify the expected domain identity,
+      and the distribution cannot serve content on custom domain names over HTTPS.
+
+  - id: cloudfront-missing-access-logs
+    name: CloudFront Access Logging Disabled
+    description: |
+      CloudFront access logging is not enabled. Without logs capturing viewer requests,
+      edge locations, response codes, and cache behavior, security teams cannot detect
+      abuse patterns, investigate incidents, or identify content scraping.
+
+  - id: cloudfront-outdated-tls
+    name: CloudFront Outdated TLS Protocol
+    description: |
+      CloudFront distribution allows connections using deprecated TLS protocol versions
+      (TLS 1.0, TLS 1.1) or weak cipher suites. Enables protocol downgrade attacks and
+      increases risk of traffic interception through known cryptographic weaknesses.
+
+  - id: cloudfront-missing-oac
+    name: CloudFront Missing Origin Access Control
+    description: |
+      CloudFront distribution does not use Origin Access Control (OAC) to restrict
+      S3 origin access. Without OAC, the S3 bucket must be publicly accessible or use
+      the legacy Origin Access Identity (OAI), which cannot support S3 SSE-KMS encryption
+      or certain request types.

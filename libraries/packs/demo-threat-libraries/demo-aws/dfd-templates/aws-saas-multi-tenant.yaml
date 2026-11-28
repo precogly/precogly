@@ -1,0 +1,311 @@
+template:
+  slug: aws-saas-multi-tenant
+  name: "Demo: SaaS Tenant Isolation"
+  description: "Multi-tenant SaaS application with per-tenant isolation using Cognito identity, scoped IAM policies, and partitioned data stores"
+  category: webApplication
+  diagram_type: level1
+
+canvas_data:
+  nodes:
+    # ---- External Actors ----
+    - id: "actor-tenant-user"
+      type: "humanActor"
+      position: { x: 60, y: 300 }
+      data:
+        label: "Tenant User"
+        actorType: "user"
+        description: "End user belonging to a specific tenant"
+
+    # ---- System Scope ----
+    - id: "scope-aws"
+      type: "systemScope"
+      position: { x: 270, y: 30 }
+      style: { width: 1100, height: 780 }
+      data:
+        label: "AWS Cloud"
+
+    # ---- Trust Zones ----
+    - id: "tz-public-edge"
+      type: "trustZone"
+      parentId: "scope-aws"
+      position: { x: 30, y: 45 }
+      style: { width: 280, height: 310 }
+      data:
+        label: "Public Edge"
+        zoneType: "trust"
+        trustLevel: 0
+
+    - id: "tz-identity"
+      type: "trustZone"
+      parentId: "scope-aws"
+      position: { x: 340, y: 45 }
+      style: { width: 340, height: 310 }
+      data:
+        label: "Identity Tier"
+        zoneType: "trust"
+        trustLevel: 50
+
+    - id: "tz-app"
+      type: "trustZone"
+      parentId: "scope-aws"
+      position: { x: 710, y: 45 }
+      style: { width: 360, height: 310 }
+      data:
+        label: "Application Tier"
+        zoneType: "trust"
+        trustLevel: 50
+
+    - id: "tz-data"
+      type: "trustZone"
+      parentId: "scope-aws"
+      position: { x: 340, y: 385 }
+      style: { width: 730, height: 350 }
+      data:
+        label: "Data Tier (Tenant-Partitioned)"
+        zoneType: "trust"
+        trustLevel: 75
+
+    # ---- Processes: Public Edge ----
+    - id: "process-waf"
+      type: "process"
+      parentId: "tz-public-edge"
+      position: { x: 55, y: 50 }
+      style: { width: 170, height: 70 }
+      data:
+        label: "AWS WAF"
+        component_ref: "waf"
+        technology: "AWS WAF"
+        description: "Web application firewall"
+
+    - id: "process-apigw"
+      type: "process"
+      parentId: "tz-public-edge"
+      position: { x: 55, y: 170 }
+      style: { width: 170, height: 70 }
+      data:
+        label: "API Gateway"
+        component_ref: "api-gateway"
+        technology: "Amazon API Gateway"
+        description: "REST API with Cognito authorizer"
+
+    # ---- Processes: Identity Tier ----
+    - id: "process-cognito"
+      type: "process"
+      parentId: "tz-identity"
+      position: { x: 85, y: 50 }
+      style: { width: 170, height: 70 }
+      data:
+        label: "Cognito"
+        component_ref: "cognito"
+        technology: "Amazon Cognito"
+        description: "User auth with tenant ID in custom claims"
+
+    - id: "process-iam"
+      type: "process"
+      parentId: "tz-identity"
+      position: { x: 85, y: 170 }
+      style: { width: 170, height: 70 }
+      data:
+        label: "IAM"
+        component_ref: "iam"
+        technology: "AWS IAM"
+        description: "Tenant-scoped roles and session policies"
+
+    # ---- Processes: Application Tier ----
+    - id: "process-lambda"
+      type: "process"
+      parentId: "tz-app"
+      position: { x: 90, y: 100 }
+      style: { width: 170, height: 70 }
+      data:
+        label: "Lambda"
+        component_ref: "lambda"
+        technology: "AWS Lambda"
+        description: "Business logic with tenant context propagation"
+
+    # ---- Data Stores: Data Tier ----
+    - id: "datastore-dynamodb"
+      type: "datastore"
+      parentId: "tz-data"
+      position: { x: 50, y: 80 }
+      style: { width: 170, height: 90 }
+      data:
+        label: "DynamoDB"
+        component_ref: "dynamodb"
+        technology: "Amazon DynamoDB"
+        description: "Tenant-partitioned data (partition key = tenant ID)"
+        dataSensitivity: "confidential"
+
+    - id: "datastore-rds"
+      type: "datastore"
+      parentId: "tz-data"
+      position: { x: 270, y: 80 }
+      style: { width: 170, height: 90 }
+      data:
+        label: "RDS"
+        component_ref: "rds"
+        technology: "Amazon RDS"
+        description: "Row-level security or schema-per-tenant isolation"
+        dataSensitivity: "confidential"
+
+    - id: "process-kms"
+      type: "process"
+      parentId: "tz-data"
+      position: { x: 500, y: 90 }
+      style: { width: 170, height: 70 }
+      data:
+        label: "KMS"
+        component_ref: "kms"
+        technology: "AWS KMS"
+        description: "Per-tenant encryption keys"
+
+  edges:
+    # Tenant User → WAF
+    - id: "edge-tenant-to-waf"
+      source: "actor-tenant-user"
+      target: "process-waf"
+      type: "dataFlow"
+      data:
+        label: "HTTPS request"
+        protocol: "HTTPS"
+        encrypted: true
+
+    # WAF → API Gateway
+    - id: "edge-waf-to-apigw"
+      source: "process-waf"
+      target: "process-apigw"
+      type: "dataFlow"
+      data:
+        label: "Filtered request"
+        protocol: "HTTPS"
+        encrypted: true
+
+    # API Gateway → Cognito (token validation)
+    - id: "edge-apigw-to-cognito"
+      source: "process-apigw"
+      target: "process-cognito"
+      type: "dataFlow"
+      data:
+        label: "Token validation"
+        protocol: "HTTPS"
+        encrypted: true
+
+    # Cognito → API Gateway (auth result with tenant ID)
+    - id: "edge-cognito-to-apigw"
+      source: "process-cognito"
+      target: "process-apigw"
+      type: "dataFlow"
+      data:
+        label: "Auth result + tenant ID"
+        protocol: "HTTPS"
+        encrypted: true
+        authentication: ["jwt"]
+
+    # Tenant User → Cognito (login)
+    - id: "edge-tenant-to-cognito"
+      source: "actor-tenant-user"
+      target: "process-cognito"
+      type: "dataFlow"
+      data:
+        label: "Login / sign-up"
+        protocol: "HTTPS"
+        encrypted: true
+
+    # API Gateway → Lambda (with tenant context)
+    - id: "edge-apigw-to-lambda"
+      source: "process-apigw"
+      target: "process-lambda"
+      type: "dataFlow"
+      data:
+        label: "Request with tenant context"
+        protocol: "AWS Internal"
+        encrypted: true
+        authentication: ["hmac"]
+
+    # Lambda → API Gateway (response)
+    - id: "edge-lambda-to-apigw"
+      source: "process-lambda"
+      target: "process-apigw"
+      type: "dataFlow"
+      data:
+        label: "API response"
+        protocol: "AWS Internal"
+        encrypted: true
+        authentication: ["hmac"]
+
+    # Lambda → IAM (assume tenant-scoped role)
+    - id: "edge-lambda-to-iam"
+      source: "process-lambda"
+      target: "process-iam"
+      type: "dataFlow"
+      data:
+        label: "Assume tenant-scoped role"
+        protocol: "AWS Internal"
+        encrypted: true
+        authentication: ["hmac"]
+
+    # IAM → Lambda (scoped credentials)
+    - id: "edge-iam-to-lambda"
+      source: "process-iam"
+      target: "process-lambda"
+      type: "dataFlow"
+      data:
+        label: "Tenant-scoped credentials"
+        protocol: "AWS Internal"
+        encrypted: true
+        authentication: ["hmac"]
+
+    # Lambda → DynamoDB (tenant-partitioned)
+    - id: "edge-lambda-to-dynamodb"
+      source: "process-lambda"
+      target: "datastore-dynamodb"
+      type: "dataFlow"
+      data:
+        label: "Tenant-partitioned queries"
+        protocol: "HTTPS"
+        encrypted: true
+        authentication: ["hmac"]
+
+    # Lambda → RDS (row-level security)
+    - id: "edge-lambda-to-rds"
+      source: "process-lambda"
+      target: "datastore-rds"
+      type: "dataFlow"
+      data:
+        label: "Tenant-scoped SQL queries"
+        protocol: "SQL"
+        encrypted: true
+        authentication: ["unspecified"]
+
+    # KMS → DynamoDB (encryption)
+    - id: "edge-kms-to-dynamodb"
+      source: "process-kms"
+      target: "datastore-dynamodb"
+      type: "dataFlow"
+      data:
+        label: "Per-tenant encryption"
+        protocol: "AWS Internal"
+        encrypted: true
+        authentication: ["hmac"]
+
+    # KMS → RDS (encryption)
+    - id: "edge-kms-to-rds"
+      source: "process-kms"
+      target: "datastore-rds"
+      type: "dataFlow"
+      data:
+        label: "Per-tenant encryption"
+        protocol: "AWS Internal"
+        encrypted: true
+        authentication: ["hmac"]
+
+    # API Gateway → Tenant User (response)
+    - id: "edge-apigw-to-tenant"
+      source: "process-apigw"
+      target: "actor-tenant-user"
+      type: "dataFlow"
+      data:
+        label: "HTTPS response"
+        protocol: "HTTPS"
+        encrypted: true
+        authentication: ["jwt"]

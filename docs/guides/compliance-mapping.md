@@ -78,7 +78,7 @@ If the target compliance framework has not been imported yet when the pack is im
 
 ## Cross-framework requirement mappings
 
-Cross-framework mappings create direct links between requirements in different compliance standards. They answer questions like "which HIPAA requirements does NIST CSF PR.AC cover?" or "which FDA Premarket requirements map to IEC 81001?".
+Cross-framework mappings create direct links between requirements in different compliance standards. The packs named in this section (IEC 81001, FDA Premarket, IMDRF Cyber and so on) come from the [library-packs](https://github.com/precogly/library-packs) catalog, imported from the Libraries page. The bundled demo packs map only to STRIDE and the demo ASVS. They answer questions like "which HIPAA requirements does NIST CSF PR.AC cover?" or "which FDA Premarket requirements map to IEC 81001?".
 
 ### When to use them
 
@@ -198,7 +198,7 @@ To map your pack's countermeasures to a compliance framework:
 To create requirement-to-requirement mappings between two frameworks:
 
 1. Determine which compliance pack should own the mapping — typically the source framework's pack
-2. Create a file `joins/requirements-{target-slug}.yaml` in that pack
+2. Create a file `joins/requirements-{target-slug}.yaml` in that pack (in the library-packs repository)
 3. Set `framework` to the target framework's slug and `source_framework` to the source framework's slug
 4. For each mapping entry, reference a `section_code` from the source framework under `requirement` and one or more `section_code` values from the target framework under `entries`
 

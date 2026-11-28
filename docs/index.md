@@ -16,7 +16,7 @@ Open-source threat modeling tools lack enterprise features. Commercial tools com
 - **CycloneDX 2.0 TM-BOM import and export**: one interchange format, validated against the CycloneDX schema, for moving models between Precogly and other tools
 - **Collaborative workspaces** — team collaboration for threat modeling programs
 - **Advanced DFD editor**: nested components, typed zones, boundaries and flows, numbered threats and controls, and more
-- **Community library packs** — links to MITRE ATT&CK, CAPEC, LINDDUN, STRIDE, and other taxonomies for high-quality threat models
+- **Community library packs**: links to MITRE ATT&CK, CAPEC, LINDDUN, STRIDE, and other taxonomies for high-quality threat models. The packs live in the [library-packs](https://github.com/precogly/library-packs) repository and import in one click from the Libraries page
 
 ## Who is Precogly for?
 
@@ -30,7 +30,7 @@ Open-source threat modeling tools lack enterprise features. Commercial tools com
 - **Compliance-aware** — built-in traceability to DORA, CRA, ASVS, NIST CSF, SOC 2, and more
 - **Structured library packs** — curated packs with components, threats, countermeasures, and taxonomy links
 - **AI-agent ready architecture** — a clean REST API with full OpenAPI docs
-- **Pack ecosystem** — community and official packs for AWS, Azure, GCP, banking, and compliance frameworks
+- **Pack ecosystem**: community and official packs for AWS, Azure, GCP, banking, and compliance frameworks, in the [library-packs](https://github.com/precogly/library-packs) repository
 
 ## Quick Start
 

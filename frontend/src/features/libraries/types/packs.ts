@@ -45,6 +45,14 @@ export interface LibraryPackListItem {
   author: string
   tags: string[]
   isImported: boolean
+  /** Frameworks this pack maps to that are not imported yet. Optional: older servers omit it. */
+  waitingFrameworks?: WaitingFramework[]
+}
+
+/** A framework a pack has mappings for, not imported yet: the mappings are saved until it is. */
+export interface WaitingFramework {
+  frameworkSlug: string
+  mappingCount: number
 }
 
 export interface PackDependencyCheck {
@@ -70,6 +78,8 @@ export interface ValidationWarning {
   field: string
   message: string
   suggestion: string
+  /** Set when the warning is only a framework not imported yet: its mappings are saved until it is. */
+  waitingForFramework?: string
 }
 
 export interface ValidationError {
@@ -89,4 +99,6 @@ export interface ValidationResult {
   warnings: ValidationWarning[]
   errorCount: number
   warningCount: number
+  /** From validate: dependencies listed but not imported yet. Import brings them in first. */
+  pendingDependencies?: string[]
 }

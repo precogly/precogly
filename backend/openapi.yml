@@ -4926,7 +4926,10 @@ paths:
       description: |-
         Get full pack contents for preview (database packs).
 
-        Returns pack metadata along with all components, threats, and countermeasures.
+        The contents come from the pack's files: bundled on this server, or
+        downloaded from the pack catalog. Returns pack metadata along with all
+        components, threats, and countermeasures; 404 when neither has the
+        pack; 502 when a catalog download fails.
       parameters:
       - in: path
         name: id
@@ -4981,11 +4984,15 @@ paths:
     get:
       operationId: packs_available_from_source_retrieve
       description: |-
-        List packs available in the libraries folder.
+        List packs that can be imported: bundled or catalog.
 
-        Returns packs found in libraries/packs that can be synced to the database.
-        Includes information about whether each pack is already in the database
-        and if it needs updating.
+        Bundled packs are the demo packs on this server's disk. Catalog packs
+        come from the pack catalog (settings.PACK_CATALOG_URL); listing them
+        downloads only catalog.json. Each pack has a `source` of "bundled" or
+        "catalog" and says whether it is in the database and if the versions
+        differ. `catalog_enabled` is false when the catalog is turned off,
+        `catalog_available` false when it could not be fetched, and
+        `catalog_release` names the release listed.
       tags:
       - packs
       security:
@@ -5001,14 +5008,16 @@ paths:
     get:
       operationId: packs_available_overlays_retrieve
       description: |-
-        Get available framework overlays for a pack before installation.
+        Get available framework overlays for a bundled or catalog pack before
+        installation.
 
         Query parameters:
-            path: The pack's relative path from libraries/packs root
-                  (e.g. "threat-libraries/aws", "standards/nist-csf")
+            path: The pack's path as the pack list gives it
+                  (e.g. "demo-threat-libraries/demo-aws", "threat-libraries/azure")
 
         Returns list of overlays with framework_id, framework_name, mapping_count,
-        and whether the framework is installed.
+        and whether the framework is installed. A catalog pack is downloaded for
+        the request; 502 when that fails.
       tags:
       - packs
       security:
@@ -5024,7 +5033,12 @@ paths:
     post:
       operationId: packs_import_single_create
       description: |-
-        Import a single pack from the libraries folder by slug.
+        Import a bundled or catalog pack by slug, its missing dependencies first.
+
+        Dependencies are imported with all their overlays and never with
+        "Import anyway". When one fails, the response is 400 (or 502 when a
+        download failed) with `failed_dependency`, `dependencies_imported` and
+        `not_imported`, and the requested pack is not imported.
 
         Provide the pack slug in the request body:
         {"slug": "aws-technologies", "force": false, "selectedOverlays": ["owasp-2021", "nist-csf"]}
@@ -5060,13 +5074,15 @@ paths:
     get:
       operationId: packs_preview_from_source_retrieve
       description: |-
-        Get full pack contents for preview (source packs by path).
+        Get full pack contents for preview (bundled or catalog packs by path).
 
         Query parameters:
-            path: The pack's relative path from libraries/packs root
-                  (e.g. "threat-libraries/aws", "standards/nist-csf")
+            path: The pack's path as the pack list gives it
+                  (e.g. "demo-threat-libraries/demo-aws", "threat-libraries/azure")
 
-        Returns pack metadata along with all components, threats, and countermeasures.
+        Returns pack metadata along with all components, threats, and
+        countermeasures. A catalog pack is downloaded for the request; 502 when
+        that fails.
       tags:
       - packs
       security:
@@ -5113,12 +5129,14 @@ paths:
     post:
       operationId: packs_validate_create
       description: |-
-        Validate a pack's references without importing (dry-run).
+        Validate a bundled or catalog pack's references without importing (dry-run).
 
         Provide the pack slug in the request body:
         {"slug": "aws-technologies"}
 
-        Returns validation results including any reference errors.
+        Returns validation results including any reference errors, plus
+        `pending_dependencies`: dependencies that are listed but not imported
+        yet, which import brings in first. 502 when a catalog download fails.
       tags:
       - packs
       requestBody:
@@ -13064,6 +13082,9 @@ components:
         isImported:
           type: string
           readOnly: true
+        waitingFrameworks:
+          type: string
+          readOnly: true
       required:
       - author
       - description
@@ -13073,6 +13094,7 @@ components:
       - packType
       - slug
       - version
+      - waitingFrameworks
     LifecyclePhaseEnum:
       enum:
       - design

@@ -41,10 +41,10 @@ Next explore the library packs.
 Library packs are community curated groupings of:
 
 - Components
-- Threats (with links to taxonomies like CAPEC, CWE, MITRE ATT&CK, and STRIDE)
+- Threats (with links to taxonomies like STRIDE, and CAPEC, CWE or MITRE ATT&CK when those packs are imported)
 - Countermeasures (with links to standards and requirements like ASVS, PCI-DSS, DORA etc.)
 
-You can import library packs into your organization.
+A fresh install has three small demo packs already imported: the STRIDE taxonomy, "Demo: OWASP ASVS subset" and "Demo: AWS". The full packs (the complete AWS pack, CWE, CAPEC, MITRE ATT&CK, more standards and more) appear in the same list, marked "Library repo". Import one with a single click. Its dependencies are imported with it.
 
 ## 4. Open the sample threat model
 

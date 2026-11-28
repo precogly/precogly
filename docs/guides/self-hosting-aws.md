@@ -243,11 +243,15 @@ EOF
 docker compose -f docker-compose.workshop.yml up --build -d
 ```
 
-Wait for all containers to start, then seed the database with demo data:
+Wait for all containers to start, then seed the database:
 
 ```bash
 docker compose -f docker-compose.workshop.yml exec backend python manage.py seed
 ```
+
+Seed installs the demo accounts, the three demo packs (STRIDE, "Demo: OWASP ASVS subset" and "Demo: AWS") and two sample threat models. It does not install the full packs. The production image does not run seed on its own, so a fresh install has no packs until you run it or import packs on the Libraries page.
+
+The full packs come from the **Libraries** page. It reads the library-packs catalog, and each pack imports in one click together with its dependencies. See [Pack catalog](#pack-catalog) below.
 
 ## 11. Verify
 
@@ -256,6 +260,20 @@ Open `https://precogly.example.com` in a browser and log in:
 | Email | Password |
 | --- | --- |
 | `admin@precogly.dev` | `admin123` |
+
+## Pack catalog
+
+The Libraries page lists packs from the [library-packs](https://github.com/precogly/library-packs) catalog.
+
+- **Network.** The backend server needs outbound HTTPS to github.com and GitHub's release download hosts. Without it the page shows "The pack library could not be reached. Bundled and imported packs are shown."
+- **Default.** `PACK_CATALOG_URL` defaults to `https://github.com/precogly/library-packs/releases/latest/download/catalog.json`. That follows the latest library-packs release, so a pack merged there reaches your install within about 10 minutes.
+- **Freeze to one release.** Set `PACK_CATALOG_URL` to `https://github.com/precogly/library-packs/releases/download/<tag>/catalog.json`, using a release tag such as `v2026.11.26.1`.
+- **Turn it off.** Set `PACK_CATALOG_URL` to an empty value. No notice is shown, and only bundled and already imported packs are listed. Only `http://` and `https://` addresses are accepted.
+- **Update available.** An imported pack shows "Update available" when the catalog's version differs from the installed one. It means the versions differ, not that the library's version is newer. If you pin an older release, you see it too.
+- **Offline sites.** On another machine, download a release's `catalog.json` and every `.tar.gz` archive from [github.com/precogly/library-packs/releases](https://github.com/precogly/library-packs/releases). Put them in one folder on an internal web server and set `PACK_CATALOG_URL` to that `catalog.json`.
+- **Worker timeout.** The production image runs gunicorn with its default 30 second worker timeout. A large import with many dependencies on a slow server could hit it. Raise it with gunicorn's `--timeout` option.
+
+The workshop compose file above does not pass `PACK_CATALOG_URL` to the backend, so the default applies. To change it, add `PACK_CATALOG_URL` to the backend `environment` list and set a value in `.env`.
 
 ## 12. Connect an MCP client
 

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { PackContents } from './PackContents'
 import { packTypeColors } from '../constants'
+import type { WaitingFramework } from '../types/packs'
 
 export function ImportedPackRow({
   pack,
@@ -25,6 +26,7 @@ export function ImportedPackRow({
     version: string
     packType: string
     description: string
+    waitingFrameworks?: WaitingFramework[]
   }
   isExpanded: boolean
   onToggleExpand: () => void
@@ -55,6 +57,14 @@ export function ImportedPackRow({
           </div>
           <div>
             <h3 className="font-semibold">{pack.name}</h3>
+            {pack.waitingFrameworks && pack.waitingFrameworks.length > 0 && (
+              <p className="text-xs text-amber-700" data-testid="waiting-frameworks">
+                Mappings waiting for a framework:{' '}
+                {pack.waitingFrameworks
+                  .map((waiting) => `${waiting.frameworkSlug} (${waiting.mappingCount})`)
+                  .join(', ')}
+              </p>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3">

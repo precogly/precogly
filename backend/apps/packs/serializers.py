@@ -4,12 +4,13 @@ Serializers for packs app.
 
 from rest_framework import serializers
 
+from apps.compliance.models import StandardFramework
+from apps.diagrams.models import DFDTemplatesLibrary
 from apps.systems.models import ComponentLibrary
 from apps.threats.models import CountermeasureLibrary, ExternalTaxonomy, ThreatLibrary
-from apps.diagrams.models import DFDTemplatesLibrary
-from apps.compliance.models import StandardFramework
 
 from .models import LibraryPack, LibraryPackDependency
+from .services import waiting_framework_mappings
 
 
 def _check_is_imported(pack):
@@ -48,6 +49,7 @@ class LibraryPackListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for pack listing."""
 
     is_imported = serializers.SerializerMethodField()
+    waiting_frameworks = serializers.SerializerMethodField()
 
     class Meta:
         model = LibraryPack
@@ -61,10 +63,15 @@ class LibraryPackListSerializer(serializers.ModelSerializer):
             "author",
             "tags",
             "is_imported",
+            "waiting_frameworks",
         ]
 
     def get_is_imported(self, obj):
         return _check_is_imported(obj)
+
+    def get_waiting_frameworks(self, obj):
+        """Frameworks this pack maps to that are not imported yet, with mapping counts."""
+        return waiting_framework_mappings(obj)
 
 
 class LibraryPackDetailSerializer(serializers.ModelSerializer):
@@ -98,7 +105,9 @@ class LibraryPackDetailSerializer(serializers.ModelSerializer):
         return {
             "components": ComponentLibrary.objects.filter(source_pack=obj).count(),
             "threats": ThreatLibrary.objects.filter(source_pack=obj).count(),
-            "countermeasures": CountermeasureLibrary.objects.filter(source_pack=obj).count(),
+            "countermeasures": CountermeasureLibrary.objects.filter(
+                source_pack=obj
+            ).count(),
             "templates": DFDTemplatesLibrary.objects.filter(source_pack=obj).count(),
             "taxonomies": ExternalTaxonomy.objects.filter(source_pack=obj).count(),
         }

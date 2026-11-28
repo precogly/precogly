@@ -1,5 +1,8 @@
 blank_issues_enabled: true
 contact_links:
+  - name: Library packs
+    url: https://github.com/precogly/library-packs
+    about: Contribute new library packs or changes to existing ones in the library-packs repository.
   - name: Discussions & Community
     url: https://github.com/precogly/precogly/discussions
     about: Ask questions, discuss architecture, or chat with the Precogly community.

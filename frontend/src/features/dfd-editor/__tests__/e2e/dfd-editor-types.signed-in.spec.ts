@@ -1,57 +1,80 @@
-import { expect, test, type Page } from '@playwright/test'
+import fs from 'node:fs'
+import path from 'node:path'
+
+import { expect, request, test, type APIRequestContext, type Page } from '@playwright/test'
+
+import { SIGNED_IN_STORAGE_STATE } from '../../../../../e2e/global-setup'
 
 /**
- * Zone, flow and boundary types in the DFD editor (plan 11.2), driven
- * against the seeded "Sample LNG Process Control" model, whose primary
- * diagram comes from the ot-ics/lng-process-control template: network zones
+ * Zone, flow and boundary types in the DFD editor (plan 11.2): network zones
  * with trust levels, signal and control flows, and one network boundary
  * ("IDMZ conduit").
  *
- * NOT YET RUN: the dev database was stale when this was written. It needs
- * the seeded compose stack (`docker compose up -d`) and the signed-in
- * project of playwright.config.ts.
+ * The spec builds its own threat model and diagram through the API, from the
+ * canvas of the LNG process control template in fixtures/. The seed no longer
+ * has an OT sample, and this spec tests the editor, not a pack. The fixture
+ * carries no database ids and no component_ref, so it cannot bind to rows of
+ * any other model. The model is removed afterwards.
  */
 
 const API_URL = process.env.E2E_API_URL ?? 'http://localhost:8000'
-const SAMPLE_MODEL_NAME = 'Sample LNG Process Control'
+const MODEL_NAME = 'E2E editor types (LNG canvas)'
+const FIXTURE_CANVAS = JSON.parse(
+  fs.readFileSync(
+    path.join(process.cwd(), 'src/features/dfd-editor/__tests__/e2e/fixtures/lng-process-control-canvas.json'),
+    'utf-8',
+  ),
+) as Record<string, unknown>
 
-interface ThreatModelRow {
-  id: number | string
-  name: string
+let api: APIRequestContext
+let threatModelId: number | string
+let diagramId: number | string
+
+/** The access token global-setup stored for the signed-in project. */
+function storedAccessToken(): string {
+  const storageState = JSON.parse(fs.readFileSync(SIGNED_IN_STORAGE_STATE, 'utf-8')) as {
+    origins: { localStorage: { name: string; value: string }[] }[]
+  }
+  const entry = storageState.origins
+    .flatMap((origin) => origin.localStorage)
+    .find((item) => item.name === 'precogly_access_token')
+  if (!entry) throw new Error('no access token in the signed-in storage state')
+  return entry.value
 }
 
-interface DiagramRow {
-  id: number | string
-  isPrimary?: boolean
-  is_primary?: boolean
-}
+test.beforeAll(async () => {
+  api = await request.newContext({
+    baseURL: API_URL,
+    extraHTTPHeaders: { Authorization: `Bearer ${storedAccessToken()}` },
+  })
 
-/** Resolve the sample model and its primary diagram over the API with the stored token. */
+  const modelResponse = await api.post('/api/threat-models/', { data: { name: MODEL_NAME } })
+  expect(modelResponse.ok(), await modelResponse.text()).toBe(true)
+  threatModelId = ((await modelResponse.json()) as { id: number | string }).id
+
+  // The same two calls the app makes: create the diagram, then save its canvas,
+  // which syncs the zones, flows and boundary to rows.
+  const diagramResponse = await api.post('/api/diagrams/create_for_threat_model/', {
+    data: { threatModelId, name: 'LNG process control', canvas_data: FIXTURE_CANVAS },
+  })
+  expect(diagramResponse.ok(), await diagramResponse.text()).toBe(true)
+  diagramId = ((await diagramResponse.json()) as { id: number | string }).id
+
+  const saveResponse = await api.patch(`/api/diagrams/${diagramId}/`, { data: { canvas_data: FIXTURE_CANVAS } })
+  expect(saveResponse.ok(), await saveResponse.text()).toBe(true)
+})
+
+test.afterAll(async () => {
+  if (threatModelId !== undefined) {
+    await api.delete(`/api/threat-models/${threatModelId}/`)
+  }
+  await api?.dispose()
+})
+
+/** Open the diagram this spec created. */
 async function openSampleDiagram(page: Page): Promise<void> {
-  await page.goto('/threat-models')
+  await page.goto(`/threat-models/${threatModelId}/diagrams/${diagramId}`)
   await expect(page).not.toHaveURL(/\/login/)
-  const accessToken = await page.evaluate(() => localStorage.getItem('precogly_access_token'))
-  if (!accessToken) throw new Error('no access token in the signed-in storage state')
-  const headers = { Authorization: `Bearer ${accessToken}` }
-
-  const modelsResponse = await page.request.get(`${API_URL}/api/threat-models/`, { headers })
-  expect(modelsResponse.ok()).toBe(true)
-  const modelsBody = (await modelsResponse.json()) as ThreatModelRow[] | { results: ThreatModelRow[] }
-  const models = Array.isArray(modelsBody) ? modelsBody : modelsBody.results
-  const sampleModel = models.find((model) => model.name === SAMPLE_MODEL_NAME)
-  if (!sampleModel) throw new Error(`${SAMPLE_MODEL_NAME} is not seeded`)
-
-  const diagramsResponse = await page.request.get(
-    `${API_URL}/api/diagrams/?threat_model=${sampleModel.id}`,
-    { headers },
-  )
-  expect(diagramsResponse.ok()).toBe(true)
-  const diagramsBody = (await diagramsResponse.json()) as DiagramRow[] | { results: DiagramRow[] }
-  const diagrams = Array.isArray(diagramsBody) ? diagramsBody : diagramsBody.results
-  const primary = diagrams.find((diagram) => diagram.isPrimary ?? diagram.is_primary) ?? diagrams[0]
-  if (!primary) throw new Error(`${SAMPLE_MODEL_NAME} has no diagram`)
-
-  await page.goto(`/threat-models/${sampleModel.id}/diagrams/${primary.id}`)
   await expect(page.locator('.react-flow__node').first()).toBeVisible({ timeout: 15_000 })
 }
 

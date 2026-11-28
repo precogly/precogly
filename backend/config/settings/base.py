@@ -170,6 +170,26 @@ MEDIA_ROOT = BASE_DIR / "media"
 # catalog empty, which reads as an empty database rather than as a missing mount.
 LIBRARIES_PATH = Path(env("LIBRARIES_PATH", default=str(BASE_DIR.parent / "libraries")))
 
+# The pack catalog: catalog.json of a precogly/library-packs release, listing
+# every full pack. The Libraries page shows those packs next to the bundled demo
+# packs, and downloads one only to preview, validate or import it.
+#
+# The default follows the latest library-packs release, so a pack merged there
+# reaches this install without an app release. To freeze the packs, set this
+# to one release: .../releases/download/<tag>/catalog.json. For an offline site,
+# host a release's catalog.json and archives in one folder on an internal web
+# server and point this at that catalog.json. Empty turns the catalog off. Only
+# http:// and https:// addresses are used (apps/packs/catalog.py).
+PACK_CATALOG_URL = env(
+    "PACK_CATALOG_URL",
+    default="https://github.com/precogly/library-packs/releases/latest/download/catalog.json",
+)
+# The largest pack archive the app downloads, in bytes. library-packs CI holds
+# every pack under the same 20 MB.
+PACK_DOWNLOAD_MAX_BYTES = env.int("PACK_DOWNLOAD_MAX_BYTES", default=20 * 1024 * 1024)
+# How long a fetched catalog.json is kept in memory, per worker.
+PACK_CATALOG_TTL_SECONDS = env.int("PACK_CATALOG_TTL_SECONDS", default=600)
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

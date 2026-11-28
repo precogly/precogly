@@ -47,7 +47,7 @@ Precogly bridges this gap and democratizes threat modeling for every org in the 
 - Use cases and abuse cases linked to threats and countermeasures, so you can analyze a system by what users do as well as by its diagram
 - A risk register with ratings, owners and responses, plus tracking of overdue countermeasures
 - Review and approval sign-off, with a clear flag when a model has changed since it was approved
-- Community library packs with links to taxonomies like MITRE ATT&CK, CAPEC, LINDDUN, STRIDE etc. - allows your team to quickly create high quality threat models
+- Community library packs with links to taxonomies like MITRE ATT&CK, CAPEC, LINDDUN, STRIDE etc. - allows your team to quickly create high quality threat models. The packs live in the [library-packs](https://github.com/precogly/library-packs) repository and import in one click from the Libraries page; a fresh install bundles three small demo packs
 - An MCP server so AI agents like Claude can read your threat models and search your threat, component and countermeasure libraries
 
 ### Who is Precogly for?
@@ -64,7 +64,7 @@ Precogly is designed for enterprise workflows, but smaller organizations can als
 - **Compliance-aware** — Built-in traceability to DORA, CRA, ASVS, NIST CSF, SOC 2, and more. Threats can link to security taxonomies, while countermeasures map to framework requirements.
 - **Structured library packs** — Not just brainstorming. Curated packs with components, threats, countermeasures, and taxonomy links (MITRE ATT&CK, CAPEC, CWE, STRIDE) give your team a structured starting point.
 - **AI-agent ready architecture** — An MCP server and a clean REST API with full OpenAPI docs, designed to be a foundation for AI-powered threat modeling assistants. See [Self-hosting on AWS with remote MCP](docs/guides/self-hosting-aws.md) and [AI threat model generation](docs/guides/ai-threat-model-generation.md).
-- **Pack ecosystem** — Community and official packs for AWS, Azure, GCP, banking, and compliance frameworks. Extend or create your own.
+- **Pack ecosystem**: Community and official packs for AWS, Azure, GCP, banking, and compliance frameworks, in the [library-packs](https://github.com/precogly/library-packs) repository. Extend or create your own.
 
 ### Our AI Philosophy
 
@@ -84,7 +84,7 @@ Precogly is designed for enterprise workflows, but smaller organizations can als
 - **0.4: MCP and AI Agents Support** (released September 2026)
 - **0.5: TM-BOM Alignment and Library Packs Repository**
   - Align Precogly's data model with the CycloneDX 2.0 TM-BOM (done on `main`, not yet released; see the [changelog](docs/changelog.md))
-  - Move library packs to a separate repository
+  - Move library packs to a separate repository (done, not yet released; see [library-packs](https://github.com/precogly/library-packs))
 - **0.6: Threat Modeling Program Management**
   - See threat modeling coverage and risk management progress across the organization
   - Report on risk ownership, treatment status and overdue actions by business unit, team and product

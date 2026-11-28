@@ -1,9 +1,11 @@
 """
 Seed the database with demo data for new contributors.
 
-Creates a superuser, demo organization, imports library packs,
-and creates sample threat models with DFD templates (two AWS models and one
-OT model). Fills the first sample model's Risk Register.
+Creates a superuser, demo organization, imports the three demo packs bundled
+with the app (STRIDE, a subset of OWASP ASVS and a small AWS pack), and creates
+two sample threat models from the AWS pack's templates. Fills the first sample
+model's Risk Register. Never touches the network: the full packs come from the
+pack catalog on the Libraries page.
 
 Also creates a second organization and a member who is not on the security team, so
 that the demo database can exhibit multi-tenancy. See _create_second_org for why that
@@ -48,59 +50,27 @@ SECOND_ORG_NAME = "Contoso Financial"
 SECOND_ORG_TEAM_NAME = "Payments"
 SECOND_ORG_EMAIL = "contoso@precogly.dev"
 
-# Import order matters: taxonomies first, then standards, then full packs
-TAXONOMY_PACKS = [
-    "taxonomies/stride-taxonomy",
-    "taxonomies/capec",
-    "taxonomies/cwe",
-    "taxonomies/mitre-attack",
-    "taxonomies/mitre-atlas",
-    "taxonomies/owasp-llm-top-10",
-    "taxonomies/owasp-agentic-top-10",
-    "taxonomies/owasp-mcp-top-10",
-    "taxonomies/mitre-attack-ics",
-]
-
-STANDARD_PACKS = [
-    "standards/owasp-top-10",
-    "standards/soc2",
-    "standards/nist-csf",
-    "standards/cra",
-    "standards/owasp-asvs",
-    "standards/owasp-aisvs",
-    "standards/pci-dss",
-    "standards/iec-62443",
-]
-
-FULL_PACKS = [
-    "threat-libraries/ai",
-    "threat-libraries/aws",
-    "threat-libraries/ot-ics",
-]
+# The demo packs bundled under libraries/packs. Import order matters:
+# taxonomies first, then standards, then the threat library that maps to both.
+TAXONOMY_PACKS = ["demo-taxonomies/stride-taxonomy"]
+STANDARD_PACKS = ["demo-standards/demo-asvs"]
+FULL_PACKS = ["demo-threat-libraries/demo-aws"]
 
 SAMPLE_THREAT_MODELS = [
     {
         "name": "Sample AWS Serverless Web App",
         "description": "A sample serverless web app with CloudFront, API Gateway, Lambda, DynamoDB, and S3.",
-        "template_slug": "aws/aws-serverless-web-app",
+        "template_slug": "demo-aws/aws-serverless-web-app",
         "criticality": "HIGH",
     },
     {
-        "name": "Sample AWS RAG / Generative AI",
-        "description": "A sample RAG app with Bedrock Agents, Knowledge Bases, and OpenSearch Serverless.",
-        "template_slug": "aws/aws-rag-genai",
-        "criticality": "HIGH",
-    },
-    # An OT model, so the sample data has network zones, signal and control
-    # flows, device components and a boundary (plan F35).
-    {
-        "name": "Sample LNG Process Control",
+        "name": "Sample AWS SaaS Tenant Isolation",
         "description": (
-            "A sample LNG facility control system with SCADA, DCS, a safety "
-            "system and field devices across Purdue network zones."
+            "A sample multi-tenant SaaS app isolating tenants with Cognito, "
+            "scoped IAM policies, KMS and partitioned data stores."
         ),
-        "template_slug": "ot-ics/lng-process-control",
-        "criticality": "CRITICAL",
+        "template_slug": "demo-aws/aws-saas-multi-tenant",
+        "criticality": "HIGH",
     },
 ]
 
@@ -335,7 +305,9 @@ class Command(BaseCommand):
         OrganizationMember.objects.filter(user=user).exclude(organization=org).delete()
         TeamMembership.objects.filter(user=user).exclude(team=team).delete()
 
-        return self._create_sample_threat_models(org, team, user, SECOND_ORG_THREAT_MODELS)
+        return self._create_sample_threat_models(
+            org, team, user, SECOND_ORG_THREAT_MODELS
+        )
 
     def _import_packs(self, force):
         libraries_path = get_libraries_path()
@@ -352,8 +324,12 @@ class Command(BaseCommand):
         for pack_slug in all_packs:
             pack_path = libraries_path / pack_slug
             if not pack_path.exists():
-                self.stdout.write(self.style.WARNING(f"Pack not found: {pack_slug}"))
-                continue
+                # Loud for the same reason as above: carrying on would create
+                # the sample threat models with no diagram behind them.
+                raise CommandError(
+                    f"Demo pack not found: {pack_path}. The seed needs every "
+                    "pack in TAXONOMY_PACKS, STANDARD_PACKS and FULL_PACKS."
+                )
 
             # Validate before importing
             validation_result = validate_pack(pack_path)

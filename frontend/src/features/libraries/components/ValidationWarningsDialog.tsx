@@ -9,6 +9,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import type { ValidationResult } from '@/features/libraries/types/packs'
+import { onlyWaitingForFrameworks } from './pack-list-helpers'
+
+export interface FailedImportSummary {
+  /** The dependency that failed, by name. */
+  dependencyName: string
+  /** "Imported: ...", "Failed: ...", "Not imported: ...", each only when it has packs. */
+  lines: string[]
+}
 
 export function ValidationWarningsDialog({
   validationResult,
@@ -16,30 +24,67 @@ export function ValidationWarningsDialog({
   onOpenChange,
   onImportAnyway,
   isImporting = false,
+  failedImport = null,
+  progressLine = null,
 }: {
   validationResult: ValidationResult | null
   open: boolean
   onOpenChange: (open: boolean) => void
   onImportAnyway?: () => void
   isImporting?: boolean
+  /** Set when a dependency failed while importing another pack. */
+  failedImport?: FailedImportSummary | null
+  /** For the requested pack's own warnings: the dependencies imported before it. */
+  progressLine?: string | null
 }) {
   if (!validationResult) return null
 
   const hasErrors = validationResult.errorCount > 0
   const hasWarnings = validationResult.warningCount > 0
-  const canImportAnyway = hasWarnings && !hasErrors && onImportAnyway
+  // "Import anyway" never applies to a dependency.
+  const canImportAnyway = hasWarnings && !hasErrors && onImportAnyway && !failedImport
+  const pendingDependencyCount = validationResult.pendingDependencies?.length ?? 0
+  // Only frameworks not imported yet: nothing is wrong, the mappings wait for them.
+  const onlyWaiting = !failedImport && onlyWaitingForFrameworks(validationResult)
 
   return (
     <Dialog open={open} onOpenChange={isImporting ? undefined : onOpenChange}>
       <DialogContent className="max-w-lg max-h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Validation Issues Found</DialogTitle>
+          <DialogTitle>
+            {failedImport
+              ? `${failedImport.dependencyName} could not be imported`
+              : onlyWaiting
+                ? 'Some mappings are waiting for a framework'
+                : 'Validation Issues Found'}
+          </DialogTitle>
           <DialogDescription>
             {validationResult.packName}
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto space-y-3 py-4">
+          {failedImport && (
+            <div className="space-y-1 text-sm" data-testid="failed-import-summary">
+              {failedImport.lines.map((line) => (
+                <p key={line}>{line}</p>
+              ))}
+            </div>
+          )}
+
+          {progressLine && !failedImport && (
+            <p className="text-sm text-muted-foreground" data-testid="dependencies-imported-line">
+              {progressLine}
+            </p>
+          )}
+
+          {pendingDependencyCount > 0 && (
+            <p className="text-sm text-muted-foreground" data-testid="pending-dependencies">
+              {pendingDependencyCount} {pendingDependencyCount === 1 ? 'dependency is' : 'dependencies are'} not
+              imported yet. Import brings them in first, and warnings about them go away then.
+            </p>
+          )}
+
           {/* Errors */}
           {hasErrors && (
             <div className="space-y-2">
@@ -66,8 +111,22 @@ export function ValidationWarningsDialog({
             </div>
           )}
 
+          {onlyWaiting && (
+            <div className="space-y-2 text-sm" data-testid="waiting-frameworks">
+              <p>
+                These frameworks aren&apos;t imported yet. {validationResult.packName}&apos;s mappings to them
+                are kept and show up when you import them.
+              </p>
+              <ul className="list-disc pl-5 text-muted-foreground">
+                {validationResult.warnings.map((warning) => (
+                  <li key={warning.waitingForFramework}>{warning.waitingForFramework}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Warnings */}
-          {hasWarnings && (
+          {hasWarnings && !onlyWaiting && (
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-amber-800">
                 Warnings ({validationResult.warningCount})
@@ -102,7 +161,7 @@ export function ValidationWarningsDialog({
           {canImportAnyway && (
             <Button onClick={onImportAnyway} disabled={isImporting}>
               {isImporting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-              Import Anyway
+              {onlyWaiting ? 'Import' : 'Import Anyway'}
             </Button>
           )}
         </DialogFooter>

@@ -2,9 +2,12 @@
 
 Library packs are modular bundles of threat-modeling content: components, threats, countermeasures, taxonomy mappings, compliance overlays, and DFD templates. They are designed for **LLM-assisted authoring with human review**. You prompt an LLM to generate the YAML, review the output for accuracy, validate it, and submit.
 
-For background on what library packs are and how they work in the UI, see [Library Packs (Concepts)](../concepts/library-packs.md). For the complete field-level YAML reference, see [`libraries/README.md`](https://github.com/precogly/precogly/blob/main/libraries/README.md).
+!!! note "New packs go to the library-packs repository"
+    The full set of packs lives in [precogly/library-packs](https://github.com/precogly/library-packs). Open pull requests for new packs and pack changes there. Its [CONTRIBUTING.md](https://github.com/precogly/library-packs/blob/main/CONTRIBUTING.md) has the submission rules. This repository keeps only three bundled demo packs under `libraries/packs/`.
 
-The canonical reference pack is **`aws`** (`libraries/packs/threat-libraries/aws/`). This guide walks through its structure and uses it as the model for creating your own.
+For background on what library packs are and how they work in the UI, see [Library Packs (Concepts)](../concepts/library-packs.md). For the complete field-level YAML reference, see the [authoring guide](https://github.com/precogly/library-packs/blob/main/docs/authoring-guide.md).
+
+The canonical reference pack is **`aws`** (`packs/threat-libraries/aws/` in library-packs). This guide walks through its structure and uses it as the model for creating your own.
 
 ---
 
@@ -48,7 +51,7 @@ The `aws` pack is a `full` pack that demonstrates every file type. Use it as you
 ### Directory layout
 
 ```
-libraries/packs/threat-libraries/aws/
+packs/threat-libraries/aws/    # in the library-packs repository
 ├── pack.yaml                              # Pack metadata
 ├── components.yaml                        # 4 components (S3, Lambda, API Gateway, DynamoDB)
 ├── threats.yaml                           # ~15 threats across all components
@@ -198,7 +201,7 @@ canvas_data:
 
 **Retired keys.** The boolean `authenticated` on edges is no longer read, and the old zone values `zoneInternet`, `zoneDmz`, `zoneInternal`, `zoneRestricted` and `zoneExternal` are not zone types. A template that still uses them fails validation and the import is refused. The pack format version stays `1`.
 
-**Join files** wire everything together. See [`libraries/README.md`](https://github.com/precogly/precogly/blob/main/libraries/README.md) for the full join file reference.
+**Join files** wire everything together. See the [authoring guide](https://github.com/precogly/library-packs/blob/main/docs/authoring-guide.md) for the full join file reference.
 
 ### Design rationale
 
@@ -387,18 +390,36 @@ This endpoint requires **Security Team** role. It checks structural issues (meta
 
 ### Import and verify in the UI
 
-1. Place your pack directory under `libraries/packs/`.
-2. Start the development server (see [Development Setup](development-setup.md)).
-3. Navigate to **Library Packs** in the sidebar.
-4. Find your pack in the catalog and click to preview it.
-5. Verify:
+Precogly reads packs from a catalog, so to try your pack you build a catalog from your library-packs clone and point the app at it. Full steps for the app side are in [Development Setup](development-setup.md#testing-against-a-local-catalog).
+
+1. In your library-packs clone, build a local release:
+
+    ```bash
+    uv run tools/build_release.py --tag v0.0.0-local --packs-dir packs --output-dir dist
+    ```
+
+2. Serve it:
+
+    ```bash
+    python3 -m http.server 8080 --directory dist
+    ```
+
+3. Start the app with the catalog pointed at it. With the backend in Docker:
+
+    ```bash
+    PACK_CATALOG_URL=http://host.docker.internal:8080/catalog.json docker compose up
+    ```
+
+4. Open **Library Packs** in the sidebar.
+5. Find your pack in the list ("Library repo") and click to preview it.
+6. Verify:
     - Components appear with correct names, categories, and descriptions
     - Threats show with their taxonomy tags (STRIDE, CWE, etc.)
     - Countermeasures show with correct control functions, control nature, and cost levels
     - Compliance mappings appear if you included them
-6. Click **Import**. Validation runs automatically. Fix any reported issues.
-7. Verify the pack imports successfully (success toast appears).
-8. Create a test threat model, add a component from your pack, and confirm threats and countermeasures propagate correctly.
+7. Click **Import**. Validation runs automatically. Fix any reported issues.
+8. Verify the pack imports successfully (success toast appears).
+9. Create a test threat model, add a component from your pack, and confirm threats and countermeasures propagate correctly.
 
 ---
 
@@ -406,6 +427,7 @@ This endpoint requires **Security Team** role. It checks structural issues (meta
 
 ### Pull request expectations
 
+- Open the PR in [precogly/library-packs](https://github.com/precogly/library-packs).
 - One pack per PR.
 - Include a brief description of what the pack covers and why it's useful.
 - List the components, number of threats, and number of countermeasures in the PR description.

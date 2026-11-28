@@ -8,10 +8,14 @@ from unittest import mock
 import yaml
 from django.test import SimpleTestCase, override_settings
 
+from apps.packs.catalog import CatalogEntry, CatalogResult
 from apps.packs.services import (
     ImportResult,
+    _dependency_slug,
     _find_pack_dir,
+    _find_pack_dir_by_slug,
     _is_valid_slug,
+    discover_available_packs,
     discover_packs_from_source,
     get_libraries_path,
     validate_pack,
@@ -143,12 +147,12 @@ class DiscoveryAndDisambiguationTests(SimpleTestCase):
 
                 self.assertEqual(owasp.relative_path, "frameworks/owasp")
 
-    def test_depends_on_with_path_disambiguates(self):
-        # A pack depends on nist-csf and disambiguates which one via path.
+    def test_depends_on_path_key_is_ignored(self):
+        # A dependency is a slug. A `path` key no longer picks a folder: the
+        # result reports where the pack with that slug actually is.
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
             with self._patch_db_and_path(base):
-                _write_pack(base, "frameworks/nist-csf", slug="nist-csf")
                 _write_pack(base, "demo/nist-csf", slug="nist-csf")
                 _write_pack(
                     base,
@@ -157,7 +161,7 @@ class DiscoveryAndDisambiguationTests(SimpleTestCase):
                     depends_on=[
                         {
                             "pack": "nist-csf",
-                            "path": "demo/nist-csf",
+                            "path": "frameworks/nist-csf",
                         }
                     ],
                 )
@@ -169,6 +173,55 @@ class DiscoveryAndDisambiguationTests(SimpleTestCase):
                 dep = consumer.depends_on[0]
                 self.assertEqual(dep["slug"], "nist-csf")
                 self.assertEqual(dep["path"], "demo/nist-csf")
+
+    def test_path_format_dependency_finds_the_pack_in_another_folder(self):
+        # The full aws pack says taxonomies/stride-taxonomy; the app bundles
+        # STRIDE at demo-taxonomies/stride-taxonomy.
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            with self._patch_db_and_path(base):
+                _write_pack(
+                    base,
+                    "demo-taxonomies/stride-taxonomy",
+                    slug="stride-taxonomy",
+                    name="STRIDE Taxonomy",
+                )
+                _write_pack(
+                    base,
+                    "threat-libraries/aws",
+                    slug="aws",
+                    depends_on=["taxonomies/stride-taxonomy"],
+                )
+
+                packs = discover_packs_from_source()
+                aws = next(p for p in packs if p.slug == "aws")
+
+                self.assertEqual(
+                    aws.depends_on,
+                    [
+                        {
+                            "slug": "stride-taxonomy",
+                            "path": "demo-taxonomies/stride-taxonomy",
+                            "name": "STRIDE Taxonomy",
+                            "is_imported": False,
+                        }
+                    ],
+                )
+
+    def test_missing_dependency_has_an_empty_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            with self._patch_db_and_path(base):
+                _write_pack(
+                    base, "consumer", slug="consumer", depends_on=["taxonomies/cwe"]
+                )
+
+                consumer = discover_packs_from_source()[0]
+
+                self.assertEqual(
+                    consumer.depends_on,
+                    [{"slug": "cwe", "path": "", "name": "cwe", "is_imported": False}],
+                )
 
     def test_path_format_string_depends_on_resolves(self):
         # depends_on with path-format strings like "taxonomies/stride-taxonomy"
@@ -190,6 +243,230 @@ class DiscoveryAndDisambiguationTests(SimpleTestCase):
                 dep = consumer.depends_on[0]
                 self.assertEqual(dep["slug"], "stride-taxonomy")
                 self.assertEqual(dep["path"], "taxonomies/stride-taxonomy")
+
+
+def _catalog_entry(slug: str, version: str = "2.0.0", **overrides) -> CatalogEntry:
+    values = {
+        "slug": slug,
+        "path": f"threat-libraries/{slug}",
+        "name": slug.upper(),
+        "description": "",
+        "version": version,
+        "pack_type": "full",
+        "schema_version": 1,
+        "author": "",
+        "tags": [],
+        "component_count": 1,
+        "threat_count": 2,
+        "countermeasure_count": 3,
+        "taxonomy_count": 0,
+        "depends_on": [],
+        "archive": f"threat-libraries__{slug}-{version}.tar.gz",
+        "archive_size": 10,
+        "sha256": "a" * 64,
+        "release": "v1",
+    }
+    values.update(overrides)
+    return CatalogEntry(**values)
+
+
+def _installed(*slug_versions):
+    """Stand-in LibraryPack rows with slug and version."""
+    return iter(
+        [mock.Mock(slug=slug, version=version) for slug, version in slug_versions]
+    )
+
+
+class MergedDiscoveryTests(SimpleTestCase):
+    """discover_available_packs lists bundled packs and catalog packs together."""
+
+    def _discover(self, base, catalog_entries, installed=(), available=True):
+        catalog_result = CatalogResult(
+            entries=list(catalog_entries),
+            release="v1" if available else "",
+            available=available,
+            enabled=True,
+        )
+        with (
+            mock.patch("apps.packs.services.get_libraries_path", return_value=base),
+            mock.patch("apps.packs.services.load_catalog", return_value=catalog_result),
+            mock.patch("apps.packs.services.LibraryPack") as library_pack_model,
+        ):
+            library_pack_model.objects.all.return_value = _installed(*installed)
+            return discover_available_packs()
+
+    def test_bundled_and_catalog_packs_are_both_listed_with_their_source(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            _write_pack(base, "demo-taxonomies/stride-taxonomy", slug="stride-taxonomy")
+
+            packs, catalog_result = self._discover(base, [_catalog_entry("azure")])
+
+            sources = {pack.slug: (pack.source, pack.relative_path) for pack in packs}
+            self.assertEqual(
+                sources,
+                {
+                    "stride-taxonomy": ("bundled", "demo-taxonomies/stride-taxonomy"),
+                    "azure": ("catalog", "threat-libraries/azure"),
+                },
+            )
+            azure = next(pack for pack in packs if pack.slug == "azure")
+            self.assertEqual(azure.path, "")
+            self.assertEqual(
+                (azure.component_count, azure.threat_count, azure.countermeasure_count),
+                (1, 2, 3),
+            )
+            self.assertTrue(catalog_result.available)
+
+    def test_a_slug_in_both_places_is_the_bundled_pack_whatever_the_versions(self):
+        for catalog_version in ("0.1.0", "1.0.0", "9.0.0"):
+            with (
+                self.subTest(catalog_version=catalog_version),
+                tempfile.TemporaryDirectory() as tmp,
+            ):
+                base = Path(tmp)
+                _write_pack(
+                    base, "demo-taxonomies/stride-taxonomy", slug="stride-taxonomy"
+                )
+                catalog_stride = _catalog_entry(
+                    "stride-taxonomy",
+                    version=catalog_version,
+                    path="taxonomies/stride-taxonomy",
+                )
+
+                packs, _ = self._discover(base, [catalog_stride])
+
+                self.assertEqual(len(packs), 1)
+                self.assertEqual(packs[0].source, "bundled")
+                self.assertEqual(packs[0].version, "1.0.0")
+
+    def test_a_catalog_dependency_resolves_to_the_bundled_stride(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            _write_pack(
+                base,
+                "demo-taxonomies/stride-taxonomy",
+                slug="stride-taxonomy",
+                name="STRIDE Taxonomy",
+            )
+            azure = _catalog_entry("azure", depends_on=["taxonomies/stride-taxonomy"])
+
+            packs, _ = self._discover(
+                base, [azure], installed=[("stride-taxonomy", "1.0.0")]
+            )
+
+            azure_info = next(pack for pack in packs if pack.slug == "azure")
+            self.assertEqual(
+                azure_info.depends_on,
+                [
+                    {
+                        "slug": "stride-taxonomy",
+                        "path": "demo-taxonomies/stride-taxonomy",
+                        "name": "STRIDE Taxonomy",
+                        "is_imported": True,
+                    }
+                ],
+            )
+
+    def test_a_catalog_pack_in_the_database_carries_its_installed_version(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            packs, _ = self._discover(
+                Path(tmp),
+                [_catalog_entry("aws", version="4.1.0")],
+                installed=[("aws", "4.0.0")],
+            )
+
+            aws = packs[0]
+            self.assertTrue(aws.is_in_database)
+            self.assertEqual(aws.database_version, "4.0.0")
+            self.assertTrue(aws.to_dict()["needs_update"])
+            self.assertEqual(aws.to_dict()["source"], "catalog")
+
+    def test_bundled_packs_carry_the_same_counts_as_the_catalog(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            standard_dir = base / "demo-standards" / "demo-asvs"
+            standard_dir.mkdir(parents=True)
+            (standard_dir / "pack.yaml").write_text(
+                yaml.safe_dump(
+                    {
+                        "pack": {
+                            "slug": "demo-asvs",
+                            "name": "ASVS",
+                            "version": "1.0.0",
+                        },
+                        "frameworks": [
+                            {
+                                "slug": "a",
+                                "requirements": [
+                                    {"section_code": "1"},
+                                    {"section_code": "2"},
+                                ],
+                            },
+                            {"slug": "b", "requirements": [{"section_code": "3"}]},
+                        ],
+                    }
+                )
+            )
+            taxonomy_dir = _write_pack(
+                base, "demo-taxonomies/stride-taxonomy", slug="stride-taxonomy"
+            )
+            (taxonomy_dir / "taxonomy.yaml").write_text(
+                yaml.safe_dump(
+                    {
+                        "taxonomies": [
+                            {"slug": "stride", "entries": [{"external_id": "s"}] * 6}
+                        ]
+                    }
+                )
+            )
+            library_dir = _write_pack(
+                base, "demo-threat-libraries/demo-aws", slug="demo-aws"
+            )
+            (library_dir / "dfd-templates").mkdir()
+            for template_name in ("one", "two"):
+                (library_dir / "dfd-templates" / f"{template_name}.yaml").write_text(
+                    "template: {}\n"
+                )
+
+            packs, _ = self._discover(
+                base, [_catalog_entry("cra", framework_count=1, requirement_count=28)]
+            )
+
+            counts = {
+                pack.slug: (
+                    pack.framework_count,
+                    pack.requirement_count,
+                    pack.taxonomy_entry_count,
+                    pack.template_count,
+                )
+                for pack in packs
+            }
+            self.assertEqual(
+                counts,
+                {
+                    "demo-asvs": (2, 3, 0, 0),
+                    "stride-taxonomy": (0, 0, 6, 0),
+                    "demo-aws": (0, 0, 0, 2),
+                    "cra": (1, 28, 0, 0),
+                },
+            )
+            self.assertEqual(
+                next(pack for pack in packs if pack.slug == "cra").to_dict()[
+                    "requirement_count"
+                ],
+                28,
+            )
+
+    def test_a_catalog_that_is_off_or_unavailable_lists_only_bundled_packs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            _write_pack(base, "demo-threat-libraries/demo-aws", slug="demo-aws")
+
+            packs, catalog_result = self._discover(base, [], available=False)
+
+            self.assertEqual([pack.slug for pack in packs], ["demo-aws"])
+            self.assertFalse(catalog_result.available)
 
 
 class TaxonomyReferenceValidationTests(SimpleTestCase):
@@ -679,6 +956,106 @@ class DependsOnValidationTests(SimpleTestCase):
                 if "stride-taxonomy" in w.message and "depends_on" in w.field
             ]
             self.assertEqual(len(dep_warnings), 0)
+
+    @mock.patch("apps.packs.services.ExternalTaxonomy")
+    @mock.patch("apps.packs.services.LibraryPack")
+    @mock.patch("apps.packs.services.get_libraries_path")
+    def test_path_format_dependency_in_another_folder_resolves(
+        self, mock_get_libraries_path, mock_lp, mock_taxonomy
+    ):
+        """taxonomies/stride-taxonomy finds STRIDE at demo-taxonomies/, and its
+        taxonomy slugs are known with an empty database."""
+        mock_taxonomy.objects.values_list.return_value = []
+        mock_lp.objects.filter.return_value.exists.return_value = False
+
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            mock_get_libraries_path.return_value = base
+
+            stride_dir = _write_pack(
+                base, "demo-taxonomies/stride-taxonomy", slug="stride-taxonomy"
+            )
+            (stride_dir / "taxonomy.yaml").write_text(
+                yaml.safe_dump(
+                    {
+                        "taxonomies": [
+                            {"slug": "stride", "name": "STRIDE", "entries": []}
+                        ]
+                    }
+                )
+            )
+            pack_dir = _write_pack(
+                base,
+                "threat-libraries/aws",
+                slug="aws",
+                depends_on=["taxonomies/stride-taxonomy"],
+            )
+            joins_dir = pack_dir / "joins"
+            joins_dir.mkdir()
+            (joins_dir / "threats-stride.yaml").write_text(
+                yaml.safe_dump({"taxonomy": "stride", "mappings": []})
+            )
+
+            result = validate_pack(pack_dir)
+
+            self.assertEqual(
+                [w.message for w in result.warnings if w.field == "depends_on"], []
+            )
+            self.assertEqual(
+                [e.message for e in result.errors if e.ref_type == "taxonomy"], []
+            )
+
+
+class DependencySlugTests(SimpleTestCase):
+    """_dependency_slug: a dependency is a slug, whatever folder it names."""
+
+    def test_entries(self):
+        cases = [
+            ("stride-taxonomy", "stride-taxonomy"),
+            ("taxonomies/stride-taxonomy", "stride-taxonomy"),
+            ("a/b/cwe", "cwe"),
+            (" taxonomies/cwe/ ", "cwe"),
+            ({"pack": "cwe", "version": "^1.0.0"}, "cwe"),
+            ({"slug": "capec"}, "capec"),
+            ({"pack": "cwe", "path": "elsewhere/other"}, "cwe"),
+            ({"version": "1.0.0"}, ""),
+            (None, ""),
+            (42, ""),
+        ]
+        for entry, expected_slug in cases:
+            with self.subTest(entry=entry):
+                self.assertEqual(_dependency_slug(entry), expected_slug)
+
+
+class FindPackDirBySlugTests(SimpleTestCase):
+    def test_finds_by_folder_name(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            _write_pack(base, "demo-taxonomies/stride-taxonomy", slug="stride-taxonomy")
+
+            self.assertEqual(
+                _find_pack_dir_by_slug(base, "stride-taxonomy"),
+                base / "demo-taxonomies" / "stride-taxonomy",
+            )
+
+    def test_finds_a_pack_whose_folder_has_another_name(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            _write_pack(base, "standards/asvs-folder", slug="owasp-asvs")
+
+            self.assertEqual(
+                _find_pack_dir_by_slug(base, "owasp-asvs"),
+                base / "standards" / "asvs-folder",
+            )
+
+    def test_missing_or_empty_slug(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            base = Path(tmp)
+            _write_pack(base, "taxonomies/cwe", slug="cwe")
+
+            self.assertIsNone(_find_pack_dir_by_slug(base, "capec"))
+            self.assertIsNone(_find_pack_dir_by_slug(base, ""))
+            self.assertIsNone(_find_pack_dir_by_slug(base / "missing", "cwe"))
 
 
 # =========================================================================
