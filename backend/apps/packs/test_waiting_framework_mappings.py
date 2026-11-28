@@ -4,8 +4,8 @@ The import dialog now ticks every overlay, including those for frameworks that
 are not imported. These tests pin the server side that change relies on:
 
   Importing a pack that maps to a framework not imported yet validates with a
-  warning ("overlay will be stored as pending"), so these imports pass
-  accept_warnings, the "Import anyway" a user chooses.
+  warning ("overlay will be stored as pending") that names the framework. That
+  warning alone does not stop an import: no "Import anyway" is needed.
 
   - item 3: a selected overlay for a missing framework is stored as waiting
     (PendingFrameworkOverlay) and turns on when the framework is imported, and a
@@ -111,7 +111,8 @@ class WaitingFrameworkMappingTests(TestCase):
         (warning,) = validate_pack(mapping_pack).warnings
         self.assertEqual(warning.waiting_for_framework, "std-1")
 
-        self.import_ok(mapping_pack, selected_overlays=["std-1"], accept_warnings=True)
+        # No "Import anyway" needed: a framework not imported yet is no problem.
+        self.import_ok(mapping_pack, selected_overlays=["std-1"])
         library_pack = LibraryPack.objects.get(slug="lib")
         self.assertEqual(
             waiting_framework_mappings(library_pack),

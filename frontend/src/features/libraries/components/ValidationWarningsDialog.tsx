@@ -114,8 +114,8 @@ export function ValidationWarningsDialog({
           {onlyWaiting && (
             <div className="space-y-2 text-sm" data-testid="waiting-frameworks">
               <p>
-                {validationResult.packName}&apos;s mappings to these frameworks are saved. Import the
-                frameworks anytime to see the mappings.
+                These frameworks aren&apos;t imported yet. {validationResult.packName}&apos;s mappings to them
+                are kept and show up when you import them.
               </p>
               <ul className="list-disc pl-5 text-muted-foreground">
                 {validationResult.warnings.map((warning) => (

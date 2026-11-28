@@ -148,7 +148,7 @@ export function ImportPackDialog({
                 <div key={dependencyPack.slug} className="flex items-center gap-2 text-sm">
                   <CircleDashed className="h-4 w-4 text-blue-600" />
                   <span>{dependencyPack.name}</span>
-                  <span className="text-xs text-blue-700">will be imported</span>
+                  <span className="text-xs text-blue-700">will be imported automatically</span>
                 </div>
               ))}
               {unavailableDependencies.map((dependencySlug) => (
@@ -160,7 +160,9 @@ export function ImportPackDialog({
               ))}
             </div>
             {packsToImport.length > 0 && (
-              <p className="text-xs text-muted-foreground">Missing dependencies are imported first.</p>
+              <p className="text-xs text-muted-foreground">
+                Missing dependencies are imported automatically, before {pack?.name}.
+              </p>
             )}
           </div>
         )}
@@ -181,8 +183,8 @@ export function ImportPackDialog({
             </p>
             {overlaysData?.overlays.some((overlay) => !overlay.frameworkExists) && (
               <p className="text-xs text-amber-600">
-                Mappings to a framework you have not imported are saved. They show up in your threat models
-                when you import that framework.
+                Some frameworks aren&apos;t imported yet. {pack?.name}&apos;s checked mappings to them are kept and
+                show up when you import them.
               </p>
             )}
             <div className="space-y-3">
@@ -197,11 +199,14 @@ export function ImportPackDialog({
                     <Label htmlFor={overlay.frameworkId}>{overlay.frameworkName}</Label>
                     <p className="text-xs text-muted-foreground">
                       {overlay.mappingCount} mappings
-                      {!overlay.frameworkExists && (
-                        <span className="block text-amber-600">
-                          Saved. Import the pack that provides {overlay.frameworkId} to see them.
-                        </span>
-                      )}
+                      {!overlay.frameworkExists &&
+                        (uncheckedOverlays.has(overlay.frameworkId) ? (
+                          <span className="block">Not kept. Check to keep these mappings for later.</span>
+                        ) : (
+                          <span className="block text-amber-600">
+                            Needs the {overlay.frameworkId} framework. Import it anytime to see these mappings.
+                          </span>
+                        ))}
                     </p>
                   </div>
                 </div>

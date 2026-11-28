@@ -63,6 +63,9 @@ export function CatalogView() {
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null)
   const [validationDialogOpen, setValidationDialogOpen] = useState(false)
   const [validationPackSlug, setValidationPackSlug] = useState<string | null>(null)
+  // The overlays ticked in the import dialog, resent with "Import anyway" so the
+  // user's choice is kept. null means every overlay, as from the Validate button.
+  const [validationSelectedOverlays, setValidationSelectedOverlays] = useState<string[] | null>(null)
   const [failedImport, setFailedImport] = useState<FailedImportSummary | null>(null)
   const [validationProgressLine, setValidationProgressLine] = useState<string | null>(null)
 
@@ -210,6 +213,7 @@ export function CatalogView() {
       if ((apiError.status === 422 || apiError.status === 400) && 'warningCount' in errorData) {
         setValidationResult(errorData as unknown as ValidationResult)
         setValidationPackSlug(pack.slug)
+        setValidationSelectedOverlays(selectedOverlays)
         setFailedImport(null)
         setValidationProgressLine(dependenciesImportedLine(errorData, allPacks))
         setValidationDialogOpen(true)
@@ -246,6 +250,7 @@ export function CatalogView() {
       if (result.errorCount > 0 || result.warningCount > 0) {
         setValidationResult(result)
         setValidationPackSlug(pack.slug)
+        setValidationSelectedOverlays(null)
         setFailedImport(null)
         setValidationDialogOpen(true)
       } else {
@@ -433,6 +438,7 @@ export function CatalogView() {
                     slug: validationPackSlug,
                     force: true,
                     skipValidation: true,
+                    selectedOverlays: validationSelectedOverlays,
                   })
                   setValidationDialogOpen(false)
                   setValidationResult(null)

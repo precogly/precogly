@@ -2095,8 +2095,15 @@ def _import_pack(
     # Run validation before import unless the caller already did
     if not skip_validation:
         validation_result = validate_pack(pack_path)
+        # A framework not imported yet needs no choice: the import dialog has
+        # already said its mappings wait for it (or the user unticked them).
+        warnings_needing_a_choice = [
+            warning
+            for warning in validation_result.warnings
+            if not warning.waiting_for_framework
+        ]
         if not validation_result.success or (
-            validation_result.warnings and not accept_warnings
+            warnings_needing_a_choice and not accept_warnings
         ):
             return validation_result
 
