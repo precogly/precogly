@@ -48,7 +48,7 @@ def dispatch(
 
     Returns the status, the parsed JSON body and the `Location` header. The body is
     `None` when empty, and the text for anything else, such as Django's HTML 404 for
-    an unrouted path.
+    an unrouted path. Raises `APIError` for a streaming response, such as a file.
     """
     # Addressed to the endpoint's public origin. `RequestFactory` defaults to
     # `testserver` over http, which production refuses twice: the host is not in
@@ -70,6 +70,21 @@ def dispatch(
 
     response = _handler().get_response(request)
     status, location = response.status_code, response.get("Location")
+
+    # A streaming response has no `.content`. For now only `/media/` under
+    # DEBUG streams.
+    # File bytes currently are no use to the agent.
+    # `close()` releases the file a `FileResponse` holds open, since nothing else
+    # consumes this response.
+    # TODO: A streamed JSON or CSV export would be useful to the agent; once one
+    #       exists, read `streaming_content` for text types up to a size cap instead.
+    if response.streaming:
+        content_type = response.get("Content-Type", "an unknown type")
+        response.close()
+        raise APIError(
+            f"{method} {path} returned a file ({content_type}). "
+            "Files are not downloaded through this tool."
+        )
 
     if not response.content:
         return status, None, location
