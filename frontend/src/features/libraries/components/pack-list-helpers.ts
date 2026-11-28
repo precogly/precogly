@@ -1,6 +1,6 @@
 import { ApiError } from '@/lib/api'
 import type { AvailablePacksResponse, ImportFailureBody, SourcePackInfo } from '@/features/libraries/api/packs'
-import type { LibraryPackListItem } from '@/features/libraries/types/packs'
+import type { LibraryPackListItem, ValidationResult, WaitingFramework } from '@/features/libraries/types/packs'
 import type { UnifiedPack } from './unified-pack'
 
 /** Folder prefix of the demo packs bundled with the app: demo-taxonomies, demo-standards. */
@@ -368,4 +368,29 @@ export function catalogSourceInfo(response: AvailablePacksResponse | undefined):
 /** The pack's folder at the listed release on GitHub, or empty when there is none. */
 export function packSourceUrl(source: CatalogSourceInfo | null, relativePath: string): string {
   return source?.packsUrl && relativePath ? `${source.packsUrl}${relativePath}` : ''
+}
+
+/**
+ * True when every issue found is a framework not imported yet. Those mappings
+ * are saved and added when the framework is imported, so the page words the
+ * dialog as information rather than a problem.
+ */
+export function onlyWaitingForFrameworks(result: ValidationResult): boolean {
+  return (
+    result.errorCount === 0 &&
+    result.warnings.length > 0 &&
+    result.warnings.every((warning) => Boolean(warning.waitingForFramework))
+  )
+}
+
+/** "25 mappings are waiting for 3 frameworks: a, b, c.", or null when none wait. */
+export function waitingFrameworksLine(waitingFrameworks: WaitingFramework[] | undefined): string | null {
+  if (!waitingFrameworks?.length) return null
+  const mappingTotal = waitingFrameworks.reduce((sum, waiting) => sum + waiting.mappingCount, 0)
+  const frameworkSlugs = waitingFrameworks.map((waiting) => waiting.frameworkSlug).join(', ')
+  const mappingWords = mappingTotal === 1 ? '1 mapping is' : `${mappingTotal} mappings are`
+  if (waitingFrameworks.length === 1) {
+    return `${mappingWords} waiting for ${frameworkSlugs}. Import it to see the mappings.`
+  }
+  return `${mappingWords} waiting for ${waitingFrameworks.length} frameworks: ${frameworkSlugs}. Import them to see the mappings.`
 }

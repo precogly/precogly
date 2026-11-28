@@ -10,6 +10,7 @@ import type {
   PackDependencyCheck,
   PackFilters,
   ValidationResult,
+  WaitingFramework,
 } from '@/features/libraries/types/packs'
 
 // Query keys
@@ -89,6 +90,8 @@ export interface ImportResult {
   warnings: string[]
   /** Dependencies imported first, in order, by this request. */
   dependenciesImported?: string[]
+  /** Frameworks the imported pack maps to that are not imported yet. */
+  waitingFrameworks?: WaitingFramework[]
 }
 
 /**

@@ -23,8 +23,13 @@ from django.test import TestCase
 
 from apps.compliance.models import CountermeasureLibraryStandard
 from apps.packs.fake_catalog import write_pack_folder
-from apps.packs.models import PendingFrameworkOverlay
-from apps.packs.services import ImportResult, import_pack_from_path
+from apps.packs.models import LibraryPack, PendingFrameworkOverlay
+from apps.packs.services import (
+    ImportResult,
+    import_pack_from_path,
+    validate_pack,
+    waiting_framework_mappings,
+)
 
 
 def write_standards_pack(root: Path, version: str = "1.0.0") -> Path:
@@ -102,7 +107,16 @@ class WaitingFrameworkMappingTests(TestCase):
     def test_a_selected_overlay_for_a_missing_framework_waits_and_then_turns_on(self):
         mapping_pack = write_mapping_pack(self.root, ["R1", "R2"])
 
+        # The page words this warning softly, so it must say which framework.
+        (warning,) = validate_pack(mapping_pack).warnings
+        self.assertEqual(warning.waiting_for_framework, "std-1")
+
         self.import_ok(mapping_pack, selected_overlays=["std-1"], accept_warnings=True)
+        library_pack = LibraryPack.objects.get(slug="lib")
+        self.assertEqual(
+            waiting_framework_mappings(library_pack),
+            [{"framework_slug": "std-1", "mapping_count": 1}],
+        )
         self.assertTrue(
             PendingFrameworkOverlay.objects.filter(
                 pack__slug="lib", framework_slug="std-1"
@@ -122,6 +136,8 @@ class WaitingFrameworkMappingTests(TestCase):
 
         self.import_ok(write_standards_pack(self.root))
         self.assertEqual(self.mapped_codes(), {"R1", "R2"})
+        # The pending row stays for re-activation, but nothing waits any more.
+        self.assertEqual(waiting_framework_mappings(library_pack), [])
 
     def test_an_unselected_overlay_for_a_missing_framework_is_dropped(self):
         # The old dialog's behaviour: the framework was not imported, so it was

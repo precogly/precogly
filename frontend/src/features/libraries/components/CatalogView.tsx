@@ -41,6 +41,7 @@ import {
   showCatalogUnreachableNotice,
   showDemoContentNotice,
   sortPacksForList,
+  waitingFrameworksLine,
   type PackStatusFilter,
 } from './pack-list-helpers'
 
@@ -153,19 +154,27 @@ export function CatalogView() {
         dependencyCount > 0
           ? `${pack.name} and ${dependencyCount} ${dependencyCount === 1 ? 'dependency' : 'dependencies'}`
           : pack.name
+      const waitingLine = waitingFrameworksLine(result.waitingFrameworks)
       if (result.warnings && result.warnings.length > 0) {
         toast.warning(
           `Imported ${importedWhat} with ${result.warnings.length} warning(s)`,
           {
-            description:
+            description: [
               result.warnings[0] +
-              (result.warnings.length > 1
-                ? ` (+${result.warnings.length - 1} more)`
-                : ''),
+                (result.warnings.length > 1
+                  ? ` (+${result.warnings.length - 1} more)`
+                  : ''),
+              waitingLine,
+            ]
+              .filter(Boolean)
+              .join(' '),
           }
         )
       } else {
-        toast.success(dependencyCount > 0 ? `Imported ${importedWhat}` : `Successfully imported ${pack.name}`)
+        toast.success(
+          dependencyCount > 0 ? `Imported ${importedWhat}` : `Successfully imported ${pack.name}`,
+          waitingLine ? { description: waitingLine } : undefined,
+        )
       }
     } catch (error: unknown) {
       if (isNoUsableResponse(error)) {
@@ -428,13 +437,17 @@ export function CatalogView() {
                   setValidationDialogOpen(false)
                   setValidationResult(null)
                   setValidationPackSlug(null)
+                  const waitingLine = waitingFrameworksLine(result.waitingFrameworks)
                   if (result.warnings && result.warnings.length > 0) {
                     toast.warning(
                       `Imported with ${result.warnings.length} warning(s)`,
-                      { description: result.warnings[0] }
+                      { description: [result.warnings[0], waitingLine].filter(Boolean).join(' ') }
                     )
                   } else {
-                    toast.success(`Successfully imported ${result.packName}`)
+                    toast.success(
+                      `Successfully imported ${result.packName}`,
+                      waitingLine ? { description: waitingLine } : undefined,
+                    )
                   }
                 } catch {
                   toast.error('Import failed')

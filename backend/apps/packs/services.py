@@ -740,6 +740,9 @@ class ValidationWarning:
     field: str
     message: str
     suggestion: str
+    # Set when the only issue is a framework that is not imported yet: the
+    # mappings are saved and added when it is. The page words these softly.
+    waiting_for_framework: str = ""
 
 
 @dataclass
@@ -775,6 +778,7 @@ class ValidationResult:
                     "field": w.field,
                     "message": w.message,
                     "suggestion": w.suggestion,
+                    "waiting_for_framework": w.waiting_for_framework,
                 }
                 for w in self.warnings
             ],
@@ -1734,6 +1738,7 @@ def validate_pack(pack_path: Path) -> ValidationResult:
                                 "Import the framework pack first, or the overlay will"
                                 " activate automatically when the framework is imported."
                             ),
+                            waiting_for_framework=framework_slug,
                         )
                     )
                     continue
@@ -4094,6 +4099,30 @@ def get_pending_overlays_for_pack(pack: LibraryPack) -> list[dict]:
             "mapping_count": p.mapping_count,
         }
         for p in pending
+    ]
+
+
+def waiting_framework_mappings(pack: LibraryPack) -> list[dict]:
+    """The frameworks this pack has mappings for that are not imported yet.
+
+    Pending overlays are kept after their framework is imported (so a re-import
+    can re-apply them), so "waiting" means the framework is still missing. Each
+    entry is {framework_slug, mapping_count}, sorted by framework.
+    """
+    from apps.compliance.models import StandardFramework
+
+    imported_framework_slugs = StandardFramework.objects.values("slug")
+    waiting_overlays = (
+        PendingFrameworkOverlay.objects.filter(pack=pack)
+        .exclude(framework_slug__in=imported_framework_slugs)
+        .order_by("framework_slug")
+    )
+    return [
+        {
+            "framework_slug": waiting_overlay.framework_slug,
+            "mapping_count": waiting_overlay.mapping_count,
+        }
+        for waiting_overlay in waiting_overlays
     ]
 
 

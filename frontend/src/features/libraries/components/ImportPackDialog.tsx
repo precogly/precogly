@@ -51,7 +51,7 @@ export function ImportPackDialog({
     error: overlaysError,
   } = usePackOverlays(pack?.relativePath || null)
   // Every overlay is ticked unless the user unticks it, including those for a
-  // framework that is not imported yet: that mapping is saved and turns on when
+  // framework that is not imported yet: that mapping is saved and added when
   // the framework is imported. The parent gives this dialog a key per pack, so
   // the unticked set starts empty for each pack.
   const [uncheckedOverlays, setUncheckedOverlays] = useState<Set<string>>(new Set())
@@ -181,8 +181,8 @@ export function ImportPackDialog({
             </p>
             {overlaysData?.overlays.some((overlay) => !overlay.frameworkExists) && (
               <p className="text-xs text-amber-600">
-                Mappings to a framework you have not imported are saved. They turn on when you import that
-                framework.
+                Mappings to a framework you have not imported are saved. They show up in your threat models
+                when you import that framework.
               </p>
             )}
             <div className="space-y-3">
@@ -198,7 +198,9 @@ export function ImportPackDialog({
                     <p className="text-xs text-muted-foreground">
                       {overlay.mappingCount} mappings
                       {!overlay.frameworkExists && (
-                        <span className="ml-2 text-amber-600">(turns on when you import this framework)</span>
+                        <span className="block text-amber-600">
+                          Saved. Import the pack that provides {overlay.frameworkId} to see them.
+                        </span>
                       )}
                     </p>
                   </div>

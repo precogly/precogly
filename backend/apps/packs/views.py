@@ -28,6 +28,7 @@ from .services import (
     open_discovered_pack,
     sync_all_packs_from_source,
     validate_pack,
+    waiting_framework_mappings,
 )
 
 
@@ -297,8 +298,17 @@ class LibraryPackViewSet(viewsets.ReadOnlyModelViewSet):
 
         if result.success:
             # Connected to every threat model by import_pack_with_dependencies.
+            imported_pack = LibraryPack.objects.filter(slug=slug).first()
+            waiting_frameworks = (
+                waiting_framework_mappings(imported_pack) if imported_pack else []
+            )
             return Response(
-                {**result.to_dict(), **progress}, status=status.HTTP_201_CREATED
+                {
+                    **result.to_dict(),
+                    **progress,
+                    "waiting_frameworks": waiting_frameworks,
+                },
+                status=status.HTTP_201_CREATED,
             )
         return Response(
             {**result.to_dict(), **progress}, status=status.HTTP_400_BAD_REQUEST

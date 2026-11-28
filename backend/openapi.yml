@@ -13112,6 +13112,9 @@ components:
         isImported:
           type: string
           readOnly: true
+        waitingFrameworks:
+          type: string
+          readOnly: true
       required:
       - author
       - description
@@ -13121,6 +13124,7 @@ components:
       - packType
       - slug
       - version
+      - waitingFrameworks
     LifecyclePhaseEnum:
       enum:
       - design

@@ -12,9 +12,11 @@ import {
   isNoUsableResponse,
   matchesStatus,
   onlyBundledPacksImported,
+  onlyWaitingForFrameworks,
   showCatalogUnreachableNotice,
   showDemoContentNotice,
   sortPacksForList,
+  waitingFrameworksLine,
 } from '../components/pack-list-helpers'
 import { dependency, makePack } from './pack-fixtures'
 
@@ -218,5 +220,49 @@ describe('a failed import', () => {
     expect(isNoUsableResponse(new ApiError('API Error: 502', 502, '<html>Bad Gateway</html>'))).toBe(true)
     expect(isNoUsableResponse(new ApiError('API Error: 504', 504, ''))).toBe(true)
     expect(isNoUsableResponse(new ApiError('API Error: 400', 400, { failedDependency: 'cwe' }))).toBe(false)
+  })
+})
+
+describe('mappings waiting for a framework', () => {
+  const warning = (waitingForFramework = '') => ({
+    file: 'joins/countermeasures-x.yaml',
+    field: 'framework',
+    message: 'm',
+    suggestion: 's',
+    waitingForFramework,
+  })
+  const validation = (warnings: ReturnType<typeof warning>[], errorCount = 0) => ({
+    success: errorCount === 0,
+    packSlug: 'bci-mini',
+    packName: 'BCI Mini',
+    version: '1.0.0',
+    errors: [],
+    warnings,
+    errorCount,
+    warningCount: warnings.length,
+  })
+
+  it('is information only when every warning is a framework not imported yet', () => {
+    expect(onlyWaitingForFrameworks(validation([warning('hipaa-security-2013'), warning('iec-81001-2021')]))).toBe(true)
+    expect(onlyWaitingForFrameworks(validation([warning('hipaa-security-2013'), warning()]))).toBe(false)
+    expect(onlyWaitingForFrameworks(validation([warning('hipaa-security-2013')], 1))).toBe(false)
+    expect(onlyWaitingForFrameworks(validation([]))).toBe(false)
+  })
+
+  it('sums the mappings and names the frameworks', () => {
+    expect(
+      waitingFrameworksLine([
+        { frameworkSlug: 'fda-premarket-2023', mappingCount: 8 },
+        { frameworkSlug: 'hipaa-security-2013', mappingCount: 8 },
+        { frameworkSlug: 'iec-81001-2021', mappingCount: 9 },
+      ]),
+    ).toBe(
+      '25 mappings are waiting for 3 frameworks: fda-premarket-2023, hipaa-security-2013, iec-81001-2021. Import them to see the mappings.',
+    )
+    expect(waitingFrameworksLine([{ frameworkSlug: 'std-1', mappingCount: 1 }])).toBe(
+      '1 mapping is waiting for std-1. Import it to see the mappings.',
+    )
+    expect(waitingFrameworksLine([])).toBeNull()
+    expect(waitingFrameworksLine(undefined)).toBeNull()
   })
 })
