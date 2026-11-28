@@ -16,7 +16,11 @@ dependencies = [
     "django-allauth>=65.0,<66.0",
     "requests>=2.32,<3.0",
     # OAuth 2.1 authorization server, for MCP clients delegating a user's access.
-    "django-oauth-toolkit>=3.4,<4.0",
+    # 3.4.1 is the first release that refuses a refresh token past
+    # REFRESH_TOKEN_EXPIRE_SECONDS when it is used, rather than only in
+    # `cleartokens`, and the first with `refresh_token_expire_timedelta`, which
+    # apps/oauth/views.py imports.
+    "django-oauth-toolkit>=3.4.1,<4.0",
     # The MCP endpoint, served from this process (config/mcp_mount.py). a2wsgi
     # bridges the MCP server's ASGI app into this WSGI application, which is only
     # affordable because that app is configured for JSON responses and never

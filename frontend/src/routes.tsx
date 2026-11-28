@@ -24,6 +24,9 @@ import {
   SystemsSettings,
   AIProviderSettings,
   GuestThreatAnalysis,
+  OAuthConsent,
+  OAuthError,
+  AuthorizedApplicationsSettings,
 } from '@/pages'
 import { Suspense } from 'react'
 
@@ -56,6 +59,16 @@ export const router = createBrowserRouter([
   {
     path: '/invite/:token',
     element: isGuestOnly ? <Navigate to="/" replace /> : <AcceptInvitation />,
+  },
+  // Consent for MCP clients; signs the user in first if needed
+  {
+    path: '/oauth/consent',
+    element: isGuestOnly ? <Navigate to="/" replace /> : <OAuthConsent />,
+  },
+  // An authorization error with no trusted redirect URI to send it back to
+  {
+    path: '/oauth/error',
+    element: isGuestOnly ? <Navigate to="/" replace /> : <OAuthError />,
   },
   // Guest mode DFD editor (no auth required)
   {
@@ -100,6 +113,7 @@ export const router = createBrowserRouter([
           { path: 'business-units', element: <BusinessUnitsSettings /> },
           { path: 'systems', element: <SystemsSettings /> },
           { path: 'ai-providers', element: <AIProviderSettings /> },
+          { path: 'authorized-apps', element: <AuthorizedApplicationsSettings /> },
         ],
       },
     ],

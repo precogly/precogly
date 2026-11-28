@@ -1,6 +1,9 @@
 # 0004: Where the user authorizes
 
-Status: accepted; the drift trade-off superseded by [0009](0009-the-auth-pages-are-built-not-copied.md)
+Status: partly superseded. The server-rendered login and consent, and the session that
+authenticates them ("Two authentication mechanisms"), by
+[0015](0015-consent-is-a-page-of-the-application.md); the drift trade-off earlier by
+[0009](0009-the-auth-pages-are-built-not-copied.md). `ALLOW_LOCALHOST_LOOPBACK` stands.
 Date: 2026-07-29
 Relates to: [0003](0003-oauth-authorization-server.md)
 

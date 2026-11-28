@@ -1,44 +1,48 @@
 # MCP Server
 
-Precogly includes an MCP server. It lets AI assistants such as Claude.ai, Claude Code, and other MCP clients read data from your Precogly instance. Today the server is read-only. It cannot create or change anything.
+Precogly includes an MCP server. It lets AI assistants such as Claude.ai, Claude Code, and other MCP clients work with your Precogly instance through its REST API, as you.
 
 ## Available tools
 
-| Tool | What it does | Key parameters |
-| --- | --- | --- |
-| `list_threat_models` | Lists the threat models in your organizations, most recently updated first. | `organization_id` (optional) |
-| `search_threat_library` | Searches the shared library of threat templates. | `query` |
-| `search_countermeasure_library` | Searches the shared library of countermeasure templates. | `query`, `control_function`, `control_nature`, `cost` |
-| `search_component_library` | Searches the shared library of component templates. | `query`, `category`, `kind` |
+| Tool | What it does |
+| --- | --- |
+| `whoami` | Shows who the connection acts as: your user, your organizations and your role in each, and the connection's scopes. |
+| `search` | Finds API endpoints. The assistant writes Python that searches the API's OpenAPI schema for the endpoints, parameters, and request bodies it needs. |
+| `execute` | Calls the API. The assistant writes Python that makes the calls and works out the answer, for example counting threats across every page of a listing. |
 
-All parameters are optional. Leave them out to get everything.
+The assistant's code runs in a sandbox with no network or file access. Its only way to reach Precogly is the API, as you, so it sees only your organizations and can do only what you can. Each `execute` run may make 100 API calls and take 30 seconds.
 
-### What comes back
+### Reading and changing data
 
-**`list_threat_models`** returns a `models` list and a `total`. Each model has its name, description, criticality, owner (email), owning team, business unit, compliance frameworks, risk scoring method, methodologies, lifecycle phase, approval date, primary system name, serial number, version, blueprint count, and created and updated times. It does not return the contents of a model.
+A new connection can only read. Changing data, such as creating or editing a threat model, needs write access, which you grant the first time the assistant tries a change ([step-up authorization](https://modelcontextprotocol.io/specification/2025-11-25/basic/authorization#step-up-authorization-flow)):
 
-`frameworks` shows which frameworks at least one countermeasure maps to. It does not mean the model is compliant. Check `total` before saying how many models exist.
+1. Precogly refuses the call and tells the client it needs write access.
+2. The client opens Precogly's consent page in your browser, now listing both read and write access.
+3. You confirm your password and choose **Allow**.
+4. The client retries the call, and the change goes through.
 
-**The three library searches** return `matches`, `matched` (how many matched), and `catalogSize` (how many the library holds). The libraries are shared by all organizations and filled by installed packs. They are templates, not the threats, countermeasures, or components in a particular model.
+![The consent page asking for read and write access](../assets/images/mcp-consent-write-access.png)
 
-| Tool | Matching rules | Fields in each row |
-| --- | --- | --- |
-| `search_threat_library` | `query` matches name, description, and taxonomy titles. A taxonomy ID such as `CWE-20` must match in full. | Name, description, pack name, taxonomy entries (taxonomy, external ID, title) |
-| `search_countermeasure_library` | `query` matches name and description. `control_function` is for example `preventive`, `detective`, or `corrective`. `control_nature` is `technical`, `administrative`, or `physical`. `cost` is `low`, `medium`, or `high`. | Name, description, control functions, control nature, cost, default status (`gap` or `platform`), pack name |
-| `search_component_library` | `query` matches name, component type, provider, and qualified slug. `category` is `process`, `datastore`, `external_human_actor`, or `external_system_actor`. `kind` is a CycloneDX asset type such as `device`, `service`, or `data-store`. | Qualified slug, name, category, kind, effective kind, component type, provider, pack name |
+The refused call changed nothing, so the retry does not repeat any change. Claude Code supports step-up authorization. A client that does not, such as opencode, reports an authorization error instead. opencode needs `oauth.scope` set to `read write`, as shown under [Other clients](#other-clients).
 
-All text matching ignores case.
+Your MCP client may ask before running `execute`, because the tool can change data.
 
 ## Connect an MCP client
 
 The endpoint is `<your Precogly URL>/mcp`. On a local install it is `http://localhost:8000/mcp`.
 
-You do not paste a token anywhere. The first time a client connects, it is sent to Precogly's own login and consent pages in your browser. You sign in and approve access. The client then gets a token that acts as you.
+You do not paste a token anywhere. The first time a client connects, it opens Precogly in your browser. Sign in if you are not already signed in, then confirm your password and choose **Allow**. The client then gets a token that acts as you.
 
 !!! note
     The token sees only the data in the organizations you belong to. It has the same access you have, no more.
 
 The access token lasts 10 hours. The client refreshes it without asking you again, for up to 7 days. After that, you sign in again.
+
+### See and revoke connected clients
+
+**Settings > Authorized applications** lists every client that can act as you, with the access it has and the date it was added. **Revoke access** ends that client's access at once, including any session it has open. To use it again, you approve it again.
+
+![Settings > Authorized applications, with one client that can read and write and one that can only read](../assets/images/mcp-authorized-applications.png)
 
 ### Claude.ai
 
@@ -97,6 +101,23 @@ opencode mcp auth precogly     # discovery, registration, browser consent
 opencode mcp list              # shows "connected"
 ```
 
+opencode does not support step-up authorization, so a change fails with "requires user authorization". To give it write access, add an `oauth` entry asking for both scopes, then run `opencode mcp auth precogly` again:
+
+```json
+{
+  "mcp": {
+    "precogly": {
+      "type": "remote",
+      "url": "http://localhost:8000/mcp",
+      "enabled": true,
+      "oauth": { "scope": "read write" }
+    }
+  }
+}
+```
+
+With this entry, every new opencode connection can write as soon as you approve it.
+
 ## Self-hosting notes
 
 The MCP endpoint runs inside the Precogly backend. You do not deploy a separate service.
@@ -113,7 +134,7 @@ For a public endpoint, set these in the backend environment:
 Your reverse proxy must send these paths to the backend:
 
 - `/mcp`
-- `/o/*` (sign-in and token endpoints)
+- `/o/*` (authorization, token and client registration endpoints)
 - `/.well-known/*` (discovery documents)
 
 Do not run gunicorn with `--preload`. The MCP endpoint starts its own background thread in each worker.

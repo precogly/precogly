@@ -68,6 +68,7 @@ LOCAL_APPS = [
     "apps.diagrams",
     "apps.compliance",
     "apps.packs",
+    "apps.oauth",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -152,11 +153,6 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-# The two server-rendered OAuth pages are the only thing here that needs static
-# files; everything else a user sees is served by Vite. `css/auth.css` is built
-# from the frontend's own tokens by `npm run build:auth-css` and committed,
-# because this image has no Node in it.
-STATICFILES_DIRS = [BASE_DIR / "static"]
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -269,12 +265,11 @@ AUTHENTICATION_BACKENDS = [
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
-# Where django-oauth-toolkit's authorize view sends an unauthenticated user.
-# Django's default is "/accounts/login/", which resolved to nothing here until
-# allauth's URLs were routed in config.urls — the authorize endpoint answered a
-# 404 rather than a login page.
-LOGIN_URL = "/accounts/login/"
 
+# django-oauth-toolkit's default, declared here because Django's migration autodetector
+# reads it from Django settings to order migrations for any model with a foreign key to
+# `Application`, and fails with an AttributeError when it is absent.
+OAUTH2_PROVIDER_APPLICATION_MODEL = "oauth2_provider.Application"
 
 # OAuth 2.1 authorization server. Precogly issues the tokens; the MCP server is
 # a resource server that validates them and holds no credential of its own.
@@ -283,8 +278,15 @@ OAUTH2_PROVIDER = {
     # an agent reads them and nothing else, so they name what is at stake rather
     # than restating the verb.
     "SCOPES": {
-        "read": "Read your threat models, diagrams and installed libraries",
-        "write": "Create and change threat models on your behalf",
+        "read": (
+            "See your threat models, diagrams, risks and libraries, and your "
+            "organizations' members and settings"
+        ),
+        "write": (
+            "Create, edit and delete your threat models, diagrams, risks and "
+            "libraries, invite people to your teams, share by link, and change your "
+            "organizations' settings, on your behalf"
+        ),
     },
     # The default is ["__all__"], which would hand every new client write access
     # without anyone choosing it. A client that wants to write has to ask.

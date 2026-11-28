@@ -1,10 +1,4 @@
-/* Design tokens for Precogly.
- *
- * Split out of index.css so that the two server-rendered pages in the OAuth
- * authorization flow can be built from the same source. They are Django
- * templates and cannot import from the application, so before this file existed
- * their palette was a hand-copied snapshot that drifted. See src/auth.css.
- */
+/* Design tokens for Precogly. */
 
 @custom-variant dark (&:is(.dark *));
 

@@ -1,0 +1,191 @@
+"""`dispatch` runs an API request in-process, as a given user.
+
+The settings are overridden to look like production. The test runner adds `testserver`
+to `ALLOWED_HOSTS` and leaves `SECURE_SSL_REDIRECT` off, which would hide both ways
+an in-process request addressed like `RequestFactory`'s default fails in production.
+"""
+
+import pytest
+from asgiref.sync import async_to_sync
+from django.contrib.auth import get_user_model
+from django.test import TestCase, override_settings
+from mcp.server.auth.provider import AccessToken
+
+from apps.core.mcp import api as mcp
+from apps.core.mcp.errors import APIError
+from apps.organizations.models import Organization, OrganizationMember
+from apps.threat_models.models import ThreatModel
+
+User = get_user_model()
+
+
+def member_of(organization, email, role="member"):
+    """A user whose only membership is `organization`, whatever the signal granted."""
+    user = User.objects.create_user(username=email, email=email, password="testpass123")
+    user.organization_memberships.all().delete()
+    user.team_memberships.all().delete()
+    OrganizationMember.objects.create(organization=organization, user=user, role=role)
+    return user
+
+
+@override_settings(
+    ALLOWED_HOSTS=["precogly.example"],
+    MCP_RESOURCE_URL="https://precogly.example/mcp",
+    SECURE_SSL_REDIRECT=True,
+)
+class DispatchTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        kestrel = Organization.objects.create(name="Kestrel", domain="kestrel.test")
+        contoso = Organization.objects.create(name="Contoso", domain="contoso.test")
+        ThreatModel.objects.create(organization=kestrel, name="Ingest pipeline")
+        ThreatModel.objects.create(organization=contoso, name="Contoso ledger")
+        cls.kestrel_user = member_of(kestrel, "ana@kestrel.test")
+        cls.contoso_user = member_of(contoso, "raj@contoso.test")
+
+    def setUp(self):
+        # Middleware reads settings when it is built, so a handler cached by an
+        # earlier test would not see the overrides above.
+        mcp._handler.cache_clear()
+
+    def test_an_unrouted_path_comes_back_as_a_status_not_an_exception(self):
+        status, body, _ = mcp.dispatch(self.kestrel_user, "GET", "/api/no-such-route/")
+
+        assert status == 404
+        assert isinstance(body, str)
+
+    def test_params_become_the_query_string(self):
+        ThreatModel.objects.create(
+            organization=self.kestrel_user.organization_memberships.get().organization,
+            name="Card vault",
+        )
+
+        status, body, _ = mcp.dispatch(
+            self.kestrel_user,
+            "GET",
+            "/api/threat-models/",
+            params={"search": "vault"},
+        )
+
+        assert status == 200, body
+        assert [row["name"] for row in body["results"]] == ["Card vault"]
+
+    def test_body_is_sent_as_json(self):
+        model = ThreatModel.objects.get(name="Ingest pipeline")
+        # A plain member gets 403 here: editing a threat model is security team work.
+        editor = member_of(model.organization, "lee@kestrel.test", role="security_team")
+
+        status, body, _ = mcp.dispatch(
+            editor,
+            "PATCH",
+            f"/api/threat-models/{model.pk}/",
+            body={"name": "Ingest pipeline v2"},
+        )
+
+        assert status == 200, body
+        model.refresh_from_db()
+        assert model.name == "Ingest pipeline v2"
+
+    def test_request_refuses_a_query_in_both_the_path_and_params(self):
+        access_token = AccessToken(
+            token="t",
+            client_id="c",
+            scopes=["read"],
+            subject=str(self.kestrel_user.pk),
+        )
+
+        with pytest.raises(APIError, match="not both"):
+            async_to_sync(mcp.request)(
+                access_token,
+                "GET",
+                "/api/threat-models/?search=a",
+                params={"search": "b"},
+            )
+
+    def test_request_reads_as_the_user_the_token_names(self):
+        # `async_to_sync` over `sync_to_async(thread_sensitive=True)` keeps the query
+        # on this thread, inside this TestCase's transaction.
+        access_token = AccessToken(
+            token="t",
+            client_id="c",
+            scopes=["read"],
+            subject=str(self.kestrel_user.pk),
+        )
+
+        body = async_to_sync(mcp.request)(access_token, "get", "/api/threat-models/")
+
+        assert [row["name"] for row in body["results"]] == ["Ingest pipeline"]
+
+    def test_request_raises_on_an_error_status_with_drfs_reason(self):
+        # Kestrel's user cannot see Contoso's model, so the viewset answers 404.
+        access_token = AccessToken(
+            token="t",
+            client_id="c",
+            scopes=["read"],
+            subject=str(self.kestrel_user.pk),
+        )
+        contoso_model = ThreatModel.objects.get(name="Contoso ledger")
+
+        with pytest.raises(APIError) as raised:
+            async_to_sync(mcp.request)(
+                access_token, "GET", f"/api/threat-models/{contoso_model.pk}/"
+            )
+
+        assert str(raised.value) == (
+            f"GET /api/threat-models/{contoso_model.pk}/ returned 404: "
+            "No ThreatModel matches the given query."
+        )
+
+    def test_request_raises_on_a_redirect_with_where_it_points(self):
+        # Without the trailing slash, Django answers 301 before the view runs, so
+        # `request` used to return None as though the PATCH had saved.
+        model = ThreatModel.objects.get(name="Ingest pipeline")
+        editor = member_of(model.organization, "lee@kestrel.test", role="security_team")
+        access_token = AccessToken(
+            token="t",
+            client_id="c",
+            scopes=["read", "write"],
+            subject=str(editor.pk),
+        )
+
+        with pytest.raises(APIError) as raised:
+            async_to_sync(mcp.request)(
+                access_token,
+                "PATCH",
+                f"/api/threat-models/{model.pk}",
+                body={"name": "Ingest pipeline v2"},
+            )
+
+        assert "returned 301" in str(raised.value)
+        assert f"/api/threat-models/{model.pk}/" in str(raised.value)
+        model.refresh_from_db()
+        assert model.name == "Ingest pipeline"
+
+    def test_request_names_the_invalid_field_as_the_model_wrote_it(self):
+        # The execute description promises the error says which field was invalid.
+        # The key is camelCase, as in every body the model reads.
+        organization = ThreatModel.objects.get(name="Ingest pipeline").organization
+        editor = member_of(organization, "lee@kestrel.test", role="security_team")
+        access_token = AccessToken(
+            token="t",
+            client_id="c",
+            scopes=["read", "write"],
+            subject=str(editor.pk),
+        )
+
+        with pytest.raises(APIError) as raised:
+            async_to_sync(mcp.request)(
+                access_token,
+                "POST",
+                "/api/threat-models/",
+                body={
+                    "organization": organization.pk,
+                    "name": "Card vault",
+                    "owningTeam": 999999,
+                },
+            )
+
+        assert str(raised.value) == (
+            "POST /api/threat-models/ returned 400: "
+            'owningTeam: Invalid pk "999999" - object does not exist.'
+        )

@@ -4540,6 +4540,110 @@ paths:
       responses:
         '204':
           description: No response body
+  /api/oauth/authorized-apps/:
+    get:
+      operationId: oauth_authorized_apps_list
+      description: Lists the MCP clients that can currently act on the user's account.
+      tags:
+      - oauth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuthorizedApplication'
+          description: ''
+  /api/oauth/authorized-apps/{application_id}/:
+    delete:
+      operationId: oauth_authorized_apps_destroy
+      description: Revokes one MCP client's access to the user's account.
+      parameters:
+      - in: path
+        name: application_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - oauth
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/oauth/pending-authorizations/{handle}/:
+    get:
+      operationId: oauth_pending_authorizations_retrieve
+      description: |-
+        Returns a pending authorization request to the consent page, binding it to the
+        first user who reads it.
+
+        Every refusal is a 404, so the response never says whether a handle exists.
+      parameters:
+      - in: path
+        name: handle
+        schema:
+          type: string
+        required: true
+      tags:
+      - oauth
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingAuthorization'
+          description: ''
+  /api/oauth/pending-authorizations/{handle}/decision/:
+    post:
+      operationId: oauth_pending_authorizations_decision_create
+      description: |-
+        Records whether the user allows or denies the client, and returns where the
+        browser goes next.
+
+        Only the user bound by reading the handle can allow or deny the client:
+
+            decision  password  row afterwards                         response
+            --------  --------  -------------------------------------  ----------------
+            deny      ignored   used                                   200, access_denied
+            allow     correct   used                                   200, code
+            allow     wrong     one more failure; used at the fifth    400
+            any       any       (unbound, another user's, expired,     404
+                                or already used)
+      parameters:
+      - in: path
+        name: handle
+        schema:
+          type: string
+        required: true
+      tags:
+      - oauth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Decision'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Decision'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Decision'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecisionResult'
+          description: ''
   /api/organizations/:
     get:
       operationId: organizations_list
@@ -11277,6 +11381,31 @@ components:
       - id
       - ownerEmail
       - updatedAt
+    AuthorizedApplication:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        scopes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Scope'
+        registeredAt:
+          type: string
+          format: date-time
+        runsLocally:
+          type: boolean
+        redirectHost:
+          type: string
+      required:
+      - id
+      - name
+      - redirectHost
+      - registeredAt
+      - runsLocally
+      - scopes
     AvailabilityEnum:
       enum:
       - low
@@ -12146,6 +12275,23 @@ components:
       description: |-
         * `at_rest` - At Rest
         * `processed` - Processed
+    Decision:
+      type: object
+      properties:
+        allow:
+          type: boolean
+        password:
+          type: string
+          writeOnly: true
+      required:
+      - allow
+    DecisionResult:
+      type: object
+      properties:
+        redirectUrl:
+          type: string
+      required:
+      - redirectUrl
     DefaultLevelEnum:
       enum:
       - info
@@ -16381,6 +16527,29 @@ components:
           type: string
           format: date-time
           readOnly: true
+    PendingAuthorization:
+      type: object
+      description: |-
+        What the consent page shows before the user allows or denies a client.
+
+        The registering client supplies `client_name` during dynamic client registration,
+        unvetted, so the page must render it as plain text, never as HTML.
+      properties:
+        clientName:
+          type: string
+        scopes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Scope'
+        redirectUri:
+          type: string
+        loopbackRedirect:
+          type: boolean
+      required:
+      - clientName
+      - loopbackRedirect
+      - redirectUri
+      - scopes
     PentestFinding:
       type: object
       description: Serializer for PentestFinding.
@@ -16785,6 +16954,16 @@ components:
         * `owasp-risk-rating` - OWASP Risk Rating
         * `fair` - FAIR
         * `mozilla-rra` - Mozilla Rapid Risk Assessment
+    Scope:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      required:
+      - description
+      - name
     SharedWithMe:
       type: object
       description: Serializer for SharedWithMe model - threat models shared via magic
